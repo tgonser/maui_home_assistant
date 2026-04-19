@@ -20,6 +20,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import "./wall-theme.css";
+import { SuperView } from "./SuperView";
 
 type CategoryKey =
   | "overview"
@@ -632,7 +633,9 @@ export function Wall() {
           </div>
 
           <AnimatePresence mode="popLayout">
-            {filtered.length === 0 ? (
+            {active === "overview" ? (
+              <SuperView key="super" states={states} />
+            ) : filtered.length === 0 ? (
               <motion.div
                 key="empty"
                 initial={{ opacity: 0 }}
