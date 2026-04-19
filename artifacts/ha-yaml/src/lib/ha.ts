@@ -165,6 +165,43 @@ export async function haForecast(
   return { ok: true as const, status: res.status, data: forecast };
 }
 
+export type HAWsResult = {
+  id: number;
+  success: boolean;
+  result?: unknown;
+  error?: { code: string; message: string };
+};
+
+const wsBase = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/api/ha/ws-batch`;
+
+export async function haWsBatch(
+  commands: Array<Record<string, unknown> & { type: string }>,
+): Promise<{ ok: boolean; results: HAWsResult[]; error?: string }> {
+  const { url, token } = useHAStore.getState();
+  if (!url || !token) {
+    return { ok: false, results: [], error: "Not connected to Home Assistant" };
+  }
+  try {
+    const res = await fetch(wsBase, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url, token, commands }),
+    });
+    const json = await res.json();
+    return {
+      ok: !!json.ok,
+      results: (json.results as HAWsResult[]) ?? [],
+      error: json.error ? `${json.error}: ${json.detail ?? ""}` : undefined,
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      results: [],
+      error: err instanceof Error ? err.message : "Network error",
+    };
+  }
+}
+
 export async function haCallService(
   domain: string,
   service: string,

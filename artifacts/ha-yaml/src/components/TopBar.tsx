@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { useStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
-import { Moon, Sun, Upload, Download, Activity, Plug, LayoutGrid } from "lucide-react";
+import { Moon, Sun, Upload, Download, Activity, Plug, LayoutGrid, ClipboardList } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ConnectDialog } from "@/components/ConnectDialog";
+import { SurveyDialog } from "@/components/SurveyDialog";
 import { useHAStore, haTest } from "@/lib/ha";
 
 export function TopBar() {
@@ -16,6 +17,7 @@ export function TopBar() {
   const { yamls, setYaml } = useStore();
   const { url, token, status, config, setStatus } = useHAStore();
   const [connectOpen, setConnectOpen] = useState(false);
+  const [surveyOpen, setSurveyOpen] = useState(false);
 
   useEffect(() => {
     if (url && token && status === "disconnected") {
@@ -157,6 +159,20 @@ export function TopBar() {
 
           <Tooltip>
             <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setSurveyOpen(true)}
+                disabled={!isLive || status !== "connected"}
+              >
+                <ClipboardList className="w-4 h-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Run HA survey (read-only inventory)</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
               <Button variant="ghost" size="icon" onClick={handleImport}>
                 <Upload className="w-4 h-4" />
               </Button>
@@ -195,6 +211,7 @@ export function TopBar() {
       </div>
 
       <ConnectDialog open={connectOpen} onOpenChange={setConnectOpen} />
+      <SurveyDialog open={surveyOpen} onClose={() => setSurveyOpen(false)} />
     </div>
   );
 }

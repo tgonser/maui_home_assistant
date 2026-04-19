@@ -65,7 +65,7 @@ router.post("/ha/call", async (req, res) => {
       }
     }
 
-    res.status(upstream.status).json({
+    return res.status(upstream.status).json({
       ok: upstream.ok,
       status: upstream.status,
       data: parsed,
@@ -73,7 +73,127 @@ router.post("/ha/call", async (req, res) => {
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     req.log.error({ err, target }, "HA proxy request failed");
-    res.status(502).json({ error: "Upstream request failed", detail: message });
+    return res
+      .status(502)
+      .json({ error: "Upstream request failed", detail: message });
+  }
+});
+
+type WsCommand = Record<string, unknown> & { type: string };
+
+router.post("/ha/ws-batch", async (req, res) => {
+  const { url, token, commands } = req.body ?? {};
+
+  if (typeof url !== "string" || !url) {
+    return res.status(400).json({ error: "Missing 'url'" });
+  }
+  if (typeof token !== "string" || !token) {
+    return res.status(400).json({ error: "Missing 'token'" });
+  }
+  if (!Array.isArray(commands) || commands.length === 0) {
+    return res.status(400).json({ error: "Missing 'commands'" });
+  }
+
+  let base: URL;
+  try {
+    base = new URL(url);
+  } catch {
+    return res.status(400).json({ error: "Invalid 'url'" });
+  }
+  const wsScheme = base.protocol === "https:" ? "wss:" : "ws:";
+  const wsUrl = `${wsScheme}//${base.host}/api/websocket`;
+
+  type Result = {
+    id: number;
+    type: string;
+    success: boolean;
+    result?: unknown;
+    error?: { code: string; message: string };
+  };
+
+  const results: Result[] = [];
+
+  try {
+    const ws = new WebSocket(wsUrl);
+    const overall = AbortSignal.timeout(60_000);
+    overall.addEventListener("abort", () => {
+      try {
+        ws.close();
+      } catch {
+        // ignore
+      }
+    });
+
+    let nextId = 1;
+    let authed = false;
+    const pending = new Map<number, (r: Result) => void>();
+
+    await new Promise<void>((resolve, reject) => {
+      ws.addEventListener("error", (e) => {
+        reject(new Error(`WS error: ${(e as ErrorEvent).message ?? "unknown"}`));
+      });
+      ws.addEventListener("close", () => {
+        if (!authed) reject(new Error("WS closed before auth"));
+      });
+      ws.addEventListener("message", async (ev) => {
+        let msg: Record<string, unknown>;
+        try {
+          msg = JSON.parse(ev.data as string);
+        } catch {
+          return;
+        }
+        if (msg.type === "auth_required") {
+          ws.send(JSON.stringify({ type: "auth", access_token: token }));
+          return;
+        }
+        if (msg.type === "auth_invalid") {
+          reject(new Error("HA rejected token"));
+          return;
+        }
+        if (msg.type === "auth_ok") {
+          authed = true;
+          try {
+            for (const cmd of commands as WsCommand[]) {
+              const id = nextId++;
+              const payload = { ...cmd, id };
+              const result = await new Promise<Result>((r) => {
+                pending.set(id, r);
+                ws.send(JSON.stringify(payload));
+              });
+              results.push(result);
+            }
+          } catch (err) {
+            reject(err);
+            return;
+          } finally {
+            ws.close();
+          }
+          resolve();
+          return;
+        }
+        if (msg.type === "result" && typeof msg.id === "number") {
+          const cb = pending.get(msg.id);
+          if (cb) {
+            pending.delete(msg.id);
+            cb({
+              id: msg.id,
+              type: "result",
+              success: msg.success === true,
+              result: msg.result,
+              error: msg.error as Result["error"],
+            });
+          }
+        }
+      });
+    });
+
+    return res.json({ ok: true, results });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    req.log.error({ err, wsUrl }, "HA WS batch failed");
+    return res
+      .status(502)
+      .json({ ok: false, error: "WS request failed", detail: message, results });
   }
 });
 
