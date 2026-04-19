@@ -30,7 +30,13 @@ import {
   Tv,
   Apple,
 } from "lucide-react";
-import { haCallService, haCameraImage, type HAState } from "@/lib/ha";
+import {
+  haCallService,
+  haCameraImage,
+  haHistory,
+  haForecast,
+  type HAState,
+} from "@/lib/ha";
 
 const friendly = (s: HAState) =>
   (s.attributes.friendly_name as string | undefined) ?? s.entity_id;

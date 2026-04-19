@@ -123,6 +123,48 @@ export async function haCameraImage(entityId: string) {
   return haCall<string>(`/api/camera_proxy/${entityId}`, { binary: true });
 }
 
+export type HAHistoryPoint = {
+  state: string;
+  last_changed: string;
+  last_updated?: string;
+};
+
+export async function haHistory(entityId: string, hoursBack = 24) {
+  const end = new Date();
+  const start = new Date(end.getTime() - hoursBack * 3600_000);
+  const path = `/api/history/period/${encodeURIComponent(
+    start.toISOString(),
+  )}?filter_entity_id=${encodeURIComponent(
+    entityId,
+  )}&end_time=${encodeURIComponent(
+    end.toISOString(),
+  )}&minimal_response&no_attributes&significant_changes_only`;
+  return haCall<HAHistoryPoint[][]>(path);
+}
+
+export type HAForecastPoint = {
+  datetime: string;
+  temperature?: number;
+  templow?: number;
+  condition?: string;
+  precipitation?: number;
+};
+
+export async function haForecast(
+  entityId: string,
+  type: "hourly" | "daily" | "twice_daily" = "hourly",
+) {
+  const res = await haCall<{
+    service_response?: Record<string, { forecast?: HAForecastPoint[] }>;
+  }>(`/api/services/weather/get_forecasts?return_response`, {
+    method: "POST",
+    body: { entity_id: entityId, type },
+  });
+  if (!res.ok) return res;
+  const forecast = res.data.service_response?.[entityId]?.forecast ?? [];
+  return { ok: true as const, status: res.status, data: forecast };
+}
+
 export async function haCallService(
   domain: string,
   service: string,
