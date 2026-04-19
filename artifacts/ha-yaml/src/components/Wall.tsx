@@ -19,6 +19,7 @@ import {
   AlertTriangle,
   ArrowLeft,
 } from "lucide-react";
+import "./wall-theme.css";
 
 type CategoryKey =
   | "overview"
@@ -63,12 +64,7 @@ const isEnergyEntity = (s: HAState) => {
 };
 
 const CATEGORIES: Category[] = [
-  {
-    key: "overview",
-    label: "Overview",
-    icon: Activity,
-    match: () => true,
-  },
+  { key: "overview", label: "Overview", icon: Activity, match: () => true },
   {
     key: "lights",
     label: "Lighting",
@@ -135,21 +131,18 @@ function Clock() {
     const id = window.setInterval(() => setNow(new Date()), 1000 * 30);
     return () => window.clearInterval(id);
   }, []);
-  const time = now.toLocaleTimeString([], {
-    hour: "numeric",
-    minute: "2-digit",
-  });
-  const date = now.toLocaleDateString([], {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
   return (
     <div className="text-right">
-      <div className="text-3xl font-light tracking-tight tabular-nums">
-        {time}
+      <div className="clock-time text-3xl font-light tracking-tight tabular-nums">
+        {now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
       </div>
-      <div className="text-xs text-muted-foreground">{date}</div>
+      <div className="clock-date text-xs">
+        {now.toLocaleDateString([], {
+          weekday: "long",
+          month: "long",
+          day: "numeric",
+        })}
+      </div>
     </div>
   );
 }
@@ -160,7 +153,6 @@ function Tile({
   value,
   sub,
   active,
-  accent,
   children,
   span,
 }: {
@@ -169,7 +161,6 @@ function Tile({
   value?: string;
   sub?: string;
   active?: boolean;
-  accent?: string;
   children?: React.ReactNode;
   span?: "wide" | "tall" | "big";
 }) {
@@ -181,33 +172,22 @@ function Tile({
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.25 }}
-      className={`relative rounded-2xl border p-5 min-h-[140px] flex flex-col justify-between overflow-hidden ${colSpan} ${
-        active
-          ? "bg-primary/10 border-primary/40"
-          : "bg-card/60 border-border/60"
-      }`}
+      className={`wall-tile ${active ? "wall-tile--active" : ""} p-5 min-h-[140px] flex flex-col justify-between ${colSpan}`}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div
-          className={`p-2.5 rounded-xl shrink-0 ${
-            active
-              ? "bg-primary/20 text-primary"
-              : "bg-muted/60 text-muted-foreground"
-          }`}
-          style={accent && active ? { color: accent } : undefined}
-        >
+      <div className="flex items-start justify-between gap-3 relative z-[1]">
+        <div className="wall-icon-wrap p-2.5 shrink-0">
           <Icon className="w-5 h-5" />
         </div>
         {sub && (
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground text-right max-w-[60%] truncate">
+          <div className="sub text-[10px] uppercase text-right max-w-[60%] truncate">
             {sub}
           </div>
         )}
       </div>
-      <div>
-        <div className="text-sm text-muted-foreground truncate">{label}</div>
+      <div className="relative z-[1]">
+        <div className="label text-sm truncate">{label}</div>
         {value !== undefined && (
-          <div className="text-2xl font-semibold tabular-nums truncate">
+          <div className="value text-2xl font-semibold tabular-nums truncate">
             {value}
           </div>
         )}
@@ -221,26 +201,17 @@ function LightTile({ s }: { s: HAState }) {
   const on = s.state === "on";
   const brightness = s.attributes.brightness as number | undefined;
   const pct = brightness ? Math.round((brightness / 255) * 100) : on ? 100 : 0;
-  const rgb = s.attributes.rgb_color as [number, number, number] | undefined;
-  const accent = rgb ? `rgb(${rgb.join(",")})` : undefined;
   return (
     <Tile
       icon={Lightbulb}
       label={friendly(s)}
       value={on ? `${pct}%` : "Off"}
       active={on}
-      accent={accent}
       sub={s.attributes.area as string | undefined}
     >
       {on && (
-        <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
-          <div
-            className="h-full rounded-full transition-all"
-            style={{
-              width: `${pct}%`,
-              background: accent ?? "var(--color-primary)",
-            }}
-          />
+        <div className="wall-progress mt-2 h-1.5">
+          <div style={{ width: `${pct}%` }} />
         </div>
       )}
     </Tile>
@@ -258,9 +229,7 @@ function ClimateTile({ s }: { s: HAState }) {
       icon={Thermometer}
       label={friendly(s)}
       value={cur !== undefined ? `${cur}${u}` : mode}
-      sub={
-        target !== undefined ? `target ${target}${u} · ${mode}` : mode
-      }
+      sub={target !== undefined ? `target ${target}${u} · ${mode}` : mode}
       active={active}
     />
   );
@@ -326,26 +295,15 @@ function MediaTile({ s }: { s: HAState }) {
   const playing = s.state === "playing";
   const title = s.attributes.media_title as string | undefined;
   const artist = s.attributes.media_artist as string | undefined;
-  const art = s.attributes.entity_picture as string | undefined;
   return (
     <Tile
       icon={Speaker}
       label={friendly(s)}
-      value={playing ? title ?? "Playing" : s.state}
+      value={playing ? (title ?? "Playing") : s.state}
       sub={playing ? artist : undefined}
       active={playing}
       span="wide"
-    >
-      {art && playing && (
-        <div className="absolute right-3 bottom-3 w-14 h-14 rounded-md overflow-hidden border border-border/40">
-          <img
-            src={art.startsWith("http") ? art : undefined}
-            alt=""
-            className="w-full h-full object-cover"
-          />
-        </div>
-      )}
-    </Tile>
+    />
   );
 }
 
@@ -376,7 +334,7 @@ function CameraTile({ s }: { s: HAState }) {
       layout
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="relative rounded-2xl border border-border/60 overflow-hidden col-span-2 row-span-2 bg-black min-h-[280px]"
+      className="wall-camera col-span-2 row-span-2 min-h-[280px]"
     >
       {src ? (
         <img
@@ -385,15 +343,13 @@ function CameraTile({ s }: { s: HAState }) {
           className="w-full h-full object-cover"
         />
       ) : (
-        <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-sm">
+        <div className="absolute inset-0 flex items-center justify-center text-sm wall-status-text">
           {err ?? "Loading..."}
         </div>
       )}
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3 flex items-center gap-2">
-        <Camera className="w-4 h-4 text-white/80" />
-        <span className="text-white text-sm font-medium truncate">
-          {friendly(s)}
-        </span>
+      <div className="wall-camera-caption absolute inset-x-0 bottom-0 p-3 flex items-center gap-2">
+        <Camera className="w-4 h-4" />
+        <span className="text-sm font-medium truncate">{friendly(s)}</span>
       </div>
     </motion.div>
   );
@@ -407,11 +363,6 @@ function EnergyTile({ s }: { s: HAState }) {
   const isPower = dc === "power" || /power|inverter/i.test(s.entity_id);
   const isProduction = /solar|production|envoy/i.test(s.entity_id);
   const Icon = isProduction ? Sun : isBattery ? BatteryCharging : Plug;
-  const accent = isProduction
-    ? "var(--color-primary)"
-    : isBattery
-      ? "#10b981"
-      : undefined;
   const active = !isNaN(num) && num !== 0;
   return (
     <Tile
@@ -420,17 +371,10 @@ function EnergyTile({ s }: { s: HAState }) {
       value={isNaN(num) ? s.state : `${num.toLocaleString()} ${u}`}
       sub={dc || (isPower ? "power" : undefined)}
       active={active}
-      accent={accent}
     >
       {isBattery && !isNaN(num) && (
-        <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
-          <div
-            className="h-full rounded-full"
-            style={{
-              width: `${Math.max(0, Math.min(100, num))}%`,
-              background: accent,
-            }}
-          />
+        <div className="wall-progress mt-2 h-1.5">
+          <div style={{ width: `${Math.max(0, Math.min(100, num))}%` }} />
         </div>
       )}
     </Tile>
@@ -461,6 +405,19 @@ function renderTile(s: HAState) {
   if (d === "binary_sensor") return <BinarySensorTile key={s.entity_id} s={s} />;
   if (isEnergyEntity(s)) return <EnergyTile key={s.entity_id} s={s} />;
   return <SensorTile key={s.entity_id} s={s} />;
+}
+
+function MonsteraLeaf() {
+  return (
+    <svg
+      className="wall-leaf"
+      viewBox="0 0 200 200"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M100 10c-30 0-55 25-55 55 0 8 2 16 5 23-10 0-20 5-25 15-5 12 0 25 12 30 5 2 11 2 16 0-3 8-2 18 5 25 10 10 25 10 35 0 3-3 5-7 6-11 4 8 12 13 22 13 14 0 25-11 25-25 0-5-2-10-4-14 7-2 14-7 18-15 7-14 1-30-13-35-3-1-6-2-9-2 4-9 6-19 6-29 0-30-25-55-44-55zm0 20c12 0 25 8 30 24-8-2-17-2-25 1-3-9-3-17-5-25zm-15 30c8 4 18 6 28 5-2 8-7 16-15 21-5-9-9-18-13-26zm35 5c8 0 16 4 22 10-7 5-15 8-23 8-2-6-1-12 1-18zm-55 15c5 5 10 10 17 13-5 6-11 10-18 12-2-9 0-18 1-25zm75 20c4 6 5 14 2 21-7-2-14-7-18-13 6-2 11-5 16-8zm-35 10c5 5 12 9 19 10-3 7-8 13-15 16-2-9-3-18-4-26zm-30 5c8 1 16 0 23-3 1 9 0 17-3 25-9-4-15-13-20-22z" />
+    </svg>
+  );
 }
 
 export function Wall() {
@@ -556,19 +513,21 @@ export function Wall() {
 
   if (!url || !token) {
     return (
-      <div className="h-screen w-full flex items-center justify-center bg-background text-foreground p-8">
-        <div className="max-w-md text-center space-y-5">
-          <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 text-primary flex items-center justify-center">
+      <div className="wall-root h-screen w-full flex items-center justify-center p-8">
+        <MonsteraLeaf />
+        <div className="max-w-md text-center space-y-5 relative z-[1]">
+          <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center wall-icon-wrap">
             <WifiOff className="w-8 h-8" />
           </div>
-          <h2 className="text-2xl font-semibold">Wall is offline</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="text-2xl font-light tracking-wide">Wall is offline</h2>
+          <p className="text-sm wall-status-text">
             Connect to your Home Assistant from the studio first, then come back
             here for the tablet view.
           </p>
           <button
             onClick={goBack}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm wall-tile wall-tile--active"
+            style={{ minHeight: 0 }}
           >
             <ArrowLeft className="w-4 h-4" /> Back to Studio
           </button>
@@ -578,11 +537,12 @@ export function Wall() {
   }
 
   return (
-    <div className="h-screen w-full flex bg-background text-foreground overflow-hidden">
-      <aside className="w-20 md:w-24 shrink-0 border-r border-border/60 bg-card/40 flex flex-col items-center py-5 gap-1.5">
+    <div className="wall-root h-screen w-full flex overflow-hidden">
+      <MonsteraLeaf />
+      <aside className="wall-aside w-20 md:w-24 shrink-0 flex flex-col items-center py-5 gap-1.5">
         <button
           onClick={goBack}
-          className="w-12 h-12 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted/60 transition-colors mb-3"
+          className="wall-nav-btn w-12 h-12 flex items-center justify-center mb-3"
           title="Back to Studio"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -596,19 +556,15 @@ export function Wall() {
               key={c.key}
               onClick={() => setActive(c.key)}
               disabled={dim}
-              className={`w-14 h-14 rounded-xl flex flex-col items-center justify-center gap-0.5 transition-colors relative ${
-                isActive
-                  ? "bg-primary/15 text-primary"
-                  : dim
-                    ? "text-muted-foreground/30"
-                    : "text-muted-foreground hover:bg-muted/60"
-              }`}
+              className={`wall-nav-btn w-14 h-14 flex flex-col items-center justify-center gap-0.5 relative ${
+                isActive ? "wall-nav-btn--active" : ""
+              } ${dim ? "wall-nav-btn--dim" : ""}`}
               title={c.label}
             >
               <c.icon className="w-5 h-5" />
               <span className="text-[9px] tracking-tight">{c.label}</span>
               {!dim && c.key !== "overview" && count > 0 && (
-                <span className="absolute top-1 right-1 text-[9px] tabular-nums opacity-60">
+                <span className="badge absolute top-1 right-1 text-[9px] tabular-nums">
                   {count}
                 </span>
               )}
@@ -618,7 +574,7 @@ export function Wall() {
         <div className="flex-1" />
         <button
           onClick={toggleFs}
-          className="w-12 h-12 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted/60 transition-colors"
+          className="wall-nav-btn w-12 h-12 flex items-center justify-center"
           title={isFs ? "Exit fullscreen" : "Enter fullscreen"}
         >
           {isFs ? (
@@ -629,8 +585,8 @@ export function Wall() {
         </button>
       </aside>
 
-      <main className="flex-1 overflow-y-auto">
-        <header className="flex items-center justify-between px-8 py-6 sticky top-0 bg-background/85 backdrop-blur z-10 border-b border-border/40">
+      <main className="wall-main flex-1 overflow-y-auto">
+        <header className="wall-header flex items-center justify-between px-8 py-6 sticky top-0 z-10">
           <div className="flex items-center gap-3">
             <div className="relative flex h-2.5 w-2.5">
               <span
@@ -645,15 +601,15 @@ export function Wall() {
               />
             </div>
             <div>
-              <div className="text-xl font-semibold tracking-tight">
+              <div className="text-xl font-light tracking-wide">
                 {config?.location_name ?? "Home"}
               </div>
-              <div className="text-[11px] text-muted-foreground flex items-center gap-2">
+              <div className="meta text-[11px] flex items-center gap-2">
                 <Wifi className="w-3 h-3" />
                 {status === "connected"
                   ? "Live"
                   : status === "error"
-                    ? error ?? "Connection error"
+                    ? (error ?? "Connection error")
                     : status}
                 {" · "}
                 {states.length} entities
@@ -663,12 +619,12 @@ export function Wall() {
           <Clock />
         </header>
 
-        <div className="px-8 py-6">
+        <div className="px-8 py-6 relative z-[1]">
           <div className="flex items-end justify-between mb-5">
-            <h2 className="text-2xl font-light tracking-tight">
+            <h2 className="wall-section-title text-2xl">
               {CATEGORIES.find((c) => c.key === active)?.label}
             </h2>
-            <span className="text-xs text-muted-foreground">
+            <span className="wall-section-meta text-xs">
               {filtered.length} {active === "overview" ? "active" : "items"}
             </span>
           </div>
@@ -680,12 +636,10 @@ export function Wall() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="text-center py-20 text-muted-foreground"
+                className="wall-empty text-center py-20"
               >
                 <Plug className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                <p className="text-sm">
-                  Nothing to show here yet.
-                </p>
+                <p className="text-sm">Nothing to show here yet.</p>
               </motion.div>
             ) : (
               <motion.div
