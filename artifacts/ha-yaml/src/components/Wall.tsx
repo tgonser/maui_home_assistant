@@ -133,10 +133,10 @@ function Clock() {
   }, []);
   return (
     <div className="text-right">
-      <div className="clock-time text-3xl font-light tracking-tight tabular-nums">
+      <div className="clock-time text-5xl font-light tracking-tight tabular-nums">
         {now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
       </div>
-      <div className="clock-date text-xs">
+      <div className="clock-date text-sm mt-1">
         {now.toLocaleDateString([], {
           weekday: "long",
           month: "long",
@@ -172,22 +172,22 @@ function Tile({
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.25 }}
-      className={`wall-tile ${active ? "wall-tile--active" : ""} p-5 min-h-[140px] flex flex-col justify-between ${colSpan}`}
+      className={`wall-tile ${active ? "wall-tile--active" : ""} p-6 min-h-[180px] flex flex-col justify-between ${colSpan}`}
     >
       <div className="flex items-start justify-between gap-3 relative z-[1]">
-        <div className="wall-icon-wrap p-2.5 shrink-0">
-          <Icon className="w-5 h-5" />
+        <div className="wall-icon-wrap p-3 shrink-0">
+          <Icon className="w-6 h-6" />
         </div>
         {sub && (
-          <div className="sub text-[10px] uppercase text-right max-w-[60%] truncate">
+          <div className="sub text-[11px] uppercase text-right max-w-[60%] truncate">
             {sub}
           </div>
         )}
       </div>
       <div className="relative z-[1]">
-        <div className="label text-sm truncate">{label}</div>
+        <div className="label text-base truncate">{label}</div>
         {value !== undefined && (
-          <div className="value text-2xl font-semibold tabular-nums truncate">
+          <div className="value text-3xl font-semibold tabular-nums truncate mt-0.5">
             {value}
           </div>
         )}
@@ -334,7 +334,7 @@ function CameraTile({ s }: { s: HAState }) {
       layout
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="wall-camera col-span-2 row-span-2 min-h-[280px]"
+      className="wall-camera col-span-2 row-span-2 min-h-[376px]"
     >
       {src ? (
         <img
@@ -539,13 +539,13 @@ export function Wall() {
   return (
     <div className="wall-root h-screen w-full flex overflow-hidden">
       <MonsteraLeaf />
-      <aside className="wall-aside w-20 md:w-24 shrink-0 flex flex-col items-center py-5 gap-1.5">
+      <aside className="wall-aside w-32 shrink-0 flex flex-col items-center py-6 gap-2">
         <button
           onClick={goBack}
-          className="wall-nav-btn w-12 h-12 flex items-center justify-center mb-3"
+          className="wall-nav-btn w-16 h-16 flex items-center justify-center mb-2"
           title="Back to Studio"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-5 h-5" />
         </button>
         {CATEGORIES.map((c) => {
           const count = counts.get(c.key) ?? 0;
@@ -556,15 +556,17 @@ export function Wall() {
               key={c.key}
               onClick={() => setActive(c.key)}
               disabled={dim}
-              className={`wall-nav-btn w-14 h-14 flex flex-col items-center justify-center gap-0.5 relative ${
+              className={`wall-nav-btn w-24 h-20 flex flex-col items-center justify-center gap-1 relative ${
                 isActive ? "wall-nav-btn--active" : ""
               } ${dim ? "wall-nav-btn--dim" : ""}`}
               title={c.label}
             >
-              <c.icon className="w-5 h-5" />
-              <span className="text-[9px] tracking-tight">{c.label}</span>
+              <c.icon className="w-6 h-6" />
+              <span className="text-[11px] tracking-tight font-medium">
+                {c.label}
+              </span>
               {!dim && c.key !== "overview" && count > 0 && (
-                <span className="badge absolute top-1 right-1 text-[9px] tabular-nums">
+                <span className="badge absolute top-1.5 right-2 text-[10px] tabular-nums">
                   {count}
                 </span>
               )}
@@ -574,38 +576,38 @@ export function Wall() {
         <div className="flex-1" />
         <button
           onClick={toggleFs}
-          className="wall-nav-btn w-12 h-12 flex items-center justify-center"
+          className="wall-nav-btn w-16 h-16 flex items-center justify-center"
           title={isFs ? "Exit fullscreen" : "Enter fullscreen"}
         >
           {isFs ? (
-            <Minimize className="w-4 h-4" />
+            <Minimize className="w-5 h-5" />
           ) : (
-            <Maximize className="w-4 h-4" />
+            <Maximize className="w-5 h-5" />
           )}
         </button>
       </aside>
 
       <main className="wall-main flex-1 overflow-y-auto">
-        <header className="wall-header flex items-center justify-between px-8 py-6 sticky top-0 z-10">
-          <div className="flex items-center gap-3">
-            <div className="relative flex h-2.5 w-2.5">
+        <header className="wall-header flex items-center justify-between px-10 py-7 sticky top-0 z-10">
+          <div className="flex items-center gap-4">
+            <div className="relative flex h-3 w-3">
               <span
                 className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
                   status === "connected" ? "bg-emerald-400" : "bg-red-400"
                 }`}
               />
               <span
-                className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
+                className={`relative inline-flex rounded-full h-3 w-3 ${
                   status === "connected" ? "bg-emerald-500" : "bg-red-500"
                 }`}
               />
             </div>
             <div>
-              <div className="text-xl font-light tracking-wide">
+              <div className="text-3xl font-light tracking-wide">
                 {config?.location_name ?? "Home"}
               </div>
-              <div className="meta text-[11px] flex items-center gap-2">
-                <Wifi className="w-3 h-3" />
+              <div className="meta text-sm flex items-center gap-2 mt-0.5">
+                <Wifi className="w-3.5 h-3.5" />
                 {status === "connected"
                   ? "Live"
                   : status === "error"
@@ -619,12 +621,12 @@ export function Wall() {
           <Clock />
         </header>
 
-        <div className="px-8 py-6 relative z-[1]">
-          <div className="flex items-end justify-between mb-5">
-            <h2 className="wall-section-title text-2xl">
+        <div className="px-10 py-8 relative z-[1]">
+          <div className="flex items-end justify-between mb-6">
+            <h2 className="wall-section-title text-3xl">
               {CATEGORIES.find((c) => c.key === active)?.label}
             </h2>
-            <span className="wall-section-meta text-xs">
+            <span className="wall-section-meta text-sm">
               {filtered.length} {active === "overview" ? "active" : "items"}
             </span>
           </div>
@@ -638,14 +640,14 @@ export function Wall() {
                 exit={{ opacity: 0 }}
                 className="wall-empty text-center py-20"
               >
-                <Plug className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                <p className="text-sm">Nothing to show here yet.</p>
+                <Plug className="w-12 h-12 mx-auto mb-4 opacity-30" />
+                <p className="text-base">Nothing to show here yet.</p>
               </motion.div>
             ) : (
               <motion.div
                 key={active}
                 layout
-                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 auto-rows-[140px] gap-3"
+                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-[180px] gap-4"
               >
                 {filtered.map(renderTile)}
               </motion.div>
