@@ -449,14 +449,24 @@ function AtriumTvRemote({ states }: { states: HAState[] }) {
   const tvId = tv?.entity_id;
   const remoteId = remote?.entity_id;
 
-  const dpad = (cmd: string) =>
-    remoteId &&
-    send(`d-${cmd}`, () =>
-      haCallService("remote", "send_command", {
-        entity_id: remoteId,
-        command: cmd,
-      }),
-    );
+  const dpad = (cmd: string) => {
+    if (remoteId) {
+      return send(`d-${cmd}`, () =>
+        haCallService("remote", "send_command", {
+          entity_id: remoteId,
+          command: cmd,
+        }),
+      );
+    }
+    if (tvId) {
+      return send(`d-${cmd}`, () =>
+        haCallService("androidtv", "adb_command", {
+          entity_id: tvId,
+          command: cmd.toUpperCase(),
+        }),
+      );
+    }
+  };
 
   const power = () =>
     tvId &&
