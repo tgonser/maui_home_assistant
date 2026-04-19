@@ -10,6 +10,8 @@ import { useState, useEffect, useRef } from "react";
 import { LineChart, Line, ResponsiveContainer, YAxis } from "recharts";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
+import { LiveTab } from "@/components/LiveTab";
+import { ConnectDialog } from "@/components/ConnectDialog";
 
 function DashboardTab() {
   const { parsed } = useStore();
@@ -262,6 +264,7 @@ function LogbookTab() {
 export function DashboardView() {
   const { yamls, loadExamplePack } = useStore();
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [connectOpen, setConnectOpen] = useState(false);
 
   const isEmpty = !yamls.entities && !yamls.dashboard && !yamls.areas;
 
@@ -316,6 +319,12 @@ export function DashboardView() {
             >
               Logbook
             </TabsTrigger>
+            <TabsTrigger 
+              value="live" 
+              className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-12 px-0 bg-transparent"
+            >
+              Live (HA)
+            </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -326,8 +335,10 @@ export function DashboardView() {
           {activeTab === "devices" && <DevicesTab />}
           {activeTab === "automations" && <AutomationsTab />}
           {activeTab === "logbook" && <LogbookTab />}
+          {activeTab === "live" && <LiveTab onOpenConnect={() => setConnectOpen(true)} />}
         </ScrollArea>
       </div>
+      <ConnectDialog open={connectOpen} onOpenChange={setConnectOpen} />
     </div>
   );
 }
