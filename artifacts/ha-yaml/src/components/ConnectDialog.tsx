@@ -19,9 +19,12 @@ type Props = {
   onOpenChange: (open: boolean) => void;
 };
 
+const DEFAULT_URL =
+  "https://ujloq919zfapojmcvd977ybzihxfmorf.ui.nabu.casa";
+
 export function ConnectDialog({ open, onOpenChange }: Props) {
   const { url, token, status, setCredentials, setStatus, clear } = useHAStore();
-  const [draftUrl, setDraftUrl] = useState(url);
+  const [draftUrl, setDraftUrl] = useState(url || DEFAULT_URL);
   const [draftToken, setDraftToken] = useState(token);
   const [testing, setTesting] = useState(false);
   const { toast } = useToast();
