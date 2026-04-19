@@ -3,7 +3,7 @@ import { Router, type IRouter } from "express";
 const router: IRouter = Router();
 
 router.post("/ha/call", async (req, res) => {
-  const { url, token, path, method, body } = req.body ?? {};
+  const { url, token, path, method, body, binary } = req.body ?? {};
 
   if (typeof url !== "string" || !url) {
     return res.status(400).json({ error: "Missing 'url'" });
@@ -42,6 +42,18 @@ router.post("/ha/call", async (req, res) => {
           : JSON.stringify(body),
       signal: AbortSignal.timeout(15_000),
     });
+
+    if (binary) {
+      const buf = Buffer.from(await upstream.arrayBuffer());
+      const contentType =
+        upstream.headers.get("content-type") ?? "application/octet-stream";
+      const dataUrl = `data:${contentType};base64,${buf.toString("base64")}`;
+      return res.status(upstream.status).json({
+        ok: upstream.ok,
+        status: upstream.status,
+        data: dataUrl,
+      });
+    }
 
     const text = await upstream.text();
     let parsed: unknown = text;

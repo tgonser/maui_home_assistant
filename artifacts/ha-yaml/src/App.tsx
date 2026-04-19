@@ -6,6 +6,7 @@ import NotFound from "@/pages/not-found";
 import { TopBar } from "@/components/TopBar";
 import { YamlEditor } from "@/components/YamlEditor";
 import { DashboardView } from "@/components/DashboardView";
+import { Wall } from "@/components/Wall";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { ThemeProvider } from "next-themes";
 import { useEffect, useState } from "react";
@@ -43,6 +44,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/wall" component={Wall} />
       <Route component={NotFound} />
     </Switch>
   );

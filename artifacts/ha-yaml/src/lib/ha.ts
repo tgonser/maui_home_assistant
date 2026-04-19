@@ -68,7 +68,7 @@ export type HACallResult<T> =
 
 export async function haCall<T = unknown>(
   path: string,
-  options: { method?: string; body?: unknown } = {},
+  options: { method?: string; body?: unknown; binary?: boolean } = {},
 ): Promise<HACallResult<T>> {
   const { url, token } = useHAStore.getState();
   if (!url || !token) {
@@ -84,6 +84,7 @@ export async function haCall<T = unknown>(
         path,
         method: options.method ?? "GET",
         body: options.body,
+        binary: options.binary ?? false,
       }),
     });
     const json = await res.json();
@@ -116,6 +117,10 @@ export async function haTest() {
 
 export async function haStates() {
   return haCall<HAState[]>("/api/states");
+}
+
+export async function haCameraImage(entityId: string) {
+  return haCall<string>(`/api/camera_proxy/${entityId}`, { binary: true });
 }
 
 export async function haCallService(

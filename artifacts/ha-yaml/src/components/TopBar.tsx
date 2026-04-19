@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
-import { Moon, Sun, Upload, Download, Activity, Plug } from "lucide-react";
+import { Moon, Sun, Upload, Download, Activity, Plug, LayoutGrid } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -137,6 +137,22 @@ export function TopBar() {
               </Button>
             </TooltipTrigger>
             <TooltipContent>Connect to Home Assistant</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+                  window.location.href = `${base}/wall`;
+                }}
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Open Wall view (tablet)</TooltipContent>
           </Tooltip>
 
           <Tooltip>

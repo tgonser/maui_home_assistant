@@ -1,0 +1,704 @@
+import { useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useHAStore, haStates, haCameraImage, type HAState } from "@/lib/ha";
+import {
+  Lightbulb,
+  Thermometer,
+  Lock,
+  ShieldCheck,
+  Speaker,
+  Camera,
+  BatteryCharging,
+  Activity,
+  Sun,
+  Plug,
+  Wifi,
+  WifiOff,
+  Maximize,
+  Minimize,
+  AlertTriangle,
+  ArrowLeft,
+} from "lucide-react";
+
+type CategoryKey =
+  | "overview"
+  | "lights"
+  | "climate"
+  | "locks"
+  | "security"
+  | "media"
+  | "cameras"
+  | "energy"
+  | "sensors";
+
+type Category = {
+  key: CategoryKey;
+  label: string;
+  icon: typeof Lightbulb;
+  match: (s: HAState) => boolean;
+};
+
+const friendly = (s: HAState) =>
+  (s.attributes.friendly_name as string | undefined) ?? s.entity_id;
+const unit = (s: HAState) =>
+  (s.attributes.unit_of_measurement as string | undefined) ?? "";
+const domainOf = (id: string) => id.split(".")[0] ?? "";
+const deviceClass = (s: HAState) =>
+  (s.attributes.device_class as string | undefined) ?? "";
+
+const isEnergyEntity = (s: HAState) => {
+  const id = s.entity_id.toLowerCase();
+  const dc = deviceClass(s);
+  if (
+    dc === "power" ||
+    dc === "energy" ||
+    dc === "battery" ||
+    dc === "voltage" ||
+    dc === "current"
+  )
+    return true;
+  return /(powerwall|tesla|envoy|enphase|solar|span|grid|inverter|battery)/.test(
+    id,
+  );
+};
+
+const CATEGORIES: Category[] = [
+  {
+    key: "overview",
+    label: "Overview",
+    icon: Activity,
+    match: () => true,
+  },
+  {
+    key: "lights",
+    label: "Lighting",
+    icon: Lightbulb,
+    match: (s) => domainOf(s.entity_id) === "light",
+  },
+  {
+    key: "climate",
+    label: "Climate",
+    icon: Thermometer,
+    match: (s) => domainOf(s.entity_id) === "climate",
+  },
+  {
+    key: "locks",
+    label: "Locks",
+    icon: Lock,
+    match: (s) => domainOf(s.entity_id) === "lock",
+  },
+  {
+    key: "security",
+    label: "Security",
+    icon: ShieldCheck,
+    match: (s) =>
+      domainOf(s.entity_id) === "alarm_control_panel" ||
+      (domainOf(s.entity_id) === "binary_sensor" &&
+        ["door", "window", "motion", "opening", "smoke", "gas", "tamper"].includes(
+          deviceClass(s),
+        )),
+  },
+  {
+    key: "media",
+    label: "Media",
+    icon: Speaker,
+    match: (s) => domainOf(s.entity_id) === "media_player",
+  },
+  {
+    key: "cameras",
+    label: "Cameras",
+    icon: Camera,
+    match: (s) => domainOf(s.entity_id) === "camera",
+  },
+  {
+    key: "energy",
+    label: "Energy",
+    icon: BatteryCharging,
+    match: isEnergyEntity,
+  },
+  {
+    key: "sensors",
+    label: "Sensors",
+    icon: Activity,
+    match: (s) =>
+      (domainOf(s.entity_id) === "sensor" && !isEnergyEntity(s)) ||
+      (domainOf(s.entity_id) === "binary_sensor" &&
+        !["door", "window", "motion", "opening", "smoke", "gas", "tamper"].includes(
+          deviceClass(s),
+        )),
+  },
+];
+
+function Clock() {
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(new Date()), 1000 * 30);
+    return () => window.clearInterval(id);
+  }, []);
+  const time = now.toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+  const date = now.toLocaleDateString([], {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+  return (
+    <div className="text-right">
+      <div className="text-3xl font-light tracking-tight tabular-nums">
+        {time}
+      </div>
+      <div className="text-xs text-muted-foreground">{date}</div>
+    </div>
+  );
+}
+
+function Tile({
+  icon: Icon,
+  label,
+  value,
+  sub,
+  active,
+  accent,
+  children,
+  span,
+}: {
+  icon: typeof Lightbulb;
+  label: string;
+  value?: string;
+  sub?: string;
+  active?: boolean;
+  accent?: string;
+  children?: React.ReactNode;
+  span?: "wide" | "tall" | "big";
+}) {
+  const colSpan =
+    span === "wide" ? "col-span-2" : span === "big" ? "col-span-2 row-span-2" : "";
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, scale: 0.96 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.25 }}
+      className={`relative rounded-2xl border p-5 min-h-[140px] flex flex-col justify-between overflow-hidden ${colSpan} ${
+        active
+          ? "bg-primary/10 border-primary/40"
+          : "bg-card/60 border-border/60"
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div
+          className={`p-2.5 rounded-xl shrink-0 ${
+            active
+              ? "bg-primary/20 text-primary"
+              : "bg-muted/60 text-muted-foreground"
+          }`}
+          style={accent && active ? { color: accent } : undefined}
+        >
+          <Icon className="w-5 h-5" />
+        </div>
+        {sub && (
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground text-right max-w-[60%] truncate">
+            {sub}
+          </div>
+        )}
+      </div>
+      <div>
+        <div className="text-sm text-muted-foreground truncate">{label}</div>
+        {value !== undefined && (
+          <div className="text-2xl font-semibold tabular-nums truncate">
+            {value}
+          </div>
+        )}
+        {children}
+      </div>
+    </motion.div>
+  );
+}
+
+function LightTile({ s }: { s: HAState }) {
+  const on = s.state === "on";
+  const brightness = s.attributes.brightness as number | undefined;
+  const pct = brightness ? Math.round((brightness / 255) * 100) : on ? 100 : 0;
+  const rgb = s.attributes.rgb_color as [number, number, number] | undefined;
+  const accent = rgb ? `rgb(${rgb.join(",")})` : undefined;
+  return (
+    <Tile
+      icon={Lightbulb}
+      label={friendly(s)}
+      value={on ? `${pct}%` : "Off"}
+      active={on}
+      accent={accent}
+      sub={s.attributes.area as string | undefined}
+    >
+      {on && (
+        <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all"
+            style={{
+              width: `${pct}%`,
+              background: accent ?? "var(--color-primary)",
+            }}
+          />
+        </div>
+      )}
+    </Tile>
+  );
+}
+
+function ClimateTile({ s }: { s: HAState }) {
+  const cur = s.attributes.current_temperature as number | undefined;
+  const target = s.attributes.temperature as number | undefined;
+  const u = (s.attributes.temperature_unit as string | undefined) ?? "°";
+  const mode = s.state;
+  const active = mode !== "off" && mode !== "unavailable";
+  return (
+    <Tile
+      icon={Thermometer}
+      label={friendly(s)}
+      value={cur !== undefined ? `${cur}${u}` : mode}
+      sub={
+        target !== undefined ? `target ${target}${u} · ${mode}` : mode
+      }
+      active={active}
+    />
+  );
+}
+
+function LockTile({ s }: { s: HAState }) {
+  const locked = s.state === "locked";
+  return (
+    <Tile
+      icon={Lock}
+      label={friendly(s)}
+      value={locked ? "Locked" : s.state === "unlocked" ? "Unlocked" : s.state}
+      active={!locked && s.state !== "unavailable"}
+      sub={locked ? "secure" : "open"}
+    />
+  );
+}
+
+function AlarmTile({ s }: { s: HAState }) {
+  const armed = s.state.startsWith("armed");
+  const triggered = s.state === "triggered";
+  return (
+    <Tile
+      icon={triggered ? AlertTriangle : ShieldCheck}
+      label={friendly(s)}
+      value={s.state.replace(/_/g, " ")}
+      active={armed || triggered}
+    />
+  );
+}
+
+function BinarySensorTile({ s }: { s: HAState }) {
+  const dc = deviceClass(s);
+  const on = s.state === "on";
+  const labelMap: Record<string, [string, string]> = {
+    door: ["Open", "Closed"],
+    window: ["Open", "Closed"],
+    opening: ["Open", "Closed"],
+    motion: ["Motion", "Clear"],
+    smoke: ["Smoke!", "Clear"],
+    gas: ["Gas!", "Clear"],
+    tamper: ["Tamper", "OK"],
+  };
+  const [onLbl, offLbl] = labelMap[dc] ?? ["On", "Off"];
+  const Icon =
+    dc === "motion"
+      ? Activity
+      : dc === "smoke" || dc === "gas"
+        ? AlertTriangle
+        : ShieldCheck;
+  return (
+    <Tile
+      icon={Icon}
+      label={friendly(s)}
+      value={on ? onLbl : offLbl}
+      active={on}
+      sub={dc || undefined}
+    />
+  );
+}
+
+function MediaTile({ s }: { s: HAState }) {
+  const playing = s.state === "playing";
+  const title = s.attributes.media_title as string | undefined;
+  const artist = s.attributes.media_artist as string | undefined;
+  const art = s.attributes.entity_picture as string | undefined;
+  return (
+    <Tile
+      icon={Speaker}
+      label={friendly(s)}
+      value={playing ? title ?? "Playing" : s.state}
+      sub={playing ? artist : undefined}
+      active={playing}
+      span="wide"
+    >
+      {art && playing && (
+        <div className="absolute right-3 bottom-3 w-14 h-14 rounded-md overflow-hidden border border-border/40">
+          <img
+            src={art.startsWith("http") ? art : undefined}
+            alt=""
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+    </Tile>
+  );
+}
+
+function CameraTile({ s }: { s: HAState }) {
+  const [src, setSrc] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const r = await haCameraImage(s.entity_id);
+      if (cancelled) return;
+      if (r.ok) {
+        setSrc(r.data);
+        setErr(null);
+      } else {
+        setErr(r.error);
+      }
+    };
+    load();
+    const id = window.setInterval(load, 15_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, [s.entity_id]);
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, scale: 0.96 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="relative rounded-2xl border border-border/60 overflow-hidden col-span-2 row-span-2 bg-black min-h-[280px]"
+    >
+      {src ? (
+        <img
+          src={src}
+          alt={friendly(s)}
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-sm">
+          {err ?? "Loading..."}
+        </div>
+      )}
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3 flex items-center gap-2">
+        <Camera className="w-4 h-4 text-white/80" />
+        <span className="text-white text-sm font-medium truncate">
+          {friendly(s)}
+        </span>
+      </div>
+    </motion.div>
+  );
+}
+
+function EnergyTile({ s }: { s: HAState }) {
+  const dc = deviceClass(s);
+  const num = parseFloat(s.state);
+  const u = unit(s);
+  const isBattery = dc === "battery" || /battery/i.test(s.entity_id);
+  const isPower = dc === "power" || /power|inverter/i.test(s.entity_id);
+  const isProduction = /solar|production|envoy/i.test(s.entity_id);
+  const Icon = isProduction ? Sun : isBattery ? BatteryCharging : Plug;
+  const accent = isProduction
+    ? "var(--color-primary)"
+    : isBattery
+      ? "#10b981"
+      : undefined;
+  const active = !isNaN(num) && num !== 0;
+  return (
+    <Tile
+      icon={Icon}
+      label={friendly(s)}
+      value={isNaN(num) ? s.state : `${num.toLocaleString()} ${u}`}
+      sub={dc || (isPower ? "power" : undefined)}
+      active={active}
+      accent={accent}
+    >
+      {isBattery && !isNaN(num) && (
+        <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
+          <div
+            className="h-full rounded-full"
+            style={{
+              width: `${Math.max(0, Math.min(100, num))}%`,
+              background: accent,
+            }}
+          />
+        </div>
+      )}
+    </Tile>
+  );
+}
+
+function SensorTile({ s }: { s: HAState }) {
+  const num = parseFloat(s.state);
+  const u = unit(s);
+  return (
+    <Tile
+      icon={Activity}
+      label={friendly(s)}
+      value={isNaN(num) ? s.state : `${num.toLocaleString()} ${u}`}
+      sub={deviceClass(s) || undefined}
+    />
+  );
+}
+
+function renderTile(s: HAState) {
+  const d = domainOf(s.entity_id);
+  if (d === "light") return <LightTile key={s.entity_id} s={s} />;
+  if (d === "climate") return <ClimateTile key={s.entity_id} s={s} />;
+  if (d === "lock") return <LockTile key={s.entity_id} s={s} />;
+  if (d === "alarm_control_panel") return <AlarmTile key={s.entity_id} s={s} />;
+  if (d === "media_player") return <MediaTile key={s.entity_id} s={s} />;
+  if (d === "camera") return <CameraTile key={s.entity_id} s={s} />;
+  if (d === "binary_sensor") return <BinarySensorTile key={s.entity_id} s={s} />;
+  if (isEnergyEntity(s)) return <EnergyTile key={s.entity_id} s={s} />;
+  return <SensorTile key={s.entity_id} s={s} />;
+}
+
+export function Wall() {
+  const { url, token, status, config } = useHAStore();
+  const [states, setStates] = useState<HAState[]>([]);
+  const [active, setActive] = useState<CategoryKey>("overview");
+  const [error, setError] = useState<string | null>(null);
+  const [isFs, setIsFs] = useState(false);
+
+  useEffect(() => {
+    if (!url || !token) return;
+    let cancelled = false;
+    const load = async () => {
+      const r = await haStates();
+      if (cancelled) return;
+      if (r.ok) {
+        setStates(r.data);
+        setError(null);
+      } else {
+        setError(r.error);
+      }
+    };
+    load();
+    const id = window.setInterval(load, 6000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, [url, token]);
+
+  useEffect(() => {
+    const onFs = () => setIsFs(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onFs);
+    return () => document.removeEventListener("fullscreenchange", onFs);
+  }, []);
+
+  const counts = useMemo(() => {
+    const map = new Map<CategoryKey, number>();
+    for (const c of CATEGORIES) {
+      if (c.key === "overview") continue;
+      map.set(c.key, states.filter(c.match).length);
+    }
+    return map;
+  }, [states]);
+
+  const filtered = useMemo(() => {
+    if (active === "overview") {
+      const featured: HAState[] = [];
+      const seen = new Set<string>();
+      for (const c of CATEGORIES) {
+        if (c.key === "overview") continue;
+        const matched = states.filter(c.match);
+        const interesting = matched
+          .filter((s) => {
+            if (s.state === "unavailable" || s.state === "unknown") return false;
+            const d = domainOf(s.entity_id);
+            if (d === "light") return s.state === "on";
+            if (d === "climate") return s.state !== "off";
+            if (d === "media_player") return s.state === "playing";
+            if (d === "lock" || d === "alarm_control_panel") return true;
+            if (d === "camera") return true;
+            if (d === "binary_sensor") return s.state === "on";
+            if (isEnergyEntity(s)) return !isNaN(parseFloat(s.state));
+            return false;
+          })
+          .slice(0, c.key === "cameras" ? 2 : c.key === "energy" ? 6 : 4);
+        for (const s of interesting) {
+          if (!seen.has(s.entity_id)) {
+            seen.add(s.entity_id);
+            featured.push(s);
+          }
+        }
+      }
+      return featured;
+    }
+    const cat = CATEGORIES.find((c) => c.key === active);
+    if (!cat) return [];
+    return states
+      .filter(cat.match)
+      .filter((s) => s.state !== "unavailable")
+      .sort((a, b) => friendly(a).localeCompare(friendly(b)));
+  }, [states, active]);
+
+  const toggleFs = () => {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen().catch(() => {});
+  };
+
+  const goBack = () => {
+    const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+    window.location.href = `${base}/`;
+  };
+
+  if (!url || !token) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-background text-foreground p-8">
+        <div className="max-w-md text-center space-y-5">
+          <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 text-primary flex items-center justify-center">
+            <WifiOff className="w-8 h-8" />
+          </div>
+          <h2 className="text-2xl font-semibold">Wall is offline</h2>
+          <p className="text-sm text-muted-foreground">
+            Connect to your Home Assistant from the studio first, then come back
+            here for the tablet view.
+          </p>
+          <button
+            onClick={goBack}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back to Studio
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-screen w-full flex bg-background text-foreground overflow-hidden">
+      <aside className="w-20 md:w-24 shrink-0 border-r border-border/60 bg-card/40 flex flex-col items-center py-5 gap-1.5">
+        <button
+          onClick={goBack}
+          className="w-12 h-12 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted/60 transition-colors mb-3"
+          title="Back to Studio"
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </button>
+        {CATEGORIES.map((c) => {
+          const count = counts.get(c.key) ?? 0;
+          const isActive = active === c.key;
+          const dim = c.key !== "overview" && count === 0;
+          return (
+            <button
+              key={c.key}
+              onClick={() => setActive(c.key)}
+              disabled={dim}
+              className={`w-14 h-14 rounded-xl flex flex-col items-center justify-center gap-0.5 transition-colors relative ${
+                isActive
+                  ? "bg-primary/15 text-primary"
+                  : dim
+                    ? "text-muted-foreground/30"
+                    : "text-muted-foreground hover:bg-muted/60"
+              }`}
+              title={c.label}
+            >
+              <c.icon className="w-5 h-5" />
+              <span className="text-[9px] tracking-tight">{c.label}</span>
+              {!dim && c.key !== "overview" && count > 0 && (
+                <span className="absolute top-1 right-1 text-[9px] tabular-nums opacity-60">
+                  {count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+        <div className="flex-1" />
+        <button
+          onClick={toggleFs}
+          className="w-12 h-12 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted/60 transition-colors"
+          title={isFs ? "Exit fullscreen" : "Enter fullscreen"}
+        >
+          {isFs ? (
+            <Minimize className="w-4 h-4" />
+          ) : (
+            <Maximize className="w-4 h-4" />
+          )}
+        </button>
+      </aside>
+
+      <main className="flex-1 overflow-y-auto">
+        <header className="flex items-center justify-between px-8 py-6 sticky top-0 bg-background/85 backdrop-blur z-10 border-b border-border/40">
+          <div className="flex items-center gap-3">
+            <div className="relative flex h-2.5 w-2.5">
+              <span
+                className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                  status === "connected" ? "bg-emerald-400" : "bg-red-400"
+                }`}
+              />
+              <span
+                className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
+                  status === "connected" ? "bg-emerald-500" : "bg-red-500"
+                }`}
+              />
+            </div>
+            <div>
+              <div className="text-xl font-semibold tracking-tight">
+                {config?.location_name ?? "Home"}
+              </div>
+              <div className="text-[11px] text-muted-foreground flex items-center gap-2">
+                <Wifi className="w-3 h-3" />
+                {status === "connected"
+                  ? "Live"
+                  : status === "error"
+                    ? error ?? "Connection error"
+                    : status}
+                {" · "}
+                {states.length} entities
+              </div>
+            </div>
+          </div>
+          <Clock />
+        </header>
+
+        <div className="px-8 py-6">
+          <div className="flex items-end justify-between mb-5">
+            <h2 className="text-2xl font-light tracking-tight">
+              {CATEGORIES.find((c) => c.key === active)?.label}
+            </h2>
+            <span className="text-xs text-muted-foreground">
+              {filtered.length} {active === "overview" ? "active" : "items"}
+            </span>
+          </div>
+
+          <AnimatePresence mode="popLayout">
+            {filtered.length === 0 ? (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="text-center py-20 text-muted-foreground"
+              >
+                <Plug className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                <p className="text-sm">
+                  Nothing to show here yet.
+                </p>
+              </motion.div>
+            ) : (
+              <motion.div
+                key={active}
+                layout
+                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 auto-rows-[140px] gap-3"
+              >
+                {filtered.map(renderTile)}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </main>
+    </div>
+  );
+}
