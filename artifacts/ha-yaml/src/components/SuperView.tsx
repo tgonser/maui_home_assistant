@@ -29,6 +29,7 @@ import {
   CornerUpLeft,
   Tv,
   Apple,
+  Settings,
 } from "lucide-react";
 import {
   haCallService,
@@ -37,6 +38,20 @@ import {
   haForecast,
   type HAState,
 } from "@/lib/ha";
+import {
+  SuperViewSettings,
+  useSuperViewOverrides,
+  type SuperViewSlot,
+} from "./SuperViewSettings";
+
+function useResolvedSlot(
+  states: HAState[],
+  slot: SuperViewSlot,
+): HAState | undefined {
+  const overrideId = useSuperViewOverrides((s) => s.overrides[slot]);
+  if (!overrideId) return undefined;
+  return states.find((s) => s.entity_id === overrideId);
+}
 
 const friendly = (s: HAState) =>
   (s.attributes.friendly_name as string | undefined) ?? s.entity_id;
@@ -78,7 +93,9 @@ const WEATHER_ICONS: Record<string, typeof Cloud> = {
 };
 
 function WeatherTile({ states }: { states: HAState[] }) {
-  const w = findFirst(states, (s) => domainOf(s.entity_id) === "weather");
+  const override = useResolvedSlot(states, "weather");
+  const w =
+    override ?? findFirst(states, (s) => domainOf(s.entity_id) === "weather");
   if (!w) {
     return (
       <div className="wall-tile p-6 col-span-2 row-span-2 flex flex-col justify-between">
@@ -199,21 +216,27 @@ function ShadesCount({ states }: { states: HAState[] }) {
 }
 
 function AtriumTemp({ states }: { states: HAState[] }) {
-  const climate = findFirst(
-    states,
-    (s) => domainOf(s.entity_id) === "climate" && matchAtrium(s),
-  );
-  const sensor = findFirst(
-    states,
-    (s) =>
-      domainOf(s.entity_id) === "sensor" &&
-      matchAtrium(s) &&
-      (deviceClass(s) === "temperature" ||
-        /temp/i.test(s.entity_id) ||
-        ["°F", "°C"].includes(
-          (s.attributes.unit_of_measurement as string | undefined) ?? "",
-        )),
-  );
+  const climateOverride = useResolvedSlot(states, "atriumClimate");
+  const sensorOverride = useResolvedSlot(states, "atriumTemp");
+  const climate =
+    climateOverride ??
+    findFirst(
+      states,
+      (s) => domainOf(s.entity_id) === "climate" && matchAtrium(s),
+    );
+  const sensor =
+    sensorOverride ??
+    findFirst(
+      states,
+      (s) =>
+        domainOf(s.entity_id) === "sensor" &&
+        matchAtrium(s) &&
+        (deviceClass(s) === "temperature" ||
+          /temp/i.test(s.entity_id) ||
+          ["°F", "°C"].includes(
+            (s.attributes.unit_of_measurement as string | undefined) ?? "",
+          )),
+    );
   let value = "—";
   let sub: string | undefined;
   if (climate) {
@@ -238,14 +261,17 @@ function AtriumTemp({ states }: { states: HAState[] }) {
 }
 
 function SolarProduction({ states }: { states: HAState[] }) {
-  const s = findFirst(
-    states,
-    (e) =>
-      domainOf(e.entity_id) === "sensor" &&
-      /envoy.*production|solar.*power|current_power_production|pv_power/i.test(
-        e.entity_id,
-      ),
-  );
+  const override = useResolvedSlot(states, "solar");
+  const s =
+    override ??
+    findFirst(
+      states,
+      (e) =>
+        domainOf(e.entity_id) === "sensor" &&
+        /envoy.*production|solar.*power|current_power_production|pv_power/i.test(
+          e.entity_id,
+        ),
+    );
   const num = s ? parseFloat(s.state) : NaN;
   const unit = (s?.attributes.unit_of_measurement as string | undefined) ?? "W";
   return (
@@ -260,14 +286,17 @@ function SolarProduction({ states }: { states: HAState[] }) {
 }
 
 function EnergyUsage({ states }: { states: HAState[] }) {
-  const s = findFirst(
-    states,
-    (e) =>
-      domainOf(e.entity_id) === "sensor" &&
-      /load|consumption|home.*power|grid.*power|current_power_consumption/i.test(
-        e.entity_id,
-      ),
-  );
+  const override = useResolvedSlot(states, "energyUse");
+  const s =
+    override ??
+    findFirst(
+      states,
+      (e) =>
+        domainOf(e.entity_id) === "sensor" &&
+        /load|consumption|home.*power|grid.*power|current_power_consumption/i.test(
+          e.entity_id,
+        ),
+    );
   const num = s ? parseFloat(s.state) : NaN;
   const unit = (s?.attributes.unit_of_measurement as string | undefined) ?? "W";
   return (
@@ -282,14 +311,17 @@ function EnergyUsage({ states }: { states: HAState[] }) {
 }
 
 function PowerwallStat({ states }: { states: HAState[] }) {
-  const s = findFirst(
-    states,
-    (e) =>
-      domainOf(e.entity_id) === "sensor" &&
-      /(powerwall|tesla).*battery|battery.*level|charge/i.test(e.entity_id) &&
-      (e.attributes.unit_of_measurement === "%" ||
-        deviceClass(e) === "battery"),
-  );
+  const override = useResolvedSlot(states, "powerwall");
+  const s =
+    override ??
+    findFirst(
+      states,
+      (e) =>
+        domainOf(e.entity_id) === "sensor" &&
+        /(powerwall|tesla).*battery|battery.*level|charge/i.test(e.entity_id) &&
+        (e.attributes.unit_of_measurement === "%" ||
+          deviceClass(e) === "battery"),
+    );
   if (!s) return null;
   const num = parseFloat(s.state);
   return (
@@ -304,6 +336,7 @@ function PowerwallStat({ states }: { states: HAState[] }) {
 }
 
 function LastMotionCamera({ states }: { states: HAState[] }) {
+  const cameraOverride = useResolvedSlot(states, "lastMotionCamera");
   const motionSensors = findEntities(
     states,
     (s) =>
@@ -316,7 +349,9 @@ function LastMotionCamera({ states }: { states: HAState[] }) {
   const last = sorted.find((s) => s.state === "on") ?? sorted[0];
   const cameras = findEntities(states, (s) => domainOf(s.entity_id) === "camera");
   let camera: HAState | undefined;
-  if (last) {
+  if (cameraOverride) {
+    camera = cameraOverride;
+  } else if (last) {
     const baseName = friendly(last)
       .replace(/motion/i, "")
       .trim()
@@ -425,15 +460,29 @@ function RemoteButton({
 }
 
 function AtriumTvRemote({ states }: { states: HAState[] }) {
-  const tv = findFirst(
-    states,
-    (s) => domainOf(s.entity_id) === "media_player" && matchAtrium(s) && matchTv(s),
-  ) ?? findFirst(states, (s) => domainOf(s.entity_id) === "media_player" && matchTv(s));
+  const tvOverride = useResolvedSlot(states, "tvMediaPlayer");
+  const remoteOverride = useResolvedSlot(states, "tvRemote");
+  const tv =
+    tvOverride ??
+    findFirst(
+      states,
+      (s) =>
+        domainOf(s.entity_id) === "media_player" &&
+        matchAtrium(s) &&
+        matchTv(s),
+    ) ??
+    findFirst(
+      states,
+      (s) => domainOf(s.entity_id) === "media_player" && matchTv(s),
+    );
 
-  const remote = findFirst(
-    states,
-    (s) => domainOf(s.entity_id) === "remote" && matchAtrium(s),
-  ) ?? findFirst(states, (s) => domainOf(s.entity_id) === "remote");
+  const remote =
+    remoteOverride ??
+    findFirst(
+      states,
+      (s) => domainOf(s.entity_id) === "remote" && matchAtrium(s),
+    ) ??
+    findFirst(states, (s) => domainOf(s.entity_id) === "remote");
 
   const [pending, setPending] = useState<string | null>(null);
 
@@ -449,17 +498,18 @@ function AtriumTvRemote({ states }: { states: HAState[] }) {
   const tvId = tv?.entity_id;
   const remoteId = remote?.entity_id;
 
-  const dpad = (cmd: string) => {
+  const dpad = async (cmd: string) => {
     if (remoteId) {
-      return send(`d-${cmd}`, () =>
+      await send(`d-${cmd}`, () =>
         haCallService("remote", "send_command", {
           entity_id: remoteId,
           command: cmd,
         }),
       );
+      return;
     }
     if (tvId) {
-      return send(`d-${cmd}`, () =>
+      await send(`d-${cmd}`, () =>
         haCallService("androidtv", "adb_command", {
           entity_id: tvId,
           command: cmd.toUpperCase(),
@@ -611,18 +661,36 @@ export function SuperView({ states }: { states: HAState[] }) {
     }),
     [states],
   );
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 auto-rows-[160px] gap-4">
-      <WeatherTile states={states} />
-      <LightsCount states={states} />
-      <ShadesCount states={states} />
-      <AtriumTemp states={states} />
-      <SolarProduction states={states} />
-      <EnergyUsage states={states} />
-      {stats.lights.length === 0 ? null : <PowerwallStat states={states} />}
-      <LastMotionCamera states={states} />
-      <AtriumTvRemote states={states} />
+    <div className="space-y-3">
+      <div className="flex justify-end">
+        <button
+          onClick={() => setSettingsOpen(true)}
+          className="wall-remote-btn flex items-center gap-2 px-3 py-2 text-xs uppercase tracking-wider"
+          title="Choose entities for each Super View tile"
+        >
+          <Settings className="w-3.5 h-3.5" />
+          Pick entities
+        </button>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 auto-rows-[160px] gap-4">
+        <WeatherTile states={states} />
+        <LightsCount states={states} />
+        <ShadesCount states={states} />
+        <AtriumTemp states={states} />
+        <SolarProduction states={states} />
+        <EnergyUsage states={states} />
+        {stats.lights.length === 0 ? null : <PowerwallStat states={states} />}
+        <LastMotionCamera states={states} />
+        <AtriumTvRemote states={states} />
+      </div>
+      <SuperViewSettings
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        states={states}
+      />
     </div>
   );
 }
