@@ -59,6 +59,19 @@ export function SurveyDialog({
     }
   };
 
+  const copyAll = async () => {
+    if (!reports) return;
+    const combined = Object.entries(reports)
+      .map(
+        ([name, content]) =>
+          `\n\n===== ${name} =====\n\n${content}`,
+      )
+      .join("");
+    await navigator.clipboard.writeText(combined.trimStart());
+    setCopied("__all__");
+    setTimeout(() => setCopied((c) => (c === "__all__" ? null : c)), 1500);
+  };
+
   const copy = async (name: string, content: string) => {
     await navigator.clipboard.writeText(content);
     setCopied(name);
@@ -139,8 +152,24 @@ export function SurveyDialog({
             <div className="w-64 border-r border-stone-800 bg-stone-950/50 overflow-auto">
               <div className="p-3">
                 <button
+                  onClick={copyAll}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-amber-700 hover:bg-amber-600 text-amber-50 text-sm font-medium mb-2"
+                >
+                  {copied === "__all__" ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      Copied all 6
+                    </>
+                  ) : (
+                    <>
+                      <ClipboardCopy className="w-4 h-4" />
+                      Copy all
+                    </>
+                  )}
+                </button>
+                <button
                   onClick={downloadAll}
-                  className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-amber-700 hover:bg-amber-600 text-amber-50 text-sm font-medium mb-3"
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-100 text-sm font-medium mb-3"
                 >
                   <Download className="w-4 h-4" />
                   Download all
