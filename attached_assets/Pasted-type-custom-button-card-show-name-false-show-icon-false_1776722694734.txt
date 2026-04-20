@@ -1,0 +1,462 @@
+type: custom:button-card
+show_name: false
+show_icon: false
+styles:
+  card:
+    - padding: 24px
+    - border-radius: 36px
+    - height: 620px
+    - background: >-
+        linear-gradient(160deg, rgba(40,40,52,1) 0%, rgba(22,22,30,1) 55%,
+        rgba(10,10,16,1) 100%)
+    - box-shadow: |
+        0 18px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08)
+    - position: relative
+    - overflow: hidden
+  grid:
+    - position: relative
+  custom_fields:
+    title:
+      - position: absolute
+      - left: 22px
+      - top: 14px
+      - color: white
+      - font-size: 20px
+      - font-weight: 500
+    pad:
+      - position: absolute
+      - left: 50%
+      - top: 42%
+      - transform: translate(-50%, -50%)
+      - width: 300px
+      - height: 300px
+    apps:
+      - position: absolute
+      - left: 50%
+      - bottom: 28px
+      - transform: translateX(-50%)
+      - width: calc(100% - 36px)
+custom_fields:
+  title: |
+    [[[
+      return `<ha-icon icon="mdi:television" style="width:20px;height:20px;vertical-align:middle;margin-right:8px;"></ha-icon>Atrium TV`;
+    ]]]
+  pad:
+    card:
+      type: custom:button-card
+      show_name: false
+      show_icon: false
+      styles:
+        card:
+          - background: >-
+              radial-gradient(circle at 50% 50%, rgba(255,255,255,0.05),
+              rgba(255,255,255,0.02))
+          - border-radius: 50%
+          - width: 300px
+          - height: 300px
+          - box-shadow: >
+              inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -8px 18px
+              rgba(0,0,0,0.32)
+          - position: relative
+          - overflow: visible
+        custom_fields:
+          up:
+            - position: absolute
+            - left: 50%
+            - top: 0
+            - transform: translateX(-50%)
+          down:
+            - position: absolute
+            - left: 50%
+            - bottom: 0
+            - transform: translateX(-50%)
+          left:
+            - position: absolute
+            - left: 0
+            - top: 50%
+            - transform: translateY(-50%)
+          right:
+            - position: absolute
+            - right: 0
+            - top: 50%
+            - transform: translateY(-50%)
+          center:
+            - position: absolute
+            - left: 50%
+            - top: 50%
+            - transform: translate(-50%, -50%)
+      custom_fields:
+        up:
+          card:
+            type: custom:button-card
+            icon: mdi:chevron-up
+            show_name: false
+            tap_action:
+              action: call-service
+              service: androidtv.adb_command
+              data:
+                entity_id: media_player.fire_tv_192_168_1_131
+                command: UP
+            styles:
+              card:
+                - width: 112px
+                - height: 76px
+                - border-radius: 999px 999px 28px 28px
+                - background: >-
+                    linear-gradient(180deg, rgba(255,255,255,0.16),
+                    rgba(255,255,255,0.05))
+                - box-shadow: >
+                    0 10px 20px rgba(0,0,0,0.35), inset 0 1px 0
+                    rgba(255,255,255,0.16), inset 0 -6px 10px rgba(0,0,0,0.18)
+              icon:
+                - width: 42px
+                - color: white
+        down:
+          card:
+            type: custom:button-card
+            icon: mdi:chevron-down
+            show_name: false
+            tap_action:
+              action: call-service
+              service: androidtv.adb_command
+              data:
+                entity_id: media_player.fire_tv_192_168_1_131
+                command: DOWN
+            styles:
+              card:
+                - width: 112px
+                - height: 76px
+                - border-radius: 28px 28px 999px 999px
+                - background: >-
+                    linear-gradient(180deg, rgba(255,255,255,0.16),
+                    rgba(255,255,255,0.05))
+                - box-shadow: >
+                    0 10px 20px rgba(0,0,0,0.35), inset 0 1px 0
+                    rgba(255,255,255,0.16), inset 0 -6px 10px rgba(0,0,0,0.18)
+              icon:
+                - width: 42px
+                - color: white
+        left:
+          card:
+            type: custom:button-card
+            icon: mdi:chevron-left
+            show_name: false
+            tap_action:
+              action: call-service
+              service: androidtv.adb_command
+              data:
+                entity_id: media_player.fire_tv_192_168_1_131
+                command: LEFT
+            styles:
+              card:
+                - width: 76px
+                - height: 112px
+                - border-radius: 999px 28px 28px 999px
+                - background: >-
+                    linear-gradient(180deg, rgba(255,255,255,0.16),
+                    rgba(255,255,255,0.05))
+                - box-shadow: >
+                    0 10px 20px rgba(0,0,0,0.35), inset 0 1px 0
+                    rgba(255,255,255,0.16), inset 0 -6px 10px rgba(0,0,0,0.18)
+              icon:
+                - width: 42px
+                - color: white
+        right:
+          card:
+            type: custom:button-card
+            icon: mdi:chevron-right
+            show_name: false
+            tap_action:
+              action: call-service
+              service: androidtv.adb_command
+              data:
+                entity_id: media_player.fire_tv_192_168_1_131
+                command: RIGHT
+            styles:
+              card:
+                - width: 76px
+                - height: 112px
+                - border-radius: 28px 999px 999px 28px
+                - background: >-
+                    linear-gradient(180deg, rgba(255,255,255,0.16),
+                    rgba(255,255,255,0.05))
+                - box-shadow: >
+                    0 10px 20px rgba(0,0,0,0.35), inset 0 1px 0
+                    rgba(255,255,255,0.16), inset 0 -6px 10px rgba(0,0,0,0.18)
+              icon:
+                - width: 42px
+                - color: white
+        center:
+          card:
+            type: custom:button-card
+            icon: mdi:circle-medium
+            show_name: false
+            tap_action:
+              action: call-service
+              service: androidtv.adb_command
+              data:
+                entity_id: media_player.fire_tv_192_168_1_131
+                command: CENTER
+            styles:
+              card:
+                - width: 92px
+                - height: 92px
+                - border-radius: 50%
+                - background: >-
+                    radial-gradient(circle at 35% 30%, rgba(255,255,255,0.22),
+                    rgba(255,255,255,0.06) 55%, rgba(0,0,0,0.20) 100%)
+                - box-shadow: >
+                    0 12px 24px rgba(0,0,0,0.40), inset 0 2px 2px
+                    rgba(255,255,255,0.18), inset 0 -8px 14px rgba(0,0,0,0.28)
+              icon:
+                - width: 34px
+                - color: white
+  apps:
+    card:
+      type: grid
+      columns: 4
+      square: false
+      cards:
+        - type: custom:button-card
+          icon: mdi:television-play
+          name: Watch TV
+          tap_action:
+            action: call-service
+            service: script.watch_tv
+          styles:
+            card:
+              - height: 58px
+              - border-radius: 18px
+              - background: >-
+                  linear-gradient(180deg, rgba(255,255,255,0.14),
+                  rgba(255,255,255,0.04))
+              - box-shadow: >
+                  0 10px 18px rgba(0,0,0,0.30), inset 0 1px 0
+                  rgba(255,255,255,0.14)
+              - padding: 6px 10px
+            grid:
+              - grid-template-areas: "\"i\" \"n\""
+              - grid-template-columns: 1fr
+              - grid-template-rows: 24px min-content
+              - row-gap: 6px
+            icon:
+              - width: 22px
+              - color: white
+            name:
+              - color: white
+              - font-size: 14px
+              - justify-self: center
+              - align-self: center
+        - type: custom:button-card
+          icon: mdi:apple
+          name: Apple TV
+          tap_action:
+            action: call-service
+            service: script.apple_tv
+          styles:
+            card:
+              - height: 58px
+              - border-radius: 18px
+              - background: >-
+                  linear-gradient(180deg, rgba(255,255,255,0.14),
+                  rgba(255,255,255,0.04))
+              - box-shadow: >
+                  0 10px 18px rgba(0,0,0,0.30), inset 0 1px 0
+                  rgba(255,255,255,0.14)
+              - padding: 6px 10px
+            grid:
+              - grid-template-areas: "\"i\" \"n\""
+              - grid-template-columns: 1fr
+              - grid-template-rows: 24px min-content
+              - row-gap: 6px
+            icon:
+              - width: 22px
+              - color: white
+            name:
+              - color: white
+              - font-size: 14px
+              - justify-self: center
+              - align-self: center
+        - type: custom:button-card
+          icon: mdi:netflix
+          name: Netflix
+          tap_action:
+            action: call-service
+            service: script.netflix
+          styles:
+            card:
+              - height: 58px
+              - border-radius: 18px
+              - background: >-
+                  linear-gradient(180deg, rgba(255,255,255,0.14),
+                  rgba(255,255,255,0.04))
+              - box-shadow: >
+                  0 10px 18px rgba(0,0,0,0.30), inset 0 1px 0
+                  rgba(255,255,255,0.14)
+              - padding: 6px 10px
+            grid:
+              - grid-template-areas: "\"i\" \"n\""
+              - grid-template-columns: 1fr
+              - grid-template-rows: 24px min-content
+              - row-gap: 6px
+            icon:
+              - width: 22px
+              - color: white
+            name:
+              - color: white
+              - font-size: 14px
+              - justify-self: center
+              - align-self: center
+        - type: custom:button-card
+          icon: mdi:reply
+          name: Back
+          tap_action:
+            action: call-service
+            service: androidtv.adb_command
+            data:
+              entity_id: media_player.fire_tv_192_168_1_131
+              command: BACK
+          styles:
+            card:
+              - height: 58px
+              - border-radius: 18px
+              - background: >-
+                  linear-gradient(180deg, rgba(255,255,255,0.14),
+                  rgba(255,255,255,0.04))
+              - box-shadow: >
+                  0 10px 18px rgba(0,0,0,0.30), inset 0 1px 0
+                  rgba(255,255,255,0.14)
+              - padding: 6px 10px
+            grid:
+              - grid-template-areas: "\"i\" \"n\""
+              - grid-template-columns: 1fr
+              - grid-template-rows: 24px min-content
+              - row-gap: 6px
+            icon:
+              - width: 22px
+              - color: white
+            name:
+              - color: white
+              - font-size: 14px
+              - justify-self: center
+              - align-self: center
+        - type: custom:button-card
+          icon: mdi:volume-minus
+          name: Vol -
+          tap_action:
+            action: call-service
+            service: script.volume_down
+          styles:
+            card:
+              - height: 58px
+              - border-radius: 18px
+              - background: >-
+                  linear-gradient(180deg, rgba(255,255,255,0.14),
+                  rgba(255,255,255,0.04))
+              - box-shadow: >
+                  0 10px 18px rgba(0,0,0,0.30), inset 0 1px 0
+                  rgba(255,255,255,0.14)
+              - padding: 6px 10px
+            grid:
+              - grid-template-areas: "\"i\" \"n\""
+              - grid-template-columns: 1fr
+              - grid-template-rows: 24px min-content
+              - row-gap: 6px
+            icon:
+              - width: 22px
+              - color: white
+            name:
+              - color: white
+              - font-size: 14px
+              - justify-self: center
+              - align-self: center
+        - type: custom:button-card
+          icon: mdi:play-pause
+          name: Play/Pause
+          tap_action:
+            action: call-service
+            service: script.play_pause
+          styles:
+            card:
+              - height: 58px
+              - border-radius: 18px
+              - background: >-
+                  linear-gradient(180deg, rgba(255,255,255,0.14),
+                  rgba(255,255,255,0.04))
+              - box-shadow: >
+                  0 10px 18px rgba(0,0,0,0.30), inset 0 1px 0
+                  rgba(255,255,255,0.14)
+              - padding: 6px 10px
+            grid:
+              - grid-template-areas: "\"i\" \"n\""
+              - grid-template-columns: 1fr
+              - grid-template-rows: 24px min-content
+              - row-gap: 6px
+            icon:
+              - width: 22px
+              - color: white
+            name:
+              - color: white
+              - font-size: 14px
+              - justify-self: center
+              - align-self: center
+        - type: custom:button-card
+          icon: mdi:volume-plus
+          name: Vol +
+          tap_action:
+            action: call-service
+            service: script.volume_up
+          styles:
+            card:
+              - height: 58px
+              - border-radius: 18px
+              - background: >-
+                  linear-gradient(180deg, rgba(255,255,255,0.14),
+                  rgba(255,255,255,0.04))
+              - box-shadow: >
+                  0 10px 18px rgba(0,0,0,0.30), inset 0 1px 0
+                  rgba(255,255,255,0.14)
+              - padding: 6px 10px
+            grid:
+              - grid-template-areas: "\"i\" \"n\""
+              - grid-template-columns: 1fr
+              - grid-template-rows: 24px min-content
+              - row-gap: 6px
+            icon:
+              - width: 22px
+              - color: white
+            name:
+              - color: white
+              - font-size: 14px
+              - justify-self: center
+              - align-self: center
+        - type: custom:button-card
+          icon: mdi:power
+          name: "Off"
+          tap_action:
+            action: call-service
+            service: script.power_off
+          styles:
+            card:
+              - height: 58px
+              - border-radius: 18px
+              - background: >-
+                  linear-gradient(180deg, rgba(255,255,255,0.14),
+                  rgba(255,255,255,0.04))
+              - box-shadow: >
+                  0 10px 18px rgba(0,0,0,0.30), inset 0 1px 0
+                  rgba(255,255,255,0.14)
+              - padding: 6px 10px
+            grid:
+              - grid-template-areas: "\"i\" \"n\""
+              - grid-template-columns: 1fr
+              - grid-template-rows: 24px min-content
+              - row-gap: 6px
+            icon:
+              - width: 22px
+              - color: white
+            name:
+              - color: white
+              - font-size: 14px
+              - justify-self: center
+              - align-self: center
