@@ -12,24 +12,34 @@ import {
   Activity,
   Sun,
   Plug,
+  Power,
   Wifi,
   WifiOff,
   Maximize,
   Minimize,
   AlertTriangle,
   ArrowLeft,
+  Blinds,
+  Wind,
+  Sparkles,
+  Play,
 } from "lucide-react";
 import "./wall-theme.css";
 import { SuperView } from "./SuperView";
+import { WallControls } from "./WallControls";
 
 type CategoryKey =
   | "overview"
   | "lights"
+  | "switches"
   | "climate"
+  | "covers"
+  | "fans"
   | "locks"
   | "security"
   | "media"
   | "cameras"
+  | "scenes"
   | "energy"
   | "sensors";
 
@@ -73,10 +83,30 @@ const CATEGORIES: Category[] = [
     match: (s) => domainOf(s.entity_id) === "light",
   },
   {
+    key: "switches",
+    label: "Switches",
+    icon: Power,
+    match: (s) =>
+      domainOf(s.entity_id) === "switch" ||
+      domainOf(s.entity_id) === "input_boolean",
+  },
+  {
     key: "climate",
     label: "Climate",
     icon: Thermometer,
     match: (s) => domainOf(s.entity_id) === "climate",
+  },
+  {
+    key: "covers",
+    label: "Covers",
+    icon: Blinds,
+    match: (s) => domainOf(s.entity_id) === "cover",
+  },
+  {
+    key: "fans",
+    label: "Fans",
+    icon: Wind,
+    match: (s) => domainOf(s.entity_id) === "fan",
   },
   {
     key: "locks",
@@ -106,6 +136,15 @@ const CATEGORIES: Category[] = [
     label: "Cameras",
     icon: Camera,
     match: (s) => domainOf(s.entity_id) === "camera",
+  },
+  {
+    key: "scenes",
+    label: "Scenes",
+    icon: Sparkles,
+    match: (s) =>
+      domainOf(s.entity_id) === "scene" ||
+      domainOf(s.entity_id) === "script" ||
+      domainOf(s.entity_id) === "automation",
   },
   {
     key: "energy",
