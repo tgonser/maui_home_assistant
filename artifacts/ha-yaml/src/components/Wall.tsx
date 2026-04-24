@@ -27,9 +27,12 @@ import {
 import "./wall-theme.css";
 import { SuperView } from "./SuperView";
 import { WallControls } from "./WallControls";
+import { RoomsView } from "./RoomsView";
+import { Home as HomeIcon } from "lucide-react";
 
 type CategoryKey =
   | "overview"
+  | "rooms"
   | "lights"
   | "switches"
   | "climate"
@@ -76,6 +79,7 @@ const isEnergyEntity = (s: HAState) => {
 
 const CATEGORIES: Category[] = [
   { key: "overview", label: "Overview", icon: Activity, match: () => true },
+  { key: "rooms", label: "Rooms", icon: HomeIcon, match: () => false },
   {
     key: "lights",
     label: "Lighting",
@@ -497,11 +501,16 @@ export function Wall() {
   const counts = useMemo(() => {
     const map = new Map<CategoryKey, number>();
     for (const c of CATEGORIES) {
-      if (c.key === "overview") continue;
+      if (c.key === "overview" || c.key === "rooms") continue;
       map.set(c.key, states.filter(c.match).length);
     }
     return map;
   }, [states]);
+
+  const refresh = async () => {
+    const r = await haStates();
+    if (r.ok) setStates(r.data);
+  };
 
   const filtered = useMemo(() => {
     if (active === "overview") {
@@ -590,7 +599,10 @@ export function Wall() {
         {CATEGORIES.map((c) => {
           const count = counts.get(c.key) ?? 0;
           const isActive = active === c.key;
-          const dim = c.key !== "overview" && count === 0;
+          const dim =
+            c.key !== "overview" && c.key !== "rooms" && count === 0;
+          const showBadge =
+            c.key !== "overview" && c.key !== "rooms" && !dim && count > 0;
           return (
             <button
               key={c.key}
@@ -605,7 +617,7 @@ export function Wall() {
               <span className="text-[11px] tracking-tight font-medium">
                 {c.label}
               </span>
-              {!dim && c.key !== "overview" && count > 0 && (
+              {showBadge && (
                 <span className="badge absolute top-1.5 right-2 text-[10px] tabular-nums">
                   {count}
                 </span>
@@ -667,13 +679,19 @@ export function Wall() {
               {CATEGORIES.find((c) => c.key === active)?.label}
             </h2>
             <span className="wall-section-meta text-sm">
-              {filtered.length} {active === "overview" ? "active" : "items"}
+              {active === "overview"
+                ? `${filtered.length} active`
+                : active === "rooms"
+                  ? ""
+                  : `${filtered.length} items`}
             </span>
           </div>
 
           <AnimatePresence mode="popLayout">
             {active === "overview" ? (
               <SuperView key="super" states={states} />
+            ) : active === "rooms" ? (
+              <RoomsView key="rooms" states={states} refresh={refresh} />
             ) : filtered.length === 0 ? (
               <motion.div
                 key="empty"
