@@ -1,14 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { Lightbulb, Power, Loader2, Pencil, ChevronRight } from "lucide-react";
+import { Lightbulb, Power, Loader2, Pencil, ChevronRight, X } from "lucide-react";
 import {
   useRegistry,
   deriveRooms,
@@ -279,6 +273,7 @@ function RoomDetailSheet({
   const [masterPct, setMasterPct] = useState<number | null>(null);
   const [pendingMaster, setPendingMaster] = useState(false);
   const upstreamAvg = room?.avgPctOfOn ?? 0;
+  const panelRef = useRef<HTMLDivElement | null>(null);
 
   // Reset local master slider whenever the open room changes
   useEffect(() => {
@@ -291,13 +286,29 @@ function RoomDetailSheet({
     if (Math.abs(upstreamAvg - masterPct) <= 8) setMasterPct(null);
   }, [upstreamAvg, masterPct]);
 
-  if (!room) {
-    return (
-      <Sheet open={false} onOpenChange={(o) => !o && onClose()}>
-        <SheetContent />
-      </Sheet>
-    );
-  }
+  useEffect(() => {
+    if (!room) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    const onDown = (e: MouseEvent) => {
+      if (
+        panelRef.current &&
+        e.target instanceof Node &&
+        !panelRef.current.contains(e.target)
+      ) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("mousedown", onDown);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("mousedown", onDown);
+    };
+  }, [room, onClose]);
+
+  if (!room) return null;
 
   const sortedLights = [...room.lights].sort((a, b) =>
     friendlyName(a.state).localeCompare(friendlyName(b.state)),
@@ -312,31 +323,45 @@ function RoomDetailSheet({
       await refresh();
     } finally {
       setPendingMaster(false);
-      // Keep the local value visible; the useEffect above (or a 5s safety
-      // timeout) will clear it once HA catches up or if the call silently
-      // failed.
       window.setTimeout(() => setMasterPct(null), 5000);
     }
   };
 
   return (
-    <Sheet open={!!room} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent
-        side="right"
-        className="wall-sheet w-full sm:max-w-md overflow-y-auto"
-      >
-        <SheetHeader>
-          <SheetTitle className="text-2xl">{displayName}</SheetTitle>
-          <div className="text-xs uppercase tracking-wider text-[var(--cream-muted)]">
+    <div
+      ref={panelRef}
+      role="dialog"
+      aria-modal="false"
+      aria-label={`${displayName} lights`}
+      className="wall-controls fixed top-0 right-0 bottom-0 z-40 w-[92vw] sm:w-[440px] max-w-[440px] overflow-y-auto shadow-2xl animate-in slide-in-from-right duration-300"
+    >
+      <div className="p-6 pb-4 border-b border-[rgba(232,193,120,0.18)] flex items-start gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="text-2xl font-medium text-[var(--cream)] truncate">
+            {displayName}
+          </div>
+          <div className="text-xs uppercase tracking-wider text-[var(--cream-muted)] mt-1">
             {room.totalLights}{" "}
             {room.totalLights === 1 ? "light" : "lights"} · {room.onCount} on
           </div>
-        </SheetHeader>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close room controls"
+          className="p-2 rounded-lg text-[var(--cream-muted)] hover:text-[var(--cream)] hover:bg-[rgba(232,193,120,0.08)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cream)]/60 shrink-0"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
 
-        <div className="mt-6 p-4 rounded-lg bg-white/5 border border-white/10">
+      <div className="p-6 space-y-6">
+        <div className="p-4 rounded-xl bg-[rgba(0,0,0,0.25)] border border-[rgba(232,193,120,0.12)]">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-medium">All lights in room</span>
-            <span className="text-xs tabular-nums text-[var(--cream-muted)]">
+            <span className="text-sm font-medium text-[var(--cream)]">
+              All lights in room
+            </span>
+            <span className="text-sm tabular-nums text-[var(--brass-bright)] font-semibold">
               {effectiveMaster}%
             </span>
           </div>
@@ -369,7 +394,7 @@ function RoomDetailSheet({
           </div>
         </div>
 
-        <div className="mt-6 space-y-2">
+        <div className="space-y-2">
           {sortedLights.length === 0 ? (
             <div className="text-center text-[var(--cream-muted)] py-8">
               No lights in this room.
@@ -384,8 +409,8 @@ function RoomDetailSheet({
             ))
           )}
         </div>
-      </SheetContent>
-    </Sheet>
+      </div>
+    </div>
   );
 }
 
@@ -434,10 +459,10 @@ function LightRow({
 
   return (
     <div
-      className={`p-3 rounded-lg border transition-colors ${
+      className={`p-3 rounded-xl border transition-colors ${
         on
-          ? "bg-[var(--cream)]/10 border-[var(--cream)]/30"
-          : "bg-white/5 border-white/10"
+          ? "bg-[rgba(201,153,74,0.12)] border-[rgba(232,193,120,0.28)]"
+          : "bg-[rgba(0,0,0,0.25)] border-[rgba(232,193,120,0.12)]"
       }`}
     >
       <div className="flex items-center gap-3">
@@ -457,7 +482,10 @@ function LightRow({
           )}
         </button>
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-medium truncate" title={name}>
+          <div
+            className="text-sm font-medium truncate text-[var(--cream)]"
+            title={name}
+          >
             {name}
           </div>
           <div className="text-[10px] uppercase tabular-nums text-[var(--cream-muted)]">
