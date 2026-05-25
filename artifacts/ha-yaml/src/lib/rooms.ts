@@ -208,6 +208,30 @@ export async function turnRoomOff(room: Room) {
   await haCallService("light", "turn_off", { entity_id: ids });
 }
 
+/** Set a single light to a specific brightness percentage (0 = off). */
+export async function setLightBrightness(entityId: string, pct: number) {
+  if (pct <= 0) {
+    await haCallService("light", "turn_off", { entity_id: entityId });
+    return;
+  }
+  await haCallService("light", "turn_on", {
+    entity_id: entityId,
+    brightness_pct: Math.max(1, Math.min(100, Math.round(pct))),
+  });
+}
+
+/** Toggle a single light on (to 35%) or off. */
+export async function toggleLight(entityId: string, on: boolean) {
+  if (on) {
+    await haCallService("light", "turn_on", {
+      entity_id: entityId,
+      brightness_pct: ROOM_ON_THRESHOLD_PCT,
+    });
+  } else {
+    await haCallService("light", "turn_off", { entity_id: entityId });
+  }
+}
+
 /** Set every light in the room to a specific brightness percentage (0 = off). */
 export async function setRoomBrightness(room: Room, pct: number) {
   if (pct <= 0) return turnRoomOff(room);
