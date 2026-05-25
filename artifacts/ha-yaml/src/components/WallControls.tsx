@@ -1143,7 +1143,9 @@ function RemoteControls({
           aria-label="Apps"
           title="Apps"
           className="wall-btn h-12"
-          onClick={() => nav("HOME", "MENU")}
+          onClick={() =>
+            isAndroidTV ? launch("com.amazon.tv.launcher") : sendKey("MENU")
+          }
         >
           <MenuIcon className="w-4 h-4 mr-1" /> Apps
         </Button>
