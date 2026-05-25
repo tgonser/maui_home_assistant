@@ -1,0 +1,408 @@
+type: grid
+cards:
+  - type: heading
+    heading: New section
+  - type: vertical-stack
+    cards:
+      - type: custom:button-card
+        entity: media_player.fire_tv_192_168_1_131
+        name: Atrium TV
+        icon: mdi:television
+        show_state: true
+        tap_action:
+          action: more-info
+        styles:
+          card:
+            - border-radius: 26px
+            - padding: 18px 20px
+            - background: >-
+                linear-gradient(180deg, rgba(18,22,38,0.98) 0%,
+                rgba(5,9,22,0.98) 100%)
+            - color: white
+            - box-shadow: 0 10px 28px rgba(0,0,0,0.28)
+          grid:
+            - grid-template-areas: "\"i n\" \"i s\""
+            - grid-template-columns: 40px 1fr
+            - grid-template-rows: min-content min-content
+          icon:
+            - width: 28px
+            - color: rgba(255,255,255,0.95)
+          name:
+            - justify-self: start
+            - font-size: 28px
+            - font-weight: 700
+            - color: rgba(255,255,255,0.95)
+          state:
+            - justify-self: start
+            - font-size: 14px
+            - color: rgba(255,255,255,0.75)
+      - type: grid
+        columns: 4
+        square: false
+        cards:
+          - type: custom:button-card
+            name: Live TV
+            icon: mdi:television-play
+            tap_action:
+              action: call-service
+              service: script.turn_on
+              target:
+                entity_id: script.watch_tv
+            styles:
+              card:
+                - height: 74px
+                - border-radius: 22px
+                - background: >-
+                    linear-gradient(180deg, rgba(54,64,110,0.95) 0%,
+                    rgba(34,40,72,0.95) 100%)
+                - color: white
+                - box-shadow: 0 8px 20px rgba(0,0,0,0.22)
+              icon:
+                - width: 28px
+                - color: rgba(255,255,255,0.95)
+              name:
+                - font-size: 18px
+                - font-weight: 600
+                - color: rgba(255,255,255,0.9)
+          - type: custom:button-card
+            name: Apple TV
+            icon: mdi:apple
+            tap_action:
+              action: call-service
+              service: script.turn_on
+              target:
+                entity_id: script.apple_tv
+            styles:
+              card:
+                - height: 74px
+                - border-radius: 22px
+                - background: >-
+                    linear-gradient(180deg, rgba(54,64,110,0.95) 0%,
+                    rgba(34,40,72,0.95) 100%)
+                - color: white
+                - box-shadow: 0 8px 20px rgba(0,0,0,0.22)
+              icon:
+                - width: 28px
+                - color: rgba(255,255,255,0.95)
+              name:
+                - font-size: 18px
+                - font-weight: 600
+                - color: rgba(255,255,255,0.9)
+          - type: custom:button-card
+            name: Netflix
+            icon: mdi:netflix
+            tap_action:
+              action: call-service
+              service: script.turn_on
+              target:
+                entity_id: script.netflix
+            styles:
+              card:
+                - height: 74px
+                - border-radius: 22px
+                - background: >-
+                    linear-gradient(180deg, rgba(54,64,110,0.95) 0%,
+                    rgba(34,40,72,0.95) 100%)
+                - color: white
+                - box-shadow: 0 8px 20px rgba(0,0,0,0.22)
+              icon:
+                - width: 28px
+                - color: rgba(255,255,255,0.95)
+              name:
+                - font-size: 18px
+                - font-weight: 600
+                - color: rgba(255,255,255,0.9)
+          - type: custom:button-card
+            name: Max
+            icon: mdi:movie-open
+            tap_action:
+              action: call-service
+              service: script.turn_on
+              target:
+                entity_id: script.max
+            styles:
+              card:
+                - height: 74px
+                - border-radius: 22px
+                - background: >-
+                    linear-gradient(180deg, rgba(54,64,110,0.95) 0%,
+                    rgba(34,40,72,0.95) 100%)
+                - color: white
+                - box-shadow: 0 8px 20px rgba(0,0,0,0.22)
+              icon:
+                - width: 28px
+                - color: rgba(255,255,255,0.95)
+              name:
+                - font-size: 18px
+                - font-weight: 600
+                - color: rgba(255,255,255,0.9)
+      - type: custom:button-card
+        styles:
+          card:
+            - border-radius: 30px
+            - padding: 24px
+            - background: >-
+                radial-gradient(circle at center, rgba(42,48,70,0.85) 0%,
+                rgba(13,17,30,0.98) 75%)
+            - box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05)
+          grid:
+            - grid-template-areas: "\". up .\" \"left ok right\" \". down .\""
+            - grid-template-columns: 1fr 116px 1fr
+            - grid-template-rows: 108px 108px 108px
+        custom_fields:
+          up:
+            card:
+              type: custom:button-card
+              icon: mdi:chevron-up
+              tap_action:
+                action: call-service
+                service: androidtv.adb_command
+                data:
+                  entity_id: media_player.fire_tv_192_168_1_131
+                  command: UP
+              styles:
+                card:
+                  - height: 92px
+                  - width: 116px
+                  - border-radius: 28px 28px 18px 18px
+                  - background: >-
+                      linear-gradient(180deg, rgba(68,73,90,0.95) 0%,
+                      rgba(44,49,66,0.95) 100%)
+                  - box-shadow: 0 10px 18px rgba(0,0,0,0.24)
+                icon:
+                  - width: 40px
+                  - color: rgba(255,255,255,0.95)
+          left:
+            card:
+              type: custom:button-card
+              icon: mdi:chevron-left
+              tap_action:
+                action: call-service
+                service: androidtv.adb_command
+                data:
+                  entity_id: media_player.fire_tv_192_168_1_131
+                  command: LEFT
+              styles:
+                card:
+                  - height: 116px
+                  - border-radius: 28px 18px 18px 28px
+                  - background: >-
+                      linear-gradient(180deg, rgba(68,73,90,0.95) 0%,
+                      rgba(44,49,66,0.95) 100%)
+                  - box-shadow: 0 10px 18px rgba(0,0,0,0.24)
+                icon:
+                  - width: 40px
+                  - color: rgba(255,255,255,0.95)
+          ok:
+            card:
+              type: custom:button-card
+              icon: mdi:circle-medium
+              tap_action:
+                action: call-service
+                service: androidtv.adb_command
+                data:
+                  entity_id: media_player.fire_tv_192_168_1_131
+                  command: CENTER
+              styles:
+                card:
+                  - height: 116px
+                  - width: 116px
+                  - border-radius: 58px
+                  - background: >-
+                      radial-gradient(circle, rgba(96,99,112,1) 0%,
+                      rgba(51,56,72,1) 70%)
+                  - box-shadow: 0 14px 24px rgba(0,0,0,0.28)
+                icon:
+                  - width: 34px
+                  - color: rgba(255,255,255,0.95)
+          right:
+            card:
+              type: custom:button-card
+              icon: mdi:chevron-right
+              tap_action:
+                action: call-service
+                service: androidtv.adb_command
+                data:
+                  entity_id: media_player.fire_tv_192_168_1_131
+                  command: RIGHT
+              styles:
+                card:
+                  - height: 116px
+                  - border-radius: 18px 28px 28px 18px
+                  - background: >-
+                      linear-gradient(180deg, rgba(68,73,90,0.95) 0%,
+                      rgba(44,49,66,0.95) 100%)
+                  - box-shadow: 0 10px 18px rgba(0,0,0,0.24)
+                icon:
+                  - width: 40px
+                  - color: rgba(255,255,255,0.95)
+          down:
+            card:
+              type: custom:button-card
+              icon: mdi:chevron-down
+              tap_action:
+                action: call-service
+                service: androidtv.adb_command
+                data:
+                  entity_id: media_player.fire_tv_192_168_1_131
+                  command: DOWN
+              styles:
+                card:
+                  - height: 92px
+                  - width: 116px
+                  - border-radius: 18px 18px 28px 28px
+                  - background: >-
+                      linear-gradient(180deg, rgba(68,73,90,0.95) 0%,
+                      rgba(44,49,66,0.95) 100%)
+                  - box-shadow: 0 10px 18px rgba(0,0,0,0.24)
+                icon:
+                  - width: 40px
+                  - color: rgba(255,255,255,0.95)
+      - type: grid
+        columns: 3
+        square: false
+        cards:
+          - type: custom:button-card
+            icon: mdi:reply
+            name: Back
+            tap_action:
+              action: call-service
+              service: androidtv.adb_command
+              data:
+                entity_id: media_player.fire_tv_192_168_1_131
+                command: BACK
+            styles:
+              card:
+                - height: 78px
+                - border-radius: 20px
+                - background: rgba(36,41,58,0.95)
+              icon:
+                - width: 28px
+                - color: rgba(255,255,255,0.95)
+              name:
+                - font-size: 16px
+                - color: rgba(255,255,255,0.85)
+          - type: custom:button-card
+            icon: mdi:play-pause
+            name: Play/Pause
+            tap_action:
+              action: call-service
+              service: script.turn_on
+              target:
+                entity_id: script.play_pause
+            styles:
+              card:
+                - height: 78px
+                - border-radius: 20px
+                - background: rgba(36,41,58,0.95)
+              icon:
+                - width: 28px
+                - color: rgba(255,255,255,0.95)
+              name:
+                - font-size: 16px
+                - color: rgba(255,255,255,0.85)
+          - type: custom:button-card
+            icon: mdi:home
+            name: Home
+            tap_action:
+              action: call-service
+              service: androidtv.adb_command
+              data:
+                entity_id: media_player.fire_tv_192_168_1_131
+                command: HOME
+            styles:
+              card:
+                - height: 78px
+                - border-radius: 20px
+                - background: rgba(36,41,58,0.95)
+              icon:
+                - width: 28px
+                - color: rgba(255,255,255,0.95)
+              name:
+                - font-size: 16px
+                - color: rgba(255,255,255,0.85)
+      - type: grid
+        columns: 3
+        square: false
+        cards:
+          - type: custom:button-card
+            icon: mdi:volume-minus
+            name: Vol -
+            tap_action:
+              action: call-service
+              service: script.turn_on
+              target:
+                entity_id: script.volume_down
+            styles:
+              card:
+                - height: 78px
+                - border-radius: 20px
+                - background: rgba(36,41,58,0.95)
+              icon:
+                - width: 28px
+                - color: rgba(255,255,255,0.95)
+              name:
+                - font-size: 16px
+                - color: rgba(255,255,255,0.85)
+          - type: custom:button-card
+            icon: mdi:motion-play
+            name: Apps
+            tap_action:
+              action: call-service
+              service: androidtv.adb_command
+              data:
+                entity_id: media_player.fire_tv_192_168_1_131
+                command: HOME
+            styles:
+              card:
+                - height: 78px
+                - border-radius: 20px
+                - background: rgba(36,41,58,0.95)
+              icon:
+                - width: 28px
+                - color: rgba(255,255,255,0.95)
+              name:
+                - font-size: 16px
+                - color: rgba(255,255,255,0.85)
+          - type: custom:button-card
+            icon: mdi:volume-plus
+            name: Vol +
+            tap_action:
+              action: call-service
+              service: script.turn_on
+              target:
+                entity_id: script.volume_up
+            styles:
+              card:
+                - height: 78px
+                - border-radius: 20px
+                - background: rgba(36,41,58,0.95)
+              icon:
+                - width: 28px
+                - color: rgba(255,255,255,0.95)
+              name:
+                - font-size: 16px
+                - color: rgba(255,255,255,0.85)
+      - type: custom:button-card
+        icon: mdi:power
+        name: Power Off
+        tap_action:
+          action: call-service
+          service: script.turn_on
+          target:
+            entity_id: script.power_off
+        styles:
+          card:
+            - height: 78px
+            - border-radius: 22px
+            - background: >-
+                linear-gradient(180deg, rgba(82,38,38,0.95) 0%,
+                rgba(58,24,24,0.95) 100%)
+            - box-shadow: 0 8px 20px rgba(0,0,0,0.22)
+          icon:
+            - width: 28px
+            - color: rgba(255,255,255,0.95)
+          name:
+            - font-size: 18px
+            - font-weight: 600
+            - color: rgba(255,255,255,0.92)

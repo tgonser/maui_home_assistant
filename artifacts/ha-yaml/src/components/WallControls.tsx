@@ -993,27 +993,43 @@ function RemoteControls({
     entity.state === "off" ||
     entity.state === "standby" ||
     entity.state === "unavailable";
-  // AndroidTV / Fire TV media_player entities expose `app_id` and `app_name`.
-  // Use that to decide whether to surface the app shortcuts + ADB-based wake.
+  // AndroidTV / Fire TV detection. `app_id`/`app_name` only appear when a
+  // session is active, so we also match the AndroidTV integration's other
+  // tells (`adb_response`, `hdmi_input`) and the conventional entity id
+  // pattern (`fire_tv_*`, `androidtv_*`). Without this broadening, an idle
+  // Fire TV gets routed down the non-ADB fallback path and the app shortcut
+  // row disappears.
+  const aid = entity.entity_id;
   const isAndroidTV =
     entity.attributes.app_id !== undefined ||
-    entity.attributes.app_name !== undefined;
+    entity.attributes.app_name !== undefined ||
+    entity.attributes.adb_response !== undefined ||
+    entity.attributes.hdmi_input !== undefined ||
+    /^media_player\.(fire_tv|androidtv|android_tv)/.test(aid);
 
   const sendKey = (command: string) =>
     call("remote", "send_command", { entity_id: remoteId, command });
   const sendAdb = (command: string) =>
     call("androidtv", "adb_command", { command });
   const launch = (pkg: string) => sendAdb(`monkey -p ${pkg} 1`);
+  // Match the user's working Lovelace card: on Android TV / Fire TV use
+  // bare key names via androidtv.adb_command (UP/DOWN/LEFT/RIGHT/CENTER/
+  // BACK/HOME/MENU). Fall back to remote.send_command with DPAD_* for
+  // other remote integrations (Roku, generic).
+  const nav = (adbKey: string, dpadKey?: string) =>
+    isAndroidTV ? sendAdb(adbKey) : sendKey(dpadKey ?? adbKey);
 
   const KeyButton = ({
     label,
     icon: Icon,
-    command,
+    adbKey,
+    dpadKey,
     className = "",
   }: {
     label: string;
     icon: typeof Play;
-    command: string;
+    adbKey: string;
+    dpadKey?: string;
     className?: string;
   }) => (
     <Button
@@ -1021,7 +1037,7 @@ function RemoteControls({
       aria-label={label}
       title={label}
       className={`wall-btn h-12 ${className}`}
-      onClick={() => sendKey(command)}
+      onClick={() => nav(adbKey, dpadKey)}
     >
       <Icon className="w-5 h-5" />
     </Button>
@@ -1060,32 +1076,51 @@ function RemoteControls({
       {/* D-pad: 3x3 grid with arrows around a center OK */}
       <div className="grid grid-cols-3 gap-2">
         <div />
-        <KeyButton label="Up" icon={ArrowUp} command="DPAD_UP" />
+        <KeyButton label="Up" icon={ArrowUp} adbKey="UP" dpadKey="DPAD_UP" />
         <div />
-        <KeyButton label="Left" icon={ArrowLeft} command="DPAD_LEFT" />
+        <KeyButton
+          label="Left"
+          icon={ArrowLeft}
+          adbKey="LEFT"
+          dpadKey="DPAD_LEFT"
+        />
         <Button
           variant="outline"
           aria-label="OK"
           title="OK"
           className="wall-btn-active h-12 font-semibold"
-          onClick={() => sendKey("DPAD_CENTER")}
+          onClick={() => nav("CENTER", "DPAD_CENTER")}
         >
           OK
         </Button>
-        <KeyButton label="Right" icon={ArrowRight} command="DPAD_RIGHT" />
+        <KeyButton
+          label="Right"
+          icon={ArrowRight}
+          adbKey="RIGHT"
+          dpadKey="DPAD_RIGHT"
+        />
         <div />
-        <KeyButton label="Down" icon={ArrowDown} command="DPAD_DOWN" />
+        <KeyButton
+          label="Down"
+          icon={ArrowDown}
+          adbKey="DOWN"
+          dpadKey="DPAD_DOWN"
+        />
         <div />
       </div>
 
       <div className="grid grid-cols-3 gap-2">
-        <KeyButton label="Back" icon={Undo2} command="BACK" />
-        <KeyButton
-          label="Play / Pause"
-          icon={Play}
-          command="MEDIA_PLAY_PAUSE"
-        />
-        <KeyButton label="Home" icon={HomeIcon} command="HOME" />
+        <KeyButton label="Back" icon={Undo2} adbKey="BACK" />
+        <Button
+          variant="outline"
+          aria-label="Play / Pause"
+          title="Play / Pause"
+          className="wall-btn h-12"
+          onClick={() => call("media_player", "media_play_pause")}
+        >
+          <Play className="w-5 h-5" />
+        </Button>
+        <KeyButton label="Home" icon={HomeIcon} adbKey="HOME" />
       </div>
 
       <div className="grid grid-cols-3 gap-2">
@@ -1094,7 +1129,11 @@ function RemoteControls({
           aria-label="Volume down"
           title="Volume down"
           className="wall-btn h-12"
-          onClick={() => call("media_player", "volume_down")}
+          onClick={() =>
+            isAndroidTV
+              ? sendAdb("VOLUME_DOWN")
+              : call("media_player", "volume_down")
+          }
         >
           <Minus className="w-4 h-4 mr-1" />
           <Volume1 className="w-4 h-4" />
@@ -1104,9 +1143,7 @@ function RemoteControls({
           aria-label="Apps"
           title="Apps"
           className="wall-btn h-12"
-          onClick={() =>
-            isAndroidTV ? launch("com.amazon.tv.launcher") : sendKey("MENU")
-          }
+          onClick={() => nav("HOME", "MENU")}
         >
           <MenuIcon className="w-4 h-4 mr-1" /> Apps
         </Button>
@@ -1115,7 +1152,11 @@ function RemoteControls({
           aria-label="Volume up"
           title="Volume up"
           className="wall-btn h-12"
-          onClick={() => call("media_player", "volume_up")}
+          onClick={() =>
+            isAndroidTV
+              ? sendAdb("VOLUME_UP")
+              : call("media_player", "volume_up")
+          }
         >
           <Plus className="w-4 h-4 mr-1" />
           <Volume2 className="w-4 h-4" />
