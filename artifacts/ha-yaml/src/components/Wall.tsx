@@ -225,6 +225,67 @@ const isTvMedia = (s: HAState) => {
   return TV_PATTERNS.some((re) => re.test(name) || re.test(id));
 };
 
+// Canonical Bluesound music zones in this home. Order shown on the kiosk.
+// The Great Room TV speaker is included intentionally so it lives in Music,
+// not the TVs tab.
+export const MUSIC_ZONES: string[] = [
+  "Great Room",
+  "Great Room TV",
+  "Great Room Lanai",
+  "BBQ",
+  "Master Bed",
+  "Master Sitting",
+  "Master Bath",
+  "Master Bath Lanai",
+  "Master Lanai",
+];
+
+// Normalize for fuzzy matching: lowercase, strip common Bluesound product
+// words, then collapse to space-separated alphanumeric tokens.
+const normForZone = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(
+      /\b(bluesound|pulse|node|powernode|player|speaker|amp|flex|mini|sub|2i|soundbar)\b/g,
+      "",
+    )
+    .replace(/[^a-z0-9]+/g, " ")
+    // Common HA/Bluesound naming variants — fold to the canonical token used
+    // in MUSIC_ZONES so "Master Bedroom" matches "Master Bed" etc.
+    .replace(/\bbedroom\b/g, "bed")
+    .replace(/\bbathroom\b/g, "bath")
+    .replace(/\bbarbecue\b/g, "bbq")
+    .replace(/\bbar b q\b/g, "bbq")
+    .replace(/\blounge\b/g, "sitting")
+    .replace(/\bporch\b/g, "lanai")
+    .replace(/\bpatio\b/g, "lanai")
+    .replace(/\bdeck\b/g, "lanai")
+    .replace(/\s+/g, " ")
+    .trim();
+
+// Returns the best-matching music zone label for an entity, or null. The
+// entity matches a zone when every word in the (normalized) zone label is
+// present in the (normalized) entity name. When several zones match (e.g.
+// "Great Room" and "Great Room TV"), the more specific (longer) zone wins.
+export function matchMusicZone(s: HAState): string | null {
+  if (domainOf(s.entity_id) !== "media_player") return null;
+  const name = normForZone(
+    (s.attributes.friendly_name as string | undefined) ?? s.entity_id,
+  );
+  const nameTokens = new Set(name.split(/\s+/).filter(Boolean));
+  let best: { zone: string; size: number } | null = null;
+  for (const zone of MUSIC_ZONES) {
+    const tokens = normForZone(zone).split(/\s+/).filter(Boolean);
+    if (tokens.length === 0) continue;
+    if (tokens.every((t) => nameTokens.has(t))) {
+      if (!best || tokens.length > best.size) {
+        best = { zone, size: tokens.length };
+      }
+    }
+  }
+  return best?.zone ?? null;
+}
+
 export const isSceneToggle = (s: HAState) => {
   const name = (
     (s.attributes.friendly_name as string | undefined) ?? ""
@@ -318,7 +379,7 @@ const CATEGORIES: Category[] = [
     match: (s) =>
       domainOf(s.entity_id) === "media_player" &&
       !isCameraMedia(s) &&
-      !isTvMedia(s),
+      (matchMusicZone(s) !== null || !isTvMedia(s)),
   },
   {
     key: "tvs",
@@ -327,7 +388,8 @@ const CATEGORIES: Category[] = [
     match: (s) =>
       domainOf(s.entity_id) === "media_player" &&
       !isCameraMedia(s) &&
-      isTvMedia(s),
+      isTvMedia(s) &&
+      matchMusicZone(s) === null,
   },
   {
     key: "cameras",
@@ -782,6 +844,29 @@ export function Wall() {
       .sort((a, b) => friendly(a).localeCompare(friendly(b)));
   }, [states, active]);
 
+  // For the Music tab, split entities into the canonical zone tiles (top) and
+  // everything else (below). Each zone tile renders the matched player when
+  // present, or a dimmed placeholder so the kiosk layout is stable.
+  const musicZoneEntries = useMemo(() => {
+    return MUSIC_ZONES.map((zone) => {
+      const player = filtered.find((s) => matchMusicZone(s) === zone) ?? null;
+      return { zone, player };
+    });
+  }, [filtered]);
+  const zonePlayerIds = useMemo(
+    () =>
+      new Set(
+        musicZoneEntries
+          .map((e) => e.player?.entity_id)
+          .filter(Boolean) as string[],
+      ),
+    [musicZoneEntries],
+  );
+  const otherMusic = useMemo(
+    () => filtered.filter((s) => !zonePlayerIds.has(s.entity_id)),
+    [filtered, zonePlayerIds],
+  );
+
   const toggleFs = () => {
     if (document.fullscreenElement) document.exitFullscreen();
     else document.documentElement.requestFullscreen().catch(() => {});
@@ -933,6 +1018,79 @@ export function Wall() {
                 entities={filtered}
                 renderTile={clickableTile}
               />
+            ) : active === "media" ? (
+              <motion.div
+                key="media"
+                layout
+                className="space-y-8"
+              >
+                <section>
+                  <div className="text-xs uppercase tracking-[0.18em] text-[var(--cream-muted)] mb-3 flex items-center gap-2">
+                    <span>Music Zones</span>
+                    <span className="text-[var(--brass)]">·</span>
+                    <span className="tabular-nums">
+                      {musicZoneEntries.filter((e) => e.player).length}/{MUSIC_ZONES.length}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 auto-rows-[110px] gap-3">
+                    {musicZoneEntries.map(({ zone, player }) =>
+                      player ? (
+                        <button
+                          type="button"
+                          key={zone}
+                          onClick={() => setOpenEntity(player)}
+                          aria-label={`Open ${zone}`}
+                          className="text-left rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cream)]/60"
+                        >
+                          {renderTile({
+                            ...player,
+                            attributes: {
+                              ...player.attributes,
+                              friendly_name: zone,
+                            },
+                          } as HAState)}
+                        </button>
+                      ) : (
+                        <div
+                          key={zone}
+                          role="status"
+                          aria-label={`${zone} music zone is offline — no matching media player found`}
+                          className="wall-tile wall-tile--dim rounded-2xl p-3 min-h-[110px] flex flex-col justify-between opacity-40"
+                        >
+                          <div
+                            aria-hidden="true"
+                            className="text-xs uppercase tracking-wider text-[var(--cream-muted)]"
+                          >
+                            Music Zone
+                          </div>
+                          <div
+                            aria-hidden="true"
+                            className="text-sm font-medium truncate"
+                          >
+                            {zone}
+                          </div>
+                          <div
+                            aria-hidden="true"
+                            className="text-[10px] text-[var(--cream-muted)]"
+                          >
+                            offline
+                          </div>
+                        </div>
+                      ),
+                    )}
+                  </div>
+                </section>
+                {otherMusic.length > 0 && (
+                  <section>
+                    <div className="text-xs uppercase tracking-[0.18em] text-[var(--cream-muted)] mb-3">
+                      Other Players
+                    </div>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 auto-rows-[110px] gap-3">
+                      {otherMusic.map(clickableTile)}
+                    </div>
+                  </section>
+                )}
+              </motion.div>
             ) : filtered.length === 0 ? (
               <motion.div
                 key="empty"
@@ -958,6 +1116,7 @@ export function Wall() {
       </main>
       <WallControls
         entity={openEntity}
+        states={states}
         onClose={() => setOpenEntity(null)}
         onChanged={refresh}
       />

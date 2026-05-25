@@ -28,8 +28,11 @@ import {
   Minus,
   Loader2,
   ShieldCheck,
+  Radio,
+  Users,
 } from "lucide-react";
 import { haCallService, type HAState } from "@/lib/ha";
+import { MUSIC_ZONES, matchMusicZone } from "./Wall";
 
 const friendly = (s: HAState) =>
   (s.attributes.friendly_name as string | undefined) ?? s.entity_id;
@@ -37,11 +40,17 @@ const domainOf = (id: string) => id.split(".")[0] ?? "";
 
 type Props = {
   entity: HAState | null;
+  states?: HAState[];
   onClose: () => void;
   onChanged: () => Promise<void> | void;
 };
 
-export function WallControls({ entity, onClose, onChanged }: Props) {
+export function WallControls({
+  entity,
+  states = [],
+  onClose,
+  onChanged,
+}: Props) {
   const [busy, setBusy] = useState(false);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const aliases = useEntityAliases((s) => s.aliases);
@@ -157,7 +166,7 @@ export function WallControls({ entity, onClose, onChanged }: Props) {
           {d === "lock" && <LockControls entity={entity} call={call} />}
           {d === "cover" && <CoverControls entity={entity} call={call} />}
           {d === "media_player" && (
-            <MediaControls entity={entity} call={call} />
+            <MediaControls entity={entity} states={states} call={call} />
           )}
           {d === "scene" && (
             <RunButton
@@ -564,13 +573,26 @@ function CoverControls({ entity, call }: { entity: HAState; call: CallFn }) {
   );
 }
 
-function MediaControls({ entity, call }: { entity: HAState; call: CallFn }) {
+function MediaControls({
+  entity,
+  states,
+  call,
+}: {
+  entity: HAState;
+  states: HAState[];
+  call: CallFn;
+}) {
   const playing = entity.state === "playing";
   const off = entity.state === "off" || entity.state === "standby";
   const volume = entity.attributes.volume_level as number | undefined;
   const muted = entity.attributes.is_volume_muted as boolean | undefined;
   const title = entity.attributes.media_title as string | undefined;
   const artist = entity.attributes.media_artist as string | undefined;
+  const sourceList = entity.attributes.source_list as string[] | undefined;
+  const currentSource = entity.attributes.source as string | undefined;
+  const groupMembers =
+    (entity.attributes.group_members as string[] | undefined) ?? [];
+  const selfZone = matchMusicZone(entity);
 
   return (
     <div className="space-y-4">
@@ -664,6 +686,123 @@ function MediaControls({ entity, call }: { entity: HAState; call: CallFn }) {
             </Button>
           </div>
         </div>
+      )}
+
+      {sourceList && sourceList.length > 0 && (
+        <div className="space-y-2 p-4 rounded-xl bg-[rgba(0,0,0,0.25)] border border-[rgba(232,193,120,0.12)]">
+          <div className="flex items-center gap-2 text-sm text-[var(--cream-muted)]">
+            <Radio className="w-4 h-4" />
+            <span>Source</span>
+          </div>
+          <select
+            value={currentSource ?? ""}
+            onChange={(e) =>
+              call("media_player", "select_source", { source: e.target.value })
+            }
+            className="w-full bg-[rgba(0,0,0,0.4)] border border-[rgba(232,193,120,0.2)] text-[var(--cream)] rounded-md px-3 py-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cream)]/60"
+          >
+            {currentSource === undefined && (
+              <option value="">— Choose a source —</option>
+            )}
+            {sourceList.map((src) => (
+              <option key={src} value={src}>
+                {src}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {selfZone && (
+        <GroupPicker entity={entity} states={states} call={call}
+          groupMembers={groupMembers} />
+      )}
+    </div>
+  );
+}
+
+function GroupPicker({
+  entity,
+  states,
+  call,
+  groupMembers,
+}: {
+  entity: HAState;
+  states: HAState[];
+  call: CallFn;
+  groupMembers: string[];
+}) {
+  // Find one media_player entity per music zone (other than ourselves).
+  const zonePlayers = MUSIC_ZONES.map((zone) => {
+    const player = states.find(
+      (s) =>
+        s.entity_id !== entity.entity_id &&
+        matchMusicZone(s) === zone,
+    );
+    return player ? { zone, player } : null;
+  }).filter((x): x is { zone: string; player: HAState } => x !== null);
+
+  if (zonePlayers.length === 0) return null;
+
+  // Bluesound exposes the coordinator's entity_id on `master` for any slave
+  // in an active group. If the user opened a slave, we still want to operate
+  // on the group's actual coordinator so join/unjoin target the right anchor.
+  const coordinatorId =
+    (entity.attributes.master as string | undefined) ?? entity.entity_id;
+
+  const isGrouped = (id: string) =>
+    groupMembers.includes(id) ||
+    (id === entity.entity_id && groupMembers.length > 0);
+
+  const toggleGroup = async (player: HAState) => {
+    if (isGrouped(player.entity_id)) {
+      // Unjoin the target player from its current group.
+      await call("media_player", "unjoin", { entity_id: player.entity_id });
+    } else {
+      // Add the target player to the coordinator's group.
+      await call("media_player", "join", {
+        entity_id: coordinatorId,
+        group_members: [player.entity_id],
+      });
+    }
+  };
+
+  return (
+    <div className="space-y-2 p-4 rounded-xl bg-[rgba(0,0,0,0.25)] border border-[rgba(232,193,120,0.12)]">
+      <div className="flex items-center gap-2 text-sm text-[var(--cream-muted)]">
+        <Users className="w-4 h-4" />
+        <span>Also play in</span>
+      </div>
+      <div className="grid grid-cols-1 gap-1.5">
+        {zonePlayers.map(({ zone, player }) => {
+          const joined = isGrouped(player.entity_id);
+          return (
+            <button
+              key={player.entity_id}
+              type="button"
+              onClick={() => toggleGroup(player)}
+              className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors text-left ${
+                joined
+                  ? "bg-[rgba(201,153,74,0.18)] border border-[rgba(232,193,120,0.35)] text-[var(--cream)]"
+                  : "bg-[rgba(0,0,0,0.3)] border border-[rgba(232,193,120,0.12)] text-[var(--cream-muted)] hover:text-[var(--cream)]"
+              }`}
+            >
+              <span className="truncate">{zone}</span>
+              <span className="text-xs tabular-nums shrink-0 ml-2">
+                {joined ? "Joined" : "Add"}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      {groupMembers.length > 1 && (
+        <Button
+          variant="outline"
+          className="wall-btn w-full mt-2"
+          onClick={() => call("media_player", "unjoin")}
+        >
+          Leave group
+        </Button>
       )}
     </div>
   );
