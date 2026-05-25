@@ -24,6 +24,7 @@ import {
   Wind,
   Sparkles,
   Play,
+  Tv,
 } from "lucide-react";
 import "./wall-theme.css";
 import { SuperView } from "./SuperView";
@@ -43,6 +44,7 @@ type CategoryKey =
   | "locks"
   | "security"
   | "media"
+  | "tvs"
   | "cameras"
   | "scenes"
   | "energy"
@@ -188,6 +190,41 @@ const isCameraMedia = (s: HAState) => {
   return CAMERA_MEDIA_PATTERNS.some((re) => re.test(name) || re.test(id));
 };
 
+// TVs vs music players. Detected by device_class === "tv" or naming
+// patterns covering common smart TVs and streaming sticks. Used to split
+// the Media tab into Music (Bluesound, Sonos, etc.) and TVs.
+const TV_PATTERNS: RegExp[] = [
+  /\btv\b/,
+  /\btelevision\b/,
+  /\bbravia\b/,
+  /\bsamsung\b/,
+  /\bsony\b/,
+  /\blg\b/,
+  /\bvizio\b/,
+  /\bhisense\b/,
+  /\btcl\b/,
+  /\bpanasonic\b/,
+  /\bphilips\b/,
+  /\broku\b/,
+  /\bapple[\s_-]*tv\b/,
+  /\bfire[\s_-]*tv\b/,
+  /\bandroid[\s_-]*tv\b/,
+  /\bgoogle[\s_-]*tv\b/,
+  /\bchromecast\b/,
+  /\bnvidia[\s_-]*shield\b/,
+  /\bshield\b/,
+  /\bwebos\b/,
+  /\bprojector\b/,
+];
+const isTvMedia = (s: HAState) => {
+  if (deviceClass(s) === "tv") return true;
+  const name = (
+    (s.attributes.friendly_name as string | undefined) ?? ""
+  ).toLowerCase();
+  const id = s.entity_id.toLowerCase();
+  return TV_PATTERNS.some((re) => re.test(name) || re.test(id));
+};
+
 export const isSceneToggle = (s: HAState) => {
   const name = (
     (s.attributes.friendly_name as string | undefined) ?? ""
@@ -276,9 +313,21 @@ const CATEGORIES: Category[] = [
   },
   {
     key: "media",
-    label: "Media",
+    label: "Music",
     icon: Speaker,
-    match: (s) => domainOf(s.entity_id) === "media_player" && !isCameraMedia(s),
+    match: (s) =>
+      domainOf(s.entity_id) === "media_player" &&
+      !isCameraMedia(s) &&
+      !isTvMedia(s),
+  },
+  {
+    key: "tvs",
+    label: "TVs",
+    icon: Tv,
+    match: (s) =>
+      domainOf(s.entity_id) === "media_player" &&
+      !isCameraMedia(s) &&
+      isTvMedia(s),
   },
   {
     key: "cameras",
