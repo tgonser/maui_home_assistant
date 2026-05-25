@@ -238,6 +238,24 @@ const isNonMusicBrand = (s: HAState) => {
   return NON_MUSIC_BRAND_PATTERNS.some((re) => re.test(name) || re.test(id));
 };
 
+// HA exposes a few things as media_player that aren't real audio
+// destinations on this kiosk — security-camera two-way audio, humidifier
+// notifications, outdoor pool speakers wired to landscape audio, etc. Hide
+// them from both the Music and TVs tabs entirely.
+const HIDDEN_MEDIA_PATTERNS: RegExp[] = [
+  /\bptz\b/,
+  /\binstant\b/,
+  /\bmud[\s_-]*room\s+hum\b/,
+  /\bsouth[\s_-]*pool\b/,
+];
+const isHiddenMedia = (s: HAState) => {
+  const name = (
+    (s.attributes.friendly_name as string | undefined) ?? ""
+  ).toLowerCase();
+  const id = s.entity_id.toLowerCase();
+  return HIDDEN_MEDIA_PATTERNS.some((re) => re.test(name) || re.test(id));
+};
+
 // Canonical Bluesound music zones in this home. Order shown on the kiosk.
 // Note: "Great Room TV" is a Bluesound hub that pipes TV audio out to other
 // speakers — it's a source, not a destination zone, so it's not listed here.
@@ -395,6 +413,7 @@ const CATEGORIES: Category[] = [
     match: (s) =>
       domainOf(s.entity_id) === "media_player" &&
       !isCameraMedia(s) &&
+      !isHiddenMedia(s) &&
       !isNonMusicBrand(s) &&
       (matchMusicZone(s) !== null || !isTvMedia(s)),
   },
@@ -405,6 +424,7 @@ const CATEGORIES: Category[] = [
     match: (s) =>
       domainOf(s.entity_id) === "media_player" &&
       !isCameraMedia(s) &&
+      !isHiddenMedia(s) &&
       (isTvMedia(s) || isNonMusicBrand(s)) &&
       matchMusicZone(s) === null,
   },
