@@ -83,6 +83,40 @@ const isCameraLight = (s: HAState) => {
   const id = s.entity_id.toLowerCase();
   return CAMERA_LIGHT_PATTERNS.some((re) => re.test(name) || re.test(id));
 };
+
+// Switches exposed by Unifi/Protect/etc. that are camera feature toggles
+// (motion alarms, sound detection, status LEDs, recording modes), not real
+// controllable power switches. Hide them from the Switches category.
+const NON_SWITCH_PATTERNS: RegExp[] = [
+  /\bunifi\b/,
+  /\bprotect\b/,
+  /\bubiquiti\b/,
+  /\busl\b/,
+  /\bu[67]\b/,
+  /\bg[45]\b/,
+  /\bcamera\b/,
+  /\bdoorbell\b/,
+  /motion[\s_-]*(alarm|detection|zone|sensitivity)/,
+  /sound[\s_-]*detection/,
+  /person[\s_-]*detection/,
+  /vehicle[\s_-]*detection/,
+  /package[\s_-]*detection/,
+  /animal[\s_-]*detection/,
+  /smart[\s_-]*detect/,
+  /status[\s_-]*(led|light)/,
+  /\bir[\s_-]*led\b/,
+  /recording[\s_-]*(mode|enabled)/,
+  /privacy[\s_-]*(mode|zone|mask)/,
+  /hdr|osd|wdr|nightvision|night[\s_-]*mode/,
+  /chime|chirp|siren/,
+];
+const isNonSwitch = (s: HAState) => {
+  const name = (
+    (s.attributes.friendly_name as string | undefined) ?? ""
+  ).toLowerCase();
+  const id = s.entity_id.toLowerCase();
+  return NON_SWITCH_PATTERNS.some((re) => re.test(name) || re.test(id));
+};
 const deviceClass = (s: HAState) =>
   (s.attributes.device_class as string | undefined) ?? "";
 
@@ -116,8 +150,9 @@ const CATEGORIES: Category[] = [
     label: "Switches",
     icon: Power,
     match: (s) =>
-      domainOf(s.entity_id) === "switch" ||
-      domainOf(s.entity_id) === "input_boolean",
+      (domainOf(s.entity_id) === "switch" ||
+        domainOf(s.entity_id) === "input_boolean") &&
+      !isNonSwitch(s),
   },
   {
     key: "climate",
