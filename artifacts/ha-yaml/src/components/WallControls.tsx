@@ -959,10 +959,37 @@ function GroupPicker({
   );
 }
 
-// App shortcuts for Fire TV. The Android TV / Fire TV integration accepts
-// `monkey -p <package> 1` via the `adb_command` service, which is how the
-// user's existing HA remote launches these apps (more reliable than
-// `am start` since it doesn't require knowing the activity name).
+// --- Remote profiles -------------------------------------------------------
+// Each TV brand uses a different HA integration with different services and
+// command vocabularies. We model each one as a `RemoteProfile` so the UI
+// can stay generic. Apps are per-profile because Fire TV launches by Android
+// package and Samsung launches by numeric Tizen app id.
+
+type NavKey =
+  | "up"
+  | "down"
+  | "left"
+  | "right"
+  | "ok"
+  | "back"
+  | "home"
+  | "apps";
+
+type AppShortcut = { label: string; launch: () => Promise<void> };
+
+type RemoteProfile = {
+  kind: "firetv" | "samsung" | "generic";
+  navKey: (k: NavKey) => Promise<void>;
+  volumeUp: () => Promise<void>;
+  volumeDown: () => Promise<void>;
+  playPause: () => Promise<void>;
+  apps: AppShortcut[];
+  powerOn: () => Promise<void>;
+  powerOff: () => Promise<void>;
+};
+
+// Fire TV apps launch via `androidtv.adb_command` + `monkey -p <pkg> 1`,
+// matching the user's working Lovelace card.
 const FIRE_TV_APPS: { label: string; pkg: string }[] = [
   { label: "YouTube TV", pkg: "com.amazon.firetv.youtube.tv" },
   { label: "Apple TV", pkg: "com.apple.atve.amazon.appletv" },
@@ -970,10 +997,136 @@ const FIRE_TV_APPS: { label: string; pkg: string }[] = [
   { label: "Max", pkg: "com.wbd.stream" },
 ];
 
-// Renders a TV remote pad (app shortcuts, D-pad, nav, volume, power) whenever
-// the opened media_player has a sibling `remote.<same_suffix>` entity.
-// Android TV / Fire TV integrations create both. Falls back gracefully when
-// the integration isn't AndroidTV (e.g. Roku, Apple TV native).
+// Samsung Tizen app IDs (2020+ Smart TVs). IDs occasionally vary by firmware
+// year; if a button does nothing, ask the user to check the working ID via
+// SmartThings or `tizenbrew`/SmartThings app inspector and update here.
+const SAMSUNG_APPS: { label: string; appId: string }[] = [
+  { label: "YouTube TV", appId: "3201707014489" },
+  { label: "Apple TV", appId: "3201807016597" },
+  { label: "Netflix", appId: "3201907018807" },
+  { label: "Max", appId: "3202112023754" },
+];
+
+function buildFireTvProfile(
+  entityId: string,
+  remoteId: string,
+  call: CallFn,
+): RemoteProfile {
+  const sendAdb = (command: string) =>
+    call("androidtv", "adb_command", { command });
+  const adbKeyFor: Record<Exclude<NavKey, "apps">, string> = {
+    up: "UP",
+    down: "DOWN",
+    left: "LEFT",
+    right: "RIGHT",
+    ok: "CENTER",
+    back: "BACK",
+    home: "HOME",
+  };
+  void entityId;
+  void remoteId;
+  return {
+    kind: "firetv",
+    navKey: (k) =>
+      k === "apps"
+        ? sendAdb("monkey -p com.amazon.tv.launcher 1")
+        : sendAdb(adbKeyFor[k]),
+    volumeUp: () => sendAdb("VOLUME_UP"),
+    volumeDown: () => sendAdb("VOLUME_DOWN"),
+    playPause: () => call("media_player", "media_play_pause"),
+    apps: FIRE_TV_APPS.map((a) => ({
+      label: a.label,
+      launch: () => sendAdb(`monkey -p ${a.pkg} 1`),
+    })),
+    powerOn: () => call("media_player", "turn_on"),
+    powerOff: () => call("media_player", "turn_off"),
+  };
+}
+
+function buildSamsungProfile(call: CallFn): RemoteProfile {
+  const sendKey = (key: string) =>
+    call("media_player", "play_media", {
+      media_content_type: "send_key",
+      media_content_id: key,
+    });
+  const samsungKeyFor: Record<NavKey, string> = {
+    up: "KEY_UP",
+    down: "KEY_DOWN",
+    left: "KEY_LEFT",
+    right: "KEY_RIGHT",
+    ok: "KEY_ENTER",
+    back: "KEY_RETURN",
+    home: "KEY_HOME",
+    apps: "KEY_HOME", // Smart Hub doubles as the apps screen on Samsung
+  };
+  return {
+    kind: "samsung",
+    navKey: (k) => sendKey(samsungKeyFor[k]),
+    volumeUp: () => call("media_player", "volume_up"),
+    volumeDown: () => call("media_player", "volume_down"),
+    playPause: () => call("media_player", "media_play_pause"),
+    apps: SAMSUNG_APPS.map((a) => ({
+      label: a.label,
+      launch: () =>
+        call("media_player", "play_media", {
+          media_content_type: "app",
+          media_content_id: a.appId,
+        }),
+    })),
+    powerOn: () => call("media_player", "turn_on"),
+    powerOff: () => call("media_player", "turn_off"),
+  };
+}
+
+function buildGenericProfile(remoteId: string, call: CallFn): RemoteProfile {
+  const sendKey = (command: string) =>
+    call("remote", "send_command", { entity_id: remoteId, command });
+  const dpadKeyFor: Record<NavKey, string> = {
+    up: "DPAD_UP",
+    down: "DPAD_DOWN",
+    left: "DPAD_LEFT",
+    right: "DPAD_RIGHT",
+    ok: "DPAD_CENTER",
+    back: "BACK",
+    home: "HOME",
+    apps: "MENU",
+  };
+  return {
+    kind: "generic",
+    navKey: (k) => sendKey(dpadKeyFor[k]),
+    volumeUp: () => call("media_player", "volume_up"),
+    volumeDown: () => call("media_player", "volume_down"),
+    playPause: () => call("media_player", "media_play_pause"),
+    apps: [],
+    powerOn: () => call("media_player", "turn_on"),
+    powerOff: () => call("media_player", "turn_off"),
+  };
+}
+
+// Detect which remote profile applies to a given media_player. Order matters:
+// Fire TV first by entity_id prefix (the AndroidTV integration follows a
+// `media_player.fire_tv_*` / `media_player.androidtv_*` convention), then
+// Samsung by the user's naming heuristics. Falls back to a generic remote
+// when a sibling `remote.*` entity exists.
+function detectProfileKind(
+  entity: HAState,
+  remoteEntity: HAState | undefined,
+): RemoteProfile["kind"] | null {
+  const id = entity.entity_id;
+  if (/^media_player\.(fire_tv|androidtv|android_tv)/.test(id)) {
+    return "firetv";
+  }
+  if (/^media_player\..*(oled|frame|samsung|qn\d+|q[ln]\d+)/i.test(id)) {
+    return "samsung";
+  }
+  if (remoteEntity) return "generic";
+  return null;
+}
+
+// Renders a TV remote pad (app shortcuts, D-pad, nav, volume, power) for any
+// supported media_player. Profile selection picks the right HA services per
+// brand so the same UI works for Fire TV (ADB), Samsung (send_key), and any
+// other remote integration that exposes a sibling `remote.*` entity.
 function RemoteControls({
   entity,
   states,
@@ -987,49 +1140,32 @@ function RemoteControls({
   const remoteEntity = states.find(
     (s) => s.entity_id === `remote.${suffix}`,
   );
-  if (!remoteEntity) return null;
-  const remoteId = remoteEntity.entity_id;
+  const kind = detectProfileKind(entity, remoteEntity);
+  if (!kind) return null;
+  const profile: RemoteProfile =
+    kind === "firetv"
+      ? buildFireTvProfile(
+          entity.entity_id,
+          remoteEntity?.entity_id ?? "",
+          call,
+        )
+      : kind === "samsung"
+        ? buildSamsungProfile(call)
+        : buildGenericProfile(remoteEntity?.entity_id ?? "", call);
   const off =
     entity.state === "off" ||
     entity.state === "standby" ||
     entity.state === "unavailable";
-  // AndroidTV / Fire TV detection. `app_id`/`app_name` only appear when a
-  // session is active, so we also match the AndroidTV integration's other
-  // tells (`adb_response`, `hdmi_input`) and the conventional entity id
-  // pattern (`fire_tv_*`, `androidtv_*`). Without this broadening, an idle
-  // Fire TV gets routed down the non-ADB fallback path and the app shortcut
-  // row disappears.
-  const aid = entity.entity_id;
-  const isAndroidTV =
-    entity.attributes.app_id !== undefined ||
-    entity.attributes.app_name !== undefined ||
-    entity.attributes.adb_response !== undefined ||
-    entity.attributes.hdmi_input !== undefined ||
-    /^media_player\.(fire_tv|androidtv|android_tv)/.test(aid);
 
-  const sendKey = (command: string) =>
-    call("remote", "send_command", { entity_id: remoteId, command });
-  const sendAdb = (command: string) =>
-    call("androidtv", "adb_command", { command });
-  const launch = (pkg: string) => sendAdb(`monkey -p ${pkg} 1`);
-  // Match the user's working Lovelace card: on Android TV / Fire TV use
-  // bare key names via androidtv.adb_command (UP/DOWN/LEFT/RIGHT/CENTER/
-  // BACK/HOME/MENU). Fall back to remote.send_command with DPAD_* for
-  // other remote integrations (Roku, generic).
-  const nav = (adbKey: string, dpadKey?: string) =>
-    isAndroidTV ? sendAdb(adbKey) : sendKey(dpadKey ?? adbKey);
-
-  const KeyButton = ({
+  const PadButton = ({
     label,
     icon: Icon,
-    adbKey,
-    dpadKey,
+    nav,
     className = "",
   }: {
     label: string;
     icon: typeof Play;
-    adbKey: string;
-    dpadKey?: string;
+    nav: NavKey;
     className?: string;
   }) => (
     <Button
@@ -1037,7 +1173,7 @@ function RemoteControls({
       aria-label={label}
       title={label}
       className={`wall-btn h-12 ${className}`}
-      onClick={() => nav(adbKey, dpadKey)}
+      onClick={() => profile.navKey(nav)}
     >
       <Icon className="w-5 h-5" />
     </Button>
@@ -1051,21 +1187,21 @@ function RemoteControls({
           <Button
             variant="outline"
             className="wall-btn-active h-9 text-xs"
-            onClick={() => call("media_player", "turn_on")}
+            onClick={() => profile.powerOn()}
           >
             <Power className="w-4 h-4 mr-1" /> Wake
           </Button>
         )}
       </div>
 
-      {isAndroidTV && (
+      {profile.apps.length > 0 && (
         <div className="grid grid-cols-4 gap-2">
-          {FIRE_TV_APPS.map((app) => (
+          {profile.apps.map((app) => (
             <Button
               key={app.label}
               variant="outline"
               className="wall-btn h-14 text-xs px-1 leading-tight whitespace-normal"
-              onClick={() => launch(app.pkg)}
+              onClick={() => app.launch()}
             >
               {app.label}
             </Button>
@@ -1076,51 +1212,36 @@ function RemoteControls({
       {/* D-pad: 3x3 grid with arrows around a center OK */}
       <div className="grid grid-cols-3 gap-2">
         <div />
-        <KeyButton label="Up" icon={ArrowUp} adbKey="UP" dpadKey="DPAD_UP" />
+        <PadButton label="Up" icon={ArrowUp} nav="up" />
         <div />
-        <KeyButton
-          label="Left"
-          icon={ArrowLeft}
-          adbKey="LEFT"
-          dpadKey="DPAD_LEFT"
-        />
+        <PadButton label="Left" icon={ArrowLeft} nav="left" />
         <Button
           variant="outline"
           aria-label="OK"
           title="OK"
           className="wall-btn-active h-12 font-semibold"
-          onClick={() => nav("CENTER", "DPAD_CENTER")}
+          onClick={() => profile.navKey("ok")}
         >
           OK
         </Button>
-        <KeyButton
-          label="Right"
-          icon={ArrowRight}
-          adbKey="RIGHT"
-          dpadKey="DPAD_RIGHT"
-        />
+        <PadButton label="Right" icon={ArrowRight} nav="right" />
         <div />
-        <KeyButton
-          label="Down"
-          icon={ArrowDown}
-          adbKey="DOWN"
-          dpadKey="DPAD_DOWN"
-        />
+        <PadButton label="Down" icon={ArrowDown} nav="down" />
         <div />
       </div>
 
       <div className="grid grid-cols-3 gap-2">
-        <KeyButton label="Back" icon={Undo2} adbKey="BACK" />
+        <PadButton label="Back" icon={Undo2} nav="back" />
         <Button
           variant="outline"
           aria-label="Play / Pause"
           title="Play / Pause"
           className="wall-btn h-12"
-          onClick={() => call("media_player", "media_play_pause")}
+          onClick={() => profile.playPause()}
         >
           <Play className="w-5 h-5" />
         </Button>
-        <KeyButton label="Home" icon={HomeIcon} adbKey="HOME" />
+        <PadButton label="Home" icon={HomeIcon} nav="home" />
       </div>
 
       <div className="grid grid-cols-3 gap-2">
@@ -1129,11 +1250,7 @@ function RemoteControls({
           aria-label="Volume down"
           title="Volume down"
           className="wall-btn h-12"
-          onClick={() =>
-            isAndroidTV
-              ? sendAdb("VOLUME_DOWN")
-              : call("media_player", "volume_down")
-          }
+          onClick={() => profile.volumeDown()}
         >
           <Minus className="w-4 h-4 mr-1" />
           <Volume1 className="w-4 h-4" />
@@ -1143,9 +1260,7 @@ function RemoteControls({
           aria-label="Apps"
           title="Apps"
           className="wall-btn h-12"
-          onClick={() =>
-            isAndroidTV ? launch("com.amazon.tv.launcher") : sendKey("MENU")
-          }
+          onClick={() => profile.navKey("apps")}
         >
           <MenuIcon className="w-4 h-4 mr-1" /> Apps
         </Button>
@@ -1154,11 +1269,7 @@ function RemoteControls({
           aria-label="Volume up"
           title="Volume up"
           className="wall-btn h-12"
-          onClick={() =>
-            isAndroidTV
-              ? sendAdb("VOLUME_UP")
-              : call("media_player", "volume_up")
-          }
+          onClick={() => profile.volumeUp()}
         >
           <Plus className="w-4 h-4 mr-1" />
           <Volume2 className="w-4 h-4" />
@@ -1169,7 +1280,7 @@ function RemoteControls({
         <Button
           variant="outline"
           className="wall-btn w-full h-12 mt-1 text-red-200 border-red-500/40 hover:bg-red-500/10"
-          onClick={() => call("media_player", "turn_off")}
+          onClick={() => profile.powerOff()}
         >
           <Power className="w-4 h-4 mr-2" /> Power Off
         </Button>
