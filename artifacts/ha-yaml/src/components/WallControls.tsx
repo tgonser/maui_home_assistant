@@ -594,6 +594,18 @@ function MediaControls({
     (entity.attributes.group_members as string[] | undefined) ?? [];
   const selfZone = matchMusicZone(entity);
 
+  // Local slider state — Radix Slider needs onValueChange to move the thumb.
+  // Sync from HA when the user isn't actively dragging.
+  const haVolumePct =
+    volume !== undefined ? Math.round(volume * 100) : 0;
+  const [draftVolume, setDraftVolume] = useState<number | null>(null);
+  useEffect(() => {
+    if (draftVolume === null) return;
+    // If HA caught up to the drafted value, drop the draft.
+    if (Math.abs(haVolumePct - draftVolume) <= 1) setDraftVolume(null);
+  }, [haVolumePct, draftVolume]);
+  const displayVolume = draftVolume ?? haVolumePct;
+
   return (
     <div className="space-y-4">
       {(title || artist) && (
@@ -651,19 +663,22 @@ function MediaControls({
               Volume
             </span>
             <span className="tabular-nums text-[var(--brass-bright)] font-semibold">
-              {Math.round(volume * 100)}%
+              {displayVolume}%
             </span>
           </div>
           <Slider
-            value={[Math.round(volume * 100)]}
+            value={[displayVolume]}
             min={0}
             max={100}
             step={1}
-            onValueCommit={(v) =>
+            onValueChange={(v) => setDraftVolume(v[0] ?? 0)}
+            onValueCommit={(v) => {
+              const pct = v[0] ?? 0;
+              setDraftVolume(pct);
               call("media_player", "volume_set", {
-                volume_level: v[0] / 100,
-              })
-            }
+                volume_level: pct / 100,
+              });
+            }}
           />
           <div className="grid grid-cols-2 gap-2">
             <Button
