@@ -109,6 +109,24 @@ const NON_SWITCH_PATTERNS: RegExp[] = [
   /privacy[\s_-]*(mode|zone|mask)/,
   /hdr|osd|wdr|nightvision|night[\s_-]*mode/,
   /chime|chirp|siren/,
+  // Tesla / EV / Powerwall feature toggles (not real power switches)
+  /\ballow[\s_-]*charging\b/,
+  /\bcharge[\s_-]*(on[\s_-]*solar|limit|enabled|schedule)/,
+  /\bstorm[\s_-]*watch\b/,
+  /\bsentry[\s_-]*mode\b/,
+  /\bvalet[\s_-]*mode\b/,
+  /\bclimate[\s_-]*(on|keeper|auto|enabled)\b/,
+  /\bpreconditioning\b/,
+  /\bseat[\s_-]*heater\b/,
+  /\bsteering[\s_-]*wheel[\s_-]*heater\b/,
+  /\bwindow[\s_-]*vent\b/,
+  /\bcharge[\s_-]*port[\s_-]*(door|latch)\b/,
+  /\bfrunk\b/,
+  /\btrunk\b/,
+  /\btesla\b/,
+  /\bpowerwall\b/,
+  /\bgrid[\s_-]*charging\b/,
+  /\boff[\s_-]*grid[\s_-]*reserve\b/,
 ];
 const isNonSwitch = (s: HAState) => {
   const name = (
