@@ -127,6 +127,23 @@ const NON_SWITCH_PATTERNS: RegExp[] = [
   /\bpowerwall\b/,
   /\bgrid[\s_-]*charging\b/,
   /\boff[\s_-]*grid[\s_-]*reserve\b/,
+  // Irrigation / sprinkler controllers (Rachio, Rain Bird, Hunter,
+  // OpenSprinkler, B-hyve, Orbit) — these expose zones, schedules, rain
+  // delays etc. as switch.* entities but they aren't simple power switches.
+  /\brachio\b/,
+  /\brain[\s_-]*bird\b/,
+  /\bopensprinkler\b/,
+  /\bb[\s_-]*hyve\b/,
+  /\borbit\b/,
+  /\bhunter\b/,
+  /\birrigation\b/,
+  /\bsprinkler\b/,
+  /\bschedule[\s_-]*(enabled|on)\b/,
+  /\brain[\s_-]*delay\b/,
+  /\bstandby\b/,
+  /\bzone[\s_-]*\d+/,
+  /\b(north|south|east|west|front|back|side)[\s_-]*(yard|lawn|garden|bed|beds)\b/,
+  /\byard[\s_-]*(zone|valve|station)\b/,
 ];
 const isNonSwitch = (s: HAState) => {
   const name = (
