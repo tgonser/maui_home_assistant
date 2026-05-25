@@ -166,6 +166,28 @@ export const SCENE_TOGGLE_PATTERNS: RegExp[] = [
   /\bparty[\s_-]*mode\b/,
   /\bdinner[\s_-]*mode\b/,
 ];
+// Ubiquiti / Unifi cameras and doorbells often expose a media_player entity
+// for their built-in speaker (chime, two-way audio). Hide them from the
+// Media tab — they aren't user-facing music players.
+const CAMERA_MEDIA_PATTERNS: RegExp[] = [
+  /\bunifi\b/,
+  /\bubiquiti\b/,
+  /\bprotect\b/,
+  /\busl\b/,
+  /\bu[67]\b/,
+  /\bg[45]\b/,
+  /\bcamera\b/,
+  /\bdoorbell\b/,
+  /\bchime\b/,
+];
+const isCameraMedia = (s: HAState) => {
+  const name = (
+    (s.attributes.friendly_name as string | undefined) ?? ""
+  ).toLowerCase();
+  const id = s.entity_id.toLowerCase();
+  return CAMERA_MEDIA_PATTERNS.some((re) => re.test(name) || re.test(id));
+};
+
 export const isSceneToggle = (s: HAState) => {
   const name = (
     (s.attributes.friendly_name as string | undefined) ?? ""
@@ -256,7 +278,7 @@ const CATEGORIES: Category[] = [
     key: "media",
     label: "Media",
     icon: Speaker,
-    match: (s) => domainOf(s.entity_id) === "media_player",
+    match: (s) => domainOf(s.entity_id) === "media_player" && !isCameraMedia(s),
   },
   {
     key: "cameras",
