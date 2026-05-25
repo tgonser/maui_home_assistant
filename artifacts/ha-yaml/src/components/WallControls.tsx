@@ -997,14 +997,16 @@ const FIRE_TV_APPS: { label: string; pkg: string }[] = [
   { label: "Max", pkg: "com.wbd.stream" },
 ];
 
-// Samsung Tizen app IDs (2020+ Smart TVs). IDs occasionally vary by firmware
-// year; if a button does nothing, ask the user to check the working ID via
-// SmartThings or `tizenbrew`/SmartThings app inspector and update here.
-const SAMSUNG_APPS: { label: string; appId: string }[] = [
-  { label: "YouTube TV", appId: "3201707014489" },
-  { label: "Apple TV", appId: "3201807016597" },
-  { label: "Netflix", appId: "3201907018807" },
-  { label: "Max", appId: "3202112023754" },
+// Samsung app launch on 2022+ Tizen TVs: deep-link via the legacy
+// `media_player.play_media { app }` path is silently dropped. Some firmware
+// versions accept the app name as a remote command (e.g. `remote.send_command
+// command: "Netflix"`). We try that as a best-effort here; if a button does
+// nothing, install the SmartThings HA integration and wire a scene per app.
+const SAMSUNG_APPS: { label: string; command: string }[] = [
+  { label: "YouTube TV", command: "YouTube" },
+  { label: "Apple TV", command: "AppleTV" },
+  { label: "Netflix", command: "Netflix" },
+  { label: "Max", command: "HBO Max" },
 ];
 
 function buildFireTvProfile(
@@ -1043,12 +1045,29 @@ function buildFireTvProfile(
   };
 }
 
-function buildSamsungProfile(call: CallFn): RemoteProfile {
-  const sendKey = (key: string) =>
-    call("media_player", "play_media", {
-      media_content_type: "send_key",
-      media_content_id: key,
-    });
+function buildSamsungProfile(
+  remoteId: string | null,
+  call: CallFn,
+): RemoteProfile {
+  // 2022+ Samsung Tizen TVs don't accept the legacy
+  // `media_player.play_media { send_key }` path — that returns 200 but the TV
+  // ignores it. The HA Samsung integration exposes a sibling `remote.*`
+  // entity that accepts `remote.send_command` with KEY_* names; that is the
+  // working path. Volume + power still go through the media_player entity
+  // because those services are well supported on Samsung core.
+  const sendKey = (command: string) => {
+    if (!remoteId) {
+      // Surface a real error rather than silently no-op'ing so the kiosk
+      // error banner tells the user what to fix in HA.
+      return Promise.reject(
+        new Error(
+          "No sibling remote.* entity found for this Samsung TV. " +
+            "Reload the Samsung TV integration in HA so the remote entity is created.",
+        ),
+      );
+    }
+    return call("remote", "send_command", { entity_id: remoteId, command });
+  };
   const samsungKeyFor: Record<NavKey, string> = {
     up: "KEY_UP",
     down: "KEY_DOWN",
@@ -1064,14 +1083,10 @@ function buildSamsungProfile(call: CallFn): RemoteProfile {
     navKey: (k) => sendKey(samsungKeyFor[k]),
     volumeUp: () => call("media_player", "volume_up"),
     volumeDown: () => call("media_player", "volume_down"),
-    playPause: () => call("media_player", "media_play_pause"),
+    playPause: () => sendKey("KEY_PLAY"),
     apps: SAMSUNG_APPS.map((a) => ({
       label: a.label,
-      launch: () =>
-        call("media_player", "play_media", {
-          media_content_type: "app",
-          media_content_id: a.appId,
-        }),
+      launch: () => sendKey(a.command),
     })),
     powerOn: () => call("media_player", "turn_on"),
     powerOff: () => call("media_player", "turn_off"),
@@ -1137,9 +1152,15 @@ function RemoteControls({
   call: CallFn;
 }) {
   const suffix = entity.entity_id.split(".")[1] ?? "";
-  const remoteEntity = states.find(
-    (s) => s.entity_id === `remote.${suffix}`,
-  );
+  // HA disambiguates duplicate entity ids with `_2`, `_3`, ... suffixes when
+  // multiple integrations claim the same name. The sibling `remote.*` entity
+  // is usually unique (only the Samsung integration creates one), so it sits
+  // at the base name without a numeric suffix. Try exact match first, then
+  // fall back to stripping a trailing `_<digits>`.
+  const baseSuffix = suffix.replace(/_\d+$/, "");
+  const remoteEntity =
+    states.find((s) => s.entity_id === `remote.${suffix}`) ??
+    states.find((s) => s.entity_id === `remote.${baseSuffix}`);
   const kind = detectProfileKind(entity, remoteEntity);
   if (!kind) return null;
   const profile: RemoteProfile =
@@ -1150,7 +1171,7 @@ function RemoteControls({
           call,
         )
       : kind === "samsung"
-        ? buildSamsungProfile(call)
+        ? buildSamsungProfile(remoteEntity?.entity_id ?? null, call)
         : buildGenericProfile(remoteEntity?.entity_id ?? "", call);
   const off =
     entity.state === "off" ||
