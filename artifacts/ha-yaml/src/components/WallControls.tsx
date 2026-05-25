@@ -811,16 +811,63 @@ function GroupPicker({
   // the user opens a slave, joining/unjoining must target the master.
   const coordinatorId = controller.entity_id;
 
-  const isGrouped = (id: string) =>
-    groupMembers.includes(id) ||
-    (id === entity.entity_id && groupMembers.length > 0);
+  // Optimistic overrides so the button flips instantly. Bluesound takes a
+  // few seconds to reflect group changes back in `group_members`, and we
+  // re-sync from real state below.
+  const [pendingJoin, setPendingJoin] = useState<Set<string>>(new Set());
+  const [pendingLeave, setPendingLeave] = useState<Set<string>>(new Set());
+
+  // Robust "joined" check: either the coordinator's group_members lists the
+  // target, or the target itself points to our coordinator via `master`.
+  // The latter updates immediately on Bluesound while the former lags.
+  const realJoined = (id: string) => {
+    if (groupMembers.includes(id)) return true;
+    const target = states.find((s) => s.entity_id === id);
+    const targetMaster = target?.attributes.master as string | undefined;
+    if (targetMaster && targetMaster === coordinatorId) return true;
+    return false;
+  };
+
+  const isGrouped = (id: string) => {
+    if (pendingJoin.has(id)) return true;
+    if (pendingLeave.has(id)) return false;
+    return realJoined(id);
+  };
+
+  // Drop optimistic flags once HA confirms the change.
+  useEffect(() => {
+    if (pendingJoin.size > 0) {
+      const next = new Set(pendingJoin);
+      for (const id of pendingJoin) if (realJoined(id)) next.delete(id);
+      if (next.size !== pendingJoin.size) setPendingJoin(next);
+    }
+    if (pendingLeave.size > 0) {
+      const next = new Set(pendingLeave);
+      for (const id of pendingLeave) if (!realJoined(id)) next.delete(id);
+      if (next.size !== pendingLeave.size) setPendingLeave(next);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [states, groupMembers]);
 
   const toggleGroup = async (player: HAState) => {
-    if (isGrouped(player.entity_id)) {
-      // Unjoin the target player from its current group.
-      await call("media_player", "unjoin", { entity_id: player.entity_id });
+    const id = player.entity_id;
+    if (isGrouped(id)) {
+      // Optimistic: mark as leaving immediately.
+      setPendingLeave((s) => new Set(s).add(id));
+      setPendingJoin((s) => {
+        const n = new Set(s);
+        n.delete(id);
+        return n;
+      });
+      await call("media_player", "unjoin", { entity_id: id });
     } else {
-      // Add the target player to the coordinator's group.
+      // Optimistic: mark as joined immediately.
+      setPendingJoin((s) => new Set(s).add(id));
+      setPendingLeave((s) => {
+        const n = new Set(s);
+        n.delete(id);
+        return n;
+      });
       await call("media_player", "join", {
         entity_id: coordinatorId,
         group_members: [player.entity_id],
