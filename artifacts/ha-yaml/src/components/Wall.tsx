@@ -693,9 +693,12 @@ export function Wall() {
               <SuperView key="super" states={states} />
             ) : active === "rooms" ? (
               <RoomsView key="rooms" states={states} refresh={refresh} />
-            ) : active === "lights" ? (
+            ) : active === "lights" ||
+              active === "switches" ||
+              active === "covers" ||
+              active === "fans" ? (
               <GroupedByRoomView
-                key="lights-grouped"
+                key={`${active}-grouped`}
                 entities={filtered}
                 renderTile={renderTile}
               />
