@@ -183,11 +183,7 @@ export function deriveRooms(states: HAState[], registry: Registry): Room[] {
 
   return rooms
     .filter((r) => r.totalLights > 0)
-    .sort((a, b) => {
-      // On rooms first, then by name
-      if (a.on !== b.on) return a.on ? -1 : 1;
-      return a.name.localeCompare(b.name);
-    });
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 // ---------- Room actions ----------
