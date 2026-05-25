@@ -59,6 +59,29 @@ const friendly = (s: HAState) =>
 const unit = (s: HAState) =>
   (s.attributes.unit_of_measurement as string | undefined) ?? "";
 const domainOf = (id: string) => id.split(".")[0] ?? "";
+
+// Many camera/network devices expose a status LED as a light.* entity
+// (Ubiquiti UniFi Protect U6/U7/G4, etc.). These shouldn't appear in the
+// Lighting section since the user doesn't think of them as room lights.
+const CAMERA_LIGHT_PATTERNS = [
+  /\bubiquiti\b/,
+  /\bunifi\b/,
+  /\bu6\b/,
+  /\bu7\b/,
+  /\bg4\b/,
+  /\bg5\b/,
+  /\bcamera\b/,
+  /\bdoorbell\b/,
+  /status[\s_-]*(led|light)/,
+  /ir[\s_-]*led/,
+];
+const isCameraLight = (s: HAState) => {
+  const name = (
+    (s.attributes.friendly_name as string | undefined) ?? ""
+  ).toLowerCase();
+  const id = s.entity_id.toLowerCase();
+  return CAMERA_LIGHT_PATTERNS.some((re) => re.test(name) || re.test(id));
+};
 const deviceClass = (s: HAState) =>
   (s.attributes.device_class as string | undefined) ?? "";
 
@@ -85,7 +108,7 @@ const CATEGORIES: Category[] = [
     key: "lights",
     label: "Lighting",
     icon: Lightbulb,
-    match: (s) => domainOf(s.entity_id) === "light",
+    match: (s) => domainOf(s.entity_id) === "light" && !isCameraLight(s),
   },
   {
     key: "switches",
