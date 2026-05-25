@@ -52,6 +52,7 @@ export function WallControls({
   onChanged,
 }: Props) {
   const [busy, setBusy] = useState(false);
+  const [lastError, setLastError] = useState<string | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const aliases = useEntityAliases((s) => s.aliases);
   const setAlias = useEntityAliases((s) => s.setAlias);
@@ -84,6 +85,14 @@ export function WallControls({
 
   if (!entity) return null;
   const d = domainOf(entity.entity_id);
+  // For media_player slaves, the coordinator entity holds the real playback
+  // state (playing, title, source). Resolve it so the header pill and
+  // transport reflect what's actually playing.
+  const masterId = entity.attributes.master as string | undefined;
+  const controller =
+    d === "media_player" && masterId
+      ? (states.find((s) => s.entity_id === masterId) ?? entity)
+      : entity;
   const currentAlias = aliases[entity.entity_id] ?? "";
   const displayName = currentAlias || friendly(entity);
   const rename = () => {
@@ -101,10 +110,18 @@ export function WallControls({
     data: Record<string, unknown> = {},
   ) => {
     setBusy(true);
-    await haCallService(domain, service, {
+    setLastError(null);
+    const res = await haCallService(domain, service, {
       entity_id: entity.entity_id,
       ...data,
     });
+    if (!res.ok) {
+      setLastError(
+        `${domain}.${service} failed: ${res.error || `HTTP ${res.status}`}`,
+      );
+      // eslint-disable-next-line no-console
+      console.error("HA service call failed", { domain, service, data, res });
+    }
     await onChanged();
     setBusy(false);
   };
@@ -154,7 +171,16 @@ export function WallControls({
       </div>
 
       <div className="p-6 space-y-6">
-          <StatePill entity={entity} />
+          <StatePill entity={controller} />
+
+          {lastError && (
+            <div
+              role="alert"
+              className="p-3 rounded-lg border border-red-500/40 bg-red-500/10 text-sm text-red-200 break-words"
+            >
+              {lastError}
+            </div>
+          )}
 
           {d === "light" && <LightControls entity={entity} call={call} />}
           {d === "switch" && <SwitchControls entity={entity} call={call} />}
@@ -166,7 +192,12 @@ export function WallControls({
           {d === "lock" && <LockControls entity={entity} call={call} />}
           {d === "cover" && <CoverControls entity={entity} call={call} />}
           {d === "media_player" && (
-            <MediaControls entity={entity} states={states} call={call} />
+            <MediaControls
+              entity={entity}
+              controller={controller}
+              states={states}
+              call={call}
+            />
           )}
           {d === "scene" && (
             <RunButton
@@ -575,23 +606,33 @@ function CoverControls({ entity, call }: { entity: HAState; call: CallFn }) {
 
 function MediaControls({
   entity,
+  controller,
   states,
   call,
 }: {
   entity: HAState;
+  controller: HAState;
   states: HAState[];
   call: CallFn;
 }) {
-  const playing = entity.state === "playing";
-  const off = entity.state === "off" || entity.state === "standby";
+  // Playback metadata comes from the coordinator (the group "master"). When
+  // the user opens a slave, the slave's own state is "idle" while the
+  // coordinator says "playing" — we want to show the latter.
+  const playing = controller.state === "playing";
+  const off =
+    controller.state === "off" || controller.state === "standby";
+  // Volume + mute are per-zone, so they always come from the opened entity.
   const volume = entity.attributes.volume_level as number | undefined;
   const muted = entity.attributes.is_volume_muted as boolean | undefined;
-  const title = entity.attributes.media_title as string | undefined;
-  const artist = entity.attributes.media_artist as string | undefined;
-  const sourceList = entity.attributes.source_list as string[] | undefined;
-  const currentSource = entity.attributes.source as string | undefined;
+  const title = controller.attributes.media_title as string | undefined;
+  const artist = controller.attributes.media_artist as string | undefined;
+  const sourceList = controller.attributes.source_list as
+    | string[]
+    | undefined;
+  const currentSource = controller.attributes.source as string | undefined;
+  // Group membership lives on the coordinator's entity.
   const groupMembers =
-    (entity.attributes.group_members as string[] | undefined) ?? [];
+    (controller.attributes.group_members as string[] | undefined) ?? [];
   const selfZone = matchMusicZone(entity);
 
   // Local slider state — Radix Slider needs onValueChange to move the thumb.
@@ -729,8 +770,13 @@ function MediaControls({
       )}
 
       {selfZone && (
-        <GroupPicker entity={entity} states={states} call={call}
-          groupMembers={groupMembers} />
+        <GroupPicker
+          entity={entity}
+          controller={controller}
+          states={states}
+          call={call}
+          groupMembers={groupMembers}
+        />
       )}
     </div>
   );
@@ -738,11 +784,13 @@ function MediaControls({
 
 function GroupPicker({
   entity,
+  controller,
   states,
   call,
   groupMembers,
 }: {
   entity: HAState;
+  controller: HAState;
   states: HAState[];
   call: CallFn;
   groupMembers: string[];
@@ -759,11 +807,9 @@ function GroupPicker({
 
   if (zonePlayers.length === 0) return null;
 
-  // Bluesound exposes the coordinator's entity_id on `master` for any slave
-  // in an active group. If the user opened a slave, we still want to operate
-  // on the group's actual coordinator so join/unjoin target the right anchor.
-  const coordinatorId =
-    (entity.attributes.master as string | undefined) ?? entity.entity_id;
+  // Operate against the group's actual coordinator (the controller). When
+  // the user opens a slave, joining/unjoining must target the master.
+  const coordinatorId = controller.entity_id;
 
   const isGrouped = (id: string) =>
     groupMembers.includes(id) ||
