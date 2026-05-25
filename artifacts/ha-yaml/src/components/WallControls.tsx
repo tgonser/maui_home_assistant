@@ -20,6 +20,8 @@ import {
   Blinds,
   ArrowUp,
   ArrowDown,
+  ArrowLeft,
+  ArrowRight,
   Square,
   Wind,
   Sparkles,
@@ -30,6 +32,11 @@ import {
   ShieldCheck,
   Radio,
   Users,
+  Home as HomeIcon,
+  Menu as MenuIcon,
+  Undo2,
+  Rewind,
+  FastForward,
 } from "lucide-react";
 import { haCallService, type HAState } from "@/lib/ha";
 import { MUSIC_ZONES, matchMusicZone } from "./Wall";
@@ -198,6 +205,9 @@ export function WallControls({
               states={states}
               call={call}
             />
+          )}
+          {d === "media_player" && (
+            <RemoteControls entity={entity} states={states} call={call} />
           )}
           {d === "scene" && (
             <RunButton
@@ -943,6 +953,189 @@ function GroupPicker({
           onClick={() => call("media_player", "unjoin")}
         >
           Leave group
+        </Button>
+      )}
+    </div>
+  );
+}
+
+// App shortcuts for Fire TV. The Android TV / Fire TV integration accepts
+// `am start -n <package>/<activity>` via the `adb_command` service, which is
+// how the user's existing HA remote launches these apps.
+const FIRE_TV_APPS: { label: string; activity: string }[] = [
+  {
+    label: "YouTube TV",
+    activity:
+      "com.google.android.youtube.tvunplugged/.activity.MainActivity",
+  },
+  { label: "Apple TV", activity: "com.apple.atve.amazon.appletv/.MainActivity" },
+  { label: "Netflix", activity: "com.netflix.ninja/.MainActivity" },
+  { label: "Max", activity: "com.wbd.stream/.MainActivity" },
+];
+
+// Renders a TV remote pad (app shortcuts, D-pad, nav, volume, power) whenever
+// the opened media_player has a sibling `remote.<same_suffix>` entity.
+// Android TV / Fire TV integrations create both. Falls back gracefully when
+// the integration isn't AndroidTV (e.g. Roku, Apple TV native).
+function RemoteControls({
+  entity,
+  states,
+  call,
+}: {
+  entity: HAState;
+  states: HAState[];
+  call: CallFn;
+}) {
+  const suffix = entity.entity_id.split(".")[1] ?? "";
+  const remoteEntity = states.find(
+    (s) => s.entity_id === `remote.${suffix}`,
+  );
+  if (!remoteEntity) return null;
+  const remoteId = remoteEntity.entity_id;
+  const off =
+    entity.state === "off" ||
+    entity.state === "standby" ||
+    entity.state === "unavailable";
+  // AndroidTV / Fire TV media_player entities expose `app_id` and `app_name`.
+  // Use that to decide whether to surface the app shortcuts + ADB-based wake.
+  const isAndroidTV =
+    entity.attributes.app_id !== undefined ||
+    entity.attributes.app_name !== undefined;
+
+  const sendKey = (command: string) =>
+    call("remote", "send_command", { entity_id: remoteId, command });
+  const sendAdb = (command: string) =>
+    call("androidtv", "adb_command", { command });
+  const launch = (activity: string) => sendAdb(`am start -n ${activity}`);
+
+  const KeyButton = ({
+    label,
+    icon: Icon,
+    command,
+    className = "",
+  }: {
+    label: string;
+    icon: typeof Play;
+    command: string;
+    className?: string;
+  }) => (
+    <Button
+      variant="outline"
+      aria-label={label}
+      title={label}
+      className={`wall-btn h-12 ${className}`}
+      onClick={() => sendKey(command)}
+    >
+      <Icon className="w-5 h-5" />
+    </Button>
+  );
+
+  return (
+    <div className="space-y-3 p-4 rounded-xl bg-[rgba(0,0,0,0.25)] border border-[rgba(232,193,120,0.12)]">
+      <div className="flex items-center justify-between text-sm">
+        <span className="text-[var(--cream-muted)]">Remote</span>
+        {off && (
+          <Button
+            variant="outline"
+            className="wall-btn-active h-9 text-xs"
+            onClick={() =>
+              isAndroidTV ? sendAdb("WAKEUP") : sendKey("WAKEUP")
+            }
+          >
+            <Power className="w-4 h-4 mr-1" /> Wake
+          </Button>
+        )}
+      </div>
+
+      {isAndroidTV && (
+        <div className="grid grid-cols-4 gap-2">
+          {FIRE_TV_APPS.map((app) => (
+            <Button
+              key={app.label}
+              variant="outline"
+              className="wall-btn h-14 text-xs px-1 leading-tight whitespace-normal"
+              onClick={() => launch(app.activity)}
+            >
+              {app.label}
+            </Button>
+          ))}
+        </div>
+      )}
+
+      {/* D-pad: 3x3 grid with arrows around a center OK */}
+      <div className="grid grid-cols-3 gap-2">
+        <div />
+        <KeyButton label="Up" icon={ArrowUp} command="DPAD_UP" />
+        <div />
+        <KeyButton label="Left" icon={ArrowLeft} command="DPAD_LEFT" />
+        <Button
+          variant="outline"
+          aria-label="OK"
+          title="OK"
+          className="wall-btn-active h-12 font-semibold"
+          onClick={() => sendKey("DPAD_CENTER")}
+        >
+          OK
+        </Button>
+        <KeyButton label="Right" icon={ArrowRight} command="DPAD_RIGHT" />
+        <div />
+        <KeyButton label="Down" icon={ArrowDown} command="DPAD_DOWN" />
+        <div />
+      </div>
+
+      <div className="grid grid-cols-3 gap-2">
+        <KeyButton label="Back" icon={Undo2} command="BACK" />
+        <KeyButton
+          label="Play / Pause"
+          icon={Play}
+          command="MEDIA_PLAY_PAUSE"
+        />
+        <KeyButton label="Home" icon={HomeIcon} command="HOME" />
+      </div>
+
+      <div className="grid grid-cols-3 gap-2">
+        <Button
+          variant="outline"
+          aria-label="Volume down"
+          title="Volume down"
+          className="wall-btn h-12"
+          onClick={() => call("media_player", "volume_down")}
+        >
+          <Minus className="w-4 h-4 mr-1" />
+          <Volume1 className="w-4 h-4" />
+        </Button>
+        <Button
+          variant="outline"
+          aria-label="Apps"
+          title="Apps"
+          className="wall-btn h-12"
+          onClick={() =>
+            isAndroidTV
+              ? launch("com.amazon.tv.launcher/.ui.HomeActivity")
+              : sendKey("MENU")
+          }
+        >
+          <MenuIcon className="w-4 h-4 mr-1" /> Apps
+        </Button>
+        <Button
+          variant="outline"
+          aria-label="Volume up"
+          title="Volume up"
+          className="wall-btn h-12"
+          onClick={() => call("media_player", "volume_up")}
+        >
+          <Plus className="w-4 h-4 mr-1" />
+          <Volume2 className="w-4 h-4" />
+        </Button>
+      </div>
+
+      {!off && (
+        <Button
+          variant="outline"
+          className="wall-btn w-full h-12 mt-1 text-red-200 border-red-500/40 hover:bg-red-500/10"
+          onClick={() => call("media_player", "turn_off")}
+        >
+          <Power className="w-4 h-4 mr-2" /> Power Off
         </Button>
       )}
     </div>
