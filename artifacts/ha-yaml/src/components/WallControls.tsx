@@ -177,7 +177,6 @@ export function WallControls({ entity, onClose, onChanged }: Props) {
             </div>
           )}
 
-        <Attributes entity={entity} />
       </div>
     </div>
   );
@@ -668,52 +667,3 @@ function RunButton({
   );
 }
 
-function Attributes({ entity }: { entity: HAState }) {
-  const skip = new Set([
-    "friendly_name",
-    "icon",
-    "supported_features",
-    "supported_color_modes",
-    "hvac_modes",
-    "fan_modes",
-    "preset_modes",
-    "swing_modes",
-    "min_mireds",
-    "max_mireds",
-    "min_temp",
-    "max_temp",
-    "target_temp_step",
-    "min_color_temp_kelvin",
-    "max_color_temp_kelvin",
-  ]);
-  const entries = Object.entries(entity.attributes).filter(
-    ([k, v]) =>
-      !skip.has(k) &&
-      v !== null &&
-      v !== undefined &&
-      (typeof v !== "object" || (Array.isArray(v) && v.length === 0)),
-  );
-  if (entries.length === 0) return null;
-  return (
-    <details className="rounded-xl bg-[rgba(0,0,0,0.18)] border border-[rgba(232,193,120,0.08)]">
-      <summary className="cursor-pointer px-4 py-3 text-xs uppercase tracking-wider text-[var(--cream-muted)]">
-        Attributes ({entries.length})
-      </summary>
-      <div className="px-4 pb-4 space-y-1.5 text-sm">
-        {entries.map(([k, v]) => (
-          <div
-            key={k}
-            className="flex items-start justify-between gap-3 border-t border-[rgba(232,193,120,0.06)] pt-1.5"
-          >
-            <span className="text-[var(--cream-muted)] font-mono text-xs truncate">
-              {k}
-            </span>
-            <span className="font-mono text-xs text-[var(--cream)] text-right break-all">
-              {String(v)}
-            </span>
-          </div>
-        ))}
-      </div>
-    </details>
-  );
-}
