@@ -28,6 +28,7 @@ import "./wall-theme.css";
 import { SuperView } from "./SuperView";
 import { WallControls } from "./WallControls";
 import { RoomsView } from "./RoomsView";
+import { GroupedByRoomView } from "./GroupedByRoomView";
 import { Home as HomeIcon } from "lucide-react";
 
 type CategoryKey =
@@ -692,6 +693,12 @@ export function Wall() {
               <SuperView key="super" states={states} />
             ) : active === "rooms" ? (
               <RoomsView key="rooms" states={states} refresh={refresh} />
+            ) : active === "lights" ? (
+              <GroupedByRoomView
+                key="lights-grouped"
+                entities={filtered}
+                renderTile={renderTile}
+              />
             ) : filtered.length === 0 ? (
               <motion.div
                 key="empty"
