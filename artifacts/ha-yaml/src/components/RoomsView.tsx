@@ -16,10 +16,16 @@ import {
   type RoomLight,
 } from "@/lib/rooms";
 import { useRoomAliases } from "@/lib/roomAliases";
+import { useEntityAliases } from "@/lib/entityAliases";
 import type { HAState } from "@/lib/ha";
 
 const friendlyName = (s: HAState) =>
   (s.attributes.friendly_name as string | undefined) ?? s.entity_id;
+
+const displayLightName = (
+  s: HAState,
+  aliases: Record<string, string>,
+) => aliases[s.entity_id] ?? friendlyName(s);
 
 export function RoomsView({
   states,
@@ -308,10 +314,14 @@ function RoomDetailSheet({
     };
   }, [room, onClose]);
 
+  const entityAliases = useEntityAliases((s) => s.aliases);
+
   if (!room) return null;
 
   const sortedLights = [...room.lights].sort((a, b) =>
-    friendlyName(a.state).localeCompare(friendlyName(b.state)),
+    displayLightName(a.state, entityAliases).localeCompare(
+      displayLightName(b.state, entityAliases),
+    ),
   );
   const effectiveMaster = masterPct ?? room.avgPctOfOn;
 
@@ -405,6 +415,7 @@ function RoomDetailSheet({
                 key={light.state.entity_id}
                 light={light}
                 refresh={refresh}
+                displayName={displayLightName(light.state, entityAliases)}
               />
             ))
           )}
@@ -417,9 +428,11 @@ function RoomDetailSheet({
 function LightRow({
   light,
   refresh,
+  displayName,
 }: {
   light: RoomLight;
   refresh: () => Promise<void> | void;
+  displayName: string;
 }) {
   const [localPct, setLocalPct] = useState<number | null>(null);
   const [pending, setPending] = useState(false);
@@ -434,7 +447,7 @@ function LightRow({
 
   const pct = localPct ?? light.pct;
   const on = pct > 0;
-  const name = friendlyName(light.state);
+  const name = displayName;
 
   const commit = async (newPct: number) => {
     setPending(true);
