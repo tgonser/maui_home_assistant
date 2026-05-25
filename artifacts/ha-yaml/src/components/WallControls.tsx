@@ -960,17 +960,14 @@ function GroupPicker({
 }
 
 // App shortcuts for Fire TV. The Android TV / Fire TV integration accepts
-// `am start -n <package>/<activity>` via the `adb_command` service, which is
-// how the user's existing HA remote launches these apps.
-const FIRE_TV_APPS: { label: string; activity: string }[] = [
-  {
-    label: "YouTube TV",
-    activity:
-      "com.google.android.youtube.tvunplugged/.activity.MainActivity",
-  },
-  { label: "Apple TV", activity: "com.apple.atve.amazon.appletv/.MainActivity" },
-  { label: "Netflix", activity: "com.netflix.ninja/.MainActivity" },
-  { label: "Max", activity: "com.wbd.stream/.MainActivity" },
+// `monkey -p <package> 1` via the `adb_command` service, which is how the
+// user's existing HA remote launches these apps (more reliable than
+// `am start` since it doesn't require knowing the activity name).
+const FIRE_TV_APPS: { label: string; pkg: string }[] = [
+  { label: "YouTube TV", pkg: "com.amazon.firetv.youtube.tv" },
+  { label: "Apple TV", pkg: "com.apple.atve.amazon.appletv" },
+  { label: "Netflix", pkg: "com.netflix.ninja" },
+  { label: "Max", pkg: "com.wbd.stream" },
 ];
 
 // Renders a TV remote pad (app shortcuts, D-pad, nav, volume, power) whenever
@@ -1006,7 +1003,7 @@ function RemoteControls({
     call("remote", "send_command", { entity_id: remoteId, command });
   const sendAdb = (command: string) =>
     call("androidtv", "adb_command", { command });
-  const launch = (activity: string) => sendAdb(`am start -n ${activity}`);
+  const launch = (pkg: string) => sendAdb(`monkey -p ${pkg} 1`);
 
   const KeyButton = ({
     label,
@@ -1038,9 +1035,7 @@ function RemoteControls({
           <Button
             variant="outline"
             className="wall-btn-active h-9 text-xs"
-            onClick={() =>
-              isAndroidTV ? sendAdb("WAKEUP") : sendKey("WAKEUP")
-            }
+            onClick={() => call("media_player", "turn_on")}
           >
             <Power className="w-4 h-4 mr-1" /> Wake
           </Button>
@@ -1054,7 +1049,7 @@ function RemoteControls({
               key={app.label}
               variant="outline"
               className="wall-btn h-14 text-xs px-1 leading-tight whitespace-normal"
-              onClick={() => launch(app.activity)}
+              onClick={() => launch(app.pkg)}
             >
               {app.label}
             </Button>
@@ -1110,9 +1105,7 @@ function RemoteControls({
           title="Apps"
           className="wall-btn h-12"
           onClick={() =>
-            isAndroidTV
-              ? launch("com.amazon.tv.launcher/.ui.HomeActivity")
-              : sendKey("MENU")
+            isAndroidTV ? launch("com.amazon.tv.launcher") : sendKey("MENU")
           }
         >
           <MenuIcon className="w-4 h-4 mr-1" /> Apps
