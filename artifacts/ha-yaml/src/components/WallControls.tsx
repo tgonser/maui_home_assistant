@@ -1,10 +1,5 @@
-import { useEffect, useState } from "react";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { useEffect, useRef, useState } from "react";
+import { X } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Switch as SwitchInput } from "@/components/ui/switch";
@@ -47,6 +42,29 @@ type Props = {
 
 export function WallControls({ entity, onClose, onChanged }: Props) {
   const [busy, setBusy] = useState(false);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!entity) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    const onDown = (e: MouseEvent) => {
+      if (
+        panelRef.current &&
+        e.target instanceof Node &&
+        !panelRef.current.contains(e.target)
+      ) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("mousedown", onDown);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("mousedown", onDown);
+    };
+  }, [entity, onClose]);
 
   if (!entity) return null;
   const d = domainOf(entity.entity_id);
@@ -68,31 +86,41 @@ export function WallControls({ entity, onClose, onChanged }: Props) {
   const Icon = pickIcon(d, entity);
 
   return (
-    <Sheet open={!!entity} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent
-        side="right"
-        className="wall-controls w-[92vw] sm:w-[440px] sm:max-w-[440px] border-l p-0 overflow-y-auto"
-      >
-        <SheetHeader className="p-6 pb-4 border-b border-[rgba(232,193,120,0.18)]">
-          <SheetTitle className="flex items-center gap-3 text-[var(--cream)]">
-            <div className="p-2.5 rounded-xl bg-[rgba(201,153,74,0.12)] text-[var(--brass-bright)]">
-              <Icon className="w-5 h-5" />
+    <div
+      ref={panelRef}
+      role="dialog"
+      aria-modal="false"
+      aria-label={`Controls for ${friendly(entity)}`}
+      className="wall-controls fixed top-0 right-0 bottom-0 z-40 w-[92vw] sm:w-[440px] max-w-[440px] overflow-y-auto shadow-2xl animate-in slide-in-from-right duration-300"
+    >
+      <div className="p-6 pb-4 border-b border-[rgba(232,193,120,0.18)]">
+        <div className="flex items-center gap-3 text-[var(--cream)]">
+          <div className="p-2.5 rounded-xl bg-[rgba(201,153,74,0.12)] text-[var(--brass-bright)]">
+            <Icon className="w-5 h-5" />
+          </div>
+          <div className="min-w-0 flex-1 text-left">
+            <div className="text-lg font-medium truncate">
+              {friendly(entity)}
             </div>
-            <div className="min-w-0 flex-1 text-left">
-              <div className="text-lg font-medium truncate">
-                {friendly(entity)}
-              </div>
-              <div className="text-[11px] font-mono text-[var(--cream-muted)] truncate">
-                {entity.entity_id}
-              </div>
+            <div className="text-[11px] font-mono text-[var(--cream-muted)] truncate">
+              {entity.entity_id}
             </div>
-            {busy && (
-              <Loader2 className="w-4 h-4 animate-spin text-[var(--brass)]" />
-            )}
-          </SheetTitle>
-        </SheetHeader>
+          </div>
+          {busy && (
+            <Loader2 className="w-4 h-4 animate-spin text-[var(--brass)]" />
+          )}
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close controls"
+            className="p-2 rounded-lg text-[var(--cream-muted)] hover:text-[var(--cream)] hover:bg-[rgba(232,193,120,0.08)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cream)]/60"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
 
-        <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6">
           <StatePill entity={entity} />
 
           {d === "light" && <LightControls entity={entity} call={call} />}
@@ -149,10 +177,9 @@ export function WallControls({ entity, onClose, onChanged }: Props) {
             </div>
           )}
 
-          <Attributes entity={entity} />
-        </div>
-      </SheetContent>
-    </Sheet>
+        <Attributes entity={entity} />
+      </div>
+    </div>
   );
 }
 
