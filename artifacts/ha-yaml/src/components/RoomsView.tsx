@@ -278,11 +278,18 @@ function RoomDetailSheet({
 }) {
   const [masterPct, setMasterPct] = useState<number | null>(null);
   const [pendingMaster, setPendingMaster] = useState(false);
+  const upstreamAvg = room?.avgPctOfOn ?? 0;
 
   // Reset local master slider whenever the open room changes
   useEffect(() => {
     setMasterPct(null);
   }, [room?.id]);
+
+  // Clear local override once HA reports a value reasonably close to ours
+  useEffect(() => {
+    if (masterPct === null) return;
+    if (Math.abs(upstreamAvg - masterPct) <= 8) setMasterPct(null);
+  }, [upstreamAvg, masterPct]);
 
   if (!room) {
     return (
@@ -300,10 +307,16 @@ function RoomDetailSheet({
   const applyMaster = async (pct: number) => {
     setPendingMaster(true);
     setMasterPct(pct);
-    await setRoomBrightness(room, pct);
-    await refresh();
-    setPendingMaster(false);
-    setMasterPct(null);
+    try {
+      await setRoomBrightness(room, pct);
+      await refresh();
+    } finally {
+      setPendingMaster(false);
+      // Keep the local value visible; the useEffect above (or a 5s safety
+      // timeout) will clear it once HA catches up or if the call silently
+      // failed.
+      window.setTimeout(() => setMasterPct(null), 5000);
+    }
   };
 
   return (
@@ -386,10 +399,13 @@ function LightRow({
   const [localPct, setLocalPct] = useState<number | null>(null);
   const [pending, setPending] = useState(false);
 
-  // When upstream state changes, drop the local override
+  // Clear local override only once HA's reported value is close to ours
+  // (some dimmers take a moment to echo back the new brightness).
   useEffect(() => {
-    setLocalPct(null);
-  }, [light.pct, light.on]);
+    if (localPct === null) return;
+    const upstream = light.on ? light.pct : 0;
+    if (Math.abs(upstream - localPct) <= 8) setLocalPct(null);
+  }, [light.pct, light.on, localPct]);
 
   const pct = localPct ?? light.pct;
   const on = pct > 0;
@@ -402,8 +418,10 @@ function LightRow({
       await setLightBrightness(light.state.entity_id, newPct);
       await refresh();
     } finally {
-      setLocalPct(null);
       setPending(false);
+      // Safety: if HA never echoes back, drop the override after 5s so we
+      // don't lie about the real state forever.
+      window.setTimeout(() => setLocalPct(null), 5000);
     }
   };
 
