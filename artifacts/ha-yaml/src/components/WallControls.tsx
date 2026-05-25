@@ -260,16 +260,49 @@ function pickIcon(d: string, e: HAState) {
   return Activity;
 }
 
+// Map raw HA state to a friendlier label. Media players need extra care
+// because Bluesound reports `state: "idle"` whenever the active source is
+// line-in or the TV hub passthrough — even while audio is actively playing.
+function displayState(entity: HAState): string {
+  const raw = entity.state;
+  const cap = (s: string) =>
+    s.length === 0 ? s : s[0].toUpperCase() + s.slice(1);
+  if (domainOf(entity.entity_id) !== "media_player") {
+    return raw.includes("_")
+      ? raw.split("_").map(cap).join(" ")
+      : cap(raw);
+  }
+  if (raw === "off") return "Off";
+  if (raw === "standby") return "Standby";
+  if (raw === "playing") return "Playing";
+  if (raw === "paused") return "Paused";
+  if (raw === "buffering") return "Buffering";
+  if (raw === "unavailable") return "Unavailable";
+  if (raw === "unknown") return "Unknown";
+  // raw is typically "idle" at this point. Bluesound players streaming a
+  // line-in / TV passthrough source report idle even while audio plays, so
+  // look for tell-tale signs of an active stream.
+  const title = entity.attributes.media_title as string | undefined;
+  const source = entity.attributes.source as string | undefined;
+  const groupMembers =
+    (entity.attributes.group_members as string[] | undefined) ?? [];
+  if (title && title.trim().length > 0) return "Streaming";
+  if (source && groupMembers.length > 1) return `Streaming · ${source}`;
+  if (source && source.toLowerCase() !== "idle") return source;
+  return "Idle";
+}
+
 function StatePill({ entity }: { entity: HAState }) {
   const unit =
     (entity.attributes.unit_of_measurement as string | undefined) ?? "";
+  const label = displayState(entity);
   return (
     <div className="rounded-xl p-4 bg-[rgba(0,0,0,0.25)] border border-[rgba(232,193,120,0.12)] flex items-center justify-between">
       <span className="text-xs uppercase tracking-wider text-[var(--cream-muted)]">
         Current state
       </span>
       <span className="text-xl font-semibold tabular-nums text-[var(--brass-bright)]">
-        {entity.state}
+        {label}
         {unit && (
           <span className="text-sm text-[var(--cream-muted)] ml-1">
             {unit}
