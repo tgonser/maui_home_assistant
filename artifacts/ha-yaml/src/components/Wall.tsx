@@ -225,6 +225,19 @@ const isTvMedia = (s: HAState) => {
   return TV_PATTERNS.some((re) => re.test(name) || re.test(id));
 };
 
+// Non-Bluesound music brands that should NOT be treated as music zones, even
+// if their name happens to contain a zone token (e.g. "JBL Bar 1300" matches
+// the "Bar" zone). These are TV-audio devices reachable as a *source* via
+// the Great Room TV hub, not music destinations.
+const NON_MUSIC_BRAND_PATTERNS: RegExp[] = [/\bjbl\b/];
+const isNonMusicBrand = (s: HAState) => {
+  const name = (
+    (s.attributes.friendly_name as string | undefined) ?? ""
+  ).toLowerCase();
+  const id = s.entity_id.toLowerCase();
+  return NON_MUSIC_BRAND_PATTERNS.some((re) => re.test(name) || re.test(id));
+};
+
 // Canonical Bluesound music zones in this home. Order shown on the kiosk.
 // Note: "Great Room TV" is a Bluesound hub that pipes TV audio out to other
 // speakers — it's a source, not a destination zone, so it's not listed here.
@@ -269,6 +282,9 @@ const normForZone = (s: string) =>
 // "Great Room" and "Great Room TV"), the more specific (longer) zone wins.
 export function matchMusicZone(s: HAState): string | null {
   if (domainOf(s.entity_id) !== "media_player") return null;
+  // Non-Bluesound brands (e.g. JBL soundbar) can't host a music zone even if
+  // their name happens to include a zone token like "bar".
+  if (isNonMusicBrand(s)) return null;
   const name = normForZone(
     (s.attributes.friendly_name as string | undefined) ?? s.entity_id,
   );
@@ -379,6 +395,7 @@ const CATEGORIES: Category[] = [
     match: (s) =>
       domainOf(s.entity_id) === "media_player" &&
       !isCameraMedia(s) &&
+      !isNonMusicBrand(s) &&
       (matchMusicZone(s) !== null || !isTvMedia(s)),
   },
   {
@@ -388,7 +405,7 @@ const CATEGORIES: Category[] = [
     match: (s) =>
       domainOf(s.entity_id) === "media_player" &&
       !isCameraMedia(s) &&
-      isTvMedia(s) &&
+      (isTvMedia(s) || isNonMusicBrand(s)) &&
       matchMusicZone(s) === null,
   },
   {
@@ -862,8 +879,17 @@ export function Wall() {
       ),
     [musicZoneEntries],
   );
+  // "Other Players" = music_player entities that didn't get their own zone
+  // tile. We also exclude anything that *did* match a zone (just didn't win
+  // the tile because another entity matched the same zone label first), to
+  // avoid showing the same zone twice. Those entities remain reachable via
+  // the Group Picker on the matching zone's tile.
   const otherMusic = useMemo(
-    () => filtered.filter((s) => !zonePlayerIds.has(s.entity_id)),
+    () =>
+      filtered.filter(
+        (s) =>
+          !zonePlayerIds.has(s.entity_id) && matchMusicZone(s) === null,
+      ),
     [filtered, zonePlayerIds],
   );
 
