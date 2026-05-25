@@ -154,7 +154,7 @@ function RoomTile({
       <div className="grid grid-cols-2 gap-2 mt-auto relative z-[1]">
         <Button
           variant="outline"
-          className="wall-btn-active h-12"
+          className={`${room.on ? "wall-btn-active" : "wall-btn"} h-12`}
           onClick={() => handle("on")}
           disabled={busy !== null}
         >
@@ -169,7 +169,7 @@ function RoomTile({
         </Button>
         <Button
           variant="outline"
-          className="wall-btn h-12"
+          className={`${!room.on ? "wall-btn-active" : "wall-btn"} h-12`}
           onClick={() => handle("off")}
           disabled={busy !== null}
         >
