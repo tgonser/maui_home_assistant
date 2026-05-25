@@ -245,7 +245,7 @@ const isNonMusicBrand = (s: HAState) => {
 const HIDDEN_MEDIA_PATTERNS: RegExp[] = [
   /\bptz\b/,
   /\binstant\b/,
-  /\bmud[\s_-]*room\s+hum\b/,
+  /\bmud[\s_-]*room\b/,
   /\bsouth[\s_-]*pool\b/,
 ];
 const isHiddenMedia = (s: HAState) => {
