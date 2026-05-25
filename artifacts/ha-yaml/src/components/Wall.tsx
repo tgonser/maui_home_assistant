@@ -226,11 +226,11 @@ const isTvMedia = (s: HAState) => {
 };
 
 // Canonical Bluesound music zones in this home. Order shown on the kiosk.
-// The Great Room TV speaker is included intentionally so it lives in Music,
-// not the TVs tab.
+// Note: "Great Room TV" is a Bluesound hub that pipes TV audio out to other
+// speakers — it's a source, not a destination zone, so it's not listed here.
 export const MUSIC_ZONES: string[] = [
   "Great Room",
-  "Great Room TV",
+  "Bar",
   "Great Room Lanai",
   "BBQ",
   "Master Bed",
