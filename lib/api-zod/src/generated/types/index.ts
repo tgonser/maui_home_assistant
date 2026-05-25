@@ -6,6 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./entityAlias";
+export * from "./entityAliasInput";
+export * from "./entityAliasMap";
 export * from "./healthStatus";
 export * from "./roomAlias";
 export * from "./roomAliasInput";

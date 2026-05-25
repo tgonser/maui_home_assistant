@@ -26,3 +26,21 @@ export interface RoomAliasInput {
 export interface RoomAliasMap {
   [key: string]: string;
 }
+
+export interface EntityAlias {
+  entityId: string;
+  alias: string;
+  updatedAt: string;
+}
+
+export interface EntityAliasInput {
+  /**
+   * @minLength 1
+   * @maxLength 80
+   */
+  alias: string;
+}
+
+export interface EntityAliasMap {
+  [key: string]: string;
+}

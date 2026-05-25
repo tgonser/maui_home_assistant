@@ -137,7 +137,7 @@ export function GroupedByRoomView({
               {g.items.length} {g.items.length === 1 ? "item" : "items"}
             </span>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-[180px] gap-4">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 auto-rows-[110px] gap-3">
             {g.items.map(renderTile)}
           </div>
         </section>

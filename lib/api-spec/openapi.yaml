@@ -12,6 +12,8 @@ tags:
     description: Health operations
   - name: roomAliases
     description: Per-area display name overrides for the kiosk
+  - name: entityAliases
+    description: Per-entity display name overrides for the kiosk
 paths:
   /healthz:
     get:
@@ -73,6 +75,53 @@ paths:
       responses:
         "204":
           description: Deleted
+  /entity-aliases:
+    get:
+      operationId: listEntityAliases
+      tags: [entityAliases]
+      summary: List all entity aliases
+      responses:
+        "200":
+          description: All aliases as an object keyed by entity_id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EntityAliasMap"
+  /entity-aliases/{entityId}:
+    put:
+      operationId: setEntityAlias
+      tags: [entityAliases]
+      summary: Create or update an entity alias
+      parameters:
+        - in: path
+          name: entityId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EntityAliasInput"
+      responses:
+        "200":
+          description: Alias upserted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EntityAlias"
+    delete:
+      operationId: deleteEntityAlias
+      tags: [entityAliases]
+      summary: Remove an entity alias
+      parameters:
+        - in: path
+          name: entityId
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Deleted
 components:
   schemas:
     HealthStatus:
@@ -95,5 +144,20 @@ components:
         name: { type: string, minLength: 1, maxLength: 80 }
       required: [name]
     RoomAliasMap:
+      type: object
+      additionalProperties: { type: string }
+    EntityAlias:
+      type: object
+      properties:
+        entityId: { type: string }
+        alias: { type: string }
+        updatedAt: { type: string, format: date-time }
+      required: [entityId, alias, updatedAt]
+    EntityAliasInput:
+      type: object
+      properties:
+        alias: { type: string, minLength: 1, maxLength: 80 }
+      required: [alias]
+    EntityAliasMap:
       type: object
       additionalProperties: { type: string }

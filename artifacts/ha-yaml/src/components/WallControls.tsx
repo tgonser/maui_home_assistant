@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { X } from "lucide-react";
+import { X, Pencil } from "lucide-react";
+import { useEntityAliases } from "@/lib/entityAliases";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Switch as SwitchInput } from "@/components/ui/switch";
@@ -43,6 +44,12 @@ type Props = {
 export function WallControls({ entity, onClose, onChanged }: Props) {
   const [busy, setBusy] = useState(false);
   const panelRef = useRef<HTMLDivElement | null>(null);
+  const aliases = useEntityAliases((s) => s.aliases);
+  const setAlias = useEntityAliases((s) => s.setAlias);
+  const loadAliases = useEntityAliases((s) => s.load);
+  useEffect(() => {
+    loadAliases();
+  }, [loadAliases]);
 
   useEffect(() => {
     if (!entity) return;
@@ -68,6 +75,16 @@ export function WallControls({ entity, onClose, onChanged }: Props) {
 
   if (!entity) return null;
   const d = domainOf(entity.entity_id);
+  const currentAlias = aliases[entity.entity_id] ?? "";
+  const displayName = currentAlias || friendly(entity);
+  const rename = () => {
+    const next = window.prompt(
+      `Rename "${friendly(entity)}" for this kiosk only.\nLeave blank to reset to the Home Assistant name.`,
+      currentAlias,
+    );
+    if (next === null) return;
+    setAlias(entity.entity_id, next);
+  };
 
   const call = async (
     domain: string,
@@ -99,16 +116,23 @@ export function WallControls({ entity, onClose, onChanged }: Props) {
             <Icon className="w-5 h-5" />
           </div>
           <div className="min-w-0 flex-1 text-left">
-            <div className="text-lg font-medium truncate">
-              {friendly(entity)}
-            </div>
+            <div className="text-lg font-medium truncate">{displayName}</div>
             <div className="text-[11px] font-mono text-[var(--cream-muted)] truncate">
-              {entity.entity_id}
+              {currentAlias ? friendly(entity) : entity.entity_id}
             </div>
           </div>
           {busy && (
             <Loader2 className="w-4 h-4 animate-spin text-[var(--brass)]" />
           )}
+          <button
+            type="button"
+            onClick={rename}
+            aria-label="Rename for this kiosk"
+            title="Rename for this kiosk"
+            className="p-2 rounded-lg text-[var(--cream-muted)] hover:text-[var(--cream)] hover:bg-[rgba(232,193,120,0.08)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cream)]/60"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
           <button
             type="button"
             onClick={onClose}

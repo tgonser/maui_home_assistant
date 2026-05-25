@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHAStore, haStates, haCameraImage, type HAState } from "@/lib/ha";
+import { useEntityAliases } from "@/lib/entityAliases";
 import {
   Lightbulb,
   Thermometer,
@@ -240,22 +241,22 @@ function Tile({
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.25 }}
-      className={`wall-tile ${active ? "wall-tile--active" : ""} p-6 min-h-[180px] flex flex-col justify-between ${colSpan}`}
+      className={`wall-tile ${active ? "wall-tile--active" : ""} p-3 min-h-[110px] flex flex-col justify-between ${colSpan}`}
     >
-      <div className="flex items-start justify-between gap-3 relative z-[1]">
-        <div className="wall-icon-wrap p-3 shrink-0">
-          <Icon className="w-6 h-6" />
+      <div className="flex items-start justify-between gap-2 relative z-[1]">
+        <div className="wall-icon-wrap p-2 shrink-0">
+          <Icon className="w-4 h-4" />
         </div>
         {sub && (
-          <div className="sub text-[11px] uppercase text-right max-w-[60%] truncate">
+          <div className="sub text-[10px] uppercase text-right max-w-[60%] truncate">
             {sub}
           </div>
         )}
       </div>
       <div className="relative z-[1]">
-        <div className="label text-base truncate">{label}</div>
+        <div className="label text-xs truncate leading-tight">{label}</div>
         {value !== undefined && (
-          <div className="value text-3xl font-semibold tabular-nums truncate mt-0.5">
+          <div className="value text-xl font-semibold tabular-nums truncate mt-0.5">
             {value}
           </div>
         )}
@@ -495,6 +496,20 @@ export function Wall() {
   const [error, setError] = useState<string | null>(null);
   const [isFs, setIsFs] = useState(false);
   const [openEntity, setOpenEntity] = useState<HAState | null>(null);
+  const entityAliases = useEntityAliases((s) => s.aliases);
+  const loadEntityAliases = useEntityAliases((s) => s.load);
+  useEffect(() => {
+    loadEntityAliases();
+  }, [loadEntityAliases]);
+
+  const applyAlias = (s: HAState): HAState => {
+    const alias = entityAliases[s.entity_id];
+    if (!alias) return s;
+    return {
+      ...s,
+      attributes: { ...s.attributes, friendly_name: alias },
+    };
+  };
 
   const openId = openEntity?.entity_id;
   // Keep the open sheet's entity in sync with refreshed states
@@ -504,17 +519,20 @@ export function Wall() {
     if (latest && latest !== openEntity) setOpenEntity(latest);
   }, [states, openId, openEntity]);
 
-  const clickableTile = (s: HAState) => (
-    <button
-      type="button"
-      key={s.entity_id}
-      onClick={() => setOpenEntity(s)}
-      aria-label={`Open ${(s.attributes.friendly_name as string) ?? s.entity_id}`}
-      className="text-left rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cream)]/60"
-    >
-      {renderTile(s)}
-    </button>
-  );
+  const clickableTile = (s: HAState) => {
+    const aliased = applyAlias(s);
+    return (
+      <button
+        type="button"
+        key={s.entity_id}
+        onClick={() => setOpenEntity(s)}
+        aria-label={`Open ${(aliased.attributes.friendly_name as string) ?? s.entity_id}`}
+        className="text-left rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cream)]/60"
+      >
+        {renderTile(aliased)}
+      </button>
+    );
+  };
 
   useEffect(() => {
     if (!url || !token) return;
@@ -761,7 +779,7 @@ export function Wall() {
               <motion.div
                 key={active}
                 layout
-                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-[180px] gap-4"
+                className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 auto-rows-[110px] gap-3"
               >
                 {filtered.map(clickableTile)}
               </motion.div>

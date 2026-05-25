@@ -45,3 +45,34 @@ export const SetRoomAliasResponse = zod.object({
 export const DeleteRoomAliasParams = zod.object({
   areaId: zod.coerce.string(),
 });
+
+/**
+ * @summary List all entity aliases
+ */
+export const ListEntityAliasesResponse = zod.record(zod.string(), zod.string());
+
+/**
+ * @summary Create or update an entity alias
+ */
+export const SetEntityAliasParams = zod.object({
+  entityId: zod.coerce.string(),
+});
+
+export const setEntityAliasBodyAliasMax = 80;
+
+export const SetEntityAliasBody = zod.object({
+  alias: zod.string().min(1).max(setEntityAliasBodyAliasMax),
+});
+
+export const SetEntityAliasResponse = zod.object({
+  entityId: zod.string(),
+  alias: zod.string(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Remove an entity alias
+ */
+export const DeleteEntityAliasParams = zod.object({
+  entityId: zod.coerce.string(),
+});

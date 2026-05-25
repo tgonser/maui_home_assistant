@@ -17,6 +17,9 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  EntityAlias,
+  EntityAliasInput,
+  EntityAliasMap,
   HealthStatus,
   RoomAlias,
   RoomAliasInput,
@@ -352,4 +355,250 @@ export const useDeleteRoomAlias = <
   TContext
 > => {
   return useMutation(getDeleteRoomAliasMutationOptions(options));
+};
+
+/**
+ * @summary List all entity aliases
+ */
+export const getListEntityAliasesUrl = () => {
+  return `/api/entity-aliases`;
+};
+
+export const listEntityAliases = async (
+  options?: RequestInit,
+): Promise<EntityAliasMap> => {
+  return customFetch<EntityAliasMap>(getListEntityAliasesUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListEntityAliasesQueryKey = () => {
+  return [`/api/entity-aliases`] as const;
+};
+
+export const getListEntityAliasesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listEntityAliases>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listEntityAliases>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListEntityAliasesQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listEntityAliases>>
+  > = ({ signal }) => listEntityAliases({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listEntityAliases>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListEntityAliasesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listEntityAliases>>
+>;
+export type ListEntityAliasesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all entity aliases
+ */
+
+export function useListEntityAliases<
+  TData = Awaited<ReturnType<typeof listEntityAliases>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listEntityAliases>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListEntityAliasesQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create or update an entity alias
+ */
+export const getSetEntityAliasUrl = (entityId: string) => {
+  return `/api/entity-aliases/${entityId}`;
+};
+
+export const setEntityAlias = async (
+  entityId: string,
+  entityAliasInput: EntityAliasInput,
+  options?: RequestInit,
+): Promise<EntityAlias> => {
+  return customFetch<EntityAlias>(getSetEntityAliasUrl(entityId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(entityAliasInput),
+  });
+};
+
+export const getSetEntityAliasMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setEntityAlias>>,
+    TError,
+    { entityId: string; data: BodyType<EntityAliasInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setEntityAlias>>,
+  TError,
+  { entityId: string; data: BodyType<EntityAliasInput> },
+  TContext
+> => {
+  const mutationKey = ["setEntityAlias"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setEntityAlias>>,
+    { entityId: string; data: BodyType<EntityAliasInput> }
+  > = (props) => {
+    const { entityId, data } = props ?? {};
+
+    return setEntityAlias(entityId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetEntityAliasMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setEntityAlias>>
+>;
+export type SetEntityAliasMutationBody = BodyType<EntityAliasInput>;
+export type SetEntityAliasMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create or update an entity alias
+ */
+export const useSetEntityAlias = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setEntityAlias>>,
+    TError,
+    { entityId: string; data: BodyType<EntityAliasInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof setEntityAlias>>,
+  TError,
+  { entityId: string; data: BodyType<EntityAliasInput> },
+  TContext
+> => {
+  return useMutation(getSetEntityAliasMutationOptions(options));
+};
+
+/**
+ * @summary Remove an entity alias
+ */
+export const getDeleteEntityAliasUrl = (entityId: string) => {
+  return `/api/entity-aliases/${entityId}`;
+};
+
+export const deleteEntityAlias = async (
+  entityId: string,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteEntityAliasUrl(entityId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteEntityAliasMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteEntityAlias>>,
+    TError,
+    { entityId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteEntityAlias>>,
+  TError,
+  { entityId: string },
+  TContext
+> => {
+  const mutationKey = ["deleteEntityAlias"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteEntityAlias>>,
+    { entityId: string }
+  > = (props) => {
+    const { entityId } = props ?? {};
+
+    return deleteEntityAlias(entityId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteEntityAliasMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteEntityAlias>>
+>;
+
+export type DeleteEntityAliasMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Remove an entity alias
+ */
+export const useDeleteEntityAlias = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteEntityAlias>>,
+    TError,
+    { entityId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteEntityAlias>>,
+  TError,
+  { entityId: string },
+  TContext
+> => {
+  return useMutation(getDeleteEntityAliasMutationOptions(options));
 };
