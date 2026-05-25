@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Lightbulb, Power, Loader2 } from "lucide-react";
+import { Lightbulb, Power, Loader2, Pencil } from "lucide-react";
 import {
   useRegistry,
   deriveRooms,
@@ -9,6 +9,7 @@ import {
   turnRoomOff,
   type Room,
 } from "@/lib/rooms";
+import { useRoomAliases } from "@/lib/roomAliases";
 import type { HAState } from "@/lib/ha";
 
 export function RoomsView({
@@ -20,6 +21,8 @@ export function RoomsView({
 }) {
   const registry = useRegistry();
   const load = useRegistry((s) => s.load);
+  const aliases = useRoomAliases((s) => s.aliases);
+  const setAlias = useRoomAliases((s) => s.setAlias);
 
   useEffect(() => {
     load();
@@ -50,6 +53,19 @@ export function RoomsView({
     if (!sharedPrefix) return name;
     const stripped = name.slice(sharedPrefix.length).trim();
     return stripped || name;
+  };
+
+  const displayNameFor = (room: Room) =>
+    aliases[room.id]?.trim() || shortName(room.name);
+
+  const handleRename = (room: Room) => {
+    const current = aliases[room.id] ?? "";
+    const next = window.prompt(
+      `Rename "${room.name}" for this kiosk only.\nLeave blank to reset.`,
+      current,
+    );
+    if (next === null) return;
+    setAlias(room.id, next);
   };
 
   if (registry.loading && rooms.length === 0) {
@@ -99,7 +115,9 @@ export function RoomsView({
           <RoomTile
             key={room.id}
             room={room}
-            displayName={shortName(room.name)}
+            displayName={displayNameFor(room)}
+            isAliased={!!aliases[room.id]}
+            onRename={() => handleRename(room)}
             onChanged={refresh}
           />
         ))}
@@ -111,10 +129,14 @@ export function RoomsView({
 function RoomTile({
   room,
   displayName,
+  isAliased,
+  onRename,
   onChanged,
 }: {
   room: Room;
   displayName: string;
+  isAliased: boolean;
+  onRename: () => void;
   onChanged: () => Promise<void> | void;
 }) {
   const [busy, setBusy] = useState<"on" | "off" | null>(null);
@@ -135,7 +157,7 @@ function RoomTile({
       transition={{ duration: 0.2 }}
       className="wall-tile p-5 flex flex-col gap-4 min-h-[160px]"
     >
-      <div className="flex items-center gap-3 relative z-[1]">
+      <div className="flex items-start gap-3 relative z-[1]">
         <div className="wall-icon-wrap p-2.5 shrink-0">
           <Lightbulb className="w-5 h-5" />
         </div>
@@ -148,8 +170,20 @@ function RoomTile({
           </div>
           <div className="sub text-[11px] uppercase tabular-nums mt-1">
             {room.totalLights} {room.totalLights === 1 ? "light" : "lights"}
+            {isAliased && (
+              <span className="ml-2 opacity-60 normal-case">
+                · {room.name}
+              </span>
+            )}
           </div>
         </div>
+        <button
+          onClick={onRename}
+          className="wall-rename-btn shrink-0 p-1.5 rounded-md"
+          title="Rename for this kiosk"
+        >
+          <Pencil className="w-3.5 h-3.5" />
+        </button>
       </div>
       <div className="grid grid-cols-2 gap-2 mt-auto relative z-[1]">
         <Button

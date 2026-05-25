@@ -419,6 +419,21 @@
   transform: translateY(1px);
 }
 
+/* Small rename pencil on room tiles */
+.wall-rename-btn {
+  color: var(--cream-muted);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(232, 193, 120, 0.08);
+  opacity: 0.5;
+  transition: all 0.15s ease;
+}
+.wall-rename-btn:hover {
+  color: var(--brass-bright);
+  background: rgba(201, 153, 74, 0.15);
+  border-color: rgba(201, 153, 74, 0.35);
+  opacity: 1;
+}
+
 /* Decorative monstera leaf in corner */
 .wall-leaf {
   position: fixed;
