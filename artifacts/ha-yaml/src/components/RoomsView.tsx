@@ -30,6 +30,28 @@ export function RoomsView({
     [states, registry],
   );
 
+  // Strip the longest shared word-prefix from every room name so e.g.
+  // "Floor 1 Bedroom 1", "Floor 1 Bedroom 2" collapse to "Bedroom 1", "Bedroom 2"
+  const sharedPrefix = useMemo(() => {
+    if (rooms.length < 2) return "";
+    const wordLists = rooms.map((r) => r.name.split(/\s+/));
+    const minLen = Math.min(...wordLists.map((w) => w.length));
+    const common: string[] = [];
+    for (let i = 0; i < minLen - 1; i++) {
+      const w = wordLists[0][i];
+      if (wordLists.every((wl) => wl[i].toLowerCase() === w.toLowerCase())) {
+        common.push(w);
+      } else break;
+    }
+    return common.join(" ");
+  }, [rooms]);
+
+  const shortName = (name: string) => {
+    if (!sharedPrefix) return name;
+    const stripped = name.slice(sharedPrefix.length).trim();
+    return stripped || name;
+  };
+
   if (registry.loading && rooms.length === 0) {
     return (
       <div className="flex items-center justify-center py-20 text-[var(--cream-muted)] gap-2">
@@ -63,22 +85,36 @@ export function RoomsView({
   }
 
   return (
-    <motion.div
-      layout
-      className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
-    >
-      {rooms.map((room) => (
-        <RoomTile key={room.id} room={room} onChanged={refresh} />
-      ))}
-    </motion.div>
+    <>
+      {sharedPrefix && (
+        <div className="text-xs uppercase tracking-wider text-[var(--cream-muted)] mb-3">
+          {sharedPrefix}
+        </div>
+      )}
+      <motion.div
+        layout
+        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+      >
+        {rooms.map((room) => (
+          <RoomTile
+            key={room.id}
+            room={room}
+            displayName={shortName(room.name)}
+            onChanged={refresh}
+          />
+        ))}
+      </motion.div>
+    </>
   );
 }
 
 function RoomTile({
   room,
+  displayName,
   onChanged,
 }: {
   room: Room;
+  displayName: string;
   onChanged: () => Promise<void> | void;
 }) {
   const [busy, setBusy] = useState<"on" | "off" | null>(null);
@@ -104,10 +140,13 @@ function RoomTile({
           <Lightbulb className="w-5 h-5" />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="value text-lg font-semibold truncate">
-            {room.name}
+          <div
+            className="value text-xl font-semibold leading-tight break-words"
+            title={room.name}
+          >
+            {displayName}
           </div>
-          <div className="sub text-[11px] uppercase tabular-nums">
+          <div className="sub text-[11px] uppercase tabular-nums mt-1">
             {room.totalLights} {room.totalLights === 1 ? "light" : "lights"}
           </div>
         </div>
