@@ -52,8 +52,28 @@ export function GroupedByRoomView({
     type Group = { key: string; label: string; items: HAState[] };
     const byArea = new Map<string, HAState[]>();
     const unassigned: HAState[] = [];
+    const helpers: HAState[] = [];
+
+    const isHelper = (s: HAState) => {
+      const name = (
+        (s.attributes.friendly_name as string | undefined) ?? s.entity_id
+      ).toLowerCase();
+      const id = s.entity_id.toLowerCase();
+      const obj = id.split(".")[1] ?? "";
+      return (
+        name.startsWith("helper ") ||
+        name.startsWith("helper:") ||
+        obj.startsWith("helper_") ||
+        obj.startsWith("group_") ||
+        id.startsWith("group.")
+      );
+    };
 
     for (const s of entities) {
+      if (isHelper(s)) {
+        helpers.push(s);
+        continue;
+      }
       const areaId = registry.entityArea.get(s.entity_id);
       if (!areaId) {
         unassigned.push(s);
@@ -80,6 +100,15 @@ export function GroupedByRoomView({
         key: "__unassigned__",
         label: "Unassigned",
         items: unassigned.sort((a, b) =>
+          friendly(a).localeCompare(friendly(b)),
+        ),
+      });
+    }
+    if (helpers.length > 0) {
+      out.push({
+        key: "__helpers__",
+        label: "Helpers & Groups",
+        items: helpers.sort((a, b) =>
           friendly(a).localeCompare(friendly(b)),
         ),
       });
