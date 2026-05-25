@@ -471,6 +471,27 @@ export function Wall() {
   const [active, setActive] = useState<CategoryKey>("overview");
   const [error, setError] = useState<string | null>(null);
   const [isFs, setIsFs] = useState(false);
+  const [openEntity, setOpenEntity] = useState<HAState | null>(null);
+
+  const openId = openEntity?.entity_id;
+  // Keep the open sheet's entity in sync with refreshed states
+  useEffect(() => {
+    if (!openId) return;
+    const latest = states.find((s) => s.entity_id === openId);
+    if (latest && latest !== openEntity) setOpenEntity(latest);
+  }, [states, openId, openEntity]);
+
+  const clickableTile = (s: HAState) => (
+    <button
+      type="button"
+      key={s.entity_id}
+      onClick={() => setOpenEntity(s)}
+      aria-label={`Open ${(s.attributes.friendly_name as string) ?? s.entity_id}`}
+      className="text-left rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cream)]/60"
+    >
+      {renderTile(s)}
+    </button>
+  );
 
   useEffect(() => {
     if (!url || !token) return;
@@ -700,7 +721,7 @@ export function Wall() {
               <GroupedByRoomView
                 key={`${active}-grouped`}
                 entities={filtered}
-                renderTile={renderTile}
+                renderTile={clickableTile}
               />
             ) : filtered.length === 0 ? (
               <motion.div
@@ -719,12 +740,17 @@ export function Wall() {
                 layout
                 className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-[180px] gap-4"
               >
-                {filtered.map(renderTile)}
+                {filtered.map(clickableTile)}
               </motion.div>
             )}
           </AnimatePresence>
         </div>
       </main>
+      <WallControls
+        entity={openEntity}
+        onClose={() => setOpenEntity(null)}
+        onChanged={refresh}
+      />
     </div>
   );
 }
