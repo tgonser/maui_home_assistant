@@ -8,3 +8,21 @@
 export interface HealthStatus {
   status: string;
 }
+
+export interface RoomAlias {
+  areaId: string;
+  name: string;
+  updatedAt: string;
+}
+
+export interface RoomAliasInput {
+  /**
+   * @minLength 1
+   * @maxLength 80
+   */
+  name: string;
+}
+
+export interface RoomAliasMap {
+  [key: string]: string;
+}

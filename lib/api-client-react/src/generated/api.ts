@@ -5,18 +5,26 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
+  MutationFunction,
   QueryFunction,
   QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
 
-import type { HealthStatus } from "./api.schemas";
+import type {
+  HealthStatus,
+  RoomAlias,
+  RoomAliasInput,
+  RoomAliasMap,
+} from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
-import type { ErrorType } from "../custom-fetch";
+import type { ErrorType, BodyType } from "../custom-fetch";
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -99,3 +107,249 @@ export function useHealthCheck<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary List all room aliases
+ */
+export const getListRoomAliasesUrl = () => {
+  return `/api/room-aliases`;
+};
+
+export const listRoomAliases = async (
+  options?: RequestInit,
+): Promise<RoomAliasMap> => {
+  return customFetch<RoomAliasMap>(getListRoomAliasesUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListRoomAliasesQueryKey = () => {
+  return [`/api/room-aliases`] as const;
+};
+
+export const getListRoomAliasesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listRoomAliases>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listRoomAliases>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListRoomAliasesQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listRoomAliases>>> = ({
+    signal,
+  }) => listRoomAliases({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listRoomAliases>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListRoomAliasesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listRoomAliases>>
+>;
+export type ListRoomAliasesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all room aliases
+ */
+
+export function useListRoomAliases<
+  TData = Awaited<ReturnType<typeof listRoomAliases>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listRoomAliases>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListRoomAliasesQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create or update an alias
+ */
+export const getSetRoomAliasUrl = (areaId: string) => {
+  return `/api/room-aliases/${areaId}`;
+};
+
+export const setRoomAlias = async (
+  areaId: string,
+  roomAliasInput: RoomAliasInput,
+  options?: RequestInit,
+): Promise<RoomAlias> => {
+  return customFetch<RoomAlias>(getSetRoomAliasUrl(areaId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(roomAliasInput),
+  });
+};
+
+export const getSetRoomAliasMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setRoomAlias>>,
+    TError,
+    { areaId: string; data: BodyType<RoomAliasInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setRoomAlias>>,
+  TError,
+  { areaId: string; data: BodyType<RoomAliasInput> },
+  TContext
+> => {
+  const mutationKey = ["setRoomAlias"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setRoomAlias>>,
+    { areaId: string; data: BodyType<RoomAliasInput> }
+  > = (props) => {
+    const { areaId, data } = props ?? {};
+
+    return setRoomAlias(areaId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetRoomAliasMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setRoomAlias>>
+>;
+export type SetRoomAliasMutationBody = BodyType<RoomAliasInput>;
+export type SetRoomAliasMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create or update an alias
+ */
+export const useSetRoomAlias = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setRoomAlias>>,
+    TError,
+    { areaId: string; data: BodyType<RoomAliasInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof setRoomAlias>>,
+  TError,
+  { areaId: string; data: BodyType<RoomAliasInput> },
+  TContext
+> => {
+  return useMutation(getSetRoomAliasMutationOptions(options));
+};
+
+/**
+ * @summary Remove an alias
+ */
+export const getDeleteRoomAliasUrl = (areaId: string) => {
+  return `/api/room-aliases/${areaId}`;
+};
+
+export const deleteRoomAlias = async (
+  areaId: string,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteRoomAliasUrl(areaId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteRoomAliasMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteRoomAlias>>,
+    TError,
+    { areaId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteRoomAlias>>,
+  TError,
+  { areaId: string },
+  TContext
+> => {
+  const mutationKey = ["deleteRoomAlias"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteRoomAlias>>,
+    { areaId: string }
+  > = (props) => {
+    const { areaId } = props ?? {};
+
+    return deleteRoomAlias(areaId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteRoomAliasMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteRoomAlias>>
+>;
+
+export type DeleteRoomAliasMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Remove an alias
+ */
+export const useDeleteRoomAlias = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteRoomAlias>>,
+    TError,
+    { areaId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteRoomAlias>>,
+  TError,
+  { areaId: string },
+  TContext
+> => {
+  return useMutation(getDeleteRoomAliasMutationOptions(options));
+};

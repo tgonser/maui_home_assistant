@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: roomAliases
+    description: Per-area display name overrides for the kiosk
 paths:
   /healthz:
     get:
@@ -24,6 +26,53 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /room-aliases:
+    get:
+      operationId: listRoomAliases
+      tags: [roomAliases]
+      summary: List all room aliases
+      responses:
+        "200":
+          description: All aliases as an object keyed by area_id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoomAliasMap"
+  /room-aliases/{areaId}:
+    put:
+      operationId: setRoomAlias
+      tags: [roomAliases]
+      summary: Create or update an alias
+      parameters:
+        - in: path
+          name: areaId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoomAliasInput"
+      responses:
+        "200":
+          description: Alias upserted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoomAlias"
+    delete:
+      operationId: deleteRoomAlias
+      tags: [roomAliases]
+      summary: Remove an alias
+      parameters:
+        - in: path
+          name: areaId
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Deleted
 components:
   schemas:
     HealthStatus:
@@ -33,4 +82,18 @@ components:
           type: string
       required:
         - status
-
+    RoomAlias:
+      type: object
+      properties:
+        areaId: { type: string }
+        name: { type: string }
+        updatedAt: { type: string, format: date-time }
+      required: [areaId, name, updatedAt]
+    RoomAliasInput:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+      required: [name]
+    RoomAliasMap:
+      type: object
+      additionalProperties: { type: string }

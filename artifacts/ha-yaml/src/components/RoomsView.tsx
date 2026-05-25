@@ -23,10 +23,12 @@ export function RoomsView({
   const load = useRegistry((s) => s.load);
   const aliases = useRoomAliases((s) => s.aliases);
   const setAlias = useRoomAliases((s) => s.setAlias);
+  const loadAliases = useRoomAliases((s) => s.load);
 
   useEffect(() => {
     load();
-  }, [load]);
+    loadAliases();
+  }, [load, loadAliases]);
 
   const rooms = useMemo(
     () => deriveRooms(states, registry),

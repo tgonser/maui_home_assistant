@@ -6,7 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export * from "./healthStatus";
-export * from "./roomAlias";
-export * from "./roomAliasInput";
-export * from "./roomAliasMap";
+export interface RoomAliasMap {
+  [key: string]: string;
+}

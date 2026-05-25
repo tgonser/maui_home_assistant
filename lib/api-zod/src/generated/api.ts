@@ -14,3 +14,34 @@ import * as zod from "zod";
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
 });
+
+/**
+ * @summary List all room aliases
+ */
+export const ListRoomAliasesResponse = zod.record(zod.string(), zod.string());
+
+/**
+ * @summary Create or update an alias
+ */
+export const SetRoomAliasParams = zod.object({
+  areaId: zod.coerce.string(),
+});
+
+export const setRoomAliasBodyNameMax = 80;
+
+export const SetRoomAliasBody = zod.object({
+  name: zod.string().min(1).max(setRoomAliasBodyNameMax),
+});
+
+export const SetRoomAliasResponse = zod.object({
+  areaId: zod.string(),
+  name: zod.string(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Remove an alias
+ */
+export const DeleteRoomAliasParams = zod.object({
+  areaId: zod.coerce.string(),
+});
