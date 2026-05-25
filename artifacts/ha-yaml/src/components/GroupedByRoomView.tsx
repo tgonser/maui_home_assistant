@@ -95,15 +95,11 @@ export function GroupedByRoomView({
       });
     }
     out.sort((a, b) => a.label.localeCompare(b.label));
-    if (unassigned.length > 0) {
-      out.push({
-        key: "__unassigned__",
-        label: "Unassigned",
-        items: unassigned.sort((a, b) =>
-          friendly(a).localeCompare(friendly(b)),
-        ),
-      });
-    }
+    // Intentionally drop the "Unassigned" bucket on the kiosk. Entities not
+    // assigned to any HA area are almost always integration metadata
+    // (Tesla feature toggles, Unifi camera options, irrigation schedule
+    // flags, etc.) rather than real user-controllable devices. Users can
+    // assign them to a room in HA if they want them to appear here.
     if (helpers.length > 0) {
       out.push({
         key: "__helpers__",
