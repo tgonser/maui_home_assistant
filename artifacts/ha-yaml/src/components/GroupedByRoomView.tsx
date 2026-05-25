@@ -2,6 +2,7 @@ import { useEffect, useMemo, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { useRegistry } from "@/lib/rooms";
 import { useRoomAliases } from "@/lib/roomAliases";
+import { isSceneToggle } from "./Wall";
 import type { HAState } from "@/lib/ha";
 
 const friendly = (s: HAState) =>
@@ -65,7 +66,8 @@ export function GroupedByRoomView({
         name.startsWith("helper:") ||
         obj.startsWith("helper_") ||
         obj.startsWith("group_") ||
-        id.startsWith("group.")
+        id.startsWith("group.") ||
+        isSceneToggle(s)
       );
     };
 

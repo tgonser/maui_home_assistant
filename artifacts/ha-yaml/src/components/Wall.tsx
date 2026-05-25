@@ -145,6 +145,34 @@ const NON_SWITCH_PATTERNS: RegExp[] = [
   /\b(north|south|east|west|front|back|side)[\s_-]*(yard|lawn|garden|bed|beds)\b/,
   /\byard[\s_-]*(zone|valve|station)\b/,
 ];
+
+// Scene / routine toggles that act on many devices at once
+// (typically input_boolean.* or scene-style switches). Not real power
+// switches but the user still needs to reach them, so they're routed to
+// the Helpers & Groups bucket rather than hidden entirely.
+export const SCENE_TOGGLE_PATTERNS: RegExp[] = [
+  /\bhome[\s_-]*off\b/,
+  /\ball[\s_-]*off\b/,
+  /\bgood[\s_-]*night\b/,
+  /\bgoodnight\b/,
+  /\bbedtime\b/,
+  /\bwake[\s_-]*up\b/,
+  /\bmorning\b/,
+  /\bevening\b/,
+  /\baway[\s_-]*mode\b/,
+  /\bvacation[\s_-]*mode\b/,
+  /\bguest[\s_-]*mode\b/,
+  /\bmovie[\s_-]*mode\b/,
+  /\bparty[\s_-]*mode\b/,
+  /\bdinner[\s_-]*mode\b/,
+];
+export const isSceneToggle = (s: HAState) => {
+  const name = (
+    (s.attributes.friendly_name as string | undefined) ?? ""
+  ).toLowerCase();
+  const id = s.entity_id.toLowerCase();
+  return SCENE_TOGGLE_PATTERNS.some((re) => re.test(name) || re.test(id));
+};
 const isNonSwitch = (s: HAState) => {
   const name = (
     (s.attributes.friendly_name as string | undefined) ?? ""
