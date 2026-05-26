@@ -886,6 +886,10 @@ function GroupPicker({
         n.delete(id);
         return n;
       });
+      // Bluesound's `media_player.unjoin` 500s when the target isn't really
+      // in a group — defend against the optimistic flag getting out of sync
+      // with reality by skipping the call if the live state says we're solo.
+      if (!realJoined(id)) return;
       await call("media_player", "unjoin", { entity_id: id });
     } else {
       // Optimistic: mark as joined immediately.
@@ -934,7 +938,9 @@ function GroupPicker({
         <Button
           variant="outline"
           className="wall-btn w-full mt-2"
-          onClick={() => call("media_player", "unjoin")}
+          onClick={() =>
+            call("media_player", "unjoin", { entity_id: coordinatorId })
+          }
         >
           Leave group
         </Button>
