@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHAStore, haStates, haCameraImage, type HAState } from "@/lib/ha";
+import { isMediaActive, displayMediaState } from "@/lib/mediaState";
 import { useEntityAliases } from "@/lib/entityAliases";
 import {
   Lightbulb,
@@ -629,16 +630,28 @@ function BinarySensorTile({ s }: { s: HAState }) {
 }
 
 function MediaTile({ s }: { s: HAState }) {
-  const playing = s.state === "playing";
+  const active = isMediaActive(s);
   const title = s.attributes.media_title as string | undefined;
   const artist = s.attributes.media_artist as string | undefined;
+  const source = s.attributes.source as string | undefined;
+  // Prefer a song title when streaming real content; otherwise the friendly
+  // state ("Streaming", "Off", source name, etc.) so Bluesound line-in /
+  // group-slave players don't all just say "idle".
+  const value = title && title.trim().length > 0
+    ? title
+    : displayMediaState(s);
+  // Subtitle: artist if we have it, else source name when streaming, else
+  // the player's HA-reported state for power-off context.
+  const sub = active
+    ? (artist ?? source ?? undefined)
+    : undefined;
   return (
     <Tile
       icon={Speaker}
       label={friendly(s)}
-      value={playing ? (title ?? "Playing") : s.state}
-      sub={playing ? artist : undefined}
-      active={playing}
+      value={value}
+      sub={sub}
+      active={active}
       span="wide"
     />
   );

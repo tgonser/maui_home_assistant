@@ -39,6 +39,7 @@ import {
   FastForward,
 } from "lucide-react";
 import { haCallService, type HAState } from "@/lib/ha";
+import { displayMediaState } from "@/lib/mediaState";
 import { MUSIC_ZONES, matchMusicZone } from "./Wall";
 
 const friendly = (s: HAState) =>
@@ -270,36 +271,19 @@ function pickIcon(d: string, e: HAState) {
   return Activity;
 }
 
-// Map raw HA state to a friendlier label. Media players need extra care
-// because Bluesound reports `state: "idle"` whenever the active source is
-// line-in or the TV hub passthrough — even while audio is actively playing.
+// Map raw HA state to a friendlier label. Media players go through the
+// shared `displayMediaState` helper so Wall tiles and this drawer agree on
+// what "idle but actually streaming" looks like.
 function displayState(entity: HAState): string {
   const raw = entity.state;
   const cap = (s: string) =>
     s.length === 0 ? s : s[0].toUpperCase() + s.slice(1);
-  if (domainOf(entity.entity_id) !== "media_player") {
-    return raw.includes("_")
-      ? raw.split("_").map(cap).join(" ")
-      : cap(raw);
+  if (domainOf(entity.entity_id) === "media_player") {
+    return displayMediaState(entity);
   }
-  if (raw === "off") return "Off";
-  if (raw === "standby") return "Standby";
-  if (raw === "playing") return "Playing";
-  if (raw === "paused") return "Paused";
-  if (raw === "buffering") return "Buffering";
-  if (raw === "unavailable") return "Unavailable";
-  if (raw === "unknown") return "Unknown";
-  // raw is typically "idle" at this point. Bluesound players streaming a
-  // line-in / TV passthrough source report idle even while audio plays, so
-  // look for tell-tale signs of an active stream.
-  const title = entity.attributes.media_title as string | undefined;
-  const source = entity.attributes.source as string | undefined;
-  const groupMembers =
-    (entity.attributes.group_members as string[] | undefined) ?? [];
-  if (title && title.trim().length > 0) return "Streaming";
-  if (source && groupMembers.length > 1) return `Streaming · ${source}`;
-  if (source && source.toLowerCase() !== "idle") return source;
-  return "Idle";
+  return raw.includes("_")
+    ? raw.split("_").map(cap).join(" ")
+    : cap(raw);
 }
 
 function StatePill({ entity }: { entity: HAState }) {
