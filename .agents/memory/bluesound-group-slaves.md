@@ -43,13 +43,13 @@ Bluesound 500s when `media_play` / `media_pause` / `media_next_track` / `media_p
 
 **How to apply:** A drawer / per-zone control that knows both `entity` (the opened player) and `controller` (the resolved coordinator via `masterOf`) must explicitly pass `entity_id: controller.entity_id` for all transport calls. Volume, mute, and source selection still go to the per-zone `entity`.
 
-# Detecting active playback when Bluesound exposes no metadata
+# Bluesound + Spotify Connect: no reliable "playing now" signal from HA
 
-When Bluesound plays via Spotify Connect (and likely AirPlay/TuneIn), the HA integration leaves `state: "idle"` AND publishes empty `media_title`, `media_artist`, `source`, and `app_name`. The only fields populated by audio actually flowing are:
-- `media_content_type: "music"` (or similar — set whenever content is loaded)
-- `media_position_updated_at: <ISO timestamp>` (bumped each HA poll, ~every 5s, while audio progresses)
+When Bluesound plays via Spotify Connect, the HA state is essentially useless: `state` stays `"idle"`, `media_title` / `media_artist` / `source` / `app_name` are all empty, and even `media_position` doesn't advance (Spotify owns playback position, not BluOS).
 
-**How to apply:** Treat (`media_content_type` non-empty) AND (`media_position_updated_at` within the last ~45s of now) as a signal of live playback. This is needed by both `isMediaActive` and the friendly state label, otherwise the tile reads "Idle" while music plays. Label can fall back to a generic "Streaming" / "Streaming · Group" since the specific source is unknown.
+`media_position_updated_at` and `media_content_type` look promising but are STICKY — they hold values from the last real-content session for an unbounded time after playback stopped. Using them as an "is playing" signal produces false positives across every player that's recently been used. Do NOT key activity detection off these.
+
+**How to apply:** Accept that Bluesound + Spotify Connect cannot be reliably auto-detected as "playing" from HA polling alone. `isMediaActive` and `displayMediaState` should stick to the signals that DO clear cleanly: HA state, `media_title`, `source` (when non-idle), and `app_name`. For UX feedback that "this player just got told to play", carry an optimistic state in the React tree (see source-echo entry) instead of trying to read it from HA.
 
 # `master` attribute is boolean on the coordinator, string on slaves
 

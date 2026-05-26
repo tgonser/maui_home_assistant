@@ -45,23 +45,6 @@ export function masterOf(s: HAState, allStates?: HAState[]): string | null {
   return raw;
 }
 
-// Bluesound often plays content (Spotify Connect, AirPlay, etc.) without
-// exposing any of the standard media_title / source / app_name fields. The
-// only reliable signal that audio is actually flowing is a recently-updated
-// `media_position_updated_at` paired with `media_content_type` being set.
-// HA polls Bluesound every few seconds, so "within the last 45s" comfortably
-// covers any reasonable poll cadence + clock skew.
-const POSITION_RECENT_MS = 45_000;
-function hasRecentPlayback(s: HAState, now: number = Date.now()): boolean {
-  const contentType = s.attributes.media_content_type as string | undefined;
-  if (!contentType || contentType.trim().length === 0) return false;
-  const ts = s.attributes.media_position_updated_at as string | undefined;
-  if (!ts) return false;
-  const updated = Date.parse(ts);
-  if (!Number.isFinite(updated)) return false;
-  return now - updated < POSITION_RECENT_MS;
-}
-
 // True if the media_player is currently producing audio (or paused on real
 // content), false if powered off / unavailable. Idle-with-source counts as
 // active because that's the Bluesound line-in / TV-audio case. Group slaves
@@ -79,10 +62,6 @@ export function isMediaActive(s: HAState, allStates?: HAState[]): boolean {
   if (title && title.trim().length > 0) return true;
   if (source && source.toLowerCase() !== "idle") return true;
   if (appName && appName.trim().length > 0) return true;
-  // Bluesound + Spotify Connect (and similar): no title/source/app_name is
-  // ever populated, but `media_content_type` is set and `media_position_
-  // updated_at` ticks forward each HA poll. That's our truth signal.
-  if (hasRecentPlayback(s)) return true;
   // NOTE: we intentionally do NOT treat `group_members.length > 1` alone as
   // "active". Bluesound leaves stale group_members populated for many
   // seconds (sometimes minutes) after a group is dissolved. Without an
@@ -126,12 +105,6 @@ export function displayMediaState(s: HAState, allStates?: HAState[]): string {
   }
   if (appName && appName.trim().length > 0) {
     return groupMembers.length > 1 ? `Streaming · ${appName}` : appName;
-  }
-  // Bluesound + Spotify Connect: nothing useful in metadata, but the player
-  // is actually producing audio. Show "Streaming" so the tile matches the
-  // active highlight instead of reading "Idle".
-  if (hasRecentPlayback(s)) {
-    return groupMembers.length > 1 ? "Streaming · Group" : "Streaming";
   }
   // Group slave: inherit label from the master only when the master->slave
   // link is bidirectional, so stale `master` attrs on standalone players
