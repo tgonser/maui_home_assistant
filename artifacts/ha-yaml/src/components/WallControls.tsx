@@ -39,7 +39,7 @@ import {
   FastForward,
 } from "lucide-react";
 import { haCallService, type HAState } from "@/lib/ha";
-import { displayMediaState } from "@/lib/mediaState";
+import { displayMediaState, masterOf } from "@/lib/mediaState";
 import { MUSIC_ZONES, matchMusicZone } from "./Wall";
 
 const friendly = (s: HAState) =>
@@ -94,11 +94,11 @@ export function WallControls({
   if (!entity) return null;
   const d = domainOf(entity.entity_id);
   // For media_player slaves, the coordinator entity holds the real playback
-  // state (playing, title, source). Resolve it so the header pill and
-  // transport reflect what's actually playing.
-  const masterId = entity.attributes.master as string | undefined;
+  // state (playing, title, source). Resolve it via the shared `masterOf`
+  // helper so we honor both Bluesound's `master` and Sonos's `group_leader`.
+  const masterId = d === "media_player" ? masterOf(entity) : null;
   const controller =
-    d === "media_player" && masterId
+    masterId !== null
       ? (states.find((s) => s.entity_id === masterId) ?? entity)
       : entity;
   const currentAlias = aliases[entity.entity_id] ?? "";
@@ -179,7 +179,7 @@ export function WallControls({
       </div>
 
       <div className="p-6 space-y-6">
-          <StatePill entity={controller} />
+          <StatePill entity={controller} allStates={states} />
 
           {lastError && (
             <div
@@ -274,22 +274,28 @@ function pickIcon(d: string, e: HAState) {
 // Map raw HA state to a friendlier label. Media players go through the
 // shared `displayMediaState` helper so Wall tiles and this drawer agree on
 // what "idle but actually streaming" looks like.
-function displayState(entity: HAState): string {
+function displayState(entity: HAState, allStates?: HAState[]): string {
   const raw = entity.state;
   const cap = (s: string) =>
     s.length === 0 ? s : s[0].toUpperCase() + s.slice(1);
   if (domainOf(entity.entity_id) === "media_player") {
-    return displayMediaState(entity);
+    return displayMediaState(entity, allStates);
   }
   return raw.includes("_")
     ? raw.split("_").map(cap).join(" ")
     : cap(raw);
 }
 
-function StatePill({ entity }: { entity: HAState }) {
+function StatePill({
+  entity,
+  allStates,
+}: {
+  entity: HAState;
+  allStates?: HAState[];
+}) {
   const unit =
     (entity.attributes.unit_of_measurement as string | undefined) ?? "";
-  const label = displayState(entity);
+  const label = displayState(entity, allStates);
   return (
     <div className="rounded-xl p-4 bg-[rgba(0,0,0,0.25)] border border-[rgba(232,193,120,0.12)] flex items-center justify-between">
       <span className="text-xs uppercase tracking-wider text-[var(--cream-muted)]">
@@ -845,14 +851,14 @@ function GroupPicker({
   const [pendingLeave, setPendingLeave] = useState<Set<string>>(new Set());
 
   // Robust "joined" check: either the coordinator's group_members lists the
-  // target, or the target itself points to our coordinator via `master`.
-  // The latter updates immediately on Bluesound while the former lags.
+  // target, or the target itself points back to our coordinator via the
+  // shared `masterOf` helper (covers both Bluesound `master` and Sonos
+  // `group_leader`). The latter updates immediately while group_members lags.
   const realJoined = (id: string) => {
     if (groupMembers.includes(id)) return true;
     const target = states.find((s) => s.entity_id === id);
-    const targetMaster = target?.attributes.master as string | undefined;
-    if (targetMaster && targetMaster === coordinatorId) return true;
-    return false;
+    if (!target) return false;
+    return masterOf(target) === coordinatorId;
   };
 
   const isGrouped = (id: string) => {
@@ -938,9 +944,16 @@ function GroupPicker({
         <Button
           variant="outline"
           className="wall-btn w-full mt-2"
-          onClick={() =>
-            call("media_player", "unjoin", { entity_id: coordinatorId })
-          }
+          onClick={() => {
+            // Live re-check: if HA already reports the coordinator solo
+            // (group_members <= 1) skip the call so we don't 500 on a stale
+            // render. The button visibility itself is based on a snapshot.
+            const live = states.find((s) => s.entity_id === coordinatorId);
+            const liveMembers =
+              (live?.attributes.group_members as string[] | undefined) ?? [];
+            if (liveMembers.length <= 1) return;
+            call("media_player", "unjoin", { entity_id: coordinatorId });
+          }}
         >
           Leave group
         </Button>

@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHAStore, haStates, haCameraImage, type HAState } from "@/lib/ha";
-import { isMediaActive, displayMediaState } from "@/lib/mediaState";
+import {
+  isMediaActive,
+  displayMediaState,
+  effectiveMedia,
+} from "@/lib/mediaState";
 import { useEntityAliases } from "@/lib/entityAliases";
 import {
   Lightbulb,
@@ -629,21 +633,24 @@ function BinarySensorTile({ s }: { s: HAState }) {
   );
 }
 
-function MediaTile({ s }: { s: HAState }) {
-  const active = isMediaActive(s);
-  const title = s.attributes.media_title as string | undefined;
-  const artist = s.attributes.media_artist as string | undefined;
-  const source = s.attributes.source as string | undefined;
-  // Prefer a song title when streaming real content; otherwise the friendly
-  // state ("Streaming", "Off", source name, etc.) so Bluesound line-in /
-  // group-slave players don't all just say "idle".
-  const value = title && title.trim().length > 0
-    ? title
-    : displayMediaState(s);
-  // Subtitle: artist if we have it, else source name when streaming, else
-  // the player's HA-reported state for power-off context.
+function MediaTile({
+  s,
+  allStates,
+}: {
+  s: HAState;
+  allStates?: HAState[];
+}) {
+  const active = isMediaActive(s, allStates);
+  // Pull effective metadata — for a Bluesound group slave this falls back to
+  // the master's now-playing info so the slave shows what's actually coming
+  // out of its speakers instead of being blank.
+  const eff = effectiveMedia(s, allStates);
+  const value =
+    eff.title && eff.title.trim().length > 0
+      ? eff.title
+      : displayMediaState(s, allStates);
   const sub = active
-    ? (artist ?? source ?? undefined)
+    ? (eff.artist ?? eff.source ?? undefined)
     : undefined;
   return (
     <Tile
@@ -744,13 +751,14 @@ function SensorTile({ s }: { s: HAState }) {
   );
 }
 
-function renderTile(s: HAState) {
+function renderTile(s: HAState, allStates?: HAState[]) {
   const d = domainOf(s.entity_id);
   if (d === "light") return <LightTile key={s.entity_id} s={s} />;
   if (d === "climate") return <ClimateTile key={s.entity_id} s={s} />;
   if (d === "lock") return <LockTile key={s.entity_id} s={s} />;
   if (d === "alarm_control_panel") return <AlarmTile key={s.entity_id} s={s} />;
-  if (d === "media_player") return <MediaTile key={s.entity_id} s={s} />;
+  if (d === "media_player")
+    return <MediaTile key={s.entity_id} s={s} allStates={allStates} />;
   if (d === "camera") return <CameraTile key={s.entity_id} s={s} />;
   if (d === "binary_sensor") return <BinarySensorTile key={s.entity_id} s={s} />;
   if (isEnergyEntity(s)) return <EnergyTile key={s.entity_id} s={s} />;
@@ -810,7 +818,7 @@ export function Wall() {
         aria-label={`Open ${(aliased.attributes.friendly_name as string) ?? s.entity_id}`}
         className="text-left rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cream)]/60"
       >
-        {renderTile(aliased)}
+        {renderTile(aliased, states)}
       </button>
     );
   };
@@ -1101,13 +1109,16 @@ export function Wall() {
                           aria-label={`Open ${zone}`}
                           className="text-left rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cream)]/60"
                         >
-                          {renderTile({
-                            ...player,
-                            attributes: {
-                              ...player.attributes,
-                              friendly_name: zone,
-                            },
-                          } as HAState)}
+                          {renderTile(
+                            {
+                              ...player,
+                              attributes: {
+                                ...player.attributes,
+                                friendly_name: zone,
+                              },
+                            } as HAState,
+                            states,
+                          )}
                         </button>
                       ) : (
                         <div

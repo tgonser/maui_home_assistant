@@ -1,2 +1,3 @@
 - [Samsung Tizen TV remote in HA](samsung-tizen-remote-ha.md) — 2022+ TVs need `remote.send_command`, not `play_media send_key`; HA returns 200 for the dead path
 - [HA duplicate entity disambiguation](ha-duplicate-entity-ids.md) — same friendly name across integrations creates `_2`/`_3` suffixes; sibling lookups must strip them
+- [Bluesound/Sonos group slaves in HA](bluesound-group-slaves.md) — slaves report idle with no metadata; use `master`/`group_leader` to inherit; unjoin 500s without entity_id or when not actually grouped
