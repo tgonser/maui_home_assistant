@@ -997,17 +997,12 @@ const FIRE_TV_APPS: { label: string; pkg: string }[] = [
   { label: "Max", pkg: "com.wbd.stream" },
 ];
 
-// Samsung app launch on 2022+ Tizen TVs: deep-link via the legacy
-// `media_player.play_media { app }` path is silently dropped. Some firmware
-// versions accept the app name as a remote command (e.g. `remote.send_command
-// command: "Netflix"`). We try that as a best-effort here; if a button does
-// nothing, install the SmartThings HA integration and wire a scene per app.
-const SAMSUNG_APPS: { label: string; command: string }[] = [
-  { label: "YouTube TV", command: "YouTube" },
-  { label: "Apple TV", command: "AppleTV" },
-  { label: "Netflix", command: "Netflix" },
-  { label: "Max", command: "HBO Max" },
-];
+// Samsung app launch on 2022+ Tizen TVs: neither the legacy
+// `media_player.play_media { app }` path nor `remote.send_command` with app
+// names works — both are silently dropped by the websocket. The only reliable
+// path is installing the SmartThings HA integration, which exposes a scene
+// per app that we can wire here once available. Until then the apps row is
+// omitted for Samsung so the kiosk doesn't pretend.
 
 function buildFireTvProfile(
   entityId: string,
@@ -1084,10 +1079,7 @@ function buildSamsungProfile(
     volumeUp: () => call("media_player", "volume_up"),
     volumeDown: () => call("media_player", "volume_down"),
     playPause: () => sendKey("KEY_PLAY"),
-    apps: SAMSUNG_APPS.map((a) => ({
-      label: a.label,
-      launch: () => sendKey(a.command),
-    })),
+    apps: [],
     powerOn: () => call("media_player", "turn_on"),
     powerOff: () => call("media_player", "turn_off"),
   };
