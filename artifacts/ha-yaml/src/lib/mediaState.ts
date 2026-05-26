@@ -56,8 +56,13 @@ export function isMediaActive(s: HAState, allStates?: HAState[]): boolean {
   const source = s.attributes.source as string | undefined;
   const groupMembers =
     (s.attributes.group_members as string[] | undefined) ?? [];
+  const appName = s.attributes.app_name as string | undefined;
   if (title && title.trim().length > 0) return true;
   if (source && source.toLowerCase() !== "idle") return true;
+  // Bluesound often reports streaming-source playback (Spotify Connect,
+  // AirPlay, TuneIn) with `state: "idle"` and no source set, but populates
+  // `app_name` with the streaming app. Treat that as live audio.
+  if (appName && appName.trim().length > 0) return true;
   // NOTE: we intentionally do NOT treat `group_members.length > 1` alone as
   // "active". Bluesound leaves stale group_members populated for many
   // seconds (sometimes minutes) after a group is dissolved. Without an
@@ -94,9 +99,16 @@ export function displayMediaState(s: HAState, allStates?: HAState[]): string {
   const source = s.attributes.source as string | undefined;
   const groupMembers =
     (s.attributes.group_members as string[] | undefined) ?? [];
+  const appName = s.attributes.app_name as string | undefined;
   if (title && title.trim().length > 0) return "Streaming";
   if (source && source.toLowerCase() !== "idle") {
     return groupMembers.length > 1 ? `Streaming · ${source}` : source;
+  }
+  // Bluesound streaming-source case (Spotify Connect, AirPlay, etc): no
+  // title yet, source attribute may be empty, but `app_name` carries the
+  // streaming app name.
+  if (appName && appName.trim().length > 0) {
+    return groupMembers.length > 1 ? `Streaming · ${appName}` : appName;
   }
   // Group slave: inherit label from the master only when the master->slave
   // link is bidirectional, so stale `master` attrs on standalone players

@@ -719,11 +719,18 @@ function MediaControls({
         </div>
       )}
 
+      {/* Transport must target the coordinator: when `entity` is a group
+          slave, Bluesound 500s if you call media_play/pause/next/previous
+          on the slave directly. The coordinator owns the playback queue. */}
       <div className="grid grid-cols-4 gap-2">
         <Button
           variant="outline"
           className="wall-btn h-14"
-          onClick={() => call("media_player", "media_previous_track")}
+          onClick={() =>
+            call("media_player", "media_previous_track", {
+              entity_id: controller.entity_id,
+            })
+          }
         >
           <SkipBack className="w-5 h-5" />
         </Button>
@@ -731,7 +738,9 @@ function MediaControls({
           variant="outline"
           className="wall-btn-active h-14 col-span-2"
           onClick={() =>
-            call("media_player", playing ? "media_pause" : "media_play")
+            call("media_player", playing ? "media_pause" : "media_play", {
+              entity_id: controller.entity_id,
+            })
           }
         >
           {playing ? (
@@ -743,7 +752,11 @@ function MediaControls({
         <Button
           variant="outline"
           className="wall-btn h-14"
-          onClick={() => call("media_player", "media_next_track")}
+          onClick={() =>
+            call("media_player", "media_next_track", {
+              entity_id: controller.entity_id,
+            })
+          }
         >
           <SkipForward className="w-5 h-5" />
         </Button>

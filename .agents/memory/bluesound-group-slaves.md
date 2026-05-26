@@ -37,6 +37,18 @@ Bluesound players are always on — the HA integration does not advertise `SUPPO
 
 **How to apply:** Any media_player power button must inspect `attributes.supported_features` (bitmask). Use TURN_OFF (256) / TURN_ON (128) when present, otherwise fall back to STOP (4096), otherwise hide the button. Never assume turn_off works on a media_player.
 
+# Transport calls must target the coordinator, not the slave
+
+Bluesound 500s when `media_play` / `media_pause` / `media_next_track` / `media_previous_track` are called on a group slave. Only the coordinator owns the playback queue.
+
+**How to apply:** A drawer / per-zone control that knows both `entity` (the opened player) and `controller` (the resolved coordinator via `masterOf`) must explicitly pass `entity_id: controller.entity_id` for all transport calls. Volume, mute, and source selection still go to the per-zone `entity`.
+
+# Streaming-source playback shows up under `app_name`
+
+When Bluesound plays via Spotify Connect / AirPlay / TuneIn / etc., the HA state often stays `state: "idle"` with empty `media_title` and `source`, but `app_name` is populated with the streaming app name ("Spotify", "AirPlay"). Without honoring `app_name`, the tile reads "Idle" while audio is clearly playing.
+
+**How to apply:** `isMediaActive` and `displayMediaState` must check `app_name` alongside title and source. Use `app_name` as the friendly label (with `Streaming · ${appName}` suffix when grouped).
+
 # Stale `master` and `group_members` after dissolve
 
 After `media_player.unjoin` on a Bluesound coordinator, both sides of the group can stay stale for many seconds (sometimes minutes):
