@@ -23,11 +23,23 @@ const OFF_RAW_STATES = new Set([
 // points at the coordinator entity_id. Audio is still flowing out of the
 // slave's speakers — it just doesn't have its own copy of the now-playing
 // info. Returns the entity_id of the master if this player is a slave.
-export function masterOf(s: HAState): string | null {
+//
+// Bluesound's `master` attribute is sticky: after a group is dissolved, the
+// former slave can keep the stale pointer for several refresh cycles. When
+// `allStates` is provided we require the named master to actually exist AND
+// list this player in its `group_members`, otherwise the attribute is stale
+// and we treat the player as standalone.
+export function masterOf(s: HAState, allStates?: HAState[]): string | null {
   const m = (s.attributes.master ??
     s.attributes.group_leader ??
     null) as string | null;
   if (!m || m === s.entity_id) return null;
+  if (!allStates) return m;
+  const master = allStates.find((x) => x.entity_id === m);
+  if (!master) return null;
+  const members =
+    (master.attributes.group_members as string[] | undefined) ?? [];
+  if (!members.includes(s.entity_id)) return null;
   return m;
 }
 
@@ -47,15 +59,14 @@ export function isMediaActive(s: HAState, allStates?: HAState[]): boolean {
   if (title && title.trim().length > 0) return true;
   if (source && source.toLowerCase() !== "idle") return true;
   if (groupMembers.length > 1) return true;
-  // Group slave: inherit from master if we can find it.
-  const masterId = masterOf(s);
+  // Group slave: inherit from master if we can find it. `masterOf` with
+  // `allStates` validates the bidirectional link, so a stale `master` attr
+  // on a standalone player doesn't keep it stuck as "active".
+  const masterId = masterOf(s, allStates);
   if (masterId && allStates) {
     const master = allStates.find((x) => x.entity_id === masterId);
     if (master) return isMediaActive(master);
   }
-  // Even without master lookup, presence of a `master` attribute is itself a
-  // strong signal that this player is grouped to something active.
-  if (masterId) return true;
   return false;
 }
 
@@ -82,14 +93,14 @@ export function displayMediaState(s: HAState, allStates?: HAState[]): string {
   if (title && title.trim().length > 0) return "Streaming";
   if (source && groupMembers.length > 1) return `Streaming · ${source}`;
   if (source && source.toLowerCase() !== "idle") return source;
-  // Group slave: inherit label from the master so the tile reads as
-  // "Playing" / "Streaming" instead of bare "Idle".
-  const masterId = masterOf(s);
+  // Group slave: inherit label from the master only when the master->slave
+  // link is bidirectional, so stale `master` attrs on standalone players
+  // don't get permanently labeled "Grouped".
+  const masterId = masterOf(s, allStates);
   if (masterId && allStates) {
     const master = allStates.find((x) => x.entity_id === masterId);
     if (master) return displayMediaState(master);
   }
-  if (masterId) return "Grouped";
   return cap(raw);
 }
 
@@ -109,7 +120,7 @@ export function effectiveMedia(
   const artist = s.attributes.media_artist as string | undefined;
   const source = s.attributes.source as string | undefined;
   if (title || artist) return { title, artist, source };
-  const masterId = masterOf(s);
+  const masterId = masterOf(s, allStates);
   if (!masterId || !allStates) return { title, artist, source };
   const master = allStates.find((x) => x.entity_id === masterId);
   if (!master) return { title, artist, source };

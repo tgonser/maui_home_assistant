@@ -96,7 +96,7 @@ export function WallControls({
   // For media_player slaves, the coordinator entity holds the real playback
   // state (playing, title, source). Resolve it via the shared `masterOf`
   // helper so we honor both Bluesound's `master` and Sonos's `group_leader`.
-  const masterId = d === "media_player" ? masterOf(entity) : null;
+  const masterId = d === "media_player" ? masterOf(entity, states) : null;
   const controller =
     masterId !== null
       ? (states.find((s) => s.entity_id === masterId) ?? entity)
@@ -887,7 +887,7 @@ function GroupPicker({
     if (groupMembers.includes(id)) return true;
     const target = states.find((s) => s.entity_id === id);
     if (!target) return false;
-    return masterOf(target) === coordinatorId;
+    return masterOf(target, states) === coordinatorId;
   };
 
   const isGrouped = (id: string) => {
