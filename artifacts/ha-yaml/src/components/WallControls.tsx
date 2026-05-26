@@ -892,11 +892,27 @@ function GroupPicker({
         n.delete(id);
         return n;
       });
-      // Bluesound's `media_player.unjoin` 500s when the target isn't really
-      // in a group — defend against the optimistic flag getting out of sync
-      // with reality by skipping the call if the live state says we're solo.
       if (!realJoined(id)) return;
-      await call("media_player", "unjoin", { entity_id: id });
+      // Bluesound's HA integration does NOT support per-slave removal —
+      // calling `media_player.unjoin` on the slave 500s ("Server got itself
+      // in trouble"). The BluOS API only exposes group dissolution from the
+      // master. So we dissolve the group and immediately re-form it with
+      // everyone except the slave being removed. This causes a brief audio
+      // dropout (~600ms) but is the only reliable way.
+      const live = states.find((s) => s.entity_id === coordinatorId);
+      const liveMembers =
+        (live?.attributes.group_members as string[] | undefined) ?? [];
+      const remaining = liveMembers.filter(
+        (m) => m !== id && m !== coordinatorId,
+      );
+      await call("media_player", "unjoin", { entity_id: coordinatorId });
+      if (remaining.length > 0) {
+        await new Promise((r) => setTimeout(r, 600));
+        await call("media_player", "join", {
+          entity_id: coordinatorId,
+          group_members: remaining,
+        });
+      }
     } else {
       // Optimistic: mark as joined immediately.
       setPendingJoin((s) => new Set(s).add(id));

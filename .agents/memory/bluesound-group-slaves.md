@@ -17,17 +17,19 @@ When two or more Bluesound (or Sonos) `media_player` entities are grouped:
 
 # Bluesound `media_player.unjoin` 500s
 
-The Bluesound HA integration returns 500 Internal Server Error when:
+The Bluesound HA integration returns 500 ("Server got itself in trouble") when:
 
 - `unjoin` is called with no `entity_id` target (HA can't dispatch a media_player service without a target).
-- `unjoin` is called against an entity that is not actually in a group right now (stale UI state vs. live HA state).
+- `unjoin` is called against a player that is not actually in a group right now (stale UI state vs. live HA state).
+- `unjoin` is called against a **slave** entity. The BluOS API only exposes group dissolution from the master side, so per-slave removal isn't actually wired up in the HA integration — it just blows up.
 
-**Why:** Bluesound's underlying API errors instead of no-oping when asked to leave a non-existent group.
+**Why:** Bluesound's underlying BluOS API has no "remove this one player from the group" primitive. You can only dissolve the whole group from the master.
 
 **How to apply:**
 
-- Always pass `entity_id` in the service data (the coordinator's id for a "leave group" button; the slave's id for per-zone toggle).
-- Re-check live `group_members` (or a `realJoined`-style helper) at click time before firing the call. Optimistic UI flags can drift several seconds behind reality during grouping operations.
+- Always pass `entity_id` in the service data.
+- To "remove a single slave" from a group, dissolve the group on the master (`unjoin` on coordinator), wait ~600ms, then `join` the master with the remaining members (excluding the removed slave). Brief audio dropout is unavoidable.
+- Re-check live `group_members` at click time before firing — optimistic UI flags drift seconds behind reality during grouping operations.
 
 # Which player becomes the master
 
