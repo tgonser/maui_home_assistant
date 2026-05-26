@@ -30,17 +30,36 @@ const OFF_RAW_STATES = new Set([
 // list this player in its `group_members`, otherwise the attribute is stale
 // and we treat the player as standalone.
 export function masterOf(s: HAState, allStates?: HAState[]): string | null {
-  const m = (s.attributes.master ??
-    s.attributes.group_leader ??
-    null) as string | null;
-  if (!m || m === s.entity_id) return null;
-  if (!allStates) return m;
-  const master = allStates.find((x) => x.entity_id === m);
+  // On Bluesound the coordinator publishes `master: true` (a boolean) while
+  // slaves publish `master: "<coordinator entity_id>"` (a string). Only the
+  // string form indicates "I am a slave of <id>".
+  const raw = s.attributes.master ?? s.attributes.group_leader ?? null;
+  if (typeof raw !== "string") return null;
+  if (raw.length === 0 || raw === s.entity_id) return null;
+  if (!allStates) return raw;
+  const master = allStates.find((x) => x.entity_id === raw);
   if (!master) return null;
   const members =
     (master.attributes.group_members as string[] | undefined) ?? [];
   if (!members.includes(s.entity_id)) return null;
-  return m;
+  return raw;
+}
+
+// Bluesound often plays content (Spotify Connect, AirPlay, etc.) without
+// exposing any of the standard media_title / source / app_name fields. The
+// only reliable signal that audio is actually flowing is a recently-updated
+// `media_position_updated_at` paired with `media_content_type` being set.
+// HA polls Bluesound every few seconds, so "within the last 45s" comfortably
+// covers any reasonable poll cadence + clock skew.
+const POSITION_RECENT_MS = 45_000;
+function hasRecentPlayback(s: HAState, now: number = Date.now()): boolean {
+  const contentType = s.attributes.media_content_type as string | undefined;
+  if (!contentType || contentType.trim().length === 0) return false;
+  const ts = s.attributes.media_position_updated_at as string | undefined;
+  if (!ts) return false;
+  const updated = Date.parse(ts);
+  if (!Number.isFinite(updated)) return false;
+  return now - updated < POSITION_RECENT_MS;
 }
 
 // True if the media_player is currently producing audio (or paused on real
@@ -59,10 +78,11 @@ export function isMediaActive(s: HAState, allStates?: HAState[]): boolean {
   const appName = s.attributes.app_name as string | undefined;
   if (title && title.trim().length > 0) return true;
   if (source && source.toLowerCase() !== "idle") return true;
-  // Bluesound often reports streaming-source playback (Spotify Connect,
-  // AirPlay, TuneIn) with `state: "idle"` and no source set, but populates
-  // `app_name` with the streaming app. Treat that as live audio.
   if (appName && appName.trim().length > 0) return true;
+  // Bluesound + Spotify Connect (and similar): no title/source/app_name is
+  // ever populated, but `media_content_type` is set and `media_position_
+  // updated_at` ticks forward each HA poll. That's our truth signal.
+  if (hasRecentPlayback(s)) return true;
   // NOTE: we intentionally do NOT treat `group_members.length > 1` alone as
   // "active". Bluesound leaves stale group_members populated for many
   // seconds (sometimes minutes) after a group is dissolved. Without an
@@ -104,11 +124,14 @@ export function displayMediaState(s: HAState, allStates?: HAState[]): string {
   if (source && source.toLowerCase() !== "idle") {
     return groupMembers.length > 1 ? `Streaming · ${source}` : source;
   }
-  // Bluesound streaming-source case (Spotify Connect, AirPlay, etc): no
-  // title yet, source attribute may be empty, but `app_name` carries the
-  // streaming app name.
   if (appName && appName.trim().length > 0) {
     return groupMembers.length > 1 ? `Streaming · ${appName}` : appName;
+  }
+  // Bluesound + Spotify Connect: nothing useful in metadata, but the player
+  // is actually producing audio. Show "Streaming" so the tile matches the
+  // active highlight instead of reading "Idle".
+  if (hasRecentPlayback(s)) {
+    return groupMembers.length > 1 ? "Streaming · Group" : "Streaming";
   }
   // Group slave: inherit label from the master only when the master->slave
   // link is bidirectional, so stale `master` attrs on standalone players

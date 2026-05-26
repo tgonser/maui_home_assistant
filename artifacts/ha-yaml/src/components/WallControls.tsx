@@ -689,6 +689,16 @@ function MediaControls({
     | string[]
     | undefined;
   const currentSource = controller.attributes.source as string | undefined;
+  // Bluesound never echoes `source` back after `select_source` for streaming
+  // inputs like Spotify Connect, so the dropdown would snap back to "Choose
+  // a source" the moment the user picks one. Remember the user's choice
+  // locally and prefer it whenever HA hasn't reported a real source. Reset
+  // when the user opens a different entity.
+  const [optimisticSource, setOptimisticSource] = useState<string | null>(null);
+  useEffect(() => {
+    setOptimisticSource(null);
+  }, [controller.entity_id]);
+  const effectiveSource = currentSource ?? optimisticSource ?? undefined;
   // Group membership lives on the coordinator's entity.
   const groupMembers =
     (controller.attributes.group_members as string[] | undefined) ?? [];
@@ -826,13 +836,16 @@ function MediaControls({
             <span>Source</span>
           </div>
           <select
-            value={currentSource ?? ""}
-            onChange={(e) =>
-              call("media_player", "select_source", { source: e.target.value })
-            }
+            value={effectiveSource ?? ""}
+            onChange={(e) => {
+              const next = e.target.value;
+              if (!next) return;
+              setOptimisticSource(next);
+              call("media_player", "select_source", { source: next });
+            }}
             className="w-full bg-[rgba(0,0,0,0.4)] border border-[rgba(232,193,120,0.2)] text-[var(--cream)] rounded-md px-3 py-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cream)]/60"
           >
-            {currentSource === undefined && (
+            {effectiveSource === undefined && (
               <option value="">— Choose a source —</option>
             )}
             {sourceList.map((src) => (

@@ -43,11 +43,25 @@ Bluesound 500s when `media_play` / `media_pause` / `media_next_track` / `media_p
 
 **How to apply:** A drawer / per-zone control that knows both `entity` (the opened player) and `controller` (the resolved coordinator via `masterOf`) must explicitly pass `entity_id: controller.entity_id` for all transport calls. Volume, mute, and source selection still go to the per-zone `entity`.
 
-# Streaming-source playback shows up under `app_name`
+# Detecting active playback when Bluesound exposes no metadata
 
-When Bluesound plays via Spotify Connect / AirPlay / TuneIn / etc., the HA state often stays `state: "idle"` with empty `media_title` and `source`, but `app_name` is populated with the streaming app name ("Spotify", "AirPlay"). Without honoring `app_name`, the tile reads "Idle" while audio is clearly playing.
+When Bluesound plays via Spotify Connect (and likely AirPlay/TuneIn), the HA integration leaves `state: "idle"` AND publishes empty `media_title`, `media_artist`, `source`, and `app_name`. The only fields populated by audio actually flowing are:
+- `media_content_type: "music"` (or similar — set whenever content is loaded)
+- `media_position_updated_at: <ISO timestamp>` (bumped each HA poll, ~every 5s, while audio progresses)
 
-**How to apply:** `isMediaActive` and `displayMediaState` must check `app_name` alongside title and source. Use `app_name` as the friendly label (with `Streaming · ${appName}` suffix when grouped).
+**How to apply:** Treat (`media_content_type` non-empty) AND (`media_position_updated_at` within the last ~45s of now) as a signal of live playback. This is needed by both `isMediaActive` and the friendly state label, otherwise the tile reads "Idle" while music plays. Label can fall back to a generic "Streaming" / "Streaming · Group" since the specific source is unknown.
+
+# `master` attribute is boolean on the coordinator, string on slaves
+
+Bluesound publishes `master: true` (boolean) on the coordinator of a group, and `master: "<coordinator entity_id>"` (string) on each slave.
+
+**How to apply:** `masterOf` must type-check the attribute — only a string value means "I am a slave of X". A boolean `true` means "I am the master" and should NOT be returned as a slave pointer.
+
+# `source` is not echoed back after `select_source` for streaming inputs
+
+After `media_player.select_source` succeeds (e.g. user picks "Spotify" from `source_list`), Bluesound's HA integration does NOT update the `source` attribute back. The dropdown will snap back to its placeholder on the next poll.
+
+**How to apply:** Drawer / source picker must keep an optimistic local copy of the user's selection (cleared when switching entities) and use it as the dropdown value whenever HA's `source` attribute is empty.
 
 # Stale `master` and `group_members` after dissolve
 
