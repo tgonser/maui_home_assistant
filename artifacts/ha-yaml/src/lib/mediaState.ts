@@ -58,14 +58,18 @@ export function isMediaActive(s: HAState, allStates?: HAState[]): boolean {
     (s.attributes.group_members as string[] | undefined) ?? [];
   if (title && title.trim().length > 0) return true;
   if (source && source.toLowerCase() !== "idle") return true;
-  if (groupMembers.length > 1) return true;
-  // Group slave: inherit from master if we can find it. `masterOf` with
-  // `allStates` validates the bidirectional link, so a stale `master` attr
-  // on a standalone player doesn't keep it stuck as "active".
+  // NOTE: we intentionally do NOT treat `group_members.length > 1` alone as
+  // "active". Bluesound leaves stale group_members populated for many
+  // seconds (sometimes minutes) after a group is dissolved. Without an
+  // actual title/source/playing-state signal there's no audio. The slave-
+  // via-master fallback below still catches truly-active groups because the
+  // master will have those signals.
+  void groupMembers;
   const masterId = masterOf(s, allStates);
   if (masterId && allStates) {
     const master = allStates.find((x) => x.entity_id === masterId);
-    if (master) return isMediaActive(master);
+    if (master && master.entity_id !== s.entity_id)
+      return isMediaActive(master, allStates);
   }
   return false;
 }
@@ -91,15 +95,17 @@ export function displayMediaState(s: HAState, allStates?: HAState[]): string {
   const groupMembers =
     (s.attributes.group_members as string[] | undefined) ?? [];
   if (title && title.trim().length > 0) return "Streaming";
-  if (source && groupMembers.length > 1) return `Streaming · ${source}`;
-  if (source && source.toLowerCase() !== "idle") return source;
+  if (source && source.toLowerCase() !== "idle") {
+    return groupMembers.length > 1 ? `Streaming · ${source}` : source;
+  }
   // Group slave: inherit label from the master only when the master->slave
   // link is bidirectional, so stale `master` attrs on standalone players
   // don't get permanently labeled "Grouped".
   const masterId = masterOf(s, allStates);
   if (masterId && allStates) {
     const master = allStates.find((x) => x.entity_id === masterId);
-    if (master) return displayMediaState(master);
+    if (master && master.entity_id !== s.entity_id)
+      return displayMediaState(master, allStates);
   }
   return cap(raw);
 }

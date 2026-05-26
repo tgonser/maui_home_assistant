@@ -37,6 +37,19 @@ Bluesound players are always on — the HA integration does not advertise `SUPPO
 
 **How to apply:** Any media_player power button must inspect `attributes.supported_features` (bitmask). Use TURN_OFF (256) / TURN_ON (128) when present, otherwise fall back to STOP (4096), otherwise hide the button. Never assume turn_off works on a media_player.
 
+# Stale `master` and `group_members` after dissolve
+
+After `media_player.unjoin` on a Bluesound coordinator, both sides of the group can stay stale for many seconds (sometimes minutes):
+- The former slave keeps its `master` attribute pointing at the old coordinator.
+- The former master keeps the slave inside its `group_members` array.
+
+This means neither side alone is trustworthy as evidence of an active group.
+
+**How to apply:**
+- `masterOf(slave)` must require a bidirectional link: the named master must exist in states AND list this slave in its `group_members`. Otherwise treat the slave as standalone.
+- Do NOT treat `group_members.length > 1` alone as "actively playing". Require an actual audio signal (HA state in playing/paused/buffering, OR non-empty `media_title`, OR `source` other than "idle"). A ghost-grouped pair with no metadata is silent.
+- Tile "active" highlighting and the friendly state label must use the same predicate, or you get yellow-highlighted tiles labeled "Idle".
+
 # Which player becomes the master
 
 When you call `media_player.join` with `entity_id: X, group_members: [Y]`, **X becomes the master**, not Y. That means the player you "started playback from" in a UI is not necessarily the one HA will report metadata for — it depends on which entity_id was the join target.
