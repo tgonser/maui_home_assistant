@@ -31,6 +31,12 @@ The Bluesound HA integration returns 500 ("Server got itself in trouble") when:
 - To "remove a single slave" from a group, dissolve the group on the master (`unjoin` on coordinator), wait ~600ms, then `join` the master with the remaining members (excluding the removed slave). Brief audio dropout is unavoidable.
 - Re-check live `group_members` at click time before firing — optimistic UI flags drift seconds behind reality during grouping operations.
 
+# Bluesound has no power off
+
+Bluesound players are always on — the HA integration does not advertise `SUPPORT_TURN_OFF` / `SUPPORT_TURN_ON` in `supported_features`, and calling `media_player.turn_off` against one returns 500. The equivalent user-facing action is `media_player.media_stop` (advertised via `SUPPORT_STOP` = 4096).
+
+**How to apply:** Any media_player power button must inspect `attributes.supported_features` (bitmask). Use TURN_OFF (256) / TURN_ON (128) when present, otherwise fall back to STOP (4096), otherwise hide the button. Never assume turn_off works on a media_player.
+
 # Which player becomes the master
 
 When you call `media_player.join` with `entity_id: X, group_members: [Y]`, **X becomes the master**, not Y. That means the player you "started playback from" in a UI is not necessarily the one HA will report metadata for — it depends on which entity_id was the join target.

@@ -654,6 +654,32 @@ function MediaControls({
   const playing = controller.state === "playing";
   const off =
     controller.state === "off" || controller.state === "standby";
+  // HA media_player supported_features bitmask. Bluesound players don't
+  // implement TURN_OFF (they're always on) — calling `media_player.turn_off`
+  // on them 500s. Detect feature support so we can fall back to STOP, or
+  // hide the button entirely when neither is available.
+  const features =
+    (controller.attributes.supported_features as number | undefined) ?? 0;
+  const SUPPORT_TURN_ON = 128;
+  const SUPPORT_TURN_OFF = 256;
+  const SUPPORT_STOP = 4096;
+  const canTurnOff = (features & SUPPORT_TURN_OFF) !== 0;
+  const canTurnOn = (features & SUPPORT_TURN_ON) !== 0;
+  const canStop = (features & SUPPORT_STOP) !== 0;
+  // What service should the power button fire? Prefer TURN_OFF/TURN_ON;
+  // otherwise fall back to STOP (and there's no "turn on" without TURN_ON,
+  // so the on-side button is hidden when only stop is supported).
+  const powerOffService = canTurnOff ? "turn_off" : canStop ? "media_stop" : null;
+  const powerOnService = canTurnOn ? "turn_on" : null;
+  const powerLabel = off
+    ? canTurnOn
+      ? "Turn on"
+      : null
+    : canTurnOff
+      ? "Turn off"
+      : canStop
+        ? "Stop"
+        : null;
   // Volume + mute are per-zone, so they always come from the opened entity.
   const volume = entity.attributes.volume_level as number | undefined;
   const muted = entity.attributes.is_volume_muted as boolean | undefined;
@@ -764,15 +790,18 @@ function MediaControls({
             >
               {muted ? "Unmute" : "Mute"}
             </Button>
-            <Button
-              variant="outline"
-              className="wall-btn"
-              onClick={() =>
-                call("media_player", off ? "turn_on" : "turn_off")
-              }
-            >
-              {off ? "Turn on" : "Turn off"}
-            </Button>
+            {powerLabel && (
+              <Button
+                variant="outline"
+                className="wall-btn"
+                onClick={() => {
+                  const svc = off ? powerOnService : powerOffService;
+                  if (svc) call("media_player", svc);
+                }}
+              >
+                {powerLabel}
+              </Button>
+            )}
           </div>
         </div>
       )}
