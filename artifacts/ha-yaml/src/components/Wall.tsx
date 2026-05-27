@@ -438,7 +438,7 @@ const CATEGORIES: Category[] = [
     match: (s) =>
       domainOf(s.entity_id) === "alarm_control_panel" ||
       (domainOf(s.entity_id) === "binary_sensor" &&
-        ["door", "window", "motion", "opening", "smoke", "gas", "tamper"].includes(
+        ["door", "window", "motion", "opening", "smoke", "gas"].includes(
           deviceClass(s),
         )),
   },
