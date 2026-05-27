@@ -198,6 +198,9 @@ export function WallControls({
           {d === "fan" && <FanControls entity={entity} call={call} />}
           {d === "climate" && <ClimateControls entity={entity} call={call} />}
           {d === "lock" && <LockControls entity={entity} call={call} />}
+          {d === "alarm_control_panel" && (
+            <SecurityControls entity={entity} call={call} />
+          )}
           {d === "cover" && <CoverControls entity={entity} call={call} />}
           {d === "media_player" && (
             <MediaControls
@@ -620,6 +623,128 @@ function LockControls({ entity, call }: { entity: HAState; call: CallFn }) {
         onClick={() => call("lock", "unlock")}
       >
         <Unlock className="w-5 h-5 mr-2" /> Unlock
+      </Button>
+    </div>
+  );
+}
+
+function SecurityControls({
+  entity,
+  call,
+}: {
+  entity: HAState;
+  call: CallFn;
+}) {
+  // HA alarm_control_panel supported_features bitmask:
+  //   1 ARM_HOME, 2 ARM_AWAY, 4 ARM_NIGHT, 8 TRIGGER,
+  //   16 ARM_CUSTOM_BYPASS, 32 ARM_VACATION
+  const feats = Number(entity.attributes.supported_features ?? 0);
+  const has = (bit: number) => (feats & bit) === bit;
+  // Total Connect tends to advertise nothing in supported_features. If we
+  // got zero, fall back to "the common three" so the user gets useful
+  // buttons instead of an empty drawer.
+  const hasHome = has(1) || feats === 0;
+  const hasAway = has(2) || feats === 0;
+  const hasNight = has(4);
+  const codeFormat = entity.attributes.code_format as string | null | undefined;
+  const codeArmRequired = entity.attributes.code_arm_required as
+    | boolean
+    | undefined;
+  const needsCode = codeFormat !== null && codeFormat !== undefined;
+  const [code, setCode] = useState("");
+  const state = entity.state;
+  const isArmed = state.startsWith("armed_");
+  const isDisarmed = state === "disarmed";
+  const inFlight = state === "arming" || state === "disarming" || state === "pending";
+
+  const armingDisabled = needsCode && codeArmRequired === true && code.length === 0;
+  const disarmDisabled = needsCode && code.length === 0;
+
+  const armCall = (service: string) => {
+    const data: Record<string, unknown> = {};
+    if (code) data.code = code;
+    call("alarm_control_panel", service, data).then(() => setCode(""));
+  };
+
+  return (
+    <div className="space-y-4">
+      {needsCode && (
+        <div className="space-y-2 p-4 rounded-xl bg-[rgba(0,0,0,0.25)] border border-[rgba(232,193,120,0.12)]">
+          <label className="text-xs uppercase tracking-wider text-[var(--cream-muted)]">
+            Code
+          </label>
+          <input
+            type="password"
+            inputMode={codeFormat === "number" ? "numeric" : "text"}
+            autoComplete="off"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder={
+              codeArmRequired ? "Required for arm & disarm" : "Required for disarm"
+            }
+            className="w-full px-3 py-2 rounded-lg bg-[rgba(0,0,0,0.4)] border border-[rgba(232,193,120,0.2)] text-[var(--cream)] tabular-nums text-lg tracking-widest focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brass)]"
+          />
+        </div>
+      )}
+
+      {inFlight && (
+        <div className="text-center text-sm text-[var(--cream-muted)] italic">
+          {state === "arming"
+            ? "Arming…"
+            : state === "disarming"
+              ? "Disarming…"
+              : "Pending…"}
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-3">
+        {hasHome && (
+          <Button
+            size="lg"
+            variant="outline"
+            disabled={armingDisabled || state === "armed_home"}
+            className={state === "armed_home" ? "wall-btn-active" : "wall-btn"}
+            onClick={() => armCall("alarm_arm_home")}
+          >
+            <HomeIcon className="w-5 h-5 mr-2" /> Arm Stay
+          </Button>
+        )}
+        {hasAway && (
+          <Button
+            size="lg"
+            variant="outline"
+            disabled={armingDisabled || state === "armed_away"}
+            className={state === "armed_away" ? "wall-btn-active" : "wall-btn"}
+            onClick={() => armCall("alarm_arm_away")}
+          >
+            <ShieldCheck className="w-5 h-5 mr-2" /> Arm Away
+          </Button>
+        )}
+        {hasNight && (
+          <Button
+            size="lg"
+            variant="outline"
+            disabled={armingDisabled || state === "armed_night"}
+            className={state === "armed_night" ? "wall-btn-active" : "wall-btn"}
+            onClick={() => armCall("alarm_arm_night")}
+          >
+            Arm Night
+          </Button>
+        )}
+      </div>
+
+      <Button
+        size="lg"
+        variant="outline"
+        disabled={disarmDisabled || isDisarmed}
+        className={
+          isArmed
+            ? "w-full h-14 text-base border-red-500/60 text-red-200 bg-red-500/15 hover:bg-red-500/25"
+            : "wall-btn w-full h-14 text-base"
+        }
+        onClick={() => armCall("alarm_disarm")}
+      >
+        <Unlock className="w-5 h-5 mr-2" /> Disarm
       </Button>
     </div>
   );
