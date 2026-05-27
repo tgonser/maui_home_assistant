@@ -900,51 +900,66 @@ function SecurityView({
         </section>
       )}
 
-      {sensors.length > 0 && (
-        <section>
-          <div className="text-xs uppercase tracking-[0.18em] text-[var(--cream-muted)] mb-3 flex items-center gap-2">
-            <span>Sensors</span>
-            <span className="text-[var(--brass)]">·</span>
-            <span className="tabular-nums">{sensors.length}</span>
-          </div>
-          <div className="rounded-2xl bg-[rgba(0,0,0,0.25)] border border-[rgba(232,193,120,0.12)] divide-y divide-[rgba(232,193,120,0.08)] overflow-hidden">
-            {sensors.map((s) => {
-              const { label, on } = sensorLabel(s);
-              const dc = deviceClass(s);
-              return (
-                <button
-                  key={s.entity_id}
-                  type="button"
-                  onClick={() => onOpen(s)}
-                  className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-[rgba(232,193,120,0.05)] focus:outline-none focus-visible:bg-[rgba(232,193,120,0.08)] transition"
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm text-[var(--cream)] truncate">
-                      {friendly(s)}
-                    </div>
-                    {dc && (
-                      <div className="text-[10px] uppercase tracking-wider text-[var(--cream-muted)] mt-0.5">
-                        {dc}
+      {(() => {
+        const groups: { title: string; classes: string[] }[] = [
+          { title: "Doors & Windows", classes: ["door", "window", "opening"] },
+          { title: "Motion", classes: ["motion"] },
+          { title: "Alerts", classes: ["smoke", "gas"] },
+        ];
+        const sortByName = (a: HAState, b: HAState) =>
+          friendly(a).localeCompare(friendly(b));
+        return groups.map((g) => {
+          const items = sensors
+            .filter((s) => g.classes.includes(deviceClass(s)))
+            .sort(sortByName);
+          if (items.length === 0) return null;
+          return (
+            <section key={g.title}>
+              <div className="text-xs uppercase tracking-[0.18em] text-[var(--cream-muted)] mb-3 flex items-center gap-2">
+                <span>{g.title}</span>
+                <span className="text-[var(--brass)]">·</span>
+                <span className="tabular-nums">{items.length}</span>
+              </div>
+              <div className="rounded-2xl bg-[rgba(0,0,0,0.25)] border border-[rgba(232,193,120,0.12)] divide-y divide-[rgba(232,193,120,0.08)] overflow-hidden">
+                {items.map((s) => {
+                  const { label, on } = sensorLabel(s);
+                  const dc = deviceClass(s);
+                  return (
+                    <button
+                      key={s.entity_id}
+                      type="button"
+                      onClick={() => onOpen(s)}
+                      className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-[rgba(232,193,120,0.05)] focus:outline-none focus-visible:bg-[rgba(232,193,120,0.08)] transition"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm text-[var(--cream)] truncate">
+                          {friendly(s)}
+                        </div>
+                        {dc && (
+                          <div className="text-[10px] uppercase tracking-wider text-[var(--cream-muted)] mt-0.5">
+                            {dc}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <span
-                    className={`text-xs font-semibold uppercase tracking-wider tabular-nums px-2.5 py-1 rounded-full ${
-                      on
-                        ? dc === "smoke" || dc === "gas" || dc === "tamper"
-                          ? "bg-red-500/20 text-red-200 border border-red-500/40"
-                          : "bg-[rgba(201,153,74,0.20)] text-[var(--brass-bright)] border border-[rgba(232,193,120,0.30)]"
-                        : "bg-[rgba(0,0,0,0.3)] text-[var(--cream-muted)] border border-[rgba(232,193,120,0.10)]"
-                    }`}
-                  >
-                    {label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
-      )}
+                      <span
+                        className={`text-xs font-semibold uppercase tracking-wider tabular-nums px-2.5 py-1 rounded-full ${
+                          on
+                            ? dc === "smoke" || dc === "gas"
+                              ? "bg-red-500/20 text-red-200 border border-red-500/40"
+                              : "bg-[rgba(201,153,74,0.20)] text-[var(--brass-bright)] border border-[rgba(232,193,120,0.30)]"
+                            : "bg-[rgba(0,0,0,0.3)] text-[var(--cream-muted)] border border-[rgba(232,193,120,0.10)]"
+                        }`}
+                      >
+                        {label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          );
+        });
+      })()}
 
       {panels.length === 0 && sensors.length === 0 && (
         <div className="text-center py-20 text-[var(--cream-muted)]">
