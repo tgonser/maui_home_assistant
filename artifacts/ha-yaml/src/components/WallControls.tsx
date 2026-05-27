@@ -475,6 +475,15 @@ function ClimateControls({
   const fanModes =
     (entity.attributes.fan_modes as string[] | undefined) ?? [];
   const fanMode = entity.attributes.fan_mode as string | undefined;
+  const presetModes =
+    (entity.attributes.preset_modes as string[] | undefined) ?? [];
+  const presetMode = entity.attributes.preset_mode as string | undefined;
+  // Ecobee surfaces the active schedule "comfort setting" name (Home, Away,
+  // Sleep, custom climates) under `current_program` / `program`. It's
+  // read-only — schedule changes go through `set_preset_mode`.
+  const currentProgram =
+    (entity.attributes.current_program as string | undefined) ??
+    (entity.attributes.program as string | undefined);
   const [draft, setDraft] = useState<number | null>(null);
   useEffect(() => setDraft(null), [entity.entity_id, target]);
   const shown = draft ?? target ?? 70;
@@ -554,6 +563,35 @@ function ClimateControls({
                 }
               >
                 {m}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {presetModes.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="text-xs uppercase tracking-wider text-[var(--cream-muted)]">
+              Schedule
+            </div>
+            {currentProgram && currentProgram !== presetMode && (
+              <div className="text-xs text-[var(--cream-muted)]">
+                on schedule: {currentProgram}
+              </div>
+            )}
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {presetModes.map((p) => (
+              <Button
+                key={p}
+                variant={presetMode === p ? "default" : "outline"}
+                className={presetMode === p ? "wall-btn-active" : "wall-btn"}
+                onClick={() =>
+                  call("climate", "set_preset_mode", { preset_mode: p })
+                }
+              >
+                {p}
               </Button>
             ))}
           </div>
