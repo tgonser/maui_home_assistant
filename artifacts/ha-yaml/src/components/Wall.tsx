@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useHAStore, haStates, haCameraImage, type HAState } from "@/lib/ha";
+import {
+  useHAStore,
+  haStates,
+  haCameraImage,
+  haIntegrationEntities,
+  type HAState,
+} from "@/lib/ha";
 import {
   isMediaActive,
   displayMediaState,
@@ -808,6 +814,11 @@ export function Wall() {
   const [states, setStates] = useState<HAState[]>([]);
   const [active, setActive] = useState<CategoryKey>("overview");
   const [error, setError] = useState<string | null>(null);
+  // Entities owned by the Total Connect integration, used to restrict the
+  // Security tab to alarm / door / motion sensors from the panel and exclude
+  // unrelated binary sensors (battery, connectivity, cameras' motion events,
+  // appliance contact sensors, etc.) that happen to share device classes.
+  const [tcEntities, setTcEntities] = useState<Set<string> | null>(null);
   const [isFs, setIsFs] = useState(false);
   const [openEntity, setOpenEntity] = useState<HAState | null>(null);
   const entityAliases = useEntityAliases((s) => s.aliases);
@@ -875,14 +886,42 @@ export function Wall() {
     return () => document.removeEventListener("fullscreenchange", onFs);
   }, []);
 
+  // Load the Total Connect entity allowlist once per connection. It rarely
+  // changes (only when zones are added/removed in the alarm panel), so a
+  // single fetch on mount/credential-change is enough.
+  useEffect(() => {
+    if (!url || !token) {
+      setTcEntities(null);
+      return;
+    }
+    let cancelled = false;
+    haIntegrationEntities("totalconnect").then((ids) => {
+      if (cancelled) return;
+      setTcEntities(new Set(ids));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [url, token]);
+
+  // Apply the TC allowlist to a category match. Until the allowlist has
+  // loaded we fall back to the raw match so the tab isn't briefly empty.
+  const restrictToTC = (s: HAState) => {
+    if (!tcEntities) return true;
+    if (domainOf(s.entity_id) === "alarm_control_panel") return true;
+    return tcEntities.has(s.entity_id);
+  };
+
   const counts = useMemo(() => {
     const map = new Map<CategoryKey, number>();
     for (const c of CATEGORIES) {
       if (c.key === "overview" || c.key === "rooms") continue;
-      map.set(c.key, states.filter(c.match).length);
+      let matched = states.filter(c.match);
+      if (c.key === "security") matched = matched.filter(restrictToTC);
+      map.set(c.key, matched.length);
     }
     return map;
-  }, [states]);
+  }, [states, tcEntities]);
 
   const refresh = async () => {
     const r = await haStates();
@@ -921,11 +960,12 @@ export function Wall() {
     }
     const cat = CATEGORIES.find((c) => c.key === active);
     if (!cat) return [];
-    return states
-      .filter(cat.match)
+    let list = states.filter(cat.match);
+    if (cat.key === "security") list = list.filter(restrictToTC);
+    return list
       .filter((s) => s.state !== "unavailable")
       .sort((a, b) => friendly(a).localeCompare(friendly(b)));
-  }, [states, active]);
+  }, [states, active, tcEntities]);
 
   // For the Music tab, split entities into the canonical zone tiles (top) and
   // everything else (below). Each zone tile renders the matched player when

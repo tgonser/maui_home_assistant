@@ -202,6 +202,33 @@ export async function haWsBatch(
   }
 }
 
+// Render a Jinja template against HA and return the raw text body.
+// HA's /api/template returns plain text (not JSON), so we accept either a
+// string (success) or surface the error.
+export async function haTemplate(template: string): Promise<HACallResult<string>> {
+  const r = await haCall<unknown>("/api/template", {
+    method: "POST",
+    body: { template },
+  });
+  if (!r.ok) return r;
+  return { ok: true, status: r.status, data: String(r.data ?? "") };
+}
+
+// Returns the set of entity_ids that belong to a given HA integration
+// (e.g. "totalconnect"). Uses HA's `integration_entities()` template helper.
+export async function haIntegrationEntities(integration: string): Promise<string[]> {
+  const r = await haTemplate(
+    `{{ integration_entities('${integration}') | list | tojson }}`,
+  );
+  if (!r.ok) return [];
+  try {
+    const parsed = JSON.parse(r.data);
+    return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
 export async function haCallService(
   domain: string,
   service: string,
