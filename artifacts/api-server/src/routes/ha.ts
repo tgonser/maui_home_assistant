@@ -40,7 +40,13 @@ router.post("/ha/call", async (req, res) => {
         httpMethod === "GET" || httpMethod === "HEAD" || body === undefined
           ? undefined
           : JSON.stringify(body),
-      signal: AbortSignal.timeout(15_000),
+      // Honeywell TCC and a few other cloud-backed climate integrations
+      // routinely take 10-20s to ack a write (HA -> Nabu Casa -> HA -> cloud
+      // -> thermostat over a slow IoT channel). 15s was too tight and gave
+      // false "Upstream request failed" toasts even when the change had
+      // actually applied. 45s covers the slowest real case we've seen
+      // without letting the connection hang forever.
+      signal: AbortSignal.timeout(45_000),
     });
 
     if (binary) {
