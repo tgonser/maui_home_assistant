@@ -341,37 +341,28 @@ const isNonSwitch = (s: HAState) => {
 };
 
 // The same Home Assistant instance manages multiple houses (Maui, Mercer
-// Island, Bend). The Climate tab on the kiosk is for the Maui house only.
-// We don't have area_id metadata in our state stream, so filter by friendly
-// name / entity_id matching the Maui thermostat room list. Add new rooms
-// here if/when they come online in Maui.
-const MAUI_CLIMATE_ROOMS = [
-  "board room",
-  "beach room",
-  "molokini",
-  "upper mauka",
-  "kitchen",
-  "atrium",
-  "pub",
-  "master bed",
-  "sitting room",
-];
+// Island = "MI", Bend). The Climate tab on the kiosk is for Maui only.
+// Convention: every non-Maui thermostat has been renamed in HA to start
+// with its house prefix ("MI " or "Bend "). Anything that doesn't carry one
+// of those prefixes is assumed to be Maui. We check both the friendly_name
+// and the entity_id slug so renames that haven't fully propagated still
+// filter correctly.
+const NON_MAUI_PREFIXES = ["mi", "bend"];
 const isMauiClimate = (s: HAState) => {
   const name = ((s.attributes.friendly_name as string | undefined) ?? "")
     .toLowerCase()
-    .replace(/[_\-]+/g, " ")
-    .replace(/\s+/g, " ")
     .trim();
-  const id = s.entity_id
-    .toLowerCase()
-    .replace(/^climate\./, "")
-    .replace(/[_\-]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  return MAUI_CLIMATE_ROOMS.some((room) => {
-    const re = new RegExp(`\\b${room.replace(/\s+/g, "\\s+")}\\b`);
-    return re.test(name) || re.test(id);
-  });
+  const slug = s.entity_id.toLowerCase().replace(/^climate\./, "");
+  for (const prefix of NON_MAUI_PREFIXES) {
+    // friendly_name: "MI Kitchen", "Bend Master" — prefix followed by a
+    // word boundary (space, hyphen, end of string).
+    const nameRe = new RegExp(`^${prefix}([\\s\\-_]|$)`);
+    if (nameRe.test(name)) return false;
+    // entity_id slug: "mi_kitchen", "bend_master".
+    const slugRe = new RegExp(`^${prefix}_`);
+    if (slugRe.test(slug)) return false;
+  }
+  return true;
 };
 const deviceClass = (s: HAState) =>
   (s.attributes.device_class as string | undefined) ?? "";
