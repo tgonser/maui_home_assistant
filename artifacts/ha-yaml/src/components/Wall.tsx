@@ -809,6 +809,159 @@ function MonsteraLeaf() {
   );
 }
 
+function SecurityView({
+  entities,
+  onOpen,
+}: {
+  entities: HAState[];
+  onOpen: (s: HAState) => void;
+}) {
+  const panels = entities.filter(
+    (e) => domainOf(e.entity_id) === "alarm_control_panel",
+  );
+  const sensors = entities.filter(
+    (e) => domainOf(e.entity_id) === "binary_sensor",
+  );
+
+  const sensorLabel = (s: HAState): { label: string; on: boolean } => {
+    const dc = deviceClass(s);
+    const on = s.state === "on";
+    const map: Record<string, [string, string]> = {
+      door: ["Open", "Closed"],
+      window: ["Open", "Closed"],
+      opening: ["Open", "Closed"],
+      motion: ["Motion", "Clear"],
+      smoke: ["Smoke!", "Clear"],
+      gas: ["Gas!", "Clear"],
+      tamper: ["Tamper", "OK"],
+    };
+    const [onLbl, offLbl] = map[dc] ?? ["On", "Off"];
+    return { label: on ? onLbl : offLbl, on };
+  };
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="space-y-8"
+    >
+      {panels.length > 0 && (
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {panels.map((p) => {
+            const armed = p.state.startsWith("armed");
+            const triggered = p.state === "triggered";
+            const PanelIcon = triggered ? AlertTriangle : ShieldCheck;
+            const stateLabel = p.state.replace(/_/g, " ");
+            return (
+              <button
+                key={p.entity_id}
+                type="button"
+                onClick={() => onOpen(p)}
+                aria-label={`Open ${friendly(p)}`}
+                className={`text-left rounded-2xl p-6 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cream)]/60 ${
+                  triggered
+                    ? "bg-red-500/20 border border-red-500/60"
+                    : armed
+                      ? "bg-[rgba(232,193,120,0.10)] border border-[rgba(232,193,120,0.35)]"
+                      : "bg-[rgba(0,0,0,0.25)] border border-[rgba(232,193,120,0.15)] hover:border-[rgba(232,193,120,0.30)]"
+                }`}
+              >
+                <div className="flex items-center gap-4">
+                  <div
+                    className={`p-4 rounded-2xl ${
+                      triggered
+                        ? "bg-red-500/30 text-red-100"
+                        : armed
+                          ? "bg-[rgba(201,153,74,0.20)] text-[var(--brass-bright)]"
+                          : "bg-[rgba(201,153,74,0.10)] text-[var(--brass)]"
+                    }`}
+                  >
+                    <PanelIcon className="w-10 h-10" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs uppercase tracking-[0.18em] text-[var(--cream-muted)]">
+                      Alarm System
+                    </div>
+                    <div className="text-xl font-medium text-[var(--cream)] truncate">
+                      {friendly(p)}
+                    </div>
+                    <div
+                      className={`text-2xl font-semibold capitalize tabular-nums mt-1 ${
+                        triggered
+                          ? "text-red-200"
+                          : armed
+                            ? "text-[var(--brass-bright)]"
+                            : "text-[var(--cream-muted)]"
+                      }`}
+                    >
+                      {stateLabel}
+                    </div>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </section>
+      )}
+
+      {sensors.length > 0 && (
+        <section>
+          <div className="text-xs uppercase tracking-[0.18em] text-[var(--cream-muted)] mb-3 flex items-center gap-2">
+            <span>Sensors</span>
+            <span className="text-[var(--brass)]">·</span>
+            <span className="tabular-nums">{sensors.length}</span>
+          </div>
+          <div className="rounded-2xl bg-[rgba(0,0,0,0.25)] border border-[rgba(232,193,120,0.12)] divide-y divide-[rgba(232,193,120,0.08)] overflow-hidden">
+            {sensors.map((s) => {
+              const { label, on } = sensorLabel(s);
+              const dc = deviceClass(s);
+              return (
+                <button
+                  key={s.entity_id}
+                  type="button"
+                  onClick={() => onOpen(s)}
+                  className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-[rgba(232,193,120,0.05)] focus:outline-none focus-visible:bg-[rgba(232,193,120,0.08)] transition"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm text-[var(--cream)] truncate">
+                      {friendly(s)}
+                    </div>
+                    {dc && (
+                      <div className="text-[10px] uppercase tracking-wider text-[var(--cream-muted)] mt-0.5">
+                        {dc}
+                      </div>
+                    )}
+                  </div>
+                  <span
+                    className={`text-xs font-semibold uppercase tracking-wider tabular-nums px-2.5 py-1 rounded-full ${
+                      on
+                        ? dc === "smoke" || dc === "gas" || dc === "tamper"
+                          ? "bg-red-500/20 text-red-200 border border-red-500/40"
+                          : "bg-[rgba(201,153,74,0.20)] text-[var(--brass-bright)] border border-[rgba(232,193,120,0.30)]"
+                        : "bg-[rgba(0,0,0,0.3)] text-[var(--cream-muted)] border border-[rgba(232,193,120,0.10)]"
+                    }`}
+                  >
+                    {label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {panels.length === 0 && sensors.length === 0 && (
+        <div className="text-center py-20 text-[var(--cream-muted)]">
+          <ShieldCheck className="w-12 h-12 mx-auto mb-4 opacity-30" />
+          <p className="text-base">No security devices to show.</p>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
 export function Wall() {
   const { url, token, status, config } = useHAStore();
   const [states, setStates] = useState<HAState[]>([]);
@@ -1152,6 +1305,12 @@ export function Wall() {
                 key={`${active}-grouped`}
                 entities={filtered}
                 renderTile={clickableTile}
+              />
+            ) : active === "security" ? (
+              <SecurityView
+                key="security"
+                entities={filtered}
+                onOpen={setOpenEntity}
               />
             ) : active === "media" ? (
               <motion.div
