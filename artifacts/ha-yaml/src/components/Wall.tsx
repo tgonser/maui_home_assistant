@@ -339,6 +339,40 @@ const isNonSwitch = (s: HAState) => {
   const id = s.entity_id.toLowerCase();
   return NON_SWITCH_PATTERNS.some((re) => re.test(name) || re.test(id));
 };
+
+// The same Home Assistant instance manages multiple houses (Maui, Mercer
+// Island, Bend). The Climate tab on the kiosk is for the Maui house only.
+// We don't have area_id metadata in our state stream, so filter by friendly
+// name / entity_id matching the Maui thermostat room list. Add new rooms
+// here if/when they come online in Maui.
+const MAUI_CLIMATE_ROOMS = [
+  "board room",
+  "beach room",
+  "molokini",
+  "upper mauka",
+  "kitchen",
+  "atrium",
+  "pub",
+  "master bed",
+  "sitting room",
+];
+const isMauiClimate = (s: HAState) => {
+  const name = ((s.attributes.friendly_name as string | undefined) ?? "")
+    .toLowerCase()
+    .replace(/[_\-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const id = s.entity_id
+    .toLowerCase()
+    .replace(/^climate\./, "")
+    .replace(/[_\-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return MAUI_CLIMATE_ROOMS.some((room) => {
+    const re = new RegExp(`\\b${room.replace(/\s+/g, "\\s+")}\\b`);
+    return re.test(name) || re.test(id);
+  });
+};
 const deviceClass = (s: HAState) =>
   (s.attributes.device_class as string | undefined) ?? "";
 
@@ -380,7 +414,7 @@ const CATEGORIES: Category[] = [
     key: "climate",
     label: "Climate",
     icon: Thermometer,
-    match: (s) => domainOf(s.entity_id) === "climate",
+    match: (s) => domainOf(s.entity_id) === "climate" && isMauiClimate(s),
   },
   {
     key: "covers",
