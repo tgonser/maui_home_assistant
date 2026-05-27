@@ -904,10 +904,13 @@ export function Wall() {
     };
   }, [url, token]);
 
-  // Apply the TC allowlist to a category match. Until the allowlist has
-  // loaded we fall back to the raw match so the tab isn't briefly empty.
+  // Apply the TC allowlist to a category match. We only filter when we
+  // actually got a non-empty list back from HA — an empty result usually
+  // means the template call failed or the integration isn't exposing what
+  // we expected, and silently hiding every sensor in that case is worse
+  // than showing a few extras.
   const restrictToTC = (s: HAState) => {
-    if (!tcEntities) return true;
+    if (!tcEntities || tcEntities.size === 0) return true;
     if (domainOf(s.entity_id) === "alarm_control_panel") return true;
     return tcEntities.has(s.entity_id);
   };
