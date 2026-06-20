@@ -402,24 +402,35 @@ const DEVICE_BATTERY_NAMES =
 function PowerwallStat({ states }: { states: HAState[] }) {
   const override = useResolvedSlot(states, "powerwall");
 
-  // Match well-known aggregate sensors OR named system sensors with charge-state keywords
-  const homeBatteries = override
+  // Tier 1: individual system sensors (named system + charge-state keyword)
+  const systemSensors = override
     ? [override]
     : findEntities(
         states,
         (e) =>
           domainOf(e.entity_id) === "sensor" &&
-          (
-            // Explicit aggregate battery sensors (e.g. sensor.battery_percent)
-            /^sensor\.battery_percent$|total.*battery.*percent|battery.*percent.*total/i.test(e.entity_id) ||
-            // Named system entities that also have a charge-state keyword
-            (
-              /(powerwall|tesla|4680|enphase|span|home_battery|gonser)/i.test(e.entity_id) &&
-              /(percentage_charged|state_of_charge|charge_level|battery_percent|soc)/i.test(e.entity_id)
-            )
-          ) &&
+          /(powerwall|tesla|4680|enphase|span|home_battery|gonser)/i.test(e.entity_id) &&
+          /(percentage_charged|state_of_charge|charge_level|battery_percent|soc)/i.test(e.entity_id) &&
           (e.attributes.unit_of_measurement === "%" || deviceClass(e) === "battery"),
       );
+
+  // Tier 2: well-known aggregate sensors (only used when no system sensors found)
+  const aggregateSensor =
+    systemSensors.length === 0 && !override
+      ? findFirst(
+          states,
+          (e) =>
+            domainOf(e.entity_id) === "sensor" &&
+            /^sensor\.battery_percent$|total.*battery.*percent/i.test(e.entity_id) &&
+            e.attributes.unit_of_measurement === "%",
+        )
+      : undefined;
+
+  const homeBatteries = systemSensors.length > 0
+    ? systemSensors
+    : aggregateSensor
+      ? [aggregateSensor]
+      : [];
 
   // Fallback: device_class=battery sensors not matching device names
   const fallback =
