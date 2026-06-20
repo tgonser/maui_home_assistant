@@ -1,0 +1,178 @@
+
+THERMOSTATS:
+climate.atrium
+climate.bar
+climate.beach_room
+climate.boardroom
+climate.kitchen
+climate.master_bed_2
+climate.maui_bar
+climate.sitting
+climate.upper_mauka
+climate.apartment
+climate.bellevue_br
+climate.kitchen_2
+climate.master_bed
+climate.office
+climate.pub
+climate.stairs
+climate.up_stairs_hall
+climate.thermostat
+
+LIKELY SOLAR / POWER SENSORS:
+sensor.total_solar = 0.0 kW
+sensor.total_battery_power = 0.65 kW
+sensor.total_home_load = 3.33 kW
+sensor.envoy_202445013483_current_power_production = 0.0 kW
+sensor.envoy_202445013483_energy_production_today = 0.001 kWh
+sensor.envoy_202445013483_energy_production_last_seven_days = 877.374 kWh
+sensor.envoy_202445013483_lifetime_energy_production = 13.011556 MWh
+sensor.envoy_202445013483_production_ct_energy_delivered = 13.011556 MWh
+sensor.envoy_202445013483_production_ct_energy_received = 0.002628 MWh
+sensor.envoy_202445013483_production_ct_power = 0.0 kW
+sensor.inverter_532408012345 = unavailable W
+sensor.inverter_532408016070 = unavailable W
+sensor.inverter_532408019357 = unavailable W
+sensor.inverter_532408020227 = unavailable W
+sensor.inverter_532408020507 = unavailable W
+sensor.inverter_532408020593 = unavailable W
+sensor.inverter_532408023197 = unavailable W
+sensor.inverter_532408023485 = unavailable W
+sensor.inverter_532408023999 = unavailable W
+sensor.inverter_532408024188 = unavailable W
+sensor.inverter_532408024210 = unavailable W
+sensor.inverter_532408024661 = unavailable W
+sensor.inverter_532408024682 = unavailable W
+sensor.inverter_532408024805 = unavailable W
+sensor.inverter_532408025021 = unavailable W
+sensor.inverter_532408025022 = unavailable W
+sensor.inverter_532408025225 = unavailable W
+sensor.inverter_532408025233 = unavailable W
+sensor.inverter_532408027349 = unavailable W
+sensor.inverter_532408027936 = unavailable W
+sensor.inverter_532408027964 = unavailable W
+sensor.inverter_532408028194 = unavailable W
+sensor.inverter_532408028214 = unavailable W
+sensor.inverter_532408028282 = unavailable W
+sensor.inverter_532408029456 = unavailable W
+sensor.inverter_532412034613 = unavailable W
+sensor.inverter_532412035852 = unavailable W
+sensor.inverter_532412038976 = unavailable W
+sensor.inverter_532412040781 = unavailable W
+sensor.inverter_532413000240 = unavailable W
+sensor.inverter_532413000367 = unavailable W
+sensor.inverter_532413000803 = unavailable W
+sensor.inverter_532413000851 = unavailable W
+sensor.inverter_532413001032 = unavailable W
+sensor.inverter_532413001596 = unavailable W
+sensor.inverter_532413002908 = unavailable W
+sensor.inverter_532408029973 = unavailable W
+sensor.inverter_532408029977 = unavailable W
+sensor.inverter_532412034281 = unavailable W
+sensor.inverter_532412034610 = unavailable W
+sensor.inverter_532412036949 = unavailable W
+sensor.inverter_532412039074 = unavailable W
+sensor.inverter_532412039852 = unavailable W
+sensor.inverter_532413000804 = unavailable W
+sensor.inverter_532413002550 = unavailable W
+sensor.inverter_532408015999 = unavailable W
+sensor.inverter_532408020235 = unavailable W
+sensor.inverter_532408020307 = unavailable W
+sensor.inverter_532408020477 = unavailable W
+sensor.inverter_532408022221 = unavailable W
+sensor.inverter_532408022277 = unavailable W
+sensor.inverter_532408022284 = unavailable W
+sensor.inverter_532408023493 = unavailable W
+sensor.inverter_532408023796 = unavailable W
+sensor.inverter_532408023815 = unavailable W
+sensor.inverter_532408023930 = unavailable W
+sensor.inverter_532408024090 = unavailable W
+sensor.inverter_532408024143 = unavailable W
+sensor.inverter_532408024236 = unavailable W
+sensor.inverter_532408024347 = unavailable W
+sensor.inverter_532408027502 = unavailable W
+sensor.inverter_532408027712 = unavailable W
+sensor.inverter_532408028198 = unavailable W
+sensor.inverter_532408028532 = unavailable W
+sensor.inverter_532408029258 = unavailable W
+sensor.inverter_532408029277 = unavailable W
+sensor.inverter_532408029486 = unavailable W
+sensor.inverter_532408029489 = unavailable W
+sensor.inverter_532408029558 = unavailable W
+sensor.inverter_532408029815 = unavailable W
+sensor.envoy_202445013488_current_power_production = unavailable kW
+sensor.envoy_202445013488_energy_production_today = unavailable kWh
+sensor.envoy_202445013488_energy_production_last_seven_days = unavailable kWh
+sensor.envoy_202445013488_lifetime_energy_production = unavailable MWh
+sensor.usp_pdu_pro_outlet_5_outlet_power = 0.000 W
+sensor.usp_pdu_pro_outlet_6_outlet_power = 30.198 W
+sensor.usp_pdu_pro_outlet_7_outlet_power = 12.923 W
+sensor.usp_pdu_pro_outlet_8_outlet_power = 174.302 W
+sensor.usp_pdu_pro_outlet_9_outlet_power = 5.481 W
+sensor.usp_pdu_pro_outlet_10_outlet_power = 21.765 W
+sensor.usp_pdu_pro_outlet_11_outlet_power = 3.414 W
+sensor.usp_pdu_pro_outlet_12_outlet_power = 0.000 W
+sensor.usp_pdu_pro_outlet_13_outlet_power = 0.000 W
+sensor.usp_pdu_pro_outlet_14_outlet_power = 0.000 W
+sensor.usp_pdu_pro_outlet_15_outlet_power = 0.000 W
+sensor.usp_pdu_pro_outlet_16_outlet_power = 0.000 W
+sensor.usp_pdu_pro_outlet_17_outlet_power = 7.011 W
+sensor.usp_pdu_pro_outlet_18_outlet_power = 1.856 W
+sensor.usp_pdu_pro_outlet_19_outlet_power = 7.847 W
+sensor.usp_pdu_pro_outlet_20_outlet_power = 0.000 W
+sensor.usp_pdu_pro_outlet_5_outlet_power_2 = 0.000 W
+sensor.usp_pdu_pro_outlet_6_outlet_power_2 = 0.000 W
+sensor.usp_pdu_pro_outlet_7_outlet_power_2 = 3.381 W
+sensor.usp_pdu_pro_outlet_8_outlet_power_2 = 3.416 W
+sensor.usp_pdu_pro_outlet_9_outlet_power_2 = 3.415 W
+sensor.usp_pdu_pro_outlet_10_outlet_power_2 = 3.362 W
+sensor.usp_pdu_pro_outlet_11_outlet_power_2 = 3.992 W
+sensor.usp_pdu_pro_outlet_12_outlet_power_2 = 3.395 W
+sensor.usp_pdu_pro_outlet_13_outlet_power_2 = 3.397 W
+sensor.usp_pdu_pro_outlet_14_outlet_power_2 = 3.426 W
+sensor.usp_pdu_pro_outlet_15_outlet_power_2 = 19.509 W
+sensor.usp_pdu_pro_outlet_16_outlet_power_2 = 19.642 W
+sensor.usp_pdu_pro_outlet_17_outlet_power_2 = 0.000 W
+sensor.usp_pdu_pro_outlet_18_outlet_power_2 = 0.000 W
+sensor.usp_pdu_pro_outlet_19_outlet_power_2 = 0.000 W
+sensor.usp_pdu_pro_outlet_20_outlet_power_2 = 0.000 W
+sensor.4680_system_2_solar_power = 0.0 kW
+sensor.4680_system_2_battery_power = 0.0 kW
+sensor.4680_system_2_load_power = 2.676 kW
+sensor.4680_system_2_grid_power = 2.676 kW
+sensor.gonser_4680_system_1_solar_power = 0.0 kW
+sensor.gonser_4680_system_1_battery_power = 0.652 kW
+sensor.gonser_4680_system_1_load_power = 0.652 kW
+sensor.gonser_4680_system_1_grid_power = 0.0 kW
+sensor.4680_system_2_solar_generated = 0.2855 kWh
+sensor.gonser_4680_system_1_solar_generated = 0.285 kWh
+sensor.envoy_202445013488_production_ct_energy_delivered = unavailable MWh
+sensor.envoy_202445013488_production_ct_energy_received = unavailable MWh
+sensor.envoy_202445013488_production_ct_power = unavailable kW
+sensor.usp_pdu_pro_ac_power_budget = 1875.000 W
+sensor.usp_pdu_pro_ac_power_budget_2 = 1875.000 W
+sensor.usp_pdu_pro_ac_power_consumption = 264.797 W
+sensor.usp_pdu_pro_ac_power_consumption_2 = 66.935 W
+
+MOTION / OCCUPANCY SENSORS:
+binary_sensor.south_g6_turret_motion  ->  South G6 Turret Motion
+binary_sensor.south_pool_g6_ptz_motion  ->  South Pool G6 PTZ Motion
+binary_sensor.entry_g6_ptz_motion  ->  Entry G6 PTZ Motion
+binary_sensor.garage_g5_ptz_motion  ->  Garage G5 PTZ Motion
+binary_sensor.north_g6_turret_motion  ->  North G6 Turret Motion
+binary_sensor.g6_instant_motion  ->  G6 Instant Motion
+binary_sensor.bbq_g6_ptz_motion  ->  BBQ G6 PTZ Motion
+binary_sensor.mud_room_door_hub_entry_motion  ->  Mud room door hub - Entry Motion
+binary_sensor.master_lanai_g6_ptz_motion  ->  Master Lanai G6 PTZ Motion
+binary_sensor.g6_turret_motion  ->  G6 Turret Motion
+binary_sensor.pool_double_sliders_motion  ->  UP sense - Equipment closet Motion
+binary_sensor.usl_motion_motion  ->  USL-Motion_Bar Motion
+binary_sensor.up_stair_motion_motion  ->  UP sense - stairs Motion
+binary_sensor.usl_motion_motion_3  ->  USL-Motion_BBQ Motion
+binary_sensor.usl_motion_sitting  ->  USL-Motion_Sitting Motion
+binary_sensor.makena_sleepnumber_makena_tom_is_in_bed  ->  Makena SleepNumber Makena Tom Is In Bed
+binary_sensor.makena_sleepnumber_makena_ellen_is_in_bed  ->  Makena SleepNumber Makena Ellen Is In Bed
+binary_sensor.motion_kitchen  ->  MOTION KITCHEN
+binary_sensor.motion_bathroom_2  ->  MOTION BATHROOM 2
+binary_sensor.motion_bathroom_3  ->  MOTION BATHROOM 3
+binary_sensor.motion_upstairs  ->  MOTION UPSTAIRS
