@@ -501,6 +501,25 @@ const CATEGORIES: Category[] = [
   },
 ];
 
+// HST is UTC-10, no daylight saving ever
+function toHST(date: Date): Date {
+  return new Date(date.getTime() - 10 * 60 * 60 * 1000);
+}
+function formatHSTTime(date: Date): string {
+  const d = toHST(date);
+  const h = d.getUTCHours();
+  const m = d.getUTCMinutes();
+  const ampm = h >= 12 ? "PM" : "AM";
+  const hour = h % 12 || 12;
+  return `${hour}:${m.toString().padStart(2, "0")} ${ampm}`;
+}
+function formatHSTDate(date: Date): string {
+  const d = toHST(date);
+  const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  return `${days[d.getUTCDay()]}, ${months[d.getUTCMonth()]} ${d.getUTCDate()}`;
+}
+
 function Clock() {
   const [now, setNow] = useState(new Date());
   useEffect(() => {
@@ -510,14 +529,10 @@ function Clock() {
   return (
     <div className="text-right">
       <div className="clock-time text-5xl font-light tracking-tight tabular-nums">
-        {now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+        {formatHSTTime(now)}
       </div>
       <div className="clock-date text-sm mt-1">
-        {now.toLocaleDateString([], {
-          weekday: "long",
-          month: "long",
-          day: "numeric",
-        })}
+        {formatHSTDate(now)} <span className="opacity-50">HST</span>
       </div>
     </div>
   );
