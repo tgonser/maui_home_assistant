@@ -279,11 +279,13 @@ function isLightGroup(s: HAState) {
 function LightsCount({ states }: { states: HAState[] }) {
   const lights = findEntities(
     states,
-    (s) => domainOf(s.entity_id) === "light" && !isLightGroup(s),
+    (s) =>
+      domainOf(s.entity_id) === "light" &&
+      !isLightGroup(s) &&
+      !/_led$/i.test(s.entity_id), // exclude network device status LEDs (Ubiquiti, etc.)
   );
   const on = lights.filter((s) => {
     if (s.state !== "on") return false;
-    // Some integrations report state="on" at brightness 0 — don't count those
     const b = s.attributes.brightness as number | undefined;
     if (b !== undefined && b === 0) return false;
     return true;
