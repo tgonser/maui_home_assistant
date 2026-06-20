@@ -32,12 +32,14 @@ import {
   Tv,
   Users,
   Pause,
+  SlidersHorizontal,
 } from "lucide-react";
 import "./wall-theme.css";
 import { SuperView } from "./SuperView";
 import { WallControls } from "./WallControls";
 import { RoomsView } from "./RoomsView";
 import { GroupedByRoomView } from "./GroupedByRoomView";
+import { ClimateSettings } from "./ClimateSettings";
 import { Home as HomeIcon } from "lucide-react";
 
 type CategoryKey =
@@ -55,7 +57,8 @@ type CategoryKey =
   | "cameras"
   | "scenes"
   | "energy"
-  | "sensors";
+  | "sensors"
+  | "settings";
 
 type Category = {
   key: CategoryKey;
@@ -498,6 +501,12 @@ const CATEGORIES: Category[] = [
         !["door", "window", "motion", "opening", "smoke", "gas", "tamper"].includes(
           deviceClass(s),
         )),
+  },
+  {
+    key: "settings",
+    label: "Settings",
+    icon: SlidersHorizontal,
+    match: () => false,
   },
 ];
 
@@ -1130,7 +1139,7 @@ export function Wall() {
   const counts = useMemo(() => {
     const map = new Map<CategoryKey, number>();
     for (const c of CATEGORIES) {
-      if (c.key === "overview" || c.key === "rooms") continue;
+      if (c.key === "overview" || c.key === "rooms" || c.key === "settings") continue;
       map.set(c.key, states.filter(c.match).length);
     }
     return map;
@@ -1261,9 +1270,9 @@ export function Wall() {
           const count = counts.get(c.key) ?? 0;
           const isActive = active === c.key;
           const dim =
-            c.key !== "overview" && c.key !== "rooms" && count === 0;
+            c.key !== "overview" && c.key !== "rooms" && c.key !== "settings" && count === 0;
           const showBadge =
-            c.key !== "overview" && c.key !== "rooms" && !dim && count > 0;
+            c.key !== "overview" && c.key !== "rooms" && c.key !== "settings" && !dim && count > 0;
           return (
             <button
               key={c.key}
@@ -1350,7 +1359,9 @@ export function Wall() {
           </div>
 
           <AnimatePresence mode="popLayout">
-            {active === "overview" ? (
+            {active === "settings" ? (
+              <ClimateSettings key="settings" states={states} onChanged={refresh} />
+            ) : active === "overview" ? (
               <SuperView key="super" states={states} />
             ) : active === "rooms" ? (
               <RoomsView key="rooms" states={states} refresh={refresh} />
