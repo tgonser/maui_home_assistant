@@ -38,7 +38,21 @@ import {
   Rewind,
   FastForward,
 } from "lucide-react";
-import { haCallService, type HAState } from "@/lib/ha";
+import {
+  haCallService,
+  haHistory,
+  haHistoryFull,
+  type HAState,
+} from "@/lib/ha";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ReferenceLine,
+  ResponsiveContainer,
+} from "recharts";
 import { displayMediaState, masterOf } from "@/lib/mediaState";
 import { MUSIC_ZONES, matchMusicZone } from "./Wall";
 
@@ -255,6 +269,16 @@ export function WallControls({
             </div>
           )}
 
+          {(d === "sensor" || d === "input_number") &&
+            !isNaN(parseFloat(entity.state)) && (
+              <HistoryChart
+                entity={entity}
+                unit={
+                  (entity.attributes.unit_of_measurement as string | undefined) ?? ""
+                }
+              />
+            )}
+
       </div>
     </div>
   );
@@ -462,6 +486,146 @@ function FanControls({ entity, call }: { entity: HAState; call: CallFn }) {
   );
 }
 
+type HistoryPoint = { t: number; v: number };
+
+function fmtHST(ts: number): string {
+  const d = new Date(ts - 10 * 3600_000);
+  const h = d.getUTCHours();
+  return `${h % 12 || 12}${h >= 12 ? "PM" : "AM"}`;
+}
+
+function HistoryChart({
+  entity,
+  refValue,
+  unit: u = "",
+}: {
+  entity: HAState;
+  refValue?: number;
+  unit?: string;
+}) {
+  const [pts, setPts] = useState<HistoryPoint[]>([]);
+  const [loading, setLoading] = useState(true);
+  const isClimate = domainOf(entity.entity_id) === "climate";
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setPts([]);
+    (async () => {
+      if (isClimate) {
+        const r = await haHistoryFull(entity.entity_id, 24);
+        if (cancelled) return;
+        if (r.ok && r.data[0]) {
+          const mapped = r.data[0]
+            .map((p) => ({
+              t: new Date(p.last_changed).getTime(),
+              v: typeof p.attributes?.current_temperature === "number"
+                ? p.attributes.current_temperature
+                : NaN,
+            }))
+            .filter((p) => !isNaN(p.v));
+          setPts(mapped);
+        }
+      } else {
+        const r = await haHistory(entity.entity_id, 24);
+        if (cancelled) return;
+        if (r.ok && r.data[0]) {
+          const mapped = r.data[0]
+            .map((p) => ({ t: new Date(p.last_changed).getTime(), v: parseFloat(p.state) }))
+            .filter((p) => !isNaN(p.v));
+          setPts(mapped);
+        }
+      }
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [entity.entity_id, isClimate]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-28 text-[var(--cream-muted)] text-xs gap-2">
+        <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading history…
+      </div>
+    );
+  }
+  if (pts.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-28 text-[var(--cream-muted)] text-xs">
+        No history available
+      </div>
+    );
+  }
+
+  const vals = pts.map((p) => p.v);
+  const min = Math.min(...vals);
+  const max = Math.max(...vals);
+  const pad = Math.max(0.5, (max - min) * 0.15);
+
+  return (
+    <div className="rounded-xl bg-[rgba(0,0,0,0.25)] border border-[rgba(232,193,120,0.12)] p-4">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[10px] uppercase tracking-wider text-[var(--cream-muted)]">
+          Last 24 h
+        </span>
+        {refValue !== undefined && (
+          <span className="text-[10px] text-[var(--brass)] tabular-nums">
+            target {refValue}{u}
+          </span>
+        )}
+      </div>
+      <ResponsiveContainer width="100%" height={110}>
+        <LineChart data={pts} margin={{ top: 4, right: 4, bottom: 0, left: -10 }}>
+          <XAxis
+            dataKey="t"
+            type="number"
+            domain={["dataMin", "dataMax"]}
+            tickFormatter={fmtHST}
+            tick={{ fontSize: 8, fill: "rgba(232,193,120,0.45)" }}
+            tickLine={false}
+            axisLine={false}
+            tickCount={5}
+            interval="preserveStartEnd"
+          />
+          <YAxis
+            domain={[min - pad, max + pad]}
+            tick={{ fontSize: 8, fill: "rgba(232,193,120,0.45)" }}
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={(v: number) => `${Math.round(v)}${u}`}
+            width={38}
+          />
+          <Tooltip
+            contentStyle={{
+              background: "rgba(18,14,8,0.97)",
+              border: "1px solid rgba(232,193,120,0.18)",
+              borderRadius: 8,
+              fontSize: 11,
+              color: "var(--cream)",
+            }}
+            labelFormatter={(ts: number) => fmtHST(ts)}
+            formatter={(v: number) => [`${v}${u}`, ""]}
+          />
+          {refValue !== undefined && (
+            <ReferenceLine
+              y={refValue}
+              stroke="rgba(201,153,74,0.35)"
+              strokeDasharray="4 3"
+            />
+          )}
+          <Line
+            type="monotone"
+            dataKey="v"
+            stroke="var(--brass-bright)"
+            strokeWidth={1.5}
+            dot={false}
+            activeDot={{ r: 3, fill: "var(--brass-bright)", strokeWidth: 0 }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
 function ClimateControls({
   entity,
   call,
@@ -600,6 +764,8 @@ function ClimateControls({
           </div>
         </div>
       )}
+
+      <HistoryChart entity={entity} refValue={target} unit={u} />
     </div>
   );
 }

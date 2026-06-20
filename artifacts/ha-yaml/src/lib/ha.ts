@@ -129,6 +129,12 @@ export type HAHistoryPoint = {
   last_updated?: string;
 };
 
+export type HAHistoryPointFull = {
+  state: string;
+  last_changed: string;
+  attributes?: Record<string, unknown>;
+};
+
 export async function haHistory(entityId: string, hoursBack = 24) {
   const end = new Date();
   const start = new Date(end.getTime() - hoursBack * 3600_000);
@@ -140,6 +146,17 @@ export async function haHistory(entityId: string, hoursBack = 24) {
     end.toISOString(),
   )}&minimal_response&no_attributes&significant_changes_only`;
   return haCall<HAHistoryPoint[][]>(path);
+}
+
+export async function haHistoryFull(entityId: string, hoursBack = 24) {
+  const end = new Date();
+  const start = new Date(end.getTime() - hoursBack * 3600_000);
+  const path = `/api/history/period/${encodeURIComponent(
+    start.toISOString(),
+  )}?filter_entity_id=${encodeURIComponent(
+    entityId,
+  )}&end_time=${encodeURIComponent(end.toISOString())}&significant_changes_only`;
+  return haCall<HAHistoryPointFull[][]>(path);
 }
 
 export type HAForecastPoint = {
