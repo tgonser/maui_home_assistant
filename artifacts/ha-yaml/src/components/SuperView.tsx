@@ -212,14 +212,11 @@ function WeatherTile({ states }: { states: HAState[] }) {
           <div className="flex justify-between">
             {forecast.slice(0, 7).map((f) => {
               const FIcon = WEATHER_ICONS[f.condition ?? ""] ?? Cloud;
-              const label = new Intl.DateTimeFormat("en-US", {
-                hour: "numeric",
-                hour12: true,
-                timeZone: "America/Honolulu",
-              })
-                .format(new Date(f.datetime))
-                .replace(/ AM/, "am")
-                .replace(/ PM/, "pm");
+              // Hawaii is always UTC-10, no DST
+              const hstHour = (new Date(f.datetime).getUTCHours() + 14) % 24;
+              const ampm = hstHour >= 12 ? "pm" : "am";
+              const h12 = hstHour % 12 || 12;
+              const label = `${h12}${ampm}`;
               return (
                 <div
                   key={f.datetime}
