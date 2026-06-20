@@ -37,6 +37,7 @@ import {
   haHistory,
   haForecast,
   type HAState,
+  type HAForecastPoint,
 } from "@/lib/ha";
 import {
   SuperViewSettings,
@@ -95,7 +96,43 @@ const WEATHER_ICONS: Record<string, typeof Cloud> = {
 function WeatherTile({ states }: { states: HAState[] }) {
   const override = useResolvedSlot(states, "weather");
   const w =
-    override ?? findFirst(states, (s) => domainOf(s.entity_id) === "weather");
+    override ??
+    findFirst(
+      states,
+      (s) =>
+        domainOf(s.entity_id) === "weather" && /tempest/i.test(s.entity_id),
+    ) ??
+    findFirst(states, (s) => domainOf(s.entity_id) === "weather");
+
+  const [forecast, setForecast] = useState<HAForecastPoint[]>([]);
+  useEffect(() => {
+    if (!w?.entity_id) return;
+    let cancelled = false;
+    const load = () =>
+      haForecast(w.entity_id, "hourly").then((r) => {
+        if (!cancelled && r.ok) setForecast(r.data.slice(0, 7));
+      });
+    load();
+    const id = setInterval(load, 30 * 60 * 1000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [w?.entity_id]);
+
+  const uvSensor = findFirst(
+    states,
+    (s) =>
+      domainOf(s.entity_id) === "sensor" &&
+      /tempest.*(uv|ultraviolet)|uv.*tempest/i.test(s.entity_id),
+  );
+  const rainSensor = findFirst(
+    states,
+    (s) =>
+      domainOf(s.entity_id) === "sensor" &&
+      /tempest.*(precip|rain)|(precip|rain).*tempest/i.test(s.entity_id),
+  );
+
   if (!w) {
     return (
       <div className="wall-tile p-6 col-span-2 row-span-2 flex flex-col justify-between">
@@ -109,12 +146,17 @@ function WeatherTile({ states }: { states: HAState[] }) {
       </div>
     );
   }
+
   const Icon = WEATHER_ICONS[w.state] ?? Cloud;
   const t = w.attributes.temperature as number | undefined;
   const tu = (w.attributes.temperature_unit as string | undefined) ?? "°";
   const hum = w.attributes.humidity as number | undefined;
   const wind = w.attributes.wind_speed as number | undefined;
   const wu = (w.attributes.wind_speed_unit as string | undefined) ?? "mph";
+  const uvAttr = w.attributes.uv_index as number | undefined;
+  const uv = uvAttr ?? (uvSensor ? parseFloat(uvSensor.state) : undefined);
+  const rain = rainSensor ? parseFloat(rainSensor.state) : undefined;
+
   return (
     <motion.div
       layout
@@ -135,20 +177,66 @@ function WeatherTile({ states }: { states: HAState[] }) {
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-4 relative z-[1]">
+
+      <div className="grid grid-cols-3 gap-3 relative z-[1]">
         <div>
           <div className="label text-xs">Humidity</div>
-          <div className="text-xl tabular-nums">
+          <div className="text-lg tabular-nums">
             {hum !== undefined ? `${hum}%` : "—"}
           </div>
         </div>
         <div>
           <div className="label text-xs">Wind</div>
-          <div className="text-xl tabular-nums">
+          <div className="text-lg tabular-nums">
             {wind !== undefined ? `${Math.round(wind)} ${wu}` : "—"}
           </div>
         </div>
+        {uv !== undefined && !isNaN(uv) ? (
+          <div>
+            <div className="label text-xs">UV Index</div>
+            <div className="text-lg tabular-nums">{Math.round(uv * 10) / 10}</div>
+          </div>
+        ) : rain !== undefined && !isNaN(rain) ? (
+          <div>
+            <div className="label text-xs">Rain</div>
+            <div className="text-lg tabular-nums">{rain.toFixed(2)}&Prime;</div>
+          </div>
+        ) : null}
       </div>
+
+      {forecast.length > 0 && (
+        <div className="relative z-[1] border-t border-white/10 pt-3 mt-1">
+          <div className="flex justify-between">
+            {forecast.slice(0, 7).map((f) => {
+              const FIcon = WEATHER_ICONS[f.condition ?? ""] ?? Cloud;
+              const d = new Date(f.datetime);
+              const hour = d.getHours();
+              const label =
+                hour === 0
+                  ? "12am"
+                  : hour === 12
+                    ? "12pm"
+                    : hour > 12
+                      ? `${hour - 12}pm`
+                      : `${hour}am`;
+              return (
+                <div
+                  key={f.datetime}
+                  className="flex flex-col items-center gap-0.5"
+                >
+                  <div className="label text-[9px] uppercase">{label}</div>
+                  <FIcon className="w-3.5 h-3.5 opacity-80" />
+                  <div className="text-[11px] tabular-nums">
+                    {f.temperature !== undefined
+                      ? `${Math.round(f.temperature)}°`
+                      : "—"}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }
