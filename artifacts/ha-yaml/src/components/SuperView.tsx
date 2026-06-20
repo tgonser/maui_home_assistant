@@ -175,6 +175,9 @@ function WeatherTile({ states }: { states: HAState[] }) {
           <div className="sub text-[11px] uppercase mt-1 tracking-wider">
             {w.state.replace(/-/g, " ")}
           </div>
+          <div className="text-[9px] opacity-40 mt-0.5 uppercase tracking-widest">
+            {w.entity_id}
+          </div>
         </div>
       </div>
 
@@ -209,16 +212,14 @@ function WeatherTile({ states }: { states: HAState[] }) {
           <div className="flex justify-between">
             {forecast.slice(0, 7).map((f) => {
               const FIcon = WEATHER_ICONS[f.condition ?? ""] ?? Cloud;
-              const d = new Date(f.datetime);
-              const hour = d.getHours();
-              const label =
-                hour === 0
-                  ? "12am"
-                  : hour === 12
-                    ? "12pm"
-                    : hour > 12
-                      ? `${hour - 12}pm`
-                      : `${hour}am`;
+              const label = new Intl.DateTimeFormat("en-US", {
+                hour: "numeric",
+                hour12: true,
+                timeZone: "America/Honolulu",
+              })
+                .format(new Date(f.datetime))
+                .replace(/ AM/, "am")
+                .replace(/ PM/, "pm");
               return (
                 <div
                   key={f.datetime}
