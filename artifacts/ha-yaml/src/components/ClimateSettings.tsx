@@ -149,6 +149,14 @@ const TEMP_SETPOINTS: { section: string; rows: Setpoint[] }[] = [
         max: 50,
         step: 5,
       },
+      {
+        entity_id: "input_number.maui_grid_protect_kw",
+        label: "Vacation Grid Draw Limit",
+        unit: "kW",
+        min: 0,
+        max: 10,
+        step: 0.5,
+      },
     ],
   },
 ];
@@ -376,7 +384,14 @@ export function ClimateSettings({
     max: 50
     step: 5
     unit_of_measurement: "%"
-    initial: 25`}</pre>
+    initial: 25
+  maui_grid_protect_kw:
+    name: "Maui: Vacation Grid Draw Limit (kW)"
+    min: 0
+    max: 10
+    step: 0.5
+    unit_of_measurement: "kW"
+    initial: 0`}</pre>
         </div>
       )}
 
