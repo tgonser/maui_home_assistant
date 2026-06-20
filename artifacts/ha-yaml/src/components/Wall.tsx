@@ -346,8 +346,12 @@ const isNonSwitch = (s: HAState) => {
 // their device name, so entity renames don't reliably propagate, and the
 // MI/Bend entity_id slugs (e.g. climate.apartment, climate.thermostat) carry
 // no house marker — so MI/Bend units leaked into the Maui tab. We therefore
-// key the Maui set off stable entity_ids. When a Maui thermostat is added in
-// HA, add its entity_id here.
+// key the Maui set off stable entity_ids (the reliable backbone). As a
+// convenience, anything whose friendly_name starts with the house convention
+// "Maui" (e.g. "Maui-Atrium", "Maui_Molokini") is also included, so a
+// correctly-named new Maui thermostat appears without a code edit. If a new
+// unit's name might not propagate (Honeywell device-name trap), add its
+// entity_id to the allowlist too.
 const MAUI_CLIMATE_IDS = new Set<string>([
   "climate.atrium",
   "climate.bar",
@@ -359,7 +363,14 @@ const MAUI_CLIMATE_IDS = new Set<string>([
   "climate.sitting",
   "climate.upper_mauka",
 ]);
-const isMauiClimate = (s: HAState) => MAUI_CLIMATE_IDS.has(s.entity_id);
+const MAUI_NAME_RE = /^maui[\s\-_]/;
+const isMauiClimate = (s: HAState) => {
+  if (MAUI_CLIMATE_IDS.has(s.entity_id)) return true;
+  const name = ((s.attributes.friendly_name as string | undefined) ?? "")
+    .toLowerCase()
+    .trim();
+  return MAUI_NAME_RE.test(name);
+};
 const deviceClass = (s: HAState) =>
   (s.attributes.device_class as string | undefined) ?? "";
 
