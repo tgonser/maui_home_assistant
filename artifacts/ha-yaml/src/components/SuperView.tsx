@@ -271,9 +271,23 @@ function StatTile({
   );
 }
 
+function isLightGroup(s: HAState) {
+  // Group/helper entities expose entity_id as an array of member IDs
+  return Array.isArray(s.attributes.entity_id);
+}
+
 function LightsCount({ states }: { states: HAState[] }) {
-  const lights = findEntities(states, (s) => domainOf(s.entity_id) === "light");
-  const on = lights.filter((s) => s.state === "on").length;
+  const lights = findEntities(
+    states,
+    (s) => domainOf(s.entity_id) === "light" && !isLightGroup(s),
+  );
+  const on = lights.filter((s) => {
+    if (s.state !== "on") return false;
+    // Some integrations report state="on" at brightness 0 — don't count those
+    const b = s.attributes.brightness as number | undefined;
+    if (b !== undefined && b === 0) return false;
+    return true;
+  }).length;
   return (
     <StatTile
       icon={Lightbulb}
