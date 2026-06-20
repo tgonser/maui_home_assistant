@@ -381,7 +381,7 @@ function SolarProduction({ states }: { states: HAState[] }) {
       icon={Sun}
       label="Solar production"
       value={isNaN(num) ? "—" : `${num.toLocaleString()} ${unit}`}
-      sub={s ? friendly(s) : undefined}
+      sub={s ? "Envoy" : undefined}
       active={!isNaN(num) && num > 0}
     />
   );
