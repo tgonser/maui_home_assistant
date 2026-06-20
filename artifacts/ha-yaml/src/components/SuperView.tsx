@@ -319,6 +319,7 @@ function PowerwallStat({ states }: { states: HAState[] }) {
       (e) =>
         domainOf(e.entity_id) === "sensor" &&
         /(powerwall|tesla).*battery|battery.*level|charge/i.test(e.entity_id) &&
+        !/(iphone|ipad|android|phone|mobile|watch|companion)/i.test(e.entity_id) &&
         (e.attributes.unit_of_measurement === "%" ||
           deviceClass(e) === "battery"),
     );
@@ -684,7 +685,6 @@ export function SuperView({ states }: { states: HAState[] }) {
         <EnergyUsage states={states} />
         {stats.lights.length === 0 ? null : <PowerwallStat states={states} />}
         <LastMotionCamera states={states} />
-        <AtriumTvRemote states={states} />
       </div>
       <SuperViewSettings
         open={settingsOpen}
