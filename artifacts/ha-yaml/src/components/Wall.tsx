@@ -342,28 +342,24 @@ const isNonSwitch = (s: HAState) => {
 
 // The same Home Assistant instance manages multiple houses (Maui, Mercer
 // Island = "MI", Bend). The Climate tab on the kiosk is for Maui only.
-// Convention: every non-Maui thermostat has been renamed in HA to start
-// with its house prefix ("MI " or "Bend "). Anything that doesn't carry one
-// of those prefixes is assumed to be Maui. We check both the friendly_name
-// and the entity_id slug so renames that haven't fully propagated still
-// filter correctly.
-const NON_MAUI_PREFIXES = ["mi", "bend"];
-const isMauiClimate = (s: HAState) => {
-  const name = ((s.attributes.friendly_name as string | undefined) ?? "")
-    .toLowerCase()
-    .trim();
-  const slug = s.entity_id.toLowerCase().replace(/^climate\./, "");
-  for (const prefix of NON_MAUI_PREFIXES) {
-    // friendly_name: "MI Kitchen", "Bend Master" — prefix followed by a
-    // word boundary (space, hyphen, end of string).
-    const nameRe = new RegExp(`^${prefix}([\\s\\-_]|$)`);
-    if (nameRe.test(name)) return false;
-    // entity_id slug: "mi_kitchen", "bend_master".
-    const slugRe = new RegExp(`^${prefix}_`);
-    if (slugRe.test(slug)) return false;
-  }
-  return true;
-};
+// Friendly-name prefixes proved unreliable: Honeywell TCC thermostats inherit
+// their device name, so entity renames don't reliably propagate, and the
+// MI/Bend entity_id slugs (e.g. climate.apartment, climate.thermostat) carry
+// no house marker — so MI/Bend units leaked into the Maui tab. We therefore
+// key the Maui set off stable entity_ids. When a Maui thermostat is added in
+// HA, add its entity_id here.
+const MAUI_CLIMATE_IDS = new Set<string>([
+  "climate.atrium",
+  "climate.bar",
+  "climate.beach_room",
+  "climate.boardroom",
+  "climate.kitchen",
+  "climate.master_bed_2",
+  "climate.maui_bar",
+  "climate.sitting",
+  "climate.upper_mauka",
+]);
+const isMauiClimate = (s: HAState) => MAUI_CLIMATE_IDS.has(s.entity_id);
 const deviceClass = (s: HAState) =>
   (s.attributes.device_class as string | undefined) ?? "";
 
