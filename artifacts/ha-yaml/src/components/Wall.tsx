@@ -624,14 +624,26 @@ function ClimateTile({ s }: { s: HAState }) {
   const u = (s.attributes.temperature_unit as string | undefined) ?? "°";
   const mode = s.state;
   const active = mode !== "off" && mode !== "unavailable";
+  const aboveTarget = cur !== undefined && target !== undefined && cur > target;
+  const atOrBelowTarget = cur !== undefined && target !== undefined && cur <= target;
+  const tempColor = aboveTarget
+    ? "text-red-400"
+    : atOrBelowTarget
+      ? "text-emerald-400"
+      : "";
   return (
-    <Tile
-      icon={Thermometer}
-      label={friendly(s)}
-      value={cur !== undefined ? `${cur}${u}` : mode}
-      sub={target !== undefined ? `target ${target}${u} · ${mode}` : mode}
-      active={active}
-    />
+    <Tile icon={Thermometer} label={friendly(s)} active={active}>
+      {cur !== undefined && (
+        <div className={`text-2xl font-semibold tabular-nums mt-0.5 ${tempColor}`}>
+          {cur}{u}
+        </div>
+      )}
+      {target !== undefined && (
+        <div className="text-xs mt-1 text-[var(--cream-muted)]">
+          target <span className="font-semibold text-[var(--cream)]">{target}{u}</span>
+        </div>
+      )}
+    </Tile>
   );
 }
 
