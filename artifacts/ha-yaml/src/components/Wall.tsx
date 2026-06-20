@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useHAStore, haStates, haCameraImage, type HAState } from "@/lib/ha";
+import { useHAStore, haStates, haCameraImage, haCallService, type HAState } from "@/lib/ha";
 import {
   isMediaActive,
   displayMediaState,
@@ -30,6 +30,8 @@ import {
   Sparkles,
   Play,
   Tv,
+  Users,
+  Pause,
 } from "lucide-react";
 import "./wall-theme.css";
 import { SuperView } from "./SuperView";
@@ -978,6 +980,66 @@ function SecurityView({
   );
 }
 
+const HOUSE_MODES = [
+  { option: "Owners Home", icon: HomeIcon, label: "Owners" },
+  { option: "Visitors",    icon: Users,    label: "Visitors" },
+  { option: "Vacation",    icon: Sun,      label: "Vacation" },
+  { option: "Suspend",     icon: Pause,    label: "Suspend" },
+] as const;
+
+function HouseModeStrip({
+  states,
+  onChanged,
+}: {
+  states: HAState[];
+  onChanged: () => void;
+}) {
+  const entity = states.find(
+    (s) => s.entity_id === "input_select.maui_house_mode",
+  );
+  const current = entity?.state ?? "";
+  const [busy, setBusy] = useState(false);
+
+  if (!entity) return null;
+
+  const select = async (option: string) => {
+    if (busy || option === current) return;
+    setBusy(true);
+    await haCallService("input_select", "select_option", {
+      entity_id: "input_select.maui_house_mode",
+      option,
+    });
+    setTimeout(onChanged, 800);
+    setBusy(false);
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      {HOUSE_MODES.map(({ option, icon: Icon, label }) => {
+        const isActive = current === option;
+        return (
+          <button
+            key={option}
+            type="button"
+            onClick={() => select(option)}
+            disabled={busy}
+            aria-pressed={isActive}
+            aria-label={`Set house mode to ${option}`}
+            className={[
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all wall-tile",
+              isActive ? "wall-tile--active" : "opacity-50 hover:opacity-80",
+              busy ? "cursor-wait" : "",
+            ].join(" ")}
+          >
+            <Icon className="w-3.5 h-3.5 shrink-0" />
+            <span>{label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export function Wall() {
   const { url, token, status, config } = useHAStore();
   const [states, setStates] = useState<HAState[]>([]);
@@ -1254,6 +1316,7 @@ export function Wall() {
               </div>
             </div>
           </div>
+          <HouseModeStrip states={states} onChanged={refresh} />
           <Clock />
         </header>
 
