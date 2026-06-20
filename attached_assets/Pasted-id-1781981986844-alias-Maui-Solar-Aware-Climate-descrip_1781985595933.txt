@@ -1,0 +1,139 @@
+id: '1781981986844'
+alias: Maui Solar-Aware Climate
+description: >
+  Sets AC targets every 15 min based on solar, battery, time of day, and house
+  mode. East rooms 9am–2pm, west rooms noon–9am. Backs off during peak pricing
+  (5–9pm) and when battery is low (<30%).
+triggers:
+  - trigger: time_pattern
+    minutes: /15
+  - trigger: state
+    entity_id: input_select.maui_house_mode
+  - trigger: homeassistant
+    event: start
+conditions:
+  - condition: template
+    value_template: '{{ not is_state(''input_select.maui_house_mode'', ''Suspend'') }}'
+actions:
+  - repeat:
+      for_each:
+        - climate.boardroom
+        - climate.sitting
+      sequence:
+        - condition: template
+          value_template: |-
+            {{ state_attr(repeat.item, 'hvac_mode') != 'cool'
+               or (state_attr(repeat.item, 'temperature') | int) != (east_target | int) }}
+        - action: climate.set_hvac_mode
+          target:
+            entity_id: '{{ repeat.item }}'
+          data:
+            hvac_mode: cool
+          continue_on_error: true
+        - action: climate.set_temperature
+          target:
+            entity_id: '{{ repeat.item }}'
+          data:
+            temperature: '{{ east_target }}'
+          continue_on_error: true
+  - repeat:
+      for_each:
+        - climate.master_bed_2
+      sequence:
+        - condition: template
+          value_template: |-
+            {{ state_attr(repeat.item, 'hvac_mode') != 'cool'
+               or (state_attr(repeat.item, 'temperature') | int) != (west_target | int) }}
+        - action: climate.set_hvac_mode
+          target:
+            entity_id: '{{ repeat.item }}'
+          data:
+            hvac_mode: cool
+          continue_on_error: true
+        - action: climate.set_temperature
+          target:
+            entity_id: '{{ repeat.item }}'
+          data:
+            temperature: '{{ west_target }}'
+          continue_on_error: true
+  - if:
+      - condition: template
+        value_template: |-
+          {{ is_state('input_select.maui_house_mode', 'Visitors')
+             or is_state('input_select.maui_house_mode', 'Vacation') }}
+    then:
+      - repeat:
+          for_each:
+            - climate.upper_mauka
+          sequence:
+            - condition: template
+              value_template: |-
+                {{ state_attr(repeat.item, 'hvac_mode') != 'cool'
+                   or (state_attr(repeat.item, 'temperature') | int) != (east_target | int) }}
+            - action: climate.set_hvac_mode
+              target:
+                entity_id: '{{ repeat.item }}'
+              data:
+                hvac_mode: cool
+              continue_on_error: true
+            - action: climate.set_temperature
+              target:
+                entity_id: '{{ repeat.item }}'
+              data:
+                temperature: '{{ east_target }}'
+              continue_on_error: true
+  - if:
+      - condition: template
+        value_template: |-
+          {{ is_state('input_select.maui_house_mode', 'Visitors')
+             or is_state('input_select.maui_house_mode', 'Vacation') }}
+    then:
+      - repeat:
+          for_each:
+            - climate.atrium
+            - climate.bar
+            - climate.beach_room
+            - climate.kitchen
+            - climate.maui_bar
+          sequence:
+            - condition: template
+              value_template: |-
+                {{ state_attr(repeat.item, 'hvac_mode') != 'cool'
+                   or (state_attr(repeat.item, 'temperature') | int) != (west_target | int) }}
+            - action: climate.set_hvac_mode
+              target:
+                entity_id: '{{ repeat.item }}'
+              data:
+                hvac_mode: cool
+              continue_on_error: true
+            - action: climate.set_temperature
+              target:
+                entity_id: '{{ repeat.item }}'
+              data:
+                temperature: '{{ west_target }}'
+              continue_on_error: true
+variables:
+  home: '{{ is_state(''input_select.maui_house_mode'', ''Owners Home'') }}'
+  visitors: '{{ is_state(''input_select.maui_house_mode'', ''Visitors'') }}'
+  batt: |-
+    {{ [states('sensor.gonser_4680_system_1_percentage_charged') | float(0),
+        states('sensor.4680_system_2_percentage_charged') | float(0)] | min }}
+  solar: '{{ states(''sensor.total_solar'') | float(0) }}'
+  peak: '{{ 17 <= now().hour < 21 }}'
+  east_active: '{{ 9 <= now().hour < 14 }}'
+  west_active: '{{ now().hour >= 12 or now().hour < 9 }}'
+  east_target: >-
+    {% if batt < 25 or peak %}84 {% elif not east_active %}82 {% elif batt >= 80
+    or solar > 10 %}
+      {{ 74 if home else (76 if visitors else 80) }}
+    {% else %}
+      {{ 79 if home else (81 if visitors else 84) }}
+    {% endif %}
+  west_target: >-
+    {% if batt < 25 or peak %}84 {% elif not west_active %}82 {% elif batt >= 80
+    or solar > 10 %}
+      {{ 74 if home else (76 if visitors else 80) }}
+    {% else %}
+      {{ 79 if home else (81 if visitors else 84) }}
+    {% endif %}
+mode: single
