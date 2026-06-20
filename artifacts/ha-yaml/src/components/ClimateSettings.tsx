@@ -337,51 +337,6 @@ export function ClimateSettings({
           </div>
         </section>
       ))}
-
-      <section>
-        <div className="text-xs uppercase tracking-[0.18em] text-[var(--cream-muted)] mb-3">
-          Updated Automation Variables
-        </div>
-        <div className="wall-tile rounded-xl p-4">
-          <p className="text-xs text-[var(--cream-muted)] mb-3 leading-relaxed">
-            Replace the <code className="bg-black/20 px-1 rounded">variables:</code> block in your{" "}
-            <strong>Maui Solar-Aware Climate</strong> automation with this:
-          </p>
-          <pre className="text-xs bg-black/30 rounded-lg p-3 overflow-x-auto leading-relaxed text-[var(--cream)]">{`variables:
-  home: "{{ is_state('input_select.maui_house_mode', 'Owners Home') }}"
-  visitors: "{{ is_state('input_select.maui_house_mode', 'Visitors') }}"
-  batt: |-
-    {{ [states('sensor.gonser_4680_system_1_percentage_charged') | float(0),
-        states('sensor.4680_system_2_percentage_charged') | float(0)] | min }}
-  solar: "{{ states('sensor.total_solar') | float(0) }}"
-  peak: "{{ 17 <= now().hour < 21 }}"
-  east_active: "{{ 9 <= now().hour < 14 }}"
-  west_active: "{{ now().hour >= 12 or now().hour < 9 }}"
-  t_og: "{{ states('input_number.maui_temp_owners_good') | float(74) }}"
-  t_vg: "{{ states('input_number.maui_temp_visitors_good') | float(76) }}"
-  t_vag: "{{ states('input_number.maui_temp_vacation_good') | float(80) }}"
-  t_om: "{{ states('input_number.maui_temp_owners_mod') | float(79) }}"
-  t_vm: "{{ states('input_number.maui_temp_visitors_mod') | float(81) }}"
-  t_vam: "{{ states('input_number.maui_temp_vacation_mod') | float(84) }}"
-  t_in: "{{ states('input_number.maui_temp_inactive') | float(82) }}"
-  t_pr: "{{ states('input_number.maui_temp_protect') | float(84) }}"
-  t_br: "{{ states('input_number.maui_temp_boardroom_max') | float(78) }}"
-  s_good: "{{ states('input_number.maui_solar_good') | float(10) }}"
-  b_good: "{{ states('input_number.maui_batt_good') | float(80) }}"
-  b_prot: "{{ states('input_number.maui_batt_protect') | float(25) }}"
-  east_target: |-
-    {{ t_pr if (batt < b_prot and solar < s_good or peak) else
-       (t_in if not east_active else
-       ((t_og if home else (t_vg if visitors else t_vag)) if (batt >= b_good or solar > s_good) else
-       (t_om if home else (t_vm if visitors else t_vam)))) }}
-  west_target: |-
-    {{ t_pr if (batt < b_prot and solar < s_good or peak) else
-       (t_in if not west_active else
-       ((t_og if home else (t_vg if visitors else t_vag)) if (batt >= b_good or solar > s_good) else
-       (t_om if home else (t_vm if visitors else t_vam)))) }}
-  boardroom_target: "{{ [east_target | float, t_br | float] | min }}"`}</pre>
-        </div>
-      </section>
     </motion.div>
   );
 }
