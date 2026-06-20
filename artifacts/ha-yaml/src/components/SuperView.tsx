@@ -402,39 +402,30 @@ const DEVICE_BATTERY_NAMES =
 function PowerwallStat({ states }: { states: HAState[] }) {
   const override = useResolvedSlot(states, "powerwall");
 
-  // Tier 1: individual system sensors (named system + charge-state keyword)
-  const systemSensors = override
-    ? [override]
-    : findEntities(
-        states,
-        (e) =>
-          domainOf(e.entity_id) === "sensor" &&
-          /(powerwall|tesla|4680|enphase|span|home_battery|gonser)/i.test(e.entity_id) &&
-          /(percentage_charged|state_of_charge|charge_level|battery_percent|soc)/i.test(e.entity_id) &&
-          (e.attributes.unit_of_measurement === "%" || deviceClass(e) === "battery"),
-      );
-
-  // Tier 2: well-known aggregate sensors (only used when no system sensors found)
+  // Aggregate sensor — the headline number
   const aggregateSensor =
-    systemSensors.length === 0 && !override
-      ? findFirst(
-          states,
-          (e) =>
-            domainOf(e.entity_id) === "sensor" &&
-            /^sensor\.battery_percent$|total.*battery.*percent/i.test(e.entity_id) &&
-            e.attributes.unit_of_measurement === "%",
-        )
-      : undefined;
+    override ??
+    findFirst(
+      states,
+      (e) =>
+        domainOf(e.entity_id) === "sensor" &&
+        /^sensor\.battery_percent$|total.*battery.*percent/i.test(e.entity_id) &&
+        e.attributes.unit_of_measurement === "%",
+    );
 
-  const homeBatteries = systemSensors.length > 0
-    ? systemSensors
-    : aggregateSensor
-      ? [aggregateSensor]
-      : [];
+  // Individual system sensors — shown as sub-label detail
+  const systemSensors = findEntities(
+    states,
+    (e) =>
+      domainOf(e.entity_id) === "sensor" &&
+      /(powerwall|tesla|4680|enphase|span|home_battery|gonser)/i.test(e.entity_id) &&
+      /(percentage_charged|state_of_charge|charge_level|battery_percent|soc)/i.test(e.entity_id) &&
+      (e.attributes.unit_of_measurement === "%" || deviceClass(e) === "battery"),
+  );
 
-  // Fallback: device_class=battery sensors not matching device names
+  // Fallback: device_class=battery if neither found
   const fallback =
-    homeBatteries.length === 0
+    !aggregateSensor && systemSensors.length === 0
       ? findFirst(
           states,
           (e) =>
@@ -445,27 +436,22 @@ function PowerwallStat({ states }: { states: HAState[] }) {
         )
       : undefined;
 
-  const sources = homeBatteries.length > 0 ? homeBatteries : fallback ? [fallback] : [];
-  if (sources.length === 0) return null;
+  const primary = aggregateSensor ?? systemSensors[0] ?? fallback;
+  if (!primary) return null;
 
-  const nums = sources
+  const primaryNum = parseFloat(primary.state);
+  const value = isNaN(primaryNum) ? primary.state : `${Math.round(primaryNum)}%`;
+
+  // Sub: individual system readings if available, otherwise friendly name
+  const sysNums = systemSensors
     .map((e) => parseFloat(e.state))
     .filter((n) => !isNaN(n))
     .sort((a, b) => a - b);
 
-  const value =
-    nums.length === 0
-      ? "—"
-      : nums.length === 2
-        ? `${Math.round(nums[0]!)}% · ${Math.round(nums[1]!)}%`
-        : nums.length > 2
-          ? `${Math.round(nums[0]!)}%–${Math.round(nums[nums.length - 1]!)}%`
-          : `${Math.round(nums[0]!)}%`;
-
   const sub =
-    sources.length > 1
-      ? `${sources.length} systems`
-      : friendly(sources[0]!);
+    sysNums.length >= 2
+      ? sysNums.map((n) => `${Math.round(n)}%`).join(" · ")
+      : friendly(primary);
 
   return (
     <StatTile
@@ -473,7 +459,7 @@ function PowerwallStat({ states }: { states: HAState[] }) {
       label="Battery"
       value={value}
       sub={sub}
-      active={nums.some((n) => n > 20)}
+      active={!isNaN(primaryNum) && primaryNum > 20}
     />
   );
 }
