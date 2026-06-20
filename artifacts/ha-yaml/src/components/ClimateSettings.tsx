@@ -17,6 +17,30 @@ const TEMP_SETPOINTS: { section: string; rows: Setpoint[] }[] = [
     section: "Temperature Setpoints (°F)",
     rows: [
       {
+        entity_id: "input_number.maui_temp_owners_awesome",
+        label: "Owners Home — Solar Awesome",
+        unit: "°F",
+        min: 65,
+        max: 85,
+        step: 1,
+      },
+      {
+        entity_id: "input_number.maui_temp_visitors_awesome",
+        label: "Visitors — Solar Awesome",
+        unit: "°F",
+        min: 65,
+        max: 85,
+        step: 1,
+      },
+      {
+        entity_id: "input_number.maui_temp_vacation_awesome",
+        label: "Vacation — Solar Awesome",
+        unit: "°F",
+        min: 65,
+        max: 85,
+        step: 1,
+      },
+      {
         entity_id: "input_number.maui_temp_owners_good",
         label: "Owners Home — Solar Good",
         unit: "°F",
@@ -93,6 +117,14 @@ const TEMP_SETPOINTS: { section: string; rows: Setpoint[] }[] = [
   {
     section: "Thresholds",
     rows: [
+      {
+        entity_id: "input_number.maui_solar_awesome",
+        label: "Solar 'Awesome' Threshold",
+        unit: "kW",
+        min: 1,
+        max: 30,
+        step: 1,
+      },
       {
         entity_id: "input_number.maui_solar_good",
         label: "Solar 'Good' Threshold",
@@ -233,6 +265,34 @@ export function ClimateSettings({
             reference these helpers.
           </p>
           <pre className="text-xs bg-black/30 rounded-lg p-3 overflow-x-auto leading-relaxed text-[var(--cream)]">{`input_number:
+  maui_temp_owners_awesome:
+    name: "Maui: Owners Home - Solar Awesome"
+    min: 65
+    max: 85
+    step: 1
+    unit_of_measurement: "°F"
+    initial: 72
+  maui_temp_visitors_awesome:
+    name: "Maui: Visitors - Solar Awesome"
+    min: 65
+    max: 85
+    step: 1
+    unit_of_measurement: "°F"
+    initial: 74
+  maui_temp_vacation_awesome:
+    name: "Maui: Vacation - Solar Awesome"
+    min: 65
+    max: 85
+    step: 1
+    unit_of_measurement: "°F"
+    initial: 80
+  maui_solar_awesome:
+    name: "Maui: Solar Awesome Threshold (kW)"
+    min: 1
+    max: 30
+    step: 1
+    unit_of_measurement: "kW"
+    initial: 14
   maui_temp_owners_good:
     name: "Maui: Owners Home - Solar Good"
     min: 65
