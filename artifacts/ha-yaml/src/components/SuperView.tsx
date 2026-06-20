@@ -446,9 +446,9 @@ function PowerwallStat({ states }: { states: HAState[] }) {
     nums.length === 0
       ? "—"
       : nums.length === 2
-        ? `${nums[0]}% · ${nums[1]}%`
+        ? `${Math.round(nums[0]!)}% · ${Math.round(nums[1]!)}%`
         : nums.length > 2
-          ? `${nums[0]}%–${nums[nums.length - 1]}%`
+          ? `${Math.round(nums[0]!)}%–${Math.round(nums[nums.length - 1]!)}%`
           : `${Math.round(nums[0]!)}%`;
 
   const sub =
