@@ -442,15 +442,18 @@ function PowerwallStat({ states }: { states: HAState[] }) {
   const primaryNum = parseFloat(primary.state);
   const value = isNaN(primaryNum) ? primary.state : `${Math.round(primaryNum)}%`;
 
-  // Sub: individual system readings if available, otherwise friendly name
-  const sysNums = systemSensors
-    .map((e) => parseFloat(e.state))
-    .filter((n) => !isNaN(n))
-    .sort((a, b) => a - b);
-
+  // Sub: individual system readings labelled "Batt 1", "Batt 2", …
+  const sortedSystems = [...systemSensors].sort((a, b) =>
+    a.entity_id.localeCompare(b.entity_id),
+  );
   const sub =
-    sysNums.length >= 2
-      ? sysNums.map((n) => `${Math.round(n)}%`).join(" · ")
+    sortedSystems.length >= 2
+      ? sortedSystems
+          .map((e, i) => {
+            const n = parseFloat(e.state);
+            return `Batt ${i + 1}: ${isNaN(n) ? "—" : Math.round(n) + "%"}`;
+          })
+          .join("  ·  ")
       : friendly(primary);
 
   return (
