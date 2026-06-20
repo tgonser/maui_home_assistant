@@ -396,28 +396,54 @@ function EnergyUsage({ states }: { states: HAState[] }) {
   );
 }
 
+const DEVICE_BATTERY_NAMES =
+  /iphone|ipad|android|phone|mobile|watch|companion|laptop|macbook|pixel|galaxy|tablet/i;
+
 function PowerwallStat({ states }: { states: HAState[] }) {
   const override = useResolvedSlot(states, "powerwall");
-  const s =
-    override ??
-    findFirst(
-      states,
-      (e) =>
-        domainOf(e.entity_id) === "sensor" &&
-        /(powerwall|tesla).*battery|battery.*level|charge/i.test(e.entity_id) &&
-        !/(iphone|ipad|android|phone|mobile|watch|companion)/i.test(e.entity_id) &&
-        (e.attributes.unit_of_measurement === "%" ||
-          deviceClass(e) === "battery"),
-    );
-  if (!s) return null;
-  const num = parseFloat(s.state);
+
+  // First: look for known home-battery system keywords in the entity_id
+  const homeBatteries = override
+    ? [override]
+    : findEntities(
+        states,
+        (e) =>
+          domainOf(e.entity_id) === "sensor" &&
+          /(powerwall|tesla|4680|enphase|span|home_battery|gonser)/i.test(
+            e.entity_id,
+          ) &&
+          (e.attributes.unit_of_measurement === "%" ||
+            deviceClass(e) === "battery"),
+      );
+
+  // Fallback: any % battery sensor that doesn't look like a device battery
+  const fallback =
+    homeBatteries.length === 0
+      ? findFirst(
+          states,
+          (e) =>
+            domainOf(e.entity_id) === "sensor" &&
+            (e.attributes.unit_of_measurement === "%" ||
+              deviceClass(e) === "battery") &&
+            !DEVICE_BATTERY_NAMES.test(e.entity_id) &&
+            !DEVICE_BATTERY_NAMES.test(friendly(e)),
+        )
+      : undefined;
+
+  const sources = homeBatteries.length > 0 ? homeBatteries : fallback ? [fallback] : [];
+  if (sources.length === 0) return null;
+
+  const nums = sources.map((e) => parseFloat(e.state)).filter((n) => !isNaN(n));
+  const avg = nums.length > 0 ? Math.round(nums.reduce((a, b) => a + b, 0) / nums.length) : NaN;
+  const label = sources.length > 1 ? `${sources.length} batteries` : friendly(sources[0]!);
+
   return (
     <StatTile
       icon={BatteryCharging}
-      label="Powerwall"
-      value={isNaN(num) ? s.state : `${Math.round(num)}%`}
-      sub={friendly(s)}
-      active={!isNaN(num) && num > 20}
+      label="Battery"
+      value={isNaN(avg) ? "—" : `${avg}%`}
+      sub={label}
+      active={!isNaN(avg) && avg > 20}
     />
   );
 }
