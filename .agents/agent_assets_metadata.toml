@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "_YXDBRhgGvl0uL_apubCy"
+uri = "file://docs/maui-climate-automation.md"
+type = "text"
+title = "Maui Climate Automation — System Document"
