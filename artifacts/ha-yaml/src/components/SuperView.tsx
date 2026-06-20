@@ -402,16 +402,22 @@ const DEVICE_BATTERY_NAMES =
 function PowerwallStat({ states }: { states: HAState[] }) {
   const override = useResolvedSlot(states, "powerwall");
 
-  // Require BOTH a home-battery system keyword AND a charge-state keyword
-  // to avoid matching power/energy/efficiency sensors from the same devices
+  // Match well-known aggregate sensors OR named system sensors with charge-state keywords
   const homeBatteries = override
     ? [override]
     : findEntities(
         states,
         (e) =>
           domainOf(e.entity_id) === "sensor" &&
-          /(powerwall|tesla|4680|enphase|span|home_battery|gonser)/i.test(e.entity_id) &&
-          /(percentage_charged|state_of_charge|charge_level|battery_percent|soc)/i.test(e.entity_id) &&
+          (
+            // Explicit aggregate battery sensors (e.g. sensor.battery_percent)
+            /^sensor\.battery_percent$|total.*battery.*percent|battery.*percent.*total/i.test(e.entity_id) ||
+            // Named system entities that also have a charge-state keyword
+            (
+              /(powerwall|tesla|4680|enphase|span|home_battery|gonser)/i.test(e.entity_id) &&
+              /(percentage_charged|state_of_charge|charge_level|battery_percent|soc)/i.test(e.entity_id)
+            )
+          ) &&
           (e.attributes.unit_of_measurement === "%" || deviceClass(e) === "battery"),
       );
 
