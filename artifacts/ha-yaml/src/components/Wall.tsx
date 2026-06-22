@@ -1123,10 +1123,10 @@ function DollarFlowChart() {
     const tS = data[0].t; const tE = data[data.length - 1].t;
     const cl = (t: number) => Math.max(tS, Math.min(tE, t));
     return [
-      { x1: cl(ms0),                x2: cl(ms0 +  9 * 3600000), fill: "rgba(201,153,74,0.10)",  label: "mid"  },
-      { x1: cl(ms0 +  9 * 3600000), x2: cl(ms0 + 17 * 3600000), fill: "rgba(74,222,128,0.06)",  label: "off"  },
-      { x1: cl(ms0 + 17 * 3600000), x2: cl(ms0 + 21 * 3600000), fill: "rgba(248,113,113,0.14)", label: "peak" },
-      { x1: cl(ms0 + 21 * 3600000), x2: cl(ms0 + 24 * 3600000), fill: "rgba(201,153,74,0.10)",  label: "mid2" },
+      { x1: cl(ms0),                x2: cl(ms0 +  9 * 3600000), fill: "rgba(201,153,74,0.10)",  label: "mid",  name: "Mid-Peak",  nameColor: "#c99a4a" },
+      { x1: cl(ms0 +  9 * 3600000), x2: cl(ms0 + 17 * 3600000), fill: "rgba(74,222,128,0.06)",  label: "off",  name: "Off-Peak",  nameColor: "rgba(255,255,255,0.45)" },
+      { x1: cl(ms0 + 17 * 3600000), x2: cl(ms0 + 21 * 3600000), fill: "rgba(248,113,113,0.14)", label: "peak", name: "Peak",      nameColor: "#f87171" },
+      { x1: cl(ms0 + 21 * 3600000), x2: cl(ms0 + 24 * 3600000), fill: "rgba(201,153,74,0.10)",  label: "mid2", name: "Mid-Peak",  nameColor: "#c99a4a" },
     ].filter((b) => b.x1 < b.x2);
   })();
 
@@ -1168,7 +1168,11 @@ function DollarFlowChart() {
             axisLine={false}
             width={28}
           />
-          {rateBands.map((b) => <ReferenceArea key={b.label} x1={b.x1} x2={b.x2} fill={b.fill} ifOverflow="hidden" />)}
+          {rateBands.map((b) => (
+            <ReferenceArea key={b.label} x1={b.x1} x2={b.x2} fill={b.fill} ifOverflow="hidden"
+              label={{ value: b.name, position: "insideTop", fontSize: 9, fill: b.nameColor, offset: 6 }}
+            />
+          ))}
           <ReferenceLine y={0} stroke="rgba(255,255,255,0.30)" strokeDasharray="4 3" />
           <Tooltip
             formatter={(v: unknown) => {
