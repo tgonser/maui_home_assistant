@@ -961,7 +961,12 @@ function NetGridChart() {
       .sort((a, b) => a.t - b.t)
       .map(({ t, sys1, sys2 }) => {
         const net = -(sys1 + sys2);
-        return { t, net, exp: Math.max(0, net), imp: Math.min(0, net) };
+        return {
+          t,
+          net,
+          exp: net > 0.01 ? net : (null as number | null),
+          imp: net < -0.01 ? net : (null as number | null),
+        };
       });
   }, [sys1Pts, sys2Pts]);
 
@@ -1029,8 +1034,8 @@ function NetGridChart() {
             labelFormatter={(t: unknown) => fmtTime(t as number)}
             contentStyle={{ background: "rgba(20,12,4,0.92)", border: "1px solid rgba(201,153,74,0.3)", borderRadius: 8, fontSize: 11 }}
           />
-          <Area type="monotone" dataKey="exp" stroke="#4ade80" strokeWidth={1.5} fill="url(#ngExport)" dot={false} isAnimationActive={false} baseValue={0} />
-          <Area type="monotone" dataKey="imp" stroke="#f87171" strokeWidth={1.5} fill="url(#ngImport)" dot={false} isAnimationActive={false} baseValue={0} />
+          <Area type="monotone" dataKey="exp" stroke="#4ade80" strokeWidth={1.5} fill="url(#ngExport)" dot={false} isAnimationActive={false} baseValue={0} connectNulls={false} />
+          <Area type="monotone" dataKey="imp" stroke="#f87171" strokeWidth={1.5} fill="url(#ngImport)" dot={false} isAnimationActive={false} baseValue={0} connectNulls={false} />
         </AreaChart>
       </ResponsiveContainer>
     </div>
