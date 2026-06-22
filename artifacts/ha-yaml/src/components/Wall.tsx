@@ -1086,23 +1086,21 @@ function DollarFlowChart() {
       const b = binKey(p.t); const e = map.get(b) ?? { t: b, sys1: 0, sys2: 0 }; e.sys2 = p.v; map.set(b, e);
     }
     const sorted = Array.from(map.values()).sort((a, b) => a.t - b.t);
-    let total = 0;
+    let cum = 0;
     const pts = sorted.map(({ t, sys1, sys2 }, i) => {
       const net = -(sys1 + sys2);
       const hstHour = Math.floor(((t / 3600000) - 10 + 240) % 24);
       const rate = net > 0.01 ? GRID_RATES.sell : hstRate(hstHour);
-      const dr = net * rate; // $/hr — positive=earning, negative=spending
       const dt = i > 0 ? (t - sorted[i - 1].t) / 3600000 : 0;
-      total += dr * dt;
+      cum += net * rate * dt; // cumulative $ balance
       return {
         t,
-        dr,
-        earn:  dr >  0.001 ? dr  : (null as number | null),
-        spend: dr < -0.001 ? dr  : (null as number | null),
-        zero:  Math.abs(dr) <= 0.001 ? 0 : (null as number | null),
+        cum,
+        pos: cum >= 0 ? cum : (null as number | null),
+        neg: cum <  0 ? cum : (null as number | null),
       };
     });
-    return { data: pts, totalDollars: total };
+    return { data: pts, totalDollars: cum };
   }, [sys1Pts, sys2Pts]);
 
   if (data.length === 0) return null;
@@ -1114,9 +1112,9 @@ function DollarFlowChart() {
   };
 
   const domain = (() => {
-    const vals = data.map((d) => d.dr);
-    const min = Math.min(...vals); const max = Math.max(...vals);
-    const pad = Math.max(Math.abs(min), Math.abs(max)) * 0.15;
+    const vals = data.map((d) => d.cum);
+    const min = Math.min(...vals, 0); const max = Math.max(...vals, 0);
+    const pad = Math.max(Math.abs(min), Math.abs(max)) * 0.15 || 0.5;
     return [min - pad, max + pad] as [number, number];
   })();
 
@@ -1125,10 +1123,10 @@ function DollarFlowChart() {
     const tS = data[0].t; const tE = data[data.length - 1].t;
     const cl = (t: number) => Math.max(tS, Math.min(tE, t));
     return [
-      { x1: cl(ms0),                   x2: cl(ms0 +  9 * 3600000), fill: "rgba(201,153,74,0.10)", label: "mid" },
-      { x1: cl(ms0 +  9 * 3600000),    x2: cl(ms0 + 17 * 3600000), fill: "rgba(74,222,128,0.06)", label: "off" },
-      { x1: cl(ms0 + 17 * 3600000),    x2: cl(ms0 + 21 * 3600000), fill: "rgba(248,113,113,0.14)", label: "peak" },
-      { x1: cl(ms0 + 21 * 3600000),    x2: cl(ms0 + 24 * 3600000), fill: "rgba(201,153,74,0.10)", label: "mid2" },
+      { x1: cl(ms0),                x2: cl(ms0 +  9 * 3600000), fill: "rgba(201,153,74,0.10)",  label: "mid"  },
+      { x1: cl(ms0 +  9 * 3600000), x2: cl(ms0 + 17 * 3600000), fill: "rgba(74,222,128,0.06)",  label: "off"  },
+      { x1: cl(ms0 + 17 * 3600000), x2: cl(ms0 + 21 * 3600000), fill: "rgba(248,113,113,0.14)", label: "peak" },
+      { x1: cl(ms0 + 21 * 3600000), x2: cl(ms0 + 24 * 3600000), fill: "rgba(201,153,74,0.10)",  label: "mid2" },
     ].filter((b) => b.x1 < b.x2);
   })();
 
@@ -1138,7 +1136,7 @@ function DollarFlowChart() {
   return (
     <div className="wall-tile rounded-2xl p-4">
       <div className="flex items-baseline justify-between mb-1">
-        <div className="text-xs uppercase tracking-[0.18em] text-[var(--cream-muted)]">Grid $ Flow — Today</div>
+        <div className="text-xs uppercase tracking-[0.18em] text-[var(--cream-muted)]">Running $ Balance — Today</div>
         <div className="flex items-center gap-4">
           <div className="text-[10px] flex gap-3">
             <span style={{ color: "#f87171" }}>peak $0.52</span>
@@ -1149,34 +1147,39 @@ function DollarFlowChart() {
           <div className="text-sm font-bold tabular-nums" style={{ color: totalColor }}>{totalStr}</div>
         </div>
       </div>
-      <ResponsiveContainer width="100%" height={120}>
-        <ComposedChart data={data} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
+      <ResponsiveContainer width="100%" height={130}>
+        <ComposedChart data={data} margin={{ top: 8, right: 4, left: 28, bottom: 0 }}>
           <defs>
-            <linearGradient id="dfEarn"  x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%"  stopColor="#4ade80" stopOpacity={0.45} />
+            <linearGradient id="dfPos" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%"  stopColor="#4ade80" stopOpacity={0.40} />
               <stop offset="95%" stopColor="#4ade80" stopOpacity={0.04} />
             </linearGradient>
-            <linearGradient id="dfSpend" x1="0" y1="1" x2="0" y2="0">
-              <stop offset="5%"  stopColor="#f87171" stopOpacity={0.45} />
+            <linearGradient id="dfNeg" x1="0" y1="1" x2="0" y2="0">
+              <stop offset="5%"  stopColor="#f87171" stopOpacity={0.40} />
               <stop offset="95%" stopColor="#f87171" stopOpacity={0.04} />
             </linearGradient>
           </defs>
           <XAxis dataKey="t" tickFormatter={fmtTime} tick={{ fontSize: 12, fill: "var(--cream-muted)" }} tickLine={false} axisLine={false} interval={Math.floor(data.length / 6)} />
-          <YAxis hide domain={domain} />
+          <YAxis
+            domain={domain}
+            tickFormatter={(v: number) => `$${Math.abs(v) < 0.01 ? "0" : v.toFixed(2)}`}
+            tick={{ fontSize: 10, fill: "var(--cream-muted)" }}
+            tickLine={false}
+            axisLine={false}
+            width={28}
+          />
           {rateBands.map((b) => <ReferenceArea key={b.label} x1={b.x1} x2={b.x2} fill={b.fill} ifOverflow="hidden" />)}
-          <ReferenceLine y={0} stroke="rgba(255,255,255,0.25)" strokeDasharray="4 3" />
+          <ReferenceLine y={0} stroke="rgba(255,255,255,0.30)" strokeDasharray="4 3" />
           <Tooltip
-            formatter={(v: unknown, key: unknown) => {
+            formatter={(v: unknown) => {
               const n = v as number;
-              if (Math.abs(n) < 0.001) return null;
-              return [`$${Math.abs(n).toFixed(2)}/hr`, key === "earn" ? "↑ Earning" : "↓ Spending"];
+              return [`${n >= 0 ? "+" : "−"}$${Math.abs(n).toFixed(2)}`, "Balance"];
             }}
             labelFormatter={(t: unknown) => fmtTime(t as number)}
             contentStyle={{ background: "rgba(20,12,4,0.92)", border: "1px solid rgba(201,153,74,0.3)", borderRadius: 8, fontSize: 11 }}
           />
-          <Area type="monotone" dataKey="earn"  stroke="#4ade80" strokeWidth={1.5} fill="url(#dfEarn)"  dot={false} isAnimationActive={false} baseValue={0} connectNulls={false} />
-          <Area type="monotone" dataKey="spend" stroke="#f87171" strokeWidth={1.5} fill="url(#dfSpend)" dot={false} isAnimationActive={false} baseValue={0} connectNulls={false} />
-          <Line  type="monotone" dataKey="zero"  stroke="#c99a4a" strokeWidth={1}   dot={false} isAnimationActive={false} connectNulls={false} strokeDasharray="3 3" />
+          <Area type="monotone" dataKey="pos" stroke="#4ade80" strokeWidth={2} fill="url(#dfPos)" dot={false} isAnimationActive={false} baseValue={0} connectNulls={false} />
+          <Area type="monotone" dataKey="neg" stroke="#f87171" strokeWidth={2} fill="url(#dfNeg)" dot={false} isAnimationActive={false} baseValue={0} connectNulls={false} />
         </ComposedChart>
       </ResponsiveContainer>
     </div>
