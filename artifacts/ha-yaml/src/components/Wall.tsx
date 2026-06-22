@@ -386,6 +386,8 @@ const ENERGY_LABELS: Record<string, string> = {
   "sensor.solar_15min_avg": "Solar 15min Avg",
   "sensor.gonser_4680_system_1_percentage_charged": "Battery 1",
   "sensor.4680_system_2_percentage_charged": "Battery 2",
+  "sensor.gonser_4680_system_1_grid_power": "Grid Power (Sys 1)",
+  "sensor.4680_system_2_grid_power": "Grid Power (Sys 2)",
 };
 
 const isEnergyEntity = (s: HAState) => {
@@ -393,7 +395,8 @@ const isEnergyEntity = (s: HAState) => {
   return (
     /^sensor\.total_(solar|home_load|battery)/.test(id) ||
     /sensor\.solar_15min_avg/.test(id) ||
-    /4680.*percentage_charged|gonser.*percentage_charged/.test(id)
+    /4680.*percentage_charged|gonser.*percentage_charged/.test(id) ||
+    /4680.*grid_power|gonser.*grid_power/.test(id)
   );
 };
 
