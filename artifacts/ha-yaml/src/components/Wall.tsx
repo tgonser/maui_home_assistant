@@ -35,7 +35,7 @@ import {
   SlidersHorizontal,
   Zap,
 } from "lucide-react";
-import { ComposedChart, AreaChart, Area, Line, ResponsiveContainer, XAxis, YAxis, ReferenceLine, Tooltip } from "recharts";
+import { ComposedChart, AreaChart, Area, Line, ReferenceArea, ResponsiveContainer, XAxis, YAxis, ReferenceLine, Tooltip } from "recharts";
 import "./wall-theme.css";
 import { SuperView } from "./SuperView";
 import { WallControls } from "./WallControls";
@@ -989,6 +989,21 @@ function NetGridChart() {
     return [Math.floor(min - pad), Math.ceil(max + pad)] as [number, number];
   })();
 
+  // Compute nighttime bands (before 6 am HST and after 7 pm HST)
+  const nightRanges = (() => {
+    if (data.length === 0) return [] as [number, number][];
+    // midnight HST expressed as UTC ms: floor to HST day then add 10h offset
+    const hstDayStartMs = (Math.floor((data[0].t / 3600000 - 10) / 24) * 24 + 10) * 3600000;
+    const sunriseMs = hstDayStartMs + 6 * 3600000;
+    const sunsetMs  = hstDayStartMs + 19 * 3600000;
+    const tStart = data[0].t;
+    const tEnd   = data[data.length - 1].t;
+    const ranges: [number, number][] = [];
+    if (tStart < sunriseMs) ranges.push([tStart, Math.min(sunriseMs, tEnd)]);
+    if (tEnd   > sunsetMs)  ranges.push([Math.max(sunsetMs, tStart), tEnd]);
+    return ranges;
+  })();
+
   return (
     <div className="wall-tile rounded-2xl p-4">
       <div className="flex items-baseline justify-between mb-1">
@@ -1019,12 +1034,15 @@ function NetGridChart() {
           <XAxis
             dataKey="t"
             tickFormatter={fmtTime}
-            tick={{ fontSize: 9, fill: "var(--cream-muted)" }}
+            tick={{ fontSize: 12, fill: "var(--cream-muted)" }}
             tickLine={false}
             axisLine={false}
             interval={Math.floor(data.length / 6)}
           />
           <YAxis hide domain={domain} />
+          {nightRanges.map(([x1, x2]) => (
+            <ReferenceArea key={x1} x1={x1} x2={x2} fill="rgba(0,0,30,0.35)" ifOverflow="hidden" />
+          ))}
           <ReferenceLine y={0} stroke="rgba(255,255,255,0.25)" strokeDasharray="4 3" />
           <Tooltip
             formatter={(v: unknown, key: unknown) => {
