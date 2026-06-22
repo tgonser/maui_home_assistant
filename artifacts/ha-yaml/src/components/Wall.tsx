@@ -1035,8 +1035,8 @@ function EnergyDashboard({ states }: { states: HAState[] }) {
         };
         return [
           { icon: Zap,            label: "Live Net Grid",        value: fmtGrid(totalGrid) },
-          { icon: Zap,            label: "Sys 1 Live",           value: fmtGrid(sys1Grid) },
-          { icon: Zap,            label: "Sys 2 Live",           value: fmtGrid(sys2Grid) },
+          { icon: Zap,            label: "Sys 1 Live Grid Use",   value: fmtGrid(sys1Grid) },
+          { icon: Zap,            label: "Sys 2 Live Grid Use",   value: fmtGrid(sys2Grid) },
           { icon: Zap,            label: "Sys 1 Exported Today", value: fmt("sensor.gonser_4680_system_1_grid_exported") },
           { icon: Zap,            label: "Sys 1 Imported Today", value: fmt("sensor.gonser_4680_system_1_grid_imported") },
           { icon: Zap,            label: "Sys 2 Exported Today", value: fmt("sensor.4680_system_2_grid_exported") },
