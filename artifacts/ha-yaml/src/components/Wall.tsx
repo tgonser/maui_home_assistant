@@ -35,7 +35,7 @@ import {
   SlidersHorizontal,
   Zap,
 } from "lucide-react";
-import { AreaChart, Area, Line, ResponsiveContainer, XAxis, YAxis, ReferenceLine, Tooltip } from "recharts";
+import { ComposedChart, AreaChart, Area, Line, ResponsiveContainer, XAxis, YAxis, ReferenceLine, Tooltip } from "recharts";
 import "./wall-theme.css";
 import { SuperView } from "./SuperView";
 import { WallControls } from "./WallControls";
@@ -1005,7 +1005,7 @@ function NetGridChart() {
         </div>
       </div>
       <ResponsiveContainer width="100%" height={140}>
-        <AreaChart data={data} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
+        <ComposedChart data={data} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="ngExport" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%"  stopColor="#4ade80" stopOpacity={0.45} />
@@ -1038,7 +1038,7 @@ function NetGridChart() {
           <Area type="monotone" dataKey="exp" stroke="#4ade80" strokeWidth={1.5} fill="url(#ngExport)" dot={false} isAnimationActive={false} baseValue={0} connectNulls={false} />
           <Area type="monotone" dataKey="imp" stroke="#f87171" strokeWidth={1.5} fill="url(#ngImport)" dot={false} isAnimationActive={false} baseValue={0} connectNulls={false} />
           <Line type="monotone" dataKey="zero" stroke="#c99a4a" strokeWidth={1} dot={false} isAnimationActive={false} connectNulls={false} strokeDasharray="3 3" />
-        </AreaChart>
+        </ComposedChart>
       </ResponsiveContainer>
     </div>
   );
