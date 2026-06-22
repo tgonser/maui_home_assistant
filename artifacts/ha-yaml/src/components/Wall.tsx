@@ -1122,12 +1122,20 @@ function DollarFlowChart() {
     const ms0 = (Math.floor((data[0].t / 3600000 - 10) / 24) * 24 + 10) * 3600000;
     const tS = data[0].t; const tE = data[data.length - 1].t;
     const cl = (t: number) => Math.max(tS, Math.min(tE, t));
-    return [
-      { x1: cl(ms0),                x2: cl(ms0 +  9 * 3600000), fill: "rgba(201,153,74,0.10)",  label: "mid",  name: "Mid-Peak",  nameColor: "#c99a4a" },
-      { x1: cl(ms0 +  9 * 3600000), x2: cl(ms0 + 17 * 3600000), fill: "rgba(74,222,128,0.06)",  label: "off",  name: "Off-Peak",  nameColor: "rgba(255,255,255,0.45)" },
-      { x1: cl(ms0 + 17 * 3600000), x2: cl(ms0 + 21 * 3600000), fill: "rgba(248,113,113,0.14)", label: "peak", name: "Peak",      nameColor: "#f87171" },
-      { x1: cl(ms0 + 21 * 3600000), x2: cl(ms0 + 24 * 3600000), fill: "rgba(201,153,74,0.10)",  label: "mid2", name: "Mid-Peak",  nameColor: "#c99a4a" },
-    ].filter((b) => b.x1 < b.x2);
+    // Two days of bands so overnight data is always covered
+    const raw = [
+      { h0:  0, h1:  9, fill: "rgba(201,153,74,0.10)",  key: "mid0",  name: "Mid-Peak",  nameColor: "#c99a4a" },
+      { h0:  9, h1: 17, fill: "rgba(74,222,128,0.06)",  key: "off0",  name: "Off-Peak",  nameColor: "rgba(200,200,200,0.6)" },
+      { h0: 17, h1: 21, fill: "rgba(248,113,113,0.14)", key: "peak0", name: "Peak",      nameColor: "#f87171" },
+      { h0: 21, h1: 24, fill: "rgba(201,153,74,0.10)",  key: "mid1",  name: "Mid-Peak",  nameColor: "#c99a4a" },
+      { h0: 24, h1: 33, fill: "rgba(201,153,74,0.10)",  key: "mid2",  name: "Mid-Peak",  nameColor: "#c99a4a" },
+      { h0: 33, h1: 41, fill: "rgba(74,222,128,0.06)",  key: "off1",  name: "Off-Peak",  nameColor: "rgba(200,200,200,0.6)" },
+      { h0: 41, h1: 45, fill: "rgba(248,113,113,0.14)", key: "peak1", name: "Peak",      nameColor: "#f87171" },
+      { h0: 45, h1: 48, fill: "rgba(201,153,74,0.10)",  key: "mid3",  name: "Mid-Peak",  nameColor: "#c99a4a" },
+    ];
+    return raw
+      .map((b) => ({ ...b, x1: cl(ms0 + b.h0 * 3600000), x2: cl(ms0 + b.h1 * 3600000) }))
+      .filter((b) => b.x1 < b.x2);
   })();
 
   const totalColor = totalDollars >= 0 ? "#4ade80" : "#f87171";
@@ -1168,9 +1176,9 @@ function DollarFlowChart() {
             axisLine={false}
             width={28}
           />
-          {/* Band fills — rendered first, behind the areas */}
+          {/* Band fills — always renders behind series in recharts */}
           {rateBands.map((b) => (
-            <ReferenceArea key={`fill-${b.label}`} x1={b.x1} x2={b.x2} fill={b.fill} ifOverflow="hidden" />
+            <ReferenceArea key={`fill-${b.key}`} x1={b.x1} x2={b.x2} fill={b.fill} ifOverflow="hidden" />
           ))}
           <ReferenceLine y={0} stroke="rgba(255,255,255,0.30)" strokeDasharray="4 3" />
           <Tooltip
@@ -1183,10 +1191,13 @@ function DollarFlowChart() {
           />
           <Area type="monotone" dataKey="pos" stroke="#4ade80" strokeWidth={2} fill="url(#dfPos)" dot={false} isAnimationActive={false} baseValue={0} connectNulls={false} />
           <Area type="monotone" dataKey="neg" stroke="#f87171" strokeWidth={2} fill="url(#dfNeg)" dot={false} isAnimationActive={false} baseValue={0} connectNulls={false} />
-          {/* Band labels — rendered last, on top of the area fills */}
+          {/* Band labels via ReferenceLine — renders above series unlike ReferenceArea */}
           {rateBands.map((b) => (
-            <ReferenceArea key={`lbl-${b.label}`} x1={b.x1} x2={b.x2} fill="transparent" ifOverflow="hidden"
-              label={{ value: b.name, position: "insideTop", fontSize: 10, fill: b.nameColor }}
+            <ReferenceLine
+              key={`lbl-${b.key}`}
+              x={(b.x1 + b.x2) / 2}
+              stroke="transparent"
+              label={{ value: b.name, position: "insideTopLeft", fontSize: 10, fill: b.nameColor }}
             />
           ))}
         </ComposedChart>
