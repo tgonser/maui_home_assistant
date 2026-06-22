@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ComponentType } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useHAStore, haStates, haCameraImage, haCallService, type HAState } from "@/lib/ha";
+import { useHAStore, haStates, haCameraImage, haCallService, haHistory, type HAState } from "@/lib/ha";
 import {
   isMediaActive,
   displayMediaState,
@@ -35,6 +35,7 @@ import {
   SlidersHorizontal,
   Zap,
 } from "lucide-react";
+import { AreaChart, Area, ResponsiveContainer } from "recharts";
 import "./wall-theme.css";
 import { SuperView } from "./SuperView";
 import { WallControls } from "./WallControls";
@@ -834,7 +835,59 @@ type EnergyRow = {
   pct?: number;
 };
 
-function EnergySystemCard({ name, rows }: { name: string; rows: EnergyRow[] }) {
+function useEntityHistory(entityId: string) {
+  const [points, setPoints] = useState<{ t: number; v: number }[]>([]);
+  useEffect(() => {
+    if (!entityId) return;
+    haHistory(entityId, 24).then((res) => {
+      if (!res.ok) return;
+      const series = res.data[0] ?? [];
+      setPoints(
+        series
+          .map((p) => ({ t: new Date(p.last_changed).getTime(), v: parseFloat(p.state) }))
+          .filter((p) => !isNaN(p.v)),
+      );
+    });
+  }, [entityId]);
+  return points;
+}
+
+function Sparkline({ entityId }: { entityId: string }) {
+  const points = useEntityHistory(entityId);
+  const gradId = `sg-${entityId.replace(/[^a-z0-9]/gi, "")}`;
+  if (points.length < 2) return <div className="h-12 opacity-20 rounded bg-[var(--cream)]/10" />;
+  return (
+    <ResponsiveContainer width="100%" height={48}>
+      <AreaChart data={points} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}>
+        <defs>
+          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor="var(--brass)" stopOpacity={0.35} />
+            <stop offset="95%" stopColor="var(--brass)" stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <Area
+          type="monotone"
+          dataKey="v"
+          stroke="var(--brass)"
+          strokeWidth={1.5}
+          fill={`url(#${gradId})`}
+          dot={false}
+          isAnimationActive={false}
+        />
+      </AreaChart>
+    </ResponsiveContainer>
+  );
+}
+
+function EnergySystemCard({
+  name,
+  rows,
+  chartEntityId,
+}: {
+  name: string;
+  rows: EnergyRow[];
+  chartEntityId?: string;
+}) {
   return (
     <div className="wall-tile rounded-2xl p-4 flex flex-col gap-3">
       <div className="text-xs uppercase tracking-[0.18em] text-[var(--cream-muted)]">
@@ -858,6 +911,11 @@ function EnergySystemCard({ name, rows }: { name: string; rows: EnergyRow[] }) {
           )}
         </div>
       ))}
+      {chartEntityId && (
+        <div className="mt-1">
+          <Sparkline entityId={chartEntityId} />
+        </div>
+      )}
     </div>
   );
 }
@@ -897,9 +955,10 @@ function EnergyDashboard({ states }: { states: HAState[] }) {
       ? sys1Grid + sys2Grid
       : NaN;
 
-  const systems: { name: string; rows: EnergyRow[] }[] = [
+  const systems: { name: string; rows: EnergyRow[]; chartEntityId: string }[] = [
     {
       name: "Tesla System 1",
+      chartEntityId: "sensor.gonser_4680_system_1_percentage_charged",
       rows: [
         { icon: BatteryCharging, label: "Battery", value: fmt("sensor.gonser_4680_system_1_percentage_charged"), pct: sys1Pct },
         { icon: Zap, label: "Grid Power", value: fmt("sensor.gonser_4680_system_1_grid_power") },
@@ -909,6 +968,7 @@ function EnergyDashboard({ states }: { states: HAState[] }) {
     },
     {
       name: "Tesla System 2",
+      chartEntityId: "sensor.4680_system_2_percentage_charged",
       rows: [
         { icon: BatteryCharging, label: "Battery", value: fmt("sensor.4680_system_2_percentage_charged"), pct: sys2Pct },
         { icon: Zap, label: "Grid Power", value: fmt("sensor.4680_system_2_grid_power") },
@@ -918,6 +978,7 @@ function EnergyDashboard({ states }: { states: HAState[] }) {
     },
     {
       name: "Whole Home",
+      chartEntityId: "sensor.total_solar",
       rows: [
         { icon: BatteryCharging, label: "Battery Avg", value: fmtN(avgPct, "%"), pct: avgPct },
         { icon: Zap, label: "Grid Power", value: fmtN(totalGrid, "kW") },
@@ -936,7 +997,7 @@ function EnergyDashboard({ states }: { states: HAState[] }) {
       className="grid grid-cols-1 md:grid-cols-3 gap-4"
     >
       {systems.map((sys) => (
-        <EnergySystemCard key={sys.name} name={sys.name} rows={sys.rows} />
+        <EnergySystemCard key={sys.name} name={sys.name} rows={sys.rows} chartEntityId={sys.chartEntityId} />
       ))}
     </motion.div>
   );
