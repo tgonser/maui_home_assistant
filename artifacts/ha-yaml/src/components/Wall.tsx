@@ -1001,14 +1001,29 @@ function EnergyDashboard({ states }: { states: HAState[] }) {
     {
       name: "Total Grid",
       chartEntityId: "sensor.total_solar",
-      rows: [
-        { icon: Zap,            label: "Net Grid",     value: fmtGrid(totalGrid) },
-        { icon: Zap,            label: "Sys 1 Grid",   value: fmtGrid(sys1Grid) },
-        { icon: Zap,            label: "Sys 2 Grid",   value: fmtGrid(sys2Grid) },
-        { icon: Sun,            label: "Total Solar",  value: fmt("sensor.total_solar") },
-        { icon: Plug,           label: "Home Load",    value: fmt("sensor.total_home_load") },
-        { icon: BatteryCharging,label: "Battery Avg",  value: fmtN(avgPct, "%"), pct: avgPct },
-      ],
+      rows: (() => {
+        const sys1ExportedToday = num("sensor.gonser_4680_system_1_grid_exported");
+        const sys2ImportedToday = num("sensor.4680_system_2_grid_imported");
+        const netToday = !isNaN(sys1ExportedToday) && !isNaN(sys2ImportedToday)
+          ? sys1ExportedToday - sys2ImportedToday
+          : NaN;
+        const fmtNet = (n: number) => {
+          if (isNaN(n)) return "—";
+          const abs = Math.abs(n).toFixed(2);
+          const unit = (get("sensor.gonser_4680_system_1_grid_exported")?.attributes.unit_of_measurement as string | undefined) ?? "kWh";
+          return n >= 0 ? `↑ ${abs} ${unit}` : `↓ ${abs} ${unit}`;
+        };
+        return [
+          { icon: Zap,            label: "Live Net Grid",      value: fmtGrid(totalGrid) },
+          { icon: Zap,            label: "Sys 1 Live",         value: fmtGrid(sys1Grid) },
+          { icon: Zap,            label: "Sys 2 Live",         value: fmtGrid(sys2Grid) },
+          { icon: Zap,            label: "Sys 1 Exported Today", value: fmt("sensor.gonser_4680_system_1_grid_exported") },
+          { icon: Zap,            label: "Sys 2 Imported Today", value: fmt("sensor.4680_system_2_grid_imported") },
+          { icon: Zap,            label: "Net Today",          value: fmtNet(netToday) },
+          { icon: Sun,            label: "Total Solar",        value: fmt("sensor.total_solar") },
+          { icon: BatteryCharging,label: "Battery Avg",        value: fmtN(avgPct, "%"), pct: avgPct },
+        ];
+      })(),
     },
   ];
 
