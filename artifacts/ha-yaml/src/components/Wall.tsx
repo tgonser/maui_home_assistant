@@ -1099,7 +1099,8 @@ function ShadesView({
 function CoverTile({ s }: { s: HAState }) {
   const isOpen = s.state === "open";
   const pct = s.attributes.current_position as number | undefined;
-  const valueText = pct !== undefined ? `${pct}%` : s.state;
+  const stateLabel = s.state.charAt(0).toUpperCase() + s.state.slice(1);
+  const valueText = pct !== undefined ? `${stateLabel} ${pct}%` : stateLabel;
   return (
     <Tile icon={Blinds} label={friendly(s)} sub="shade">
       <div
