@@ -379,6 +379,15 @@ const isMauiClimate = (s: HAState) => {
 const deviceClass = (s: HAState) =>
   (s.attributes.device_class as string | undefined) ?? "";
 
+const ENERGY_LABELS: Record<string, string> = {
+  "sensor.total_solar": "Solar Production",
+  "sensor.total_home_load": "Home Load",
+  "sensor.total_battery_power": "Battery Power",
+  "sensor.solar_15min_avg": "Solar 15min Avg",
+  "sensor.gonser_4680_system_1_percentage_charged": "Battery 1",
+  "sensor.4680_system_2_percentage_charged": "Battery 2",
+};
+
 const isEnergyEntity = (s: HAState) => {
   const id = s.entity_id.toLowerCase();
   return (
@@ -787,7 +796,7 @@ function EnergyTile({ s }: { s: HAState }) {
   return (
     <Tile
       icon={Icon}
-      label={friendly(s)}
+      label={ENERGY_LABELS[s.entity_id] ?? friendly(s)}
       value={isNaN(num) ? s.state : `${num.toLocaleString()} ${u}`}
       sub={dc || (isPower ? "power" : undefined)}
       active={active}
