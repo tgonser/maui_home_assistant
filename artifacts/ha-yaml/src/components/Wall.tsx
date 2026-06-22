@@ -381,17 +381,10 @@ const deviceClass = (s: HAState) =>
 
 const isEnergyEntity = (s: HAState) => {
   const id = s.entity_id.toLowerCase();
-  const dc = deviceClass(s);
-  if (
-    dc === "power" ||
-    dc === "energy" ||
-    dc === "battery" ||
-    dc === "voltage" ||
-    dc === "current"
-  )
-    return true;
-  return /(powerwall|tesla|envoy|enphase|solar|span|grid|inverter|battery)/.test(
-    id,
+  return (
+    /^sensor\.total_(solar|home_load|battery)/.test(id) ||
+    /sensor\.solar_15min_avg/.test(id) ||
+    /4680.*percentage_charged|gonser.*percentage_charged/.test(id)
   );
 };
 
