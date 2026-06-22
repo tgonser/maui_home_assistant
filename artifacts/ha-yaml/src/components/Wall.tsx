@@ -35,7 +35,7 @@ import {
   SlidersHorizontal,
   Zap,
 } from "lucide-react";
-import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, ReferenceLine, Tooltip } from "recharts";
+import { AreaChart, Area, Line, ResponsiveContainer, XAxis, YAxis, ReferenceLine, Tooltip } from "recharts";
 import "./wall-theme.css";
 import { SuperView } from "./SuperView";
 import { WallControls } from "./WallControls";
@@ -966,6 +966,7 @@ function NetGridChart() {
           net,
           exp: net > 0.01 ? net : (null as number | null),
           imp: net < -0.01 ? net : (null as number | null),
+          zero: net >= -0.01 && net <= 0.01 ? 0 : (null as number | null),
         };
       });
   }, [sys1Pts, sys2Pts]);
@@ -1036,6 +1037,7 @@ function NetGridChart() {
           />
           <Area type="monotone" dataKey="exp" stroke="#4ade80" strokeWidth={1.5} fill="url(#ngExport)" dot={false} isAnimationActive={false} baseValue={0} connectNulls={false} />
           <Area type="monotone" dataKey="imp" stroke="#f87171" strokeWidth={1.5} fill="url(#ngImport)" dot={false} isAnimationActive={false} baseValue={0} connectNulls={false} />
+          <Line type="monotone" dataKey="zero" stroke="#c99a4a" strokeWidth={1} dot={false} isAnimationActive={false} connectNulls={false} strokeDasharray="3 3" />
         </AreaChart>
       </ResponsiveContainer>
     </div>
