@@ -959,7 +959,8 @@ function NetGridChart() {
     }
     return Array.from(map.values())
       .sort((a, b) => a.t - b.t)
-      .map(({ t, sys1, sys2 }) => ({ t, net: sys1 + sys2 }));
+      // Negate so positive = exporting to grid (intuitive: up = good)
+      .map(({ t, sys1, sys2 }) => ({ t, net: -(sys1 + sys2) }));
   }, [sys1Pts, sys2Pts]);
 
   if (data.length === 0) return null;
@@ -1034,7 +1035,7 @@ function EnergyDashboard({ states }: { states: HAState[] }) {
     const s = get(id);
     if (!s) return "—";
     const n = parseFloat(s.state);
-    if (isNaN(n)) return s.state;
+    if (isNaN(n)) return "—";
     const u = (s.attributes.unit_of_measurement as string | undefined) ?? "";
     return `${n.toFixed(dec)} ${u}`.trim();
   };
