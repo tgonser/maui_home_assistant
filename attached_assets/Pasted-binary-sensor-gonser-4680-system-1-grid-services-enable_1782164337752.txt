@@ -1,0 +1,107 @@
+binary_sensor.gonser_4680_system_1_grid_services_enabled
+Gonser 4680 system 1 Grid services enabled
+off
+friendly_name: Gonser 4680 system 1 Grid services enabled
+binary_sensor.gonser_4680_system_1_grid_status
+Gonser 4680 system 1 Grid status
+on
+device_class: power
+friendly_name: Gonser 4680 system 1 Grid status
+binary_sensor.gonser_4680_system_1_storm_watch_active
+Gonser 4680 system 1 Storm watch active
+off
+friendly_name: Gonser 4680 system 1 Storm watch active
+sensor.gonser_4680_system_1_battery_charged
+Gonser 4680 system 1 Battery charged
+10.923
+state_class: total_increasing
+unit_of_measurement: kWh
+device_class: energy
+friendly_name: Gonser 4680 system 1 Battery charged
+sensor.gonser_4680_system_1_battery_discharged
+Gonser 4680 system 1 Battery discharged
+6.168
+state_class: total_increasing
+unit_of_measurement: kWh
+device_class: energy
+friendly_name: Gonser 4680 system 1 Battery discharged
+sensor.gonser_4680_system_1_battery_power
+Gonser 4680 system 1 Battery power
+0.0
+state_class: measurement
+unit_of_measurement: kW
+device_class: power
+friendly_name: Gonser 4680 system 1 Battery power
+sensor.gonser_4680_system_1_grid_exported
+Gonser 4680 system 1 Grid exported
+14.26
+state_class: total_increasing
+unit_of_measurement: kWh
+device_class: energy
+friendly_name: Gonser 4680 system 1 Grid exported
+sensor.gonser_4680_system_1_grid_imported
+Gonser 4680 system 1 Grid imported
+0.039
+state_class: total_increasing
+unit_of_measurement: kWh
+device_class: energy
+friendly_name: Gonser 4680 system 1 Grid imported
+sensor.gonser_4680_system_1_grid_power
+Gonser 4680 system 1 Grid power
+-10.78601953125
+state_class: measurement
+unit_of_measurement: kW
+device_class: power
+friendly_name: Gonser 4680 system 1 Grid power
+sensor.gonser_4680_system_1_home_usage
+Gonser 4680 system 1 Home usage
+12.161
+state_class: total_increasing
+unit_of_measurement: kWh
+device_class: energy
+friendly_name: Gonser 4680 system 1 Home usage
+sensor.gonser_4680_system_1_island_status
+Gonser 4680 system 1 Island status
+on_grid
+options: on_grid, off_grid, off_grid_intentional, off_grid_unintentional, island_status_unknown
+device_class: enum
+friendly_name: Gonser 4680 system 1 Island status
+sensor.gonser_4680_system_1_load_power
+Gonser 4680 system 1 Load power
+1.5048642578125
+state_class: measurement
+unit_of_measurement: kW
+device_class: power
+friendly_name: Gonser 4680 system 1 Load power
+sensor.gonser_4680_system_1_percentage_charged
+Gonser 4680 system 1 Percentage charged
+100
+state_class: measurement
+unit_of_measurement: %
+device_class: battery
+friendly_name: Gonser 4680 system 1 Percentage charged
+sensor.gonser_4680_system_1_solar_generated
+Gonser 4680 system 1 Solar generated
+31.137
+state_class: total_increasing
+unit_of_measurement: kWh
+device_class: energy
+friendly_name: Gonser 4680 system 1 Solar generated
+sensor.gonser_4680_system_1_solar_power
+Gonser 4680 system 1 Solar power
+12.2908837890625
+state_class: measurement
+unit_of_measurement: kW
+device_class: power
+friendly_name: Gonser 4680 system 1 Solar power
+sensor.gonser_4680_system_1_version
+Version
+unavailable
+restored: true
+friendly_name: Version
+supported_features: 0
+sensor.gonser_4680_system_1_vpp_backup_reserve
+Gonser 4680 system 1 VPP backup reserve
+10
+unit_of_measurement: %
+friendly_name: Gonser 4680 system 1 VPP backup reserve
