@@ -1055,7 +1055,7 @@ function NetGridChart() {
           />
           <Area type="monotone" dataKey="exp" stroke="#4ade80" strokeWidth={1.5} fill="url(#ngExport)" dot={false} isAnimationActive={false} baseValue={0} connectNulls={false} />
           <Area type="monotone" dataKey="imp" stroke="#f87171" strokeWidth={1.5} fill="url(#ngImport)" dot={false} isAnimationActive={false} baseValue={0} connectNulls={false} />
-          <Line type="monotone" dataKey="zero" stroke="#c99a4a" strokeWidth={1} dot={false} isAnimationActive={false} connectNulls={false} strokeDasharray="3 3" />
+          <Line type="monotone" dataKey="zero" stroke="#c99a4a" strokeWidth={2} dot={false} isAnimationActive={false} connectNulls={false} strokeDasharray="4 3" />
         </ComposedChart>
       </ResponsiveContainer>
     </div>
@@ -1168,10 +1168,9 @@ function DollarFlowChart() {
             axisLine={false}
             width={28}
           />
+          {/* Band fills — rendered first, behind the areas */}
           {rateBands.map((b) => (
-            <ReferenceArea key={b.label} x1={b.x1} x2={b.x2} fill={b.fill} ifOverflow="hidden"
-              label={{ value: b.name, position: "insideTop", fontSize: 9, fill: b.nameColor, offset: 6 }}
-            />
+            <ReferenceArea key={`fill-${b.label}`} x1={b.x1} x2={b.x2} fill={b.fill} ifOverflow="hidden" />
           ))}
           <ReferenceLine y={0} stroke="rgba(255,255,255,0.30)" strokeDasharray="4 3" />
           <Tooltip
@@ -1184,6 +1183,12 @@ function DollarFlowChart() {
           />
           <Area type="monotone" dataKey="pos" stroke="#4ade80" strokeWidth={2} fill="url(#dfPos)" dot={false} isAnimationActive={false} baseValue={0} connectNulls={false} />
           <Area type="monotone" dataKey="neg" stroke="#f87171" strokeWidth={2} fill="url(#dfNeg)" dot={false} isAnimationActive={false} baseValue={0} connectNulls={false} />
+          {/* Band labels — rendered last, on top of the area fills */}
+          {rateBands.map((b) => (
+            <ReferenceArea key={`lbl-${b.label}`} x1={b.x1} x2={b.x2} fill="transparent" ifOverflow="hidden"
+              label={{ value: b.name, position: "insideTop", fontSize: 10, fill: b.nameColor }}
+            />
+          ))}
         </ComposedChart>
       </ResponsiveContainer>
     </div>
