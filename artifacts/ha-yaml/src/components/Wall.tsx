@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ComponentType } from "react";
+import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHAStore, haStates, haCameraImage, haCallService, haHistory, type HAState } from "@/lib/ha";
 import {
@@ -428,7 +428,7 @@ const CATEGORIES: Category[] = [
   },
   {
     key: "covers",
-    label: "Covers",
+    label: "Shades",
     icon: Blinds,
     match: (s) => domainOf(s.entity_id) === "cover",
   },
@@ -1003,6 +1003,89 @@ function EnergyDashboard({ states }: { states: HAState[] }) {
   );
 }
 
+const SHADE_FLOORS: { floor: string; rooms: string[] }[] = [
+  {
+    floor: "First Floor",
+    rooms: ["Beach Room Bath", "Beach Room", "Utility", "Pub"],
+  },
+  {
+    floor: "Second Floor",
+    rooms: ["Master Bath", "Master Bed", "Mauka Bed", "Molokini Bath", "Molokini Bed"],
+  },
+];
+
+function ShadesView({
+  entities,
+  renderTile: rt,
+}: {
+  entities: HAState[];
+  renderTile: (s: HAState) => ReactNode;
+}) {
+  const bucketed = useMemo(() => {
+    const allRooms = SHADE_FLOORS.flatMap((f) => f.rooms);
+    // Sort longest label first so "Beach Room Bath" matches before "Beach Room"
+    const sorted = [...allRooms].sort((a, b) => b.length - a.length);
+    const map = new Map<string, HAState[]>(allRooms.map((r) => [r, []]));
+    const other: HAState[] = [];
+    for (const e of entities) {
+      const name = (e.attributes.friendly_name as string | undefined) ?? e.entity_id;
+      const match = sorted.find((r) => name.toLowerCase().includes(r.toLowerCase()));
+      if (match) map.get(match)!.push(e);
+      else other.push(e);
+    }
+    return { map, other };
+  }, [entities]);
+
+  return (
+    <motion.div
+      key="shades"
+      layout
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="space-y-8"
+    >
+      {SHADE_FLOORS.map(({ floor, rooms }) => {
+        const floorEntities = rooms.flatMap((r) => bucketed.map.get(r) ?? []);
+        if (floorEntities.length === 0) return null;
+        return (
+          <section key={floor}>
+            <div className="text-xs uppercase tracking-[0.18em] text-[var(--cream-muted)] mb-4">
+              {floor}
+            </div>
+            <div className="space-y-4">
+              {rooms.map((room) => {
+                const items = bucketed.map.get(room) ?? [];
+                if (items.length === 0) return null;
+                return (
+                  <div key={room}>
+                    <div className="text-[11px] uppercase tracking-wider text-[var(--brass)] mb-2 ml-1">
+                      {room}
+                    </div>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 auto-rows-[110px] gap-3">
+                      {items.map(rt)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        );
+      })}
+      {bucketed.other.length > 0 && (
+        <section>
+          <div className="text-xs uppercase tracking-[0.18em] text-[var(--cream-muted)] mb-3">
+            Other
+          </div>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 auto-rows-[110px] gap-3">
+            {bucketed.other.map(rt)}
+          </div>
+        </section>
+      )}
+    </motion.div>
+  );
+}
+
 function renderTile(s: HAState, allStates?: HAState[]) {
   const d = domainOf(s.entity_id);
   if (d === "light") return <LightTile key={s.entity_id} s={s} />;
@@ -1559,9 +1642,14 @@ export function Wall() {
               <SuperView key="super" states={states} />
             ) : active === "rooms" ? (
               <RoomsView key="rooms" states={states} refresh={refresh} />
+            ) : active === "covers" ? (
+              <ShadesView
+                key="shades"
+                entities={filtered}
+                renderTile={clickableTile}
+              />
             ) : active === "lights" ||
               active === "switches" ||
-              active === "covers" ||
               active === "fans" ? (
               <GroupedByRoomView
                 key={`${active}-grouped`}
