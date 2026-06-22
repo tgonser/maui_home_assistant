@@ -1096,10 +1096,27 @@ function ShadesView({
   );
 }
 
+function CoverTile({ s }: { s: HAState }) {
+  const isOpen = s.state === "open";
+  const pct = s.attributes.current_position as number | undefined;
+  const valueText = pct !== undefined ? `${pct}%` : s.state;
+  return (
+    <Tile icon={Blinds} label={friendly(s)} sub="shade">
+      <div
+        className="text-xl font-semibold tabular-nums truncate mt-0.5"
+        style={{ color: isOpen ? "var(--brass-bright)" : undefined }}
+      >
+        {valueText}
+      </div>
+    </Tile>
+  );
+}
+
 function renderTile(s: HAState, allStates?: HAState[]) {
   const d = domainOf(s.entity_id);
   if (d === "light") return <LightTile key={s.entity_id} s={s} />;
   if (d === "climate") return <ClimateTile key={s.entity_id} s={s} />;
+  if (d === "cover") return <CoverTile key={s.entity_id} s={s} />;
   if (d === "lock") return <LockTile key={s.entity_id} s={s} />;
   if (d === "alarm_control_panel") return <AlarmTile key={s.entity_id} s={s} />;
   if (d === "media_player")
