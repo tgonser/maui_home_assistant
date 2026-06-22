@@ -961,6 +961,18 @@ function EnergyDashboard({ states }: { states: HAState[] }) {
   const fmtN = (n: number, u: string, dec = 1) =>
     isNaN(n) ? "—" : `${n.toFixed(dec)} ${u}`;
 
+  const fmtBattPower = (id: string) => {
+    const s = get(id);
+    if (!s) return "—";
+    const n = parseFloat(s.state);
+    if (isNaN(n)) return s.state;
+    const u = (s.attributes.unit_of_measurement as string | undefined) ?? "kW";
+    if (Math.abs(n) < 0.05) return `0.0 ${u} · idle`;
+    return n > 0
+      ? `${n.toFixed(1)} ${u} · discharging`
+      : `${Math.abs(n).toFixed(1)} ${u} · charging`;
+  };
+
   const sys1Pct = num("sensor.gonser_4680_system_1_percentage_charged");
   const sys2Pct = num("sensor.4680_system_2_percentage_charged");
   const avgPct =
@@ -996,7 +1008,7 @@ function EnergyDashboard({ states }: { states: HAState[] }) {
         { icon: Sun,            label: "Solar Live",      value: fmt("sensor.gonser_4680_system_1_solar_power") },
         { icon: Sun,            label: "Solar Today",     value: fmt("sensor.gonser_4680_system_1_solar_generated") },
         { icon: BatteryCharging,label: "Battery",         value: fmt("sensor.gonser_4680_system_1_percentage_charged"), pct: sys1Pct },
-        { icon: Plug,           label: "Battery Power",   value: fmt("sensor.gonser_4680_system_1_battery_power") },
+        { icon: Plug,           label: "Battery Power",   value: fmtBattPower("sensor.gonser_4680_system_1_battery_power") },
         { icon: Plug,           label: "Load",            value: fmt("sensor.gonser_4680_system_1_load_power") },
       ],
     },
@@ -1010,7 +1022,7 @@ function EnergyDashboard({ states }: { states: HAState[] }) {
         { icon: Sun,            label: "Solar Live",      value: fmt("sensor.4680_system_2_solar_power") },
         { icon: Sun,            label: "Solar Today",     value: fmt("sensor.4680_system_2_solar_generated") },
         { icon: BatteryCharging,label: "Battery",         value: fmt("sensor.4680_system_2_percentage_charged"), pct: sys2Pct },
-        { icon: Plug,           label: "Battery Power",   value: fmt("sensor.4680_system_2_battery_power") },
+        { icon: Plug,           label: "Battery Power",   value: fmtBattPower("sensor.4680_system_2_battery_power") },
         { icon: Plug,           label: "Load",            value: fmt("sensor.4680_system_2_load_power") },
       ],
     },
