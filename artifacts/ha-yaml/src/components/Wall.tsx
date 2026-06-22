@@ -388,8 +388,16 @@ const ENERGY_LABELS: Record<string, string> = {
   "sensor.solar_15min_avg": "Solar 15min Avg",
   "sensor.gonser_4680_system_1_percentage_charged": "Battery 1",
   "sensor.4680_system_2_percentage_charged": "Battery 2",
-  "sensor.gonser_4680_system_1_grid_power": "Grid Power (Sys 1)",
-  "sensor.4680_system_2_grid_power": "Grid Power (Sys 2)",
+  "sensor.gonser_4680_system_1_grid_power": "Grid (Sys 1)",
+  "sensor.4680_system_2_grid_imported": "Grid (Sys 2)",
+  "sensor.gonser_4680_system_1_solar_power": "Solar (Sys 1)",
+  "sensor.4680_system_2_solar_power": "Solar (Sys 2)",
+  "sensor.4680_system_2_battery_power": "Battery Power (Sys 2)",
+  "sensor.4680_system_2_load_power": "Load (Sys 2)",
+  "sensor.gonser_4680_system_1_load_power": "Load (Sys 1)",
+  "sensor.4680_system_2_solar_generated": "Solar Today (Sys 2)",
+  "sensor.gonser_4680_system_1_solar_generated": "Solar Today (Sys 1)",
+  "sensor.gonser_4680_system_1_grid_exported": "Grid Exported (Sys 1)",
 };
 
 const isEnergyEntity = (s: HAState) => {
@@ -398,7 +406,13 @@ const isEnergyEntity = (s: HAState) => {
     /^sensor\.total_(solar|home_load|battery)/.test(id) ||
     /sensor\.solar_15min_avg/.test(id) ||
     /4680.*percentage_charged|gonser.*percentage_charged/.test(id) ||
-    /4680.*grid_power|gonser.*grid_power/.test(id)
+    /4680.*grid_power|gonser.*grid_power/.test(id) ||
+    /4680.*grid_imported|gonser.*grid_imported/.test(id) ||
+    /4680.*solar_power|gonser.*solar_power/.test(id) ||
+    /4680.*battery_power|gonser.*battery_power/.test(id) ||
+    /4680.*load_power|gonser.*load_power/.test(id) ||
+    /4680.*solar_generated|gonser.*solar_generated/.test(id) ||
+    /gonser.*grid_exported|4680.*grid_exported/.test(id)
   );
 };
 
@@ -947,43 +961,53 @@ function EnergyDashboard({ states }: { states: HAState[] }) {
         : sys1Pct;
 
   const sys1Grid = num("sensor.gonser_4680_system_1_grid_power");
-  const sys2Grid = num("sensor.4680_system_2_grid_power");
+  const sys2Grid = num("sensor.4680_system_2_grid_imported");
   const totalGridState = get("sensor.total_grid_power");
   const totalGrid = totalGridState
     ? parseFloat(totalGridState.state)
     : !isNaN(sys1Grid) && !isNaN(sys2Grid)
       ? sys1Grid + sys2Grid
-      : NaN;
+      : !isNaN(sys1Grid) ? sys1Grid : sys2Grid;
+
+  const fmtGrid = (n: number) => {
+    if (isNaN(n)) return "—";
+    const abs = Math.abs(n).toFixed(2);
+    return n < -0.05 ? `↑ ${abs} kW` : `${abs} kW`;
+  };
 
   const systems: { name: string; rows: EnergyRow[]; chartEntityId: string }[] = [
     {
       name: "Tesla System 1",
       chartEntityId: "sensor.gonser_4680_system_1_percentage_charged",
       rows: [
-        { icon: BatteryCharging, label: "Battery", value: fmt("sensor.gonser_4680_system_1_percentage_charged"), pct: sys1Pct },
-        { icon: Zap, label: "Grid Power", value: fmt("sensor.gonser_4680_system_1_grid_power") },
-        { icon: Sun, label: "Solar", value: fmt("sensor.gonser_4680_system_1_solar_power") },
-        { icon: Plug, label: "Load", value: fmt("sensor.gonser_4680_system_1_load_power") },
+        { icon: Zap,            label: "Grid",         value: fmtGrid(sys1Grid) },
+        { icon: Zap,            label: "Exported Today",value: fmt("sensor.gonser_4680_system_1_grid_exported") },
+        { icon: Sun,            label: "Solar",        value: fmt("sensor.gonser_4680_system_1_solar_power") },
+        { icon: BatteryCharging,label: "Battery",      value: fmt("sensor.gonser_4680_system_1_percentage_charged"), pct: sys1Pct },
+        { icon: Plug,           label: "Load",         value: fmt("sensor.gonser_4680_system_1_load_power") },
       ],
     },
     {
       name: "Tesla System 2",
       chartEntityId: "sensor.4680_system_2_percentage_charged",
       rows: [
-        { icon: BatteryCharging, label: "Battery", value: fmt("sensor.4680_system_2_percentage_charged"), pct: sys2Pct },
-        { icon: Zap, label: "Grid Power", value: fmt("sensor.4680_system_2_grid_power") },
-        { icon: Sun, label: "Solar", value: fmt("sensor.4680_system_2_solar_power") },
-        { icon: Plug, label: "Load", value: fmt("sensor.4680_system_2_load_power") },
+        { icon: Zap,            label: "Grid",         value: fmtGrid(sys2Grid) },
+        { icon: Sun,            label: "Solar",        value: fmt("sensor.4680_system_2_solar_power") },
+        { icon: BatteryCharging,label: "Battery",      value: fmt("sensor.4680_system_2_percentage_charged"), pct: sys2Pct },
+        { icon: Plug,           label: "Battery Out",  value: fmt("sensor.4680_system_2_battery_power") },
+        { icon: Plug,           label: "Load",         value: fmt("sensor.4680_system_2_load_power") },
       ],
     },
     {
-      name: "Whole Home",
+      name: "Total Grid",
       chartEntityId: "sensor.total_solar",
       rows: [
-        { icon: BatteryCharging, label: "Battery Avg", value: fmtN(avgPct, "%"), pct: avgPct },
-        { icon: Zap, label: "Grid Power", value: fmtN(totalGrid, "kW") },
-        { icon: Sun, label: "Solar", value: fmt("sensor.total_solar") },
-        { icon: Plug, label: "Home Load", value: fmt("sensor.total_home_load") },
+        { icon: Zap,            label: "Net Grid",     value: fmtGrid(totalGrid) },
+        { icon: Zap,            label: "Sys 1 Grid",   value: fmtGrid(sys1Grid) },
+        { icon: Zap,            label: "Sys 2 Grid",   value: fmtGrid(sys2Grid) },
+        { icon: Sun,            label: "Total Solar",  value: fmt("sensor.total_solar") },
+        { icon: Plug,           label: "Home Load",    value: fmt("sensor.total_home_load") },
+        { icon: BatteryCharging,label: "Battery Avg",  value: fmtN(avgPct, "%"), pct: avgPct },
       ],
     },
   ];
