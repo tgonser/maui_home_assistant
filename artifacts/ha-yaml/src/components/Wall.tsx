@@ -959,8 +959,10 @@ function NetGridChart() {
     }
     return Array.from(map.values())
       .sort((a, b) => a.t - b.t)
-      // Negate so positive = exporting to grid (intuitive: up = good)
-      .map(({ t, sys1, sys2 }) => ({ t, net: -(sys1 + sys2) }));
+      .map(({ t, sys1, sys2 }) => {
+        const net = -(sys1 + sys2);
+        return { t, net, exp: Math.max(0, net), imp: Math.min(0, net) };
+      });
   }, [sys1Pts, sys2Pts]);
 
   if (data.length === 0) return null;
@@ -987,17 +989,25 @@ function NetGridChart() {
         <div className="text-xs uppercase tracking-[0.18em] text-[var(--cream-muted)]">
           Net Grid Power — Today
         </div>
-        <div className="text-[10px] text-[var(--cream-muted)] flex gap-3">
-          <span>↑ exporting to grid</span>
-          <span>↓ drawing from grid</span>
+        <div className="text-[10px] flex gap-4">
+          <span className="flex items-center gap-1" style={{ color: "#4ade80" }}>
+            <span>▲</span><span>exporting</span>
+          </span>
+          <span className="flex items-center gap-1" style={{ color: "#f87171" }}>
+            <span>▼</span><span>drawing from grid</span>
+          </span>
         </div>
       </div>
       <ResponsiveContainer width="100%" height={140}>
         <AreaChart data={data} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
           <defs>
-            <linearGradient id="ngPositive" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="var(--brass-bright)" stopOpacity={0.35} />
-              <stop offset="95%" stopColor="var(--brass-bright)" stopOpacity={0.02} />
+            <linearGradient id="ngExport" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%"  stopColor="#4ade80" stopOpacity={0.45} />
+              <stop offset="95%" stopColor="#4ade80" stopOpacity={0.04} />
+            </linearGradient>
+            <linearGradient id="ngImport" x1="0" y1="1" x2="0" y2="0">
+              <stop offset="5%"  stopColor="#f87171" stopOpacity={0.45} />
+              <stop offset="95%" stopColor="#f87171" stopOpacity={0.04} />
             </linearGradient>
           </defs>
           <XAxis
@@ -1009,16 +1019,18 @@ function NetGridChart() {
             interval={Math.floor(data.length / 6)}
           />
           <YAxis hide domain={domain} />
-          <ReferenceLine y={0} stroke="var(--brass)" strokeOpacity={0.45} strokeDasharray="4 3" label={{ value: "0", position: "insideRight", fontSize: 9, fill: "var(--brass)" }} />
+          <ReferenceLine y={0} stroke="rgba(255,255,255,0.25)" strokeDasharray="4 3" />
           <Tooltip
-            formatter={(v: unknown) => {
+            formatter={(v: unknown, key: unknown) => {
               const n = v as number;
-              return [`${Math.abs(n).toFixed(2)} kW`, n >= 0 ? "↑ Exporting" : "↓ Importing"];
+              if (Math.abs(n) < 0.01) return null;
+              return [`${Math.abs(n).toFixed(2)} kW`, key === "exp" ? "↑ Exporting" : "↓ Importing"];
             }}
             labelFormatter={(t: unknown) => fmtTime(t as number)}
             contentStyle={{ background: "rgba(20,12,4,0.92)", border: "1px solid rgba(201,153,74,0.3)", borderRadius: 8, fontSize: 11 }}
           />
-          <Area type="monotone" dataKey="net" stroke="var(--brass-bright)" strokeWidth={1.5} fill="url(#ngPositive)" dot={false} isAnimationActive={false} />
+          <Area type="monotone" dataKey="exp" stroke="#4ade80" strokeWidth={1.5} fill="url(#ngExport)" dot={false} isAnimationActive={false} baseValue={0} />
+          <Area type="monotone" dataKey="imp" stroke="#f87171" strokeWidth={1.5} fill="url(#ngImport)" dot={false} isAnimationActive={false} baseValue={0} />
         </AreaChart>
       </ResponsiveContainer>
     </div>
