@@ -1055,41 +1055,39 @@ function ShadesView({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="space-y-8"
+      className="grid grid-cols-2 gap-8 items-start"
     >
       {SHADE_FLOORS.map(({ floor, rooms }) => {
         const floorEntities = rooms.flatMap((r) => bucketed.map.get(r) ?? []);
         if (floorEntities.length === 0) return null;
         return (
-          <section key={floor}>
-            <div className="text-xs uppercase tracking-[0.18em] text-[var(--cream-muted)] mb-4">
+          <section key={floor} className="space-y-5">
+            <div className="text-xs uppercase tracking-[0.18em] text-[var(--cream-muted)]">
               {floor}
             </div>
-            <div className="space-y-4">
-              {rooms.map((room) => {
-                const items = bucketed.map.get(room) ?? [];
-                if (items.length === 0) return null;
-                return (
-                  <div key={room}>
-                    <div className="text-[11px] uppercase tracking-wider text-[var(--brass)] mb-2 ml-1">
-                      {room}
-                    </div>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 auto-rows-[110px] gap-3">
-                      {items.map(rt)}
-                    </div>
+            {rooms.map((room) => {
+              const items = bucketed.map.get(room) ?? [];
+              if (items.length === 0) return null;
+              return (
+                <div key={room}>
+                  <div className="text-[11px] uppercase tracking-wider text-[var(--brass)] mb-2 ml-1">
+                    {room}
                   </div>
-                );
-              })}
-            </div>
+                  <div className="grid grid-cols-2 auto-rows-[110px] gap-3">
+                    {items.map(rt)}
+                  </div>
+                </div>
+              );
+            })}
           </section>
         );
       })}
       {bucketed.other.length > 0 && (
-        <section>
+        <section className="col-span-2">
           <div className="text-xs uppercase tracking-[0.18em] text-[var(--cream-muted)] mb-3">
             Other
           </div>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 auto-rows-[110px] gap-3">
+          <div className="grid grid-cols-4 auto-rows-[110px] gap-3">
             {bucketed.other.map(rt)}
           </div>
         </section>
