@@ -1,0 +1,107 @@
+binary_sensor.4680_system_2_grid_services_enabled
+4680 System 2 Grid services enabled
+off
+friendly_name: 4680 System 2 Grid services enabled
+binary_sensor.4680_system_2_grid_status
+4680 System 2 Grid status
+on
+device_class: power
+friendly_name: 4680 System 2 Grid status
+binary_sensor.4680_system_2_storm_watch_active
+4680 System 2 Storm watch active
+off
+friendly_name: 4680 System 2 Storm watch active
+sensor.4680_system_2_battery_charged
+4680 System 2 Battery charged
+6.042
+state_class: total_increasing
+unit_of_measurement: kWh
+device_class: energy
+friendly_name: 4680 System 2 Battery charged
+sensor.4680_system_2_battery_discharged
+4680 System 2 Battery discharged
+7.973
+state_class: total_increasing
+unit_of_measurement: kWh
+device_class: energy
+friendly_name: 4680 System 2 Battery discharged
+sensor.4680_system_2_battery_power
+4680 System 2 Battery power
+0.0
+state_class: measurement
+unit_of_measurement: kW
+device_class: power
+friendly_name: 4680 System 2 Battery power
+sensor.4680_system_2_grid_exported
+4680 System 2 Grid exported
+0.019
+state_class: total_increasing
+unit_of_measurement: kWh
+device_class: energy
+friendly_name: 4680 System 2 Grid exported
+sensor.4680_system_2_grid_imported
+4680 System 2 Grid imported
+2.384
+state_class: total_increasing
+unit_of_measurement: kWh
+device_class: energy
+friendly_name: 4680 System 2 Grid imported
+sensor.4680_system_2_grid_power
+4680 System 2 Grid power
+5.508
+state_class: measurement
+unit_of_measurement: kW
+device_class: power
+friendly_name: 4680 System 2 Grid power
+sensor.4680_system_2_home_usage
+4680 System 2 Home usage
+32.239
+state_class: total_increasing
+unit_of_measurement: kWh
+device_class: energy
+friendly_name: 4680 System 2 Home usage
+sensor.4680_system_2_island_status
+4680 System 2 Island status
+on_grid
+options: on_grid, off_grid, off_grid_intentional, off_grid_unintentional, island_status_unknown
+device_class: enum
+friendly_name: 4680 System 2 Island status
+sensor.4680_system_2_load_power
+4680 System 2 Load power
+10.7787060546875
+state_class: measurement
+unit_of_measurement: kW
+device_class: power
+friendly_name: 4680 System 2 Load power
+sensor.4680_system_2_percentage_charged
+4680 System 2 Percentage charged
+9.94969942338363
+state_class: measurement
+unit_of_measurement: %
+device_class: battery
+friendly_name: 4680 System 2 Percentage charged
+sensor.4680_system_2_solar_generated
+4680 System 2 Solar generated
+27.943
+state_class: total_increasing
+unit_of_measurement: kWh
+device_class: energy
+friendly_name: 4680 System 2 Solar generated
+sensor.4680_system_2_solar_power
+4680 System 2 Solar power
+5.2707060546875
+state_class: measurement
+unit_of_measurement: kW
+device_class: power
+friendly_name: 4680 System 2 Solar power
+sensor.4680_system_2_version
+Version
+unavailable
+restored: true
+friendly_name: Version
+supported_features: 0
+sensor.4680_system_2_vpp_backup_reserve
+4680 System 2 VPP backup reserve
+10
+unit_of_measurement: %
+friendly_name: 4680 System 2 VPP backup reserve

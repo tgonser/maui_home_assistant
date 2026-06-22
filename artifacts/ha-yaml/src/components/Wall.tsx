@@ -398,6 +398,8 @@ const ENERGY_LABELS: Record<string, string> = {
   "sensor.4680_system_2_solar_generated": "Solar Today (Sys 2)",
   "sensor.gonser_4680_system_1_solar_generated": "Solar Today (Sys 1)",
   "sensor.gonser_4680_system_1_grid_exported": "Grid Exported (Sys 1)",
+  "sensor.4680_system_2_grid_exported": "Grid Exported (Sys 2)",
+  "sensor.4680_system_2_home_usage": "Home Usage Today (Sys 2)",
 };
 
 const isEnergyEntity = (s: HAState) => {
@@ -412,7 +414,8 @@ const isEnergyEntity = (s: HAState) => {
     /4680.*battery_power|gonser.*battery_power/.test(id) ||
     /4680.*load_power|gonser.*load_power/.test(id) ||
     /4680.*solar_generated|gonser.*solar_generated/.test(id) ||
-    /gonser.*grid_exported|4680.*grid_exported/.test(id)
+    /gonser.*grid_exported|4680.*grid_exported/.test(id) ||
+    /4680.*home_usage|gonser.*home_usage/.test(id)
   );
 };
 
@@ -961,7 +964,7 @@ function EnergyDashboard({ states }: { states: HAState[] }) {
         : sys1Pct;
 
   const sys1Grid = num("sensor.gonser_4680_system_1_grid_power");
-  const sys2Grid = num("sensor.4680_system_2_grid_imported");
+  const sys2Grid = num("sensor.4680_system_2_grid_power");
   const totalGridState = get("sensor.total_grid_power");
   const totalGrid = totalGridState
     ? parseFloat(totalGridState.state)
@@ -991,11 +994,13 @@ function EnergyDashboard({ states }: { states: HAState[] }) {
       name: "Tesla System 2",
       chartEntityId: "sensor.4680_system_2_percentage_charged",
       rows: [
-        { icon: Zap,            label: "Grid",         value: fmtGrid(sys2Grid) },
-        { icon: Sun,            label: "Solar",        value: fmt("sensor.4680_system_2_solar_power") },
-        { icon: BatteryCharging,label: "Battery",      value: fmt("sensor.4680_system_2_percentage_charged"), pct: sys2Pct },
-        { icon: Plug,           label: "Battery Out",  value: fmt("sensor.4680_system_2_battery_power") },
-        { icon: Plug,           label: "Load",         value: fmt("sensor.4680_system_2_load_power") },
+        { icon: Zap,            label: "Grid Live",       value: fmtGrid(sys2Grid) },
+        { icon: Zap,            label: "Imported Today",  value: fmt("sensor.4680_system_2_grid_imported") },
+        { icon: Zap,            label: "Exported Today",  value: fmt("sensor.4680_system_2_grid_exported") },
+        { icon: Sun,            label: "Solar",           value: fmt("sensor.4680_system_2_solar_power") },
+        { icon: BatteryCharging,label: "Battery",         value: fmt("sensor.4680_system_2_percentage_charged"), pct: sys2Pct },
+        { icon: Plug,           label: "Battery Power",   value: fmt("sensor.4680_system_2_battery_power") },
+        { icon: Plug,           label: "Load",            value: fmt("sensor.4680_system_2_load_power") },
       ],
     },
     {
@@ -1003,25 +1008,28 @@ function EnergyDashboard({ states }: { states: HAState[] }) {
       chartEntityId: "sensor.total_solar",
       rows: (() => {
         const sys1ExportedToday = num("sensor.gonser_4680_system_1_grid_exported");
+        const sys2ExportedToday = num("sensor.4680_system_2_grid_exported");
         const sys2ImportedToday = num("sensor.4680_system_2_grid_imported");
-        const netToday = !isNaN(sys1ExportedToday) && !isNaN(sys2ImportedToday)
-          ? sys1ExportedToday - sys2ImportedToday
-          : NaN;
-        const fmtNet = (n: number) => {
+        // Net today: total exported minus total imported across both systems
+        const totalExported = (!isNaN(sys1ExportedToday) ? sys1ExportedToday : 0)
+                            + (!isNaN(sys2ExportedToday) ? sys2ExportedToday : 0);
+        const totalImported = !isNaN(sys2ImportedToday) ? sys2ImportedToday : 0;
+        const netToday = totalExported - totalImported;
+        const fmtKwh = (n: number) => {
           if (isNaN(n)) return "—";
           const abs = Math.abs(n).toFixed(2);
-          const unit = (get("sensor.gonser_4680_system_1_grid_exported")?.attributes.unit_of_measurement as string | undefined) ?? "kWh";
-          return n >= 0 ? `↑ ${abs} ${unit}` : `↓ ${abs} ${unit}`;
+          return n >= 0 ? `↑ ${abs} kWh` : `↓ ${abs} kWh`;
         };
         return [
-          { icon: Zap,            label: "Live Net Grid",      value: fmtGrid(totalGrid) },
-          { icon: Zap,            label: "Sys 1 Live",         value: fmtGrid(sys1Grid) },
-          { icon: Zap,            label: "Sys 2 Live",         value: fmtGrid(sys2Grid) },
+          { icon: Zap,            label: "Live Net Grid",        value: fmtGrid(totalGrid) },
+          { icon: Zap,            label: "Sys 1 Live",           value: fmtGrid(sys1Grid) },
+          { icon: Zap,            label: "Sys 2 Live",           value: fmtGrid(sys2Grid) },
           { icon: Zap,            label: "Sys 1 Exported Today", value: fmt("sensor.gonser_4680_system_1_grid_exported") },
+          { icon: Zap,            label: "Sys 2 Exported Today", value: fmt("sensor.4680_system_2_grid_exported") },
           { icon: Zap,            label: "Sys 2 Imported Today", value: fmt("sensor.4680_system_2_grid_imported") },
-          { icon: Zap,            label: "Net Today",          value: fmtNet(netToday) },
-          { icon: Sun,            label: "Total Solar",        value: fmt("sensor.total_solar") },
-          { icon: BatteryCharging,label: "Battery Avg",        value: fmtN(avgPct, "%"), pct: avgPct },
+          { icon: Zap,            label: "Net Today",            value: fmtKwh(netToday) },
+          { icon: Sun,            label: "Total Solar",          value: fmt("sensor.total_solar") },
+          { icon: BatteryCharging,label: "Battery Avg",          value: fmtN(avgPct, "%"), pct: avgPct },
         ];
       })(),
     },
