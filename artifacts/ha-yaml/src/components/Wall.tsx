@@ -1003,14 +1003,28 @@ function EnergyDashboard({ states }: { states: HAState[] }) {
   );
 }
 
+// Match against entity_id (snake_case), most-specific pattern first.
+// Bath patterns must come before their parent room pattern.
+const SHADE_ROOM_PATTERNS: { label: string; pattern: RegExp }[] = [
+  { label: "Beach Room Bath",  pattern: /floor_1_bedroom_2.*bath/   },
+  { label: "Beach Room",       pattern: /floor_1_bedroom_2/          },
+  { label: "Utility",          pattern: /floor_1.*util/              },
+  { label: "Pub",              pattern: /floor_1_bar/                },
+  { label: "Master Bath",      pattern: /floor_2_master.*bath/       },
+  { label: "Master Bed",       pattern: /floor_2_master/             },
+  { label: "Mauka Bed",        pattern: /floor_2_bedroom_5/          },
+  { label: "Molokini Bath",    pattern: /floor_2_bedroom_4.*bath/    },
+  { label: "Molokini Bed",     pattern: /floor_2_bedroom_4/          },
+];
+
 const SHADE_FLOORS: { floor: string; rooms: string[] }[] = [
   {
     floor: "First Floor",
-    rooms: ["Beach Room Bath", "Beach Room", "Utility", "Pub"],
+    rooms: ["Beach Room", "Beach Room Bath", "Utility", "Pub"],
   },
   {
     floor: "Second Floor",
-    rooms: ["Master Bath", "Master Bed", "Mauka Bed", "Molokini Bath", "Molokini Bed"],
+    rooms: ["Master Bed", "Master Bath", "Mauka Bed", "Molokini Bed", "Molokini Bath"],
   },
 ];
 
@@ -1022,15 +1036,13 @@ function ShadesView({
   renderTile: (s: HAState) => ReactNode;
 }) {
   const bucketed = useMemo(() => {
-    const allRooms = SHADE_FLOORS.flatMap((f) => f.rooms);
-    // Sort longest label first so "Beach Room Bath" matches before "Beach Room"
-    const sorted = [...allRooms].sort((a, b) => b.length - a.length);
+    const allRooms = SHADE_ROOM_PATTERNS.map((r) => r.label);
     const map = new Map<string, HAState[]>(allRooms.map((r) => [r, []]));
     const other: HAState[] = [];
     for (const e of entities) {
-      const name = (e.attributes.friendly_name as string | undefined) ?? e.entity_id;
-      const match = sorted.find((r) => name.toLowerCase().includes(r.toLowerCase()));
-      if (match) map.get(match)!.push(e);
+      const id = e.entity_id.toLowerCase();
+      const match = SHADE_ROOM_PATTERNS.find((r) => r.pattern.test(id));
+      if (match) map.get(match.label)!.push(e);
       else other.push(e);
     }
     return { map, other };
