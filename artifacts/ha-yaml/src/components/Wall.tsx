@@ -35,7 +35,7 @@ import {
   SlidersHorizontal,
   Zap,
 } from "lucide-react";
-import { AreaChart, Area, ResponsiveContainer } from "recharts";
+import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, ReferenceLine, Tooltip } from "recharts";
 import "./wall-theme.css";
 import { SuperView } from "./SuperView";
 import { WallControls } from "./WallControls";
@@ -906,11 +906,9 @@ function Sparkline({ entityId }: { entityId: string }) {
 function EnergySystemCard({
   name,
   rows,
-  chartEntityId,
 }: {
   name: string;
   rows: EnergyRow[];
-  chartEntityId?: string;
 }) {
   return (
     <div className="wall-tile rounded-2xl p-4 flex flex-col gap-3">
@@ -935,11 +933,93 @@ function EnergySystemCard({
           )}
         </div>
       ))}
-      {chartEntityId && (
-        <div className="mt-1">
-          <Sparkline entityId={chartEntityId} />
+    </div>
+  );
+}
+
+function NetGridChart() {
+  const sys1Pts = useEntityHistory("sensor.gonser_4680_system_1_grid_power");
+  const sys2Pts = useEntityHistory("sensor.4680_system_2_grid_power");
+
+  const data = useMemo(() => {
+    if (sys1Pts.length === 0 && sys2Pts.length === 0) return [];
+    const bin = (t: number) => Math.round(t / (5 * 60000)) * (5 * 60000);
+    const map = new Map<number, { t: number; sys1: number; sys2: number }>();
+    for (const p of sys1Pts) {
+      const b = bin(p.t);
+      const e = map.get(b) ?? { t: b, sys1: 0, sys2: 0 };
+      e.sys1 = p.v;
+      map.set(b, e);
+    }
+    for (const p of sys2Pts) {
+      const b = bin(p.t);
+      const e = map.get(b) ?? { t: b, sys1: 0, sys2: 0 };
+      e.sys2 = p.v;
+      map.set(b, e);
+    }
+    return Array.from(map.values())
+      .sort((a, b) => a.t - b.t)
+      .map(({ t, sys1, sys2 }) => ({ t, net: sys1 + sys2 }));
+  }, [sys1Pts, sys2Pts]);
+
+  if (data.length === 0) return null;
+
+  // Hawaii is UTC-10; Intl.DateTimeFormat with America/Honolulu is unreliable here
+  const fmtTime = (t: number) => {
+    const h = Math.floor(((t / 3600000) - 10 + 48) % 24);
+    const m = Math.floor((t % 3600000) / 60000);
+    const ampm = h < 12 ? "a" : "p";
+    return `${h % 12 || 12}:${m.toString().padStart(2, "0")}${ampm}`;
+  };
+
+  const domain = (() => {
+    const vals = data.map((d) => d.net);
+    const min = Math.min(...vals);
+    const max = Math.max(...vals);
+    const pad = Math.max(Math.abs(min), Math.abs(max)) * 0.15;
+    return [Math.floor(min - pad), Math.ceil(max + pad)] as [number, number];
+  })();
+
+  return (
+    <div className="wall-tile rounded-2xl p-4">
+      <div className="flex items-baseline justify-between mb-1">
+        <div className="text-xs uppercase tracking-[0.18em] text-[var(--cream-muted)]">
+          Net Grid Power — Today
         </div>
-      )}
+        <div className="text-[10px] text-[var(--cream-muted)] flex gap-3">
+          <span>↑ exporting to grid</span>
+          <span>↓ drawing from grid</span>
+        </div>
+      </div>
+      <ResponsiveContainer width="100%" height={140}>
+        <AreaChart data={data} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
+          <defs>
+            <linearGradient id="ngPositive" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="var(--brass-bright)" stopOpacity={0.35} />
+              <stop offset="95%" stopColor="var(--brass-bright)" stopOpacity={0.02} />
+            </linearGradient>
+          </defs>
+          <XAxis
+            dataKey="t"
+            tickFormatter={fmtTime}
+            tick={{ fontSize: 9, fill: "var(--cream-muted)" }}
+            tickLine={false}
+            axisLine={false}
+            interval={Math.floor(data.length / 6)}
+          />
+          <YAxis hide domain={domain} />
+          <ReferenceLine y={0} stroke="var(--brass)" strokeOpacity={0.45} strokeDasharray="4 3" label={{ value: "0", position: "insideRight", fontSize: 9, fill: "var(--brass)" }} />
+          <Tooltip
+            formatter={(v: unknown) => {
+              const n = v as number;
+              return [`${Math.abs(n).toFixed(2)} kW`, n >= 0 ? "↑ Exporting" : "↓ Importing"];
+            }}
+            labelFormatter={(t: unknown) => fmtTime(t as number)}
+            contentStyle={{ background: "rgba(20,12,4,0.92)", border: "1px solid rgba(201,153,74,0.3)", borderRadius: 8, fontSize: 11 }}
+          />
+          <Area type="monotone" dataKey="net" stroke="var(--brass-bright)" strokeWidth={1.5} fill="url(#ngPositive)" dot={false} isAnimationActive={false} />
+        </AreaChart>
+      </ResponsiveContainer>
     </div>
   );
 }
@@ -997,10 +1077,9 @@ function EnergyDashboard({ states }: { states: HAState[] }) {
     return n < -0.05 ? `↑ ${abs} kW` : `${abs} kW`;
   };
 
-  const systems: { name: string; rows: EnergyRow[]; chartEntityId: string }[] = [
+  const systems: { name: string; rows: EnergyRow[] }[] = [
     {
       name: "Tesla System 1",
-      chartEntityId: "sensor.gonser_4680_system_1_percentage_charged",
       rows: [
         { icon: Zap,            label: "Grid Live",       value: fmtGrid(sys1Grid) },
         { icon: Zap,            label: "Exported Today",  value: fmt("sensor.gonser_4680_system_1_grid_exported") },
@@ -1014,7 +1093,6 @@ function EnergyDashboard({ states }: { states: HAState[] }) {
     },
     {
       name: "Tesla System 2",
-      chartEntityId: "sensor.4680_system_2_percentage_charged",
       rows: [
         { icon: Zap,            label: "Grid Live",       value: fmtGrid(sys2Grid) },
         { icon: Zap,            label: "Exported Today",  value: fmt("sensor.4680_system_2_grid_exported") },
@@ -1028,7 +1106,6 @@ function EnergyDashboard({ states }: { states: HAState[] }) {
     },
     {
       name: "Total Grid",
-      chartEntityId: "sensor.total_solar",
       rows: (() => {
         const sys1ExportedToday = num("sensor.gonser_4680_system_1_grid_exported");
         const sys1ImportedToday = num("sensor.gonser_4680_system_1_grid_imported");
@@ -1069,11 +1146,14 @@ function EnergyDashboard({ states }: { states: HAState[] }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="grid grid-cols-1 md:grid-cols-3 gap-4"
+      className="space-y-4"
     >
-      {systems.map((sys) => (
-        <EnergySystemCard key={sys.name} name={sys.name} rows={sys.rows} chartEntityId={sys.chartEntityId} />
-      ))}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {systems.map((sys) => (
+          <EnergySystemCard key={sys.name} name={sys.name} rows={sys.rows} />
+        ))}
+      </div>
+      <NetGridChart />
     </motion.div>
   );
 }
