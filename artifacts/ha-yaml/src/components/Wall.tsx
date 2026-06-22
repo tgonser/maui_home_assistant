@@ -1062,6 +1062,127 @@ function NetGridChart() {
   );
 }
 
+const GRID_RATES = { sell: 0.04, offPeak: 0.17, peak: 0.52, midPeak: 0.35 };
+
+function hstRate(hstHour: number) {
+  if (hstHour >= 9 && hstHour < 17) return GRID_RATES.offPeak;
+  if (hstHour >= 17 && hstHour < 21) return GRID_RATES.peak;
+  return GRID_RATES.midPeak;
+}
+
+function DollarFlowChart() {
+  const sys1Pts = useEntityHistory("sensor.gonser_4680_system_1_grid_power");
+  const sys2Pts = useEntityHistory("sensor.4680_system_2_grid_power");
+
+  const { data, totalDollars } = useMemo(() => {
+    if (sys1Pts.length === 0 && sys2Pts.length === 0) return { data: [], totalDollars: 0 };
+    const BIN = 5 * 60000;
+    const binKey = (t: number) => Math.round(t / BIN) * BIN;
+    const map = new Map<number, { t: number; sys1: number; sys2: number }>();
+    for (const p of sys1Pts) {
+      const b = binKey(p.t); const e = map.get(b) ?? { t: b, sys1: 0, sys2: 0 }; e.sys1 = p.v; map.set(b, e);
+    }
+    for (const p of sys2Pts) {
+      const b = binKey(p.t); const e = map.get(b) ?? { t: b, sys1: 0, sys2: 0 }; e.sys2 = p.v; map.set(b, e);
+    }
+    const sorted = Array.from(map.values()).sort((a, b) => a.t - b.t);
+    let total = 0;
+    const pts = sorted.map(({ t, sys1, sys2 }, i) => {
+      const net = -(sys1 + sys2);
+      const hstHour = Math.floor(((t / 3600000) - 10 + 240) % 24);
+      const rate = net > 0.01 ? GRID_RATES.sell : hstRate(hstHour);
+      const dr = net * rate; // $/hr — positive=earning, negative=spending
+      const dt = i > 0 ? (t - sorted[i - 1].t) / 3600000 : 0;
+      total += dr * dt;
+      return {
+        t,
+        dr,
+        earn:  dr >  0.001 ? dr  : (null as number | null),
+        spend: dr < -0.001 ? dr  : (null as number | null),
+        zero:  Math.abs(dr) <= 0.001 ? 0 : (null as number | null),
+      };
+    });
+    return { data: pts, totalDollars: total };
+  }, [sys1Pts, sys2Pts]);
+
+  if (data.length === 0) return null;
+
+  const fmtTime = (t: number) => {
+    const h = Math.floor(((t / 3600000) - 10 + 48) % 24);
+    const m = Math.floor((t % 3600000) / 60000);
+    return `${h % 12 || 12}:${m.toString().padStart(2, "0")}${h < 12 ? "a" : "p"}`;
+  };
+
+  const domain = (() => {
+    const vals = data.map((d) => d.dr);
+    const min = Math.min(...vals); const max = Math.max(...vals);
+    const pad = Math.max(Math.abs(min), Math.abs(max)) * 0.15;
+    return [min - pad, max + pad] as [number, number];
+  })();
+
+  const rateBands = (() => {
+    const ms0 = (Math.floor((data[0].t / 3600000 - 10) / 24) * 24 + 10) * 3600000;
+    const tS = data[0].t; const tE = data[data.length - 1].t;
+    const cl = (t: number) => Math.max(tS, Math.min(tE, t));
+    return [
+      { x1: cl(ms0),                   x2: cl(ms0 +  9 * 3600000), fill: "rgba(201,153,74,0.10)", label: "mid" },
+      { x1: cl(ms0 +  9 * 3600000),    x2: cl(ms0 + 17 * 3600000), fill: "rgba(74,222,128,0.06)", label: "off" },
+      { x1: cl(ms0 + 17 * 3600000),    x2: cl(ms0 + 21 * 3600000), fill: "rgba(248,113,113,0.14)", label: "peak" },
+      { x1: cl(ms0 + 21 * 3600000),    x2: cl(ms0 + 24 * 3600000), fill: "rgba(201,153,74,0.10)", label: "mid2" },
+    ].filter((b) => b.x1 < b.x2);
+  })();
+
+  const totalColor = totalDollars >= 0 ? "#4ade80" : "#f87171";
+  const totalStr = `${totalDollars >= 0 ? "+" : "−"}$${Math.abs(totalDollars).toFixed(2)}`;
+
+  return (
+    <div className="wall-tile rounded-2xl p-4">
+      <div className="flex items-baseline justify-between mb-1">
+        <div className="text-xs uppercase tracking-[0.18em] text-[var(--cream-muted)]">Grid $ Flow — Today</div>
+        <div className="flex items-center gap-4">
+          <div className="text-[10px] flex gap-3">
+            <span style={{ color: "#f87171" }}>peak $0.52</span>
+            <span style={{ color: "#c99a4a" }}>mid $0.35</span>
+            <span style={{ color: "var(--cream-muted)" }}>off $0.17</span>
+            <span style={{ color: "#4ade80" }}>sell $0.04</span>
+          </div>
+          <div className="text-sm font-bold tabular-nums" style={{ color: totalColor }}>{totalStr}</div>
+        </div>
+      </div>
+      <ResponsiveContainer width="100%" height={120}>
+        <ComposedChart data={data} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
+          <defs>
+            <linearGradient id="dfEarn"  x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%"  stopColor="#4ade80" stopOpacity={0.45} />
+              <stop offset="95%" stopColor="#4ade80" stopOpacity={0.04} />
+            </linearGradient>
+            <linearGradient id="dfSpend" x1="0" y1="1" x2="0" y2="0">
+              <stop offset="5%"  stopColor="#f87171" stopOpacity={0.45} />
+              <stop offset="95%" stopColor="#f87171" stopOpacity={0.04} />
+            </linearGradient>
+          </defs>
+          <XAxis dataKey="t" tickFormatter={fmtTime} tick={{ fontSize: 12, fill: "var(--cream-muted)" }} tickLine={false} axisLine={false} interval={Math.floor(data.length / 6)} />
+          <YAxis hide domain={domain} />
+          {rateBands.map((b) => <ReferenceArea key={b.label} x1={b.x1} x2={b.x2} fill={b.fill} ifOverflow="hidden" />)}
+          <ReferenceLine y={0} stroke="rgba(255,255,255,0.25)" strokeDasharray="4 3" />
+          <Tooltip
+            formatter={(v: unknown, key: unknown) => {
+              const n = v as number;
+              if (Math.abs(n) < 0.001) return null;
+              return [`$${Math.abs(n).toFixed(2)}/hr`, key === "earn" ? "↑ Earning" : "↓ Spending"];
+            }}
+            labelFormatter={(t: unknown) => fmtTime(t as number)}
+            contentStyle={{ background: "rgba(20,12,4,0.92)", border: "1px solid rgba(201,153,74,0.3)", borderRadius: 8, fontSize: 11 }}
+          />
+          <Area type="monotone" dataKey="earn"  stroke="#4ade80" strokeWidth={1.5} fill="url(#dfEarn)"  dot={false} isAnimationActive={false} baseValue={0} connectNulls={false} />
+          <Area type="monotone" dataKey="spend" stroke="#f87171" strokeWidth={1.5} fill="url(#dfSpend)" dot={false} isAnimationActive={false} baseValue={0} connectNulls={false} />
+          <Line  type="monotone" dataKey="zero"  stroke="#c99a4a" strokeWidth={1}   dot={false} isAnimationActive={false} connectNulls={false} strokeDasharray="3 3" />
+        </ComposedChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
 function EnergyDashboard({ states }: { states: HAState[] }) {
   const get = (id: string) => states.find((s) => s.entity_id === id);
   const num = (id: string) => {
@@ -1192,6 +1313,7 @@ function EnergyDashboard({ states }: { states: HAState[] }) {
         ))}
       </div>
       <NetGridChart />
+      <DollarFlowChart />
     </motion.div>
   );
 }
