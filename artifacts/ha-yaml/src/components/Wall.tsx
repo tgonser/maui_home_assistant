@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ComponentType } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHAStore, haStates, haCameraImage, haCallService, type HAState } from "@/lib/ha";
 import {
@@ -33,6 +33,7 @@ import {
   Users,
   Pause,
   SlidersHorizontal,
+  Zap,
 } from "lucide-react";
 import "./wall-theme.css";
 import { SuperView } from "./SuperView";
@@ -826,6 +827,121 @@ function SensorTile({ s }: { s: HAState }) {
   );
 }
 
+type EnergyRow = {
+  icon: ComponentType<{ className?: string }>;
+  label: string;
+  value: string;
+  pct?: number;
+};
+
+function EnergySystemCard({ name, rows }: { name: string; rows: EnergyRow[] }) {
+  return (
+    <div className="wall-tile rounded-2xl p-4 flex flex-col gap-3">
+      <div className="text-xs uppercase tracking-[0.18em] text-[var(--cream-muted)]">
+        {name}
+      </div>
+      {rows.map(({ icon: Icon, label, value, pct }) => (
+        <div key={label} className="flex flex-col gap-1">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-[var(--cream-muted)]">
+              <Icon className="w-3.5 h-3.5 shrink-0" />
+              <span className="text-xs">{label}</span>
+            </div>
+            <span className="text-sm font-semibold tabular-nums text-[var(--cream)]">
+              {value}
+            </span>
+          </div>
+          {pct !== undefined && !isNaN(pct) && (
+            <div className="wall-progress h-1.5">
+              <div style={{ width: `${Math.max(0, Math.min(100, pct))}%` }} />
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function EnergyDashboard({ states }: { states: HAState[] }) {
+  const get = (id: string) => states.find((s) => s.entity_id === id);
+  const num = (id: string) => {
+    const s = get(id);
+    return s ? parseFloat(s.state) : NaN;
+  };
+  const fmt = (id: string, dec = 1) => {
+    const s = get(id);
+    if (!s) return "—";
+    const n = parseFloat(s.state);
+    if (isNaN(n)) return s.state;
+    const u = (s.attributes.unit_of_measurement as string | undefined) ?? "";
+    return `${n.toFixed(dec)} ${u}`.trim();
+  };
+  const fmtN = (n: number, u: string, dec = 1) =>
+    isNaN(n) ? "—" : `${n.toFixed(dec)} ${u}`;
+
+  const sys1Pct = num("sensor.gonser_4680_system_1_percentage_charged");
+  const sys2Pct = num("sensor.4680_system_2_percentage_charged");
+  const avgPct =
+    !isNaN(sys1Pct) && !isNaN(sys2Pct)
+      ? (sys1Pct + sys2Pct) / 2
+      : isNaN(sys1Pct)
+        ? sys2Pct
+        : sys1Pct;
+
+  const sys1Grid = num("sensor.gonser_4680_system_1_grid_power");
+  const sys2Grid = num("sensor.4680_system_2_grid_power");
+  const totalGridState = get("sensor.total_grid_power");
+  const totalGrid = totalGridState
+    ? parseFloat(totalGridState.state)
+    : !isNaN(sys1Grid) && !isNaN(sys2Grid)
+      ? sys1Grid + sys2Grid
+      : NaN;
+
+  const systems: { name: string; rows: EnergyRow[] }[] = [
+    {
+      name: "Tesla System 1",
+      rows: [
+        { icon: BatteryCharging, label: "Battery", value: fmt("sensor.gonser_4680_system_1_percentage_charged"), pct: sys1Pct },
+        { icon: Zap, label: "Grid Power", value: fmt("sensor.gonser_4680_system_1_grid_power") },
+        { icon: Sun, label: "Solar", value: fmt("sensor.gonser_4680_system_1_solar_power") },
+        { icon: Plug, label: "Load", value: fmt("sensor.gonser_4680_system_1_load_power") },
+      ],
+    },
+    {
+      name: "Tesla System 2",
+      rows: [
+        { icon: BatteryCharging, label: "Battery", value: fmt("sensor.4680_system_2_percentage_charged"), pct: sys2Pct },
+        { icon: Zap, label: "Grid Power", value: fmt("sensor.4680_system_2_grid_power") },
+        { icon: Sun, label: "Solar", value: fmt("sensor.4680_system_2_solar_power") },
+        { icon: Plug, label: "Load", value: fmt("sensor.4680_system_2_load_power") },
+      ],
+    },
+    {
+      name: "Whole Home",
+      rows: [
+        { icon: BatteryCharging, label: "Battery Avg", value: fmtN(avgPct, "%"), pct: avgPct },
+        { icon: Zap, label: "Grid Power", value: fmtN(totalGrid, "kW") },
+        { icon: Sun, label: "Solar", value: fmt("sensor.total_solar") },
+        { icon: Plug, label: "Home Load", value: fmt("sensor.total_home_load") },
+      ],
+    },
+  ];
+
+  return (
+    <motion.div
+      key="energy"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="grid grid-cols-1 md:grid-cols-3 gap-4"
+    >
+      {systems.map((sys) => (
+        <EnergySystemCard key={sys.name} name={sys.name} rows={sys.rows} />
+      ))}
+    </motion.div>
+  );
+}
+
 function renderTile(s: HAState, allStates?: HAState[]) {
   const d = domainOf(s.entity_id);
   if (d === "light") return <LightTile key={s.entity_id} s={s} />;
@@ -1397,6 +1513,8 @@ export function Wall() {
                 entities={filtered}
                 onOpen={setOpenEntity}
               />
+            ) : active === "energy" ? (
+              <EnergyDashboard key="energy" states={states} />
             ) : active === "media" ? (
               <motion.div
                 key="media"
