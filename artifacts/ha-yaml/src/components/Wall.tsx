@@ -401,6 +401,9 @@ const ENERGY_LABELS: Record<string, string> = {
   "sensor.gonser_4680_system_1_grid_imported": "Grid Imported (Sys 1)",
   "sensor.4680_system_2_grid_exported": "Grid Exported (Sys 2)",
   "sensor.4680_system_2_home_usage": "Home Usage Today (Sys 2)",
+  "sensor.envoy_202445013483_current_power_production": "Solar Live",
+  "sensor.envoy_202445013483_energy_production_today": "Solar Today",
+  "sensor.envoy_202445013483_energy_production_last_seven_days": "Solar 7-Day",
 };
 
 const isEnergyEntity = (s: HAState) => {
@@ -416,7 +419,10 @@ const isEnergyEntity = (s: HAState) => {
     /4680.*load_power|gonser.*load_power/.test(id) ||
     /4680.*solar_generated|gonser.*solar_generated/.test(id) ||
     /gonser.*grid_exported|4680.*grid_exported/.test(id) ||
-    /4680.*home_usage|gonser.*home_usage/.test(id)
+    /4680.*home_usage|gonser.*home_usage/.test(id) ||
+    /envoy_.*_current_power_production/.test(id) ||
+    /envoy_.*_energy_production_today/.test(id) ||
+    /envoy_.*_energy_production_last_seven_days/.test(id)
   );
 };
 
@@ -987,8 +993,10 @@ function EnergyDashboard({ states }: { states: HAState[] }) {
         { icon: Zap,            label: "Grid Live",       value: fmtGrid(sys1Grid) },
         { icon: Zap,            label: "Exported Today",  value: fmt("sensor.gonser_4680_system_1_grid_exported") },
         { icon: Zap,            label: "Imported Today",  value: fmt("sensor.gonser_4680_system_1_grid_imported") },
-        { icon: Sun,            label: "Solar",           value: fmt("sensor.gonser_4680_system_1_solar_power") },
+        { icon: Sun,            label: "Solar Live",      value: fmt("sensor.gonser_4680_system_1_solar_power") },
+        { icon: Sun,            label: "Solar Today",     value: fmt("sensor.gonser_4680_system_1_solar_generated") },
         { icon: BatteryCharging,label: "Battery",         value: fmt("sensor.gonser_4680_system_1_percentage_charged"), pct: sys1Pct },
+        { icon: Plug,           label: "Battery Power",   value: fmt("sensor.gonser_4680_system_1_battery_power") },
         { icon: Plug,           label: "Load",            value: fmt("sensor.gonser_4680_system_1_load_power") },
       ],
     },
@@ -997,9 +1005,10 @@ function EnergyDashboard({ states }: { states: HAState[] }) {
       chartEntityId: "sensor.4680_system_2_percentage_charged",
       rows: [
         { icon: Zap,            label: "Grid Live",       value: fmtGrid(sys2Grid) },
-        { icon: Zap,            label: "Imported Today",  value: fmt("sensor.4680_system_2_grid_imported") },
         { icon: Zap,            label: "Exported Today",  value: fmt("sensor.4680_system_2_grid_exported") },
-        { icon: Sun,            label: "Solar",           value: fmt("sensor.4680_system_2_solar_power") },
+        { icon: Zap,            label: "Imported Today",  value: fmt("sensor.4680_system_2_grid_imported") },
+        { icon: Sun,            label: "Solar Live",      value: fmt("sensor.4680_system_2_solar_power") },
+        { icon: Sun,            label: "Solar Today",     value: fmt("sensor.4680_system_2_solar_generated") },
         { icon: BatteryCharging,label: "Battery",         value: fmt("sensor.4680_system_2_percentage_charged"), pct: sys2Pct },
         { icon: Plug,           label: "Battery Power",   value: fmt("sensor.4680_system_2_battery_power") },
         { icon: Plug,           label: "Load",            value: fmt("sensor.4680_system_2_load_power") },
@@ -1029,10 +1038,13 @@ function EnergyDashboard({ states }: { states: HAState[] }) {
           { icon: Zap,            label: "Sys 1 Live",           value: fmtGrid(sys1Grid) },
           { icon: Zap,            label: "Sys 2 Live",           value: fmtGrid(sys2Grid) },
           { icon: Zap,            label: "Sys 1 Exported Today", value: fmt("sensor.gonser_4680_system_1_grid_exported") },
+          { icon: Zap,            label: "Sys 1 Imported Today", value: fmt("sensor.gonser_4680_system_1_grid_imported") },
           { icon: Zap,            label: "Sys 2 Exported Today", value: fmt("sensor.4680_system_2_grid_exported") },
           { icon: Zap,            label: "Sys 2 Imported Today", value: fmt("sensor.4680_system_2_grid_imported") },
           { icon: Zap,            label: "Net Today",            value: fmtKwh(netToday) },
-          { icon: Sun,            label: "Total Solar",          value: fmt("sensor.total_solar") },
+          { icon: Sun,            label: "Solar Live",           value: fmt("sensor.envoy_202445013483_current_power_production") },
+          { icon: Sun,            label: "Solar Today",          value: fmt("sensor.envoy_202445013483_energy_production_today") },
+          { icon: Sun,            label: "Solar 7-Day",          value: fmt("sensor.envoy_202445013483_energy_production_last_seven_days") },
           { icon: BatteryCharging,label: "Battery Avg",          value: fmtN(avgPct, "%"), pct: avgPct },
         ];
       })(),
