@@ -1220,10 +1220,6 @@ function DollarFlowChart() {
   );
 }
 
-// Blended buy rate: weighted average of Maui rate tiers by hours per day
-// Off-peak 9am-5pm (8h)=$0.17, Peak 5pm-9pm (4h)=$0.52, Mid-peak 9pm-9am (12h)=$0.35
-const BLENDED_BUY_RATE = (8 * 0.17 + 4 * 0.52 + 12 * 0.35) / 24; // ≈ $0.318/kWh
-
 const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 const STAT_IMPORT_IDS = [
@@ -1245,9 +1241,10 @@ function MonthlyCostChart() {
     let cancelled = false;
     const load = async () => {
       const start = new Date(Date.now() - 2 * 365 * 24 * 3600_000);
+      // Use hourly period so we can apply exact rate per HST hour — no blending needed
       const [impRes, expRes] = await Promise.all([
-        haStatistics(STAT_IMPORT_IDS, "month", start),
-        haStatistics(STAT_EXPORT_IDS, "month", start),
+        haStatistics(STAT_IMPORT_IDS, "hour", start),
+        haStatistics(STAT_EXPORT_IDS, "hour", start),
       ]);
       if (cancelled) return;
       if (!impRes.ok || !expRes.ok) {
@@ -1256,34 +1253,41 @@ function MonthlyCostChart() {
         return;
       }
 
-      const sumByMonth = (
-        res: Record<string, HAStatisticPoint[]>,
-        map: Map<string, number>,
-      ) => {
-        for (const pts of Object.values(res)) {
-          for (const pt of pts) {
-            // HA stat start times are UTC; extract YYYY-MM from the UTC date
-            const d = new Date(pt.start);
-            const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
-            map.set(key, (map.get(key) ?? 0) + (pt.change ?? 0));
-          }
-        }
-      };
+      // costByMonth: accumulate exact $ cost per hourly bucket → sum by month key
+      const costMap = new Map<string, number>();
 
-      const impMap = new Map<string, number>();
-      const expMap = new Map<string, number>();
-      sumByMonth(impRes.data, impMap);
-      sumByMonth(expRes.data, expMap);
+      // Process all hourly import buckets
+      for (const pts of Object.values(impRes.data)) {
+        for (const pt of pts) {
+          const tMs = new Date(pt.start).getTime();
+          const hstHour = Math.floor(((tMs / 3600_000) - 10 + 240) % 24);
+          const rate = hstRate(hstHour);
+          const kwh = pt.change ?? 0;
+          // Month key in HST
+          const hstDate = new Date(tMs - 10 * 3600_000);
+          const mKey = `${hstDate.getUTCFullYear()}-${String(hstDate.getUTCMonth() + 1).padStart(2, "0")}`;
+          costMap.set(mKey, (costMap.get(mKey) ?? 0) + kwh * rate);
+        }
+      }
+
+      // Process all hourly export buckets — credit at sell rate
+      for (const pts of Object.values(expRes.data)) {
+        for (const pt of pts) {
+          const tMs = new Date(pt.start).getTime();
+          const kwh = pt.change ?? 0;
+          const hstDate = new Date(tMs - 10 * 3600_000);
+          const mKey = `${hstDate.getUTCFullYear()}-${String(hstDate.getUTCMonth() + 1).padStart(2, "0")}`;
+          costMap.set(mKey, (costMap.get(mKey) ?? 0) - kwh * GRID_RATES.sell);
+        }
+      }
 
       // Current month key in HST (UTC-10)
       const nowHst = new Date(Date.now() - 10 * 3600_000);
       const curKey = `${nowHst.getUTCFullYear()}-${String(nowHst.getUTCMonth() + 1).padStart(2, "0")}`;
 
-      const allKeys = Array.from(new Set([...impMap.keys(), ...expMap.keys()])).sort();
+      const allKeys = Array.from(costMap.keys()).sort();
       const newBars: MonthBar[] = allKeys.map((key) => {
-        const imp = impMap.get(key) ?? 0;
-        const exp = expMap.get(key) ?? 0;
-        const cost = Math.max(0, imp * BLENDED_BUY_RATE - exp * GRID_RATES.sell);
+        const cost = Math.max(0, costMap.get(key) ?? 0);
         const [yr, mo] = key.split("-");
         return {
           key,
@@ -1327,7 +1331,7 @@ function MonthlyCostChart() {
         <div className="text-xs uppercase tracking-[0.18em] text-[var(--cream-muted)]">Monthly Grid Cost</div>
         <div className="flex items-center gap-3">
           <div className="text-[10px] text-[var(--cream-muted)]">
-            ~${BLENDED_BUY_RATE.toFixed(2)}/kWh buy · ${GRID_RATES.sell.toFixed(2)}/kWh sell
+            exact rate per hour · off $0.17 / mid $0.35 / peak $0.52 / sell $0.04
           </div>
           {currentBar && (
             <div className="text-sm font-bold tabular-nums" style={{ color: "#c99a4a" }}>
