@@ -107,7 +107,10 @@ const NON_SWITCH_PATTERNS: RegExp[] = [
   /\bubiquiti\b/,
   /\busl\b/,
   /\bu[67]\b/,
-  /\bg[45]\b/,
+  /\bg\d+\b/,           // G3/G4/G5/G6/G7+ camera model numbers
+  /\bturret\b/,         // G5/G6 Turret camera model
+  /\bbullet\b/,         // G4/G5/G6 Bullet camera model
+  /\bviewport\b/,       // UniFi Viewport
   /\bcamera\b/,
   /\bdoorbell\b/,
   /motion[\s_-]*(alarm|detection|zone|sensitivity)/,
@@ -116,12 +119,17 @@ const NON_SWITCH_PATTERNS: RegExp[] = [
   /vehicle[\s_-]*detection/,
   /package[\s_-]*detection/,
   /animal[\s_-]*detection/,
+  /baby[\s_-]*cry/,     // Protect AI baby cry detection
   /smart[\s_-]*detect/,
-  /status[\s_-]*(led|light)/,
+  /status[\s_-]*(led|light|sounds)/,
   /\bir[\s_-]*led\b/,
   /recording[\s_-]*(mode|enabled)/,
   /privacy[\s_-]*(mode|zone|mask)/,
   /hdr|osd|wdr|nightvision|night[\s_-]*mode/,
+  /\boverlay\b/,        // Protect video overlay settings (show name/date/logo/bitrate)
+  /high[\s_-]*fps/,     // Protect high FPS mode
+  /auto[\s_-]*track/,   // PTZ auto tracking
+  /\bssh\b/,            // Camera SSH access toggle
   /chime|chirp|siren/,
   // Tesla / EV / Powerwall feature toggles (not real power switches)
   /\ballow[\s_-]*charging\b/,
