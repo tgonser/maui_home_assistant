@@ -269,24 +269,31 @@ export type HAStatisticPoint = {
   state?: number;
 };
 
+// Statistics are only available via the HA WebSocket API (recorder/statistics_during_period),
+// not the REST API — using haWsBatch here.
 export async function haStatistics(
   statisticIds: string[],
   period: "5minute" | "hour" | "day" | "month",
   startTime: Date,
   endTime?: Date,
   types: string[] = ["change"],
-) {
-  return haCall<Record<string, HAStatisticPoint[]>>(
-    "/api/statistics_during_period",
+): Promise<{ ok: true; data: Record<string, HAStatisticPoint[]> } | { ok: false; error: string }> {
+  const res = await haWsBatch([
     {
-      method: "POST",
-      body: {
-        start_time: startTime.toISOString(),
-        ...(endTime ? { end_time: endTime.toISOString() } : {}),
-        period,
-        statistic_ids: statisticIds,
-        types,
-      },
+      type: "recorder/statistics_during_period",
+      start_time: startTime.toISOString(),
+      ...(endTime ? { end_time: endTime.toISOString() } : {}),
+      period,
+      statistic_ids: statisticIds,
+      types,
     },
-  );
+  ]);
+  if (!res.ok || !res.results[0]) {
+    return { ok: false, error: res.error ?? "WebSocket error" };
+  }
+  const r = res.results[0];
+  if (!r.success) {
+    return { ok: false, error: r.error?.message ?? "recorder/statistics_during_period failed" };
+  }
+  return { ok: true, data: (r.result ?? {}) as Record<string, HAStatisticPoint[]> };
 }
