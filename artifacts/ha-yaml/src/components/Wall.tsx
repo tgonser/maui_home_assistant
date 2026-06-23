@@ -806,7 +806,7 @@ function CameraTile({ s }: { s: HAState }) {
       layout
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="wall-camera col-span-2 row-span-2 min-h-[376px]"
+      className="wall-camera w-full aspect-video"
     >
       {src ? (
         <img
@@ -2130,6 +2130,14 @@ export function Wall() {
               >
                 <Plug className="w-12 h-12 mx-auto mb-4 opacity-30" />
                 <p className="text-base">Nothing to show here yet.</p>
+              </motion.div>
+            ) : active === "cameras" ? (
+              <motion.div
+                key="cameras"
+                layout
+                className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3"
+              >
+                {filtered.map(clickableTile)}
               </motion.div>
             ) : (
               <motion.div
