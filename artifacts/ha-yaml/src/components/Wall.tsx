@@ -131,6 +131,8 @@ const NON_SWITCH_PATTERNS: RegExp[] = [
   /auto[\s_-]*track/,   // PTZ auto tracking
   /\bssh\b/,            // Camera SSH access toggle
   /chime|chirp|siren/,
+  // Sensor-enable toggles (device exposes sensor reads as switch entities)
+  /\b(humidity|temperature|illuminance|lux|light|air[\s_-]*quality)[\s_-]*sensor\b/,
   // Tesla / EV / Powerwall feature toggles (not real power switches)
   /\ballow[\s_-]*charging\b/,
   /\bcharge[\s_-]*(on[\s_-]*solar|limit|enabled|schedule)/,
@@ -352,9 +354,11 @@ const isNonSwitch = (s: HAState) => {
     (s.attributes.friendly_name as string | undefined) ?? ""
   ).toLowerCase();
   const id = s.entity_id.toLowerCase();
+  // Normalize underscores → spaces so \b word-boundary patterns work on entity IDs
+  const idWords = id.replace(/[_-]/g, " ");
   // Keypads are always real switches — never filter them out
-  if (/\bkeypad\b/.test(name) || /\bkeypad\b/.test(id)) return false;
-  return NON_SWITCH_PATTERNS.some((re) => re.test(name) || re.test(id));
+  if (/\bkeypad\b/.test(name) || /\bkeypad\b/.test(idWords)) return false;
+  return NON_SWITCH_PATTERNS.some((re) => re.test(name) || re.test(idWords));
 };
 
 // The same Home Assistant instance manages multiple houses (Maui, Mercer
