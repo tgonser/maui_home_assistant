@@ -344,6 +344,8 @@ const isNonSwitch = (s: HAState) => {
     (s.attributes.friendly_name as string | undefined) ?? ""
   ).toLowerCase();
   const id = s.entity_id.toLowerCase();
+  // Keypads are always real switches — never filter them out
+  if (/\bkeypad\b/.test(name) || /\bkeypad\b/.test(id)) return false;
   return NON_SWITCH_PATTERNS.some((re) => re.test(name) || re.test(id));
 };
 
