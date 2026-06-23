@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useHAStore, haStates, haCameraImage, haCallService, haHistory, type HAState } from "@/lib/ha";
+import { useHAStore, haStates, haCameraImage, haCallService, haHistory, haStatistics, type HAState, type HAStatisticPoint } from "@/lib/ha";
 import {
   isMediaActive,
   displayMediaState,
@@ -35,7 +35,7 @@ import {
   SlidersHorizontal,
   Zap,
 } from "lucide-react";
-import { ComposedChart, AreaChart, Area, Line, ReferenceArea, ResponsiveContainer, XAxis, YAxis, ReferenceLine, Tooltip } from "recharts";
+import { ComposedChart, AreaChart, Area, Line, ReferenceArea, ResponsiveContainer, XAxis, YAxis, ReferenceLine, Tooltip, BarChart, Bar, Cell, LabelList } from "recharts";
 import "./wall-theme.css";
 import { SuperView } from "./SuperView";
 import { WallControls } from "./WallControls";
@@ -1220,6 +1220,171 @@ function DollarFlowChart() {
   );
 }
 
+// Blended buy rate: weighted average of Maui rate tiers by hours per day
+// Off-peak 9am-5pm (8h)=$0.17, Peak 5pm-9pm (4h)=$0.52, Mid-peak 9pm-9am (12h)=$0.35
+const BLENDED_BUY_RATE = (8 * 0.17 + 4 * 0.52 + 12 * 0.35) / 24; // ≈ $0.318/kWh
+
+const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+const STAT_IMPORT_IDS = [
+  "sensor.gonser_4680_system_1_grid_imported",
+  "sensor.4680_system_2_grid_imported",
+];
+const STAT_EXPORT_IDS = [
+  "sensor.gonser_4680_system_1_grid_exported",
+  "sensor.4680_system_2_grid_exported",
+];
+
+function MonthlyCostChart() {
+  type MonthBar = { key: string; label: string; cost: number; isCurrent: boolean };
+  const [bars, setBars] = useState<MonthBar[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const start = new Date(Date.now() - 2 * 365 * 24 * 3600_000);
+      const [impRes, expRes] = await Promise.all([
+        haStatistics(STAT_IMPORT_IDS, "month", start),
+        haStatistics(STAT_EXPORT_IDS, "month", start),
+      ]);
+      if (cancelled) return;
+      if (!impRes.ok || !expRes.ok) {
+        setErr(!impRes.ok ? impRes.error : !expRes.ok ? expRes.error : "Unknown error");
+        setLoading(false);
+        return;
+      }
+
+      const sumByMonth = (
+        res: Record<string, HAStatisticPoint[]>,
+        map: Map<string, number>,
+      ) => {
+        for (const pts of Object.values(res)) {
+          for (const pt of pts) {
+            // HA stat start times are UTC; extract YYYY-MM from the UTC date
+            const d = new Date(pt.start);
+            const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+            map.set(key, (map.get(key) ?? 0) + (pt.change ?? 0));
+          }
+        }
+      };
+
+      const impMap = new Map<string, number>();
+      const expMap = new Map<string, number>();
+      sumByMonth(impRes.data, impMap);
+      sumByMonth(expRes.data, expMap);
+
+      // Current month key in HST (UTC-10)
+      const nowHst = new Date(Date.now() - 10 * 3600_000);
+      const curKey = `${nowHst.getUTCFullYear()}-${String(nowHst.getUTCMonth() + 1).padStart(2, "0")}`;
+
+      const allKeys = Array.from(new Set([...impMap.keys(), ...expMap.keys()])).sort();
+      const newBars: MonthBar[] = allKeys.map((key) => {
+        const imp = impMap.get(key) ?? 0;
+        const exp = expMap.get(key) ?? 0;
+        const cost = Math.max(0, imp * BLENDED_BUY_RATE - exp * GRID_RATES.sell);
+        const [yr, mo] = key.split("-");
+        return {
+          key,
+          label: `${MONTH_NAMES[parseInt(mo) - 1]} '${yr.slice(2)}`,
+          cost,
+          isCurrent: key === curKey,
+        };
+      });
+
+      setBars(newBars);
+      setLoading(false);
+      setErr(null);
+    };
+
+    load();
+    const id = window.setInterval(load, 5 * 60_000);
+    return () => { cancelled = true; window.clearInterval(id); };
+  }, []);
+
+  if (loading && bars.length === 0) {
+    return (
+      <div className="wall-tile rounded-2xl p-4 flex items-center justify-center" style={{ height: 200 }}>
+        <span className="text-sm text-[var(--cream-muted)]">Loading monthly costs…</span>
+      </div>
+    );
+  }
+
+  if (err && bars.length === 0) {
+    return (
+      <div className="wall-tile rounded-2xl p-4 flex items-center justify-center" style={{ height: 200 }}>
+        <span className="text-sm text-[var(--cream-muted)]">Monthly stats unavailable — {err}</span>
+      </div>
+    );
+  }
+
+  const currentBar = bars.find((b) => b.isCurrent);
+
+  return (
+    <div className="wall-tile rounded-2xl p-4">
+      <div className="flex items-baseline justify-between mb-1">
+        <div className="text-xs uppercase tracking-[0.18em] text-[var(--cream-muted)]">Monthly Grid Cost</div>
+        <div className="flex items-center gap-3">
+          <div className="text-[10px] text-[var(--cream-muted)]">
+            ~${BLENDED_BUY_RATE.toFixed(2)}/kWh buy · ${GRID_RATES.sell.toFixed(2)}/kWh sell
+          </div>
+          {currentBar && (
+            <div className="text-sm font-bold tabular-nums" style={{ color: "#c99a4a" }}>
+              ${currentBar.cost.toFixed(0)} this month
+            </div>
+          )}
+        </div>
+      </div>
+      <ResponsiveContainer width="100%" height={180}>
+        <BarChart data={bars} margin={{ top: 18, right: 4, left: 32, bottom: 0 }}>
+          <XAxis
+            dataKey="label"
+            tick={{ fontSize: 11, fill: "var(--cream-muted)" }}
+            tickLine={false}
+            axisLine={false}
+          />
+          <YAxis
+            tickFormatter={(v: number) =>
+              v >= 1000 ? `$${(v / 1000).toFixed(1)}k` : `$${v.toFixed(0)}`
+            }
+            tick={{ fontSize: 10, fill: "var(--cream-muted)" }}
+            tickLine={false}
+            axisLine={false}
+            width={36}
+          />
+          <Tooltip
+            formatter={(v: unknown) => [`$${(v as number).toFixed(2)}`, "Est. Cost"]}
+            contentStyle={{
+              background: "rgba(20,12,4,0.92)",
+              border: "1px solid rgba(201,153,74,0.3)",
+              borderRadius: 8,
+              fontSize: 11,
+            }}
+          />
+          <Bar dataKey="cost" radius={[4, 4, 0, 0]} isAnimationActive={false}>
+            {bars.map((b) => (
+              <Cell
+                key={b.key}
+                fill={b.isCurrent ? "#c99a4a" : "rgba(201,153,74,0.38)"}
+              />
+            ))}
+            <LabelList
+              dataKey="cost"
+              position="top"
+              formatter={(v: number) => (v >= 1 ? `$${v.toFixed(0)}` : "")}
+              style={{ fontSize: 10, fill: "var(--cream-muted)" }}
+            />
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+      <div className="text-[10px] text-[var(--cream-muted)] mt-1">
+        Bright bar = current month (still accumulating)
+      </div>
+    </div>
+  );
+}
+
 function EnergyDashboard({ states }: { states: HAState[] }) {
   const get = (id: string) => states.find((s) => s.entity_id === id);
   const num = (id: string) => {
@@ -1351,6 +1516,7 @@ function EnergyDashboard({ states }: { states: HAState[] }) {
       </div>
       <NetGridChart />
       <DollarFlowChart />
+      <MonthlyCostChart />
     </motion.div>
   );
 }

@@ -256,3 +256,37 @@ export async function haCallService(
     body: data,
   });
 }
+
+export type HAStatisticPoint = {
+  statistic_id: string;
+  start: string;
+  end: string;
+  change?: number;
+  mean?: number;
+  min?: number;
+  max?: number;
+  sum?: number;
+  state?: number;
+};
+
+export async function haStatistics(
+  statisticIds: string[],
+  period: "5minute" | "hour" | "day" | "month",
+  startTime: Date,
+  endTime?: Date,
+  types: string[] = ["change"],
+) {
+  return haCall<Record<string, HAStatisticPoint[]>>(
+    "/api/statistics_during_period",
+    {
+      method: "POST",
+      body: {
+        start_time: startTime.toISOString(),
+        ...(endTime ? { end_time: endTime.toISOString() } : {}),
+        period,
+        statistic_ids: statisticIds,
+        types,
+      },
+    },
+  );
+}
