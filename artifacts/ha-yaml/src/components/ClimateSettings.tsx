@@ -247,9 +247,10 @@ export function ClimateSettings({
   states: HAState[];
   onChanged: () => void;
 }) {
-  const anyMissing = TEMP_SETPOINTS.flatMap((s) => s.rows).some(
-    (sp) => !states.find((s) => s.entity_id === sp.entity_id),
-  );
+  const missingIds = TEMP_SETPOINTS.flatMap((s) => s.rows)
+    .filter((sp) => !states.find((s) => s.entity_id === sp.entity_id))
+    .map((sp) => sp.entity_id);
+  const anyMissing = missingIds.length > 0;
 
   return (
     <motion.div
@@ -262,15 +263,18 @@ export function ClimateSettings({
       {anyMissing && (
         <div className="wall-tile rounded-xl p-4 text-sm space-y-2 border border-[var(--brass)]/30">
           <div className="font-semibold text-[var(--brass)]">
-            ⚠ Setup required
+            ⚠ {missingIds.length} helper{missingIds.length !== 1 ? "s" : ""} not found in HA
           </div>
           <p className="text-[var(--cream-muted)] leading-relaxed">
-            Add the following to your HA{" "}
+            These entity IDs are expected but missing from the current HA state. Check that the names match exactly (HA converts spaces to underscores automatically).
+          </p>
+          <pre className="text-xs bg-black/30 rounded-lg p-3 overflow-x-auto leading-relaxed text-[var(--cream)]">{missingIds.join("\n")}</pre>
+          <p className="text-[var(--cream-muted)] leading-relaxed">
+            If they don&apos;t exist yet, add them to your HA{" "}
             <code className="text-xs bg-black/20 px-1 rounded">
               configuration.yaml
             </code>{" "}
-            and restart Home Assistant, then update the automation variables to
-            reference these helpers.
+            and restart Home Assistant.
           </p>
           <pre className="text-xs bg-black/30 rounded-lg p-3 overflow-x-auto leading-relaxed text-[var(--cream)]">{`input_number:
   maui_temp_owners_awesome:
