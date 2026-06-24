@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useHAStore, haStates, haCameraImage, haCallService, haHistory, haStatistics, type HAState, type HAStatisticPoint } from "@/lib/ha";
+import { useHAStore, haStates, haCameraImage, haCallService, haHistory, haStatistics, haAutoConnectIfAddon, type HAState, type HAStatisticPoint } from "@/lib/ha";
 import {
   isMediaActive,
   displayMediaState,
@@ -1903,6 +1903,13 @@ export function Wall() {
   useEffect(() => {
     loadEntityAliases();
   }, [loadEntityAliases]);
+
+  // In add-on mode the server holds SUPERVISOR_TOKEN and we auto-connect
+  // without showing the connect dialog. Runs once on mount; skipped if the
+  // user already has credentials saved in localStorage.
+  useEffect(() => {
+    haAutoConnectIfAddon().catch(() => undefined);
+  }, []);
 
   const applyAlias = (s: HAState): HAState => {
     const alias = entityAliases[s.entity_id];

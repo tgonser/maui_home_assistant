@@ -62,7 +62,16 @@ export const useHAStore = create<HAStore>()(
   ),
 );
 
-const proxyBase = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/api/ha/call`;
+// Compute the API base at call time so it picks up the <base> tag that
+// Express injects for HA ingress paths (e.g. /api/hassio_ingress/<hash>/).
+// Uses a relative URL (no leading slash) so it works from any mount point.
+function getApiBase(): string {
+  if (typeof document !== "undefined") {
+    const href = document.querySelector("base")?.getAttribute("href");
+    if (href) return href.replace(/\/$/, "");
+  }
+  return import.meta.env.BASE_URL.replace(/\/$/, "");
+}
 
 export type HACallResult<T> =
   | { ok: true; status: number; data: T }
@@ -77,7 +86,7 @@ export async function haCall<T = unknown>(
     return { ok: false, status: 0, error: "Not connected to Home Assistant" };
   }
   try {
-    const res = await fetch(proxyBase, {
+    const res = await fetch(`${getApiBase()}/api/ha/call`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -191,7 +200,7 @@ export type HAWsResult = {
   error?: { code: string; message: string };
 };
 
-const wsBase = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/api/ha/ws-batch`;
+// wsBase is computed per-call via getApiBase() defined above
 
 export async function haWsBatch(
   commands: Array<Record<string, unknown> & { type: string }>,
@@ -201,7 +210,7 @@ export async function haWsBatch(
     return { ok: false, results: [], error: "Not connected to Home Assistant" };
   }
   try {
-    const res = await fetch(wsBase, {
+    const res = await fetch(`${getApiBase()}/api/ha/ws-batch`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url, token, commands }),
@@ -298,4 +307,31 @@ export async function haStatistics(
     return { ok: false, error: r.error?.message ?? "recorder/statistics_during_period failed" };
   }
   return { ok: true, data: (r.result ?? {}) as Record<string, HAStatisticPoint[]> };
+}
+
+// ── Add-on auto-connect ────────────────────────────────────────────────────────
+// Returns { addon: true } when the app is running inside an HA add-on and the
+// supervisor token is available server-side. Uses a relative URL so it resolves
+// correctly through HA ingress and direct kiosk access alike.
+export async function haAddonConfig(): Promise<{ addon: boolean }> {
+  try {
+    const res = await fetch("api/addon-config");
+    if (!res.ok) return { addon: false };
+    return (await res.json()) as { addon: boolean };
+  } catch {
+    return { addon: false };
+  }
+}
+
+// When running as an HA add-on, call this once on startup.
+// It sets the store credentials to the sentinel url "__supervisor__" which the
+// proxy server recognises and replaces with SUPERVISOR_TOKEN + local HA URL.
+// The real token never reaches the browser.
+export async function haAutoConnectIfAddon(): Promise<boolean> {
+  const { url } = useHAStore.getState();
+  if (url) return false; // already configured by user
+  const { addon } = await haAddonConfig();
+  if (!addon) return false;
+  useHAStore.getState().setCredentials("__supervisor__", "addon");
+  return true;
 }

@@ -36,7 +36,7 @@ router.put("/entity-aliases/:entityId", async (req, res) => {
       set: { alias, updatedAt: now },
     })
     .returning();
-  res.json({
+  return res.json({
     entityId: row.entityId,
     alias: row.alias,
     updatedAt: row.updatedAt.toISOString(),

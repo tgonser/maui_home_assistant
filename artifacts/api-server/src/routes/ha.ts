@@ -2,15 +2,41 @@ import { Router, type IRouter } from "express";
 
 const router: IRouter = Router();
 
-router.post("/ha/call", async (req, res) => {
-  const { url, token, path, method, body, binary } = req.body ?? {};
+// ── Add-on config ──────────────────────────────────────────────────────────────
+// Tells the frontend whether it is running inside an HA add-on so it can
+// auto-connect using the supervisor token (which never leaves the server).
+router.get("/addon-config", (_req, res) => {
+  if (process.env.SUPERVISOR_TOKEN) {
+    res.json({ addon: true });
+  } else {
+    res.json({ addon: false });
+  }
+});
 
-  if (typeof url !== "string" || !url) {
-    return res.status(400).json({ error: "Missing 'url'" });
+// ── Supervisor helpers ─────────────────────────────────────────────────────────
+// When running as an HA add-on the server has SUPERVISOR_TOKEN and can reach
+// HA at http://supervisor/core.  The client signals this by sending
+// url="__supervisor__" — the browser never sees the real token.
+const SUPERVISOR_URL = "http://supervisor/core";
+
+function resolveHaCredentials(clientUrl: unknown, clientToken: unknown) {
+  if (clientUrl === "__supervisor__") {
+    const tok = process.env.SUPERVISOR_TOKEN;
+    if (!tok) return { err: "SUPERVISOR_TOKEN not set — not running as HA add-on" };
+    return { url: SUPERVISOR_URL, token: tok };
   }
-  if (typeof token !== "string" || !token) {
-    return res.status(400).json({ error: "Missing 'token'" });
-  }
+  if (typeof clientUrl !== "string" || !clientUrl) return { err: "Missing 'url'" };
+  if (typeof clientToken !== "string" || !clientToken) return { err: "Missing 'token'" };
+  return { url: clientUrl, token: clientToken };
+}
+
+router.post("/ha/call", async (req, res) => {
+  const { url: clientUrl, token: clientToken, path, method, body, binary } = req.body ?? {};
+
+  const creds = resolveHaCredentials(clientUrl, clientToken);
+  if ("err" in creds) return res.status(400).json({ error: creds.err });
+  const { url, token } = creds;
+
   if (typeof path !== "string" || !path.startsWith("/")) {
     return res.status(400).json({ error: "Missing or invalid 'path'" });
   }
@@ -88,14 +114,12 @@ router.post("/ha/call", async (req, res) => {
 type WsCommand = Record<string, unknown> & { type: string };
 
 router.post("/ha/ws-batch", async (req, res) => {
-  const { url, token, commands } = req.body ?? {};
+  const { url: clientUrl, token: clientToken, commands } = req.body ?? {};
 
-  if (typeof url !== "string" || !url) {
-    return res.status(400).json({ error: "Missing 'url'" });
-  }
-  if (typeof token !== "string" || !token) {
-    return res.status(400).json({ error: "Missing 'token'" });
-  }
+  const creds = resolveHaCredentials(clientUrl, clientToken);
+  if ("err" in creds) return res.status(400).json({ error: creds.err });
+  const { url, token } = creds;
+
   if (!Array.isArray(commands) || commands.length === 0) {
     return res.status(400).json({ error: "Missing 'commands'" });
   }

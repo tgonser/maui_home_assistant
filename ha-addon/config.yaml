@@ -1,0 +1,25 @@
+name: "Wall Kiosk"
+description: >
+  Solar-aware energy and home control dashboard.
+  Shows cameras, climate, energy, scenes, music, and more
+  on a tablet or kiosk display. Runs fully local — no cloud required.
+version: "1.0.0"
+slug: "wall-kiosk"
+init: false
+arch:
+  - aarch64
+  - amd64
+  - armhf
+homeassistant: "2023.6"
+ingress: true
+ingress_port: 8099
+ingress_entry: /
+panel_icon: mdi:tablet-dashboard
+panel_title: Wall
+watchdog: http://[HOST]:[PORT:8099]/api/healthz
+ports:
+  8099/tcp: 8099
+ports_description:
+  8099/tcp: "Direct kiosk/tablet access (bypasses ingress)"
+options: {}
+schema: {}

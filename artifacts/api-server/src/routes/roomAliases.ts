@@ -34,7 +34,7 @@ router.put("/room-aliases/:areaId", async (req, res) => {
       set: { name, updatedAt: now },
     })
     .returning();
-  res.json({
+  return res.json({
     areaId: row.areaId,
     name: row.name,
     updatedAt: row.updatedAt.toISOString(),
