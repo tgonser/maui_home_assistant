@@ -13,6 +13,8 @@ export type HAConfig = {
   location_name: string;
   version: string;
   time_zone: string;
+  internal_url?: string;
+  external_url?: string;
   unit_system?: Record<string, string>;
   components?: string[];
 };

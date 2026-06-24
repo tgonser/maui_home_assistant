@@ -23,7 +23,7 @@ const DEFAULT_URL =
   "https://ujloq919zfapojmcvd977ybzihxfmorf.ui.nabu.casa";
 
 export function ConnectDialog({ open, onOpenChange }: Props) {
-  const { url, token, status, setCredentials, setStatus, clear } = useHAStore();
+  const { url, token, status, config, setCredentials, setStatus, clear } = useHAStore();
   const [draftUrl, setDraftUrl] = useState(url || DEFAULT_URL);
   const [draftToken, setDraftToken] = useState(token);
   const [testing, setTesting] = useState(false);
@@ -106,6 +106,33 @@ export function ConnectDialog({ open, onOpenChange }: Props) {
           {status === "error" && (
             <div className="text-sm rounded-md border border-destructive/40 bg-destructive/10 text-destructive px-3 py-2">
               {useHAStore.getState().errorMessage ?? "Connection failed."}
+            </div>
+          )}
+
+          {config && (config.internal_url || config.external_url) && (
+            <div className="rounded-md border border-border bg-muted/40 px-3 py-2 space-y-1">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">HA-reported URLs</p>
+              {config.internal_url && (
+                <button
+                  type="button"
+                  className="w-full text-left text-xs font-mono text-foreground hover:text-primary truncate block"
+                  title="Click to use this URL"
+                  onClick={() => setDraftUrl(config.internal_url!)}
+                >
+                  <span className="text-muted-foreground mr-1">LAN:</span>{config.internal_url}
+                </button>
+              )}
+              {config.external_url && (
+                <button
+                  type="button"
+                  className="w-full text-left text-xs font-mono text-foreground hover:text-primary truncate block"
+                  title="Click to use this URL"
+                  onClick={() => setDraftUrl(config.external_url!)}
+                >
+                  <span className="text-muted-foreground mr-1">External:</span>{config.external_url}
+                </button>
+              )}
+              <p className="text-[10px] text-muted-foreground">Click a URL to switch to it</p>
             </div>
           )}
         </div>
