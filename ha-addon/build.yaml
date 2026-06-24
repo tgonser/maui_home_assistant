@@ -1,3 +1,5 @@
+# build.yaml is only used when building locally (not via the pre-built GHCR image).
+# The GitHub Actions workflow handles multi-arch builds (amd64, arm64, armv7).
 build_from:
   aarch64: node:24-alpine
   amd64: node:24-alpine
