@@ -1,0 +1,479 @@
+2026-06-25T14:51:19.1099435Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-06-25T14:51:19.1101114Z ##[group]Run docker/build-push-action@v5
+2026-06-25T14:51:19.1101463Z with:
+2026-06-25T14:51:19.1101701Z   context: .
+2026-06-25T14:51:19.1101958Z   file: ha-addon/Dockerfile
+2026-06-25T14:51:19.1102308Z   platforms: linux/amd64,linux/arm64
+2026-06-25T14:51:19.1102799Z   push: true
+2026-06-25T14:51:19.1103330Z   tags: ghcr.io/tgonser/maui_home_assistant/wall-kiosk:1.0.0
+ghcr.io/tgonser/maui_home_assistant/wall-kiosk:latest
+
+2026-06-25T14:51:19.1103887Z   cache-from: type=gha
+2026-06-25T14:51:19.1104141Z   cache-to: type=gha,mode=max
+2026-06-25T14:51:19.1104401Z   load: false
+2026-06-25T14:51:19.1104625Z   no-cache: false
+2026-06-25T14:51:19.1104864Z   pull: false
+2026-06-25T14:51:19.1109333Z   github-token: ***
+2026-06-25T14:51:19.1109601Z env:
+2026-06-25T14:51:19.1109902Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-06-25T14:51:19.1110163Z ##[endgroup]
+2026-06-25T14:51:19.2976978Z (node:3106) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-06-25T14:51:19.2978275Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-06-25T14:51:19.2990038Z ##[group]GitHub Actions runtime token ACs
+2026-06-25T14:51:19.2996312Z refs/heads/main: read/write
+2026-06-25T14:51:19.2997032Z ##[endgroup]
+2026-06-25T14:51:19.2998011Z ##[group]Docker info
+2026-06-25T14:51:19.3026932Z [command]/usr/bin/docker version
+2026-06-25T14:51:19.3211260Z Client: Docker Engine - Community
+2026-06-25T14:51:19.3223476Z  Version:           28.0.4
+2026-06-25T14:51:19.3223958Z  API version:       1.48
+2026-06-25T14:51:19.3228799Z  Go version:        go1.23.7
+2026-06-25T14:51:19.3230090Z  Git commit:        b8034c0
+2026-06-25T14:51:19.3230674Z  Built:             Tue Mar 25 15:07:16 2025
+2026-06-25T14:51:19.3231198Z  OS/Arch:           linux/amd64
+2026-06-25T14:51:19.3231688Z  Context:           default
+2026-06-25T14:51:19.3231977Z 
+2026-06-25T14:51:19.3232298Z Server: Docker Engine - Community
+2026-06-25T14:51:19.3232949Z  Engine:
+2026-06-25T14:51:19.3237465Z   Version:          28.0.4
+2026-06-25T14:51:19.3237991Z   API version:      1.48 (minimum version 1.24)
+2026-06-25T14:51:19.3238531Z   Go version:       go1.23.7
+2026-06-25T14:51:19.3238957Z   Git commit:       6430e49
+2026-06-25T14:51:19.3239447Z   Built:            Tue Mar 25 15:07:16 2025
+2026-06-25T14:51:19.3239980Z   OS/Arch:          linux/amd64
+2026-06-25T14:51:19.3240456Z   Experimental:     false
+2026-06-25T14:51:19.3240872Z  containerd:
+2026-06-25T14:51:19.3241270Z   Version:          v2.2.5
+2026-06-25T14:51:19.3241781Z   GitCommit:        e53c7c1516c3b2bff98eb76f1f4117477e6f4e66
+2026-06-25T14:51:19.3242665Z  runc:
+2026-06-25T14:51:19.3242945Z   Version:          1.3.6
+2026-06-25T14:51:19.3243777Z   GitCommit:        v1.3.6-0-g491b69ba
+2026-06-25T14:51:19.3244397Z  docker-init:
+2026-06-25T14:51:19.3244983Z   Version:          0.19.0
+2026-06-25T14:51:19.3245973Z   GitCommit:        de40ad0
+2026-06-25T14:51:19.3253309Z [command]/usr/bin/docker info
+2026-06-25T14:51:19.3703452Z Client: Docker Engine - Community
+2026-06-25T14:51:19.3703975Z  Version:    28.0.4
+2026-06-25T14:51:19.3704389Z  Context:    default
+2026-06-25T14:51:19.3704781Z  Debug Mode: false
+2026-06-25T14:51:19.3705106Z  Plugins:
+2026-06-25T14:51:19.3705463Z   buildx: Docker Buildx (Docker Inc.)
+2026-06-25T14:51:19.3705901Z     Version:  v0.35.0
+2026-06-25T14:51:19.3706372Z     Path:     /usr/libexec/docker/cli-plugins/docker-buildx
+2026-06-25T14:51:19.3706881Z   compose: Docker Compose (Docker Inc.)
+2026-06-25T14:51:19.3707278Z     Version:  v2.38.2
+2026-06-25T14:51:19.3707713Z     Path:     /usr/libexec/docker/cli-plugins/docker-compose
+2026-06-25T14:51:19.3708065Z 
+2026-06-25T14:51:19.3708605Z Server:
+2026-06-25T14:51:19.3708900Z  Containers: 1
+2026-06-25T14:51:19.3709226Z   Running: 1
+2026-06-25T14:51:19.3709540Z   Paused: 0
+2026-06-25T14:51:19.3709839Z   Stopped: 0
+2026-06-25T14:51:19.3710142Z  Images: 8
+2026-06-25T14:51:19.3710455Z  Server Version: 28.0.4
+2026-06-25T14:51:19.3710811Z  Storage Driver: overlay2
+2026-06-25T14:51:19.3711170Z   Backing Filesystem: extfs
+2026-06-25T14:51:19.3711537Z   Supports d_type: true
+2026-06-25T14:51:19.3711872Z   Using metacopy: false
+2026-06-25T14:51:19.3712214Z   Native Overlay Diff: false
+2026-06-25T14:51:19.3712868Z   userxattr: false
+2026-06-25T14:51:19.3713216Z  Logging Driver: json-file
+2026-06-25T14:51:19.3713572Z  Cgroup Driver: systemd
+2026-06-25T14:51:19.3713919Z  Cgroup Version: 2
+2026-06-25T14:51:19.3714257Z  Plugins:
+2026-06-25T14:51:19.3714562Z   Volume: local
+2026-06-25T14:51:19.3715031Z   Network: bridge host ipvlan macvlan null overlay
+2026-06-25T14:51:19.3715655Z   Log: awslogs fluentd gcplogs gelf journald json-file local splunk syslog
+2026-06-25T14:51:19.3716242Z  Swarm: inactive
+2026-06-25T14:51:19.3716638Z  Runtimes: io.containerd.runc.v2 runc
+2026-06-25T14:51:19.3717073Z  Default Runtime: runc
+2026-06-25T14:51:19.3717452Z  Init Binary: docker-init
+2026-06-25T14:51:19.3717957Z  containerd version: e53c7c1516c3b2bff98eb76f1f4117477e6f4e66
+2026-06-25T14:51:19.3719060Z  runc version: v1.3.6-0-g491b69ba
+2026-06-25T14:51:19.3719657Z  init version: de40ad0
+2026-06-25T14:51:19.3720039Z  Security Options:
+2026-06-25T14:51:19.3720416Z   apparmor
+2026-06-25T14:51:19.3720751Z   seccomp
+2026-06-25T14:51:19.3721082Z    Profile: builtin
+2026-06-25T14:51:19.3721717Z   cgroupns
+2026-06-25T14:51:19.3722090Z  Kernel Version: 6.17.0-1018-azure
+2026-06-25T14:51:19.3722773Z  Operating System: Ubuntu 24.04.4 LTS
+2026-06-25T14:51:19.3723224Z  OSType: linux
+2026-06-25T14:51:19.3723569Z  Architecture: x86_64
+2026-06-25T14:51:19.3723889Z  CPUs: 2
+2026-06-25T14:51:19.3724192Z  Total Memory: 7.752GiB
+2026-06-25T14:51:19.3724531Z  Name: runnervmmklqx
+2026-06-25T14:51:19.3724948Z  ID: f2d2c484-93e9-43a1-aea9-ebee539c4962
+2026-06-25T14:51:19.3725423Z  Docker Root Dir: /var/lib/docker
+2026-06-25T14:51:19.3725821Z  Debug Mode: false
+2026-06-25T14:51:19.3726164Z  Username: githubactions
+2026-06-25T14:51:19.3726546Z  Experimental: false
+2026-06-25T14:51:19.3726913Z  Insecure Registries:
+2026-06-25T14:51:19.3727295Z   ::1/128
+2026-06-25T14:51:19.3727613Z   127.0.0.0/8
+2026-06-25T14:51:19.3727972Z  Live Restore Enabled: false
+2026-06-25T14:51:19.3728265Z 
+2026-06-25T14:51:19.3728835Z ##[endgroup]
+2026-06-25T14:51:19.3729424Z ##[group]Proxy configuration
+2026-06-25T14:51:19.3729889Z No proxy configuration found
+2026-06-25T14:51:19.3730466Z ##[endgroup]
+2026-06-25T14:51:19.4353431Z ##[group]Buildx version
+2026-06-25T14:51:19.4433733Z [command]/usr/bin/docker buildx version
+2026-06-25T14:51:19.4870887Z github.com/docker/buildx v0.35.0 a319e5b15052cf6557ceb666eb8ff6e32380b782
+2026-06-25T14:51:19.4903242Z ##[endgroup]
+2026-06-25T14:51:19.4903967Z ##[group]Builder info
+2026-06-25T14:51:19.5673878Z {
+2026-06-25T14:51:19.5675086Z   "nodes": [
+2026-06-25T14:51:19.5675545Z     {
+2026-06-25T14:51:19.5676142Z       "name": "builder-7026f964-542f-481d-beff-51212ea0e3530",
+2026-06-25T14:51:19.5676814Z       "endpoint": "unix:///var/run/docker.sock",
+2026-06-25T14:51:19.5677456Z       "status": "running",
+2026-06-25T14:51:19.5678336Z       "buildkitd-flags": "--allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host",
+2026-06-25T14:51:19.5679242Z       "buildkit": "v0.30.0",
+2026-06-25T14:51:19.5680448Z       "platforms": "linux/amd64,linux/amd64/v2,linux/amd64/v3,linux/amd64/v4,linux/arm64,linux/riscv64,linux/ppc64le,linux/s390x,linux/386,linux/mips64le,linux/mips64,linux/loong64,linux/arm/v7,linux/arm/v6",
+2026-06-25T14:51:19.5681739Z       "features": {
+2026-06-25T14:51:19.5682536Z         "Automatically load images to the Docker Engine image store": true,
+2026-06-25T14:51:19.5683151Z         "Cache export": true,
+2026-06-25T14:51:19.5683619Z         "Direct push": true,
+2026-06-25T14:51:19.5684463Z         "Docker exporter": true,
+2026-06-25T14:51:19.5684964Z         "Multi-platform build": true,
+2026-06-25T14:51:19.5685449Z         "OCI exporter": true
+2026-06-25T14:51:19.5685879Z       },
+2026-06-25T14:51:19.5686268Z       "labels": {
+2026-06-25T14:51:19.5686843Z         "org.mobyproject.buildkit.worker.executor": "oci",
+2026-06-25T14:51:19.5687593Z         "org.mobyproject.buildkit.worker.hostname": "7e440b2190ce",
+2026-06-25T14:51:19.5688351Z         "org.mobyproject.buildkit.worker.network": "host",
+2026-06-25T14:51:19.5689130Z         "org.mobyproject.buildkit.worker.oci.process-mode": "sandbox",
+2026-06-25T14:51:19.5689957Z         "org.mobyproject.buildkit.worker.selinux.enabled": "false",
+2026-06-25T14:51:19.5690780Z         "org.mobyproject.buildkit.worker.snapshotter": "overlayfs"
+2026-06-25T14:51:19.5691375Z       },
+2026-06-25T14:51:19.5691754Z       "gcPolicy": [
+2026-06-25T14:51:19.5692167Z         {
+2026-06-25T14:51:19.5692807Z           "all": false,
+2026-06-25T14:51:19.5693264Z           "filter": [
+2026-06-25T14:51:19.5693722Z             "type==source.local",
+2026-06-25T14:51:19.5694232Z             "type==exec.cachemount",
+2026-06-25T14:51:19.5694777Z             "type==source.git.checkout"
+2026-06-25T14:51:19.5695266Z           ],
+2026-06-25T14:51:19.5695791Z           "keepDuration": "48h0m0s"
+2026-06-25T14:51:19.5696273Z         },
+2026-06-25T14:51:19.5696643Z         {
+2026-06-25T14:51:19.5697022Z           "all": false,
+2026-06-25T14:51:19.5697511Z           "keepDuration": "1440h0m0s"
+2026-06-25T14:51:19.5697998Z         },
+2026-06-25T14:51:19.5698378Z         {
+2026-06-25T14:51:19.5699078Z           "all": false
+2026-06-25T14:51:19.5699510Z         },
+2026-06-25T14:51:19.5699880Z         {
+2026-06-25T14:51:19.5700249Z           "all": true
+2026-06-25T14:51:19.5700665Z         }
+2026-06-25T14:51:19.5701039Z       ]
+2026-06-25T14:51:19.5701407Z     }
+2026-06-25T14:51:19.5701782Z   ],
+2026-06-25T14:51:19.5702278Z   "name": "builder-7026f964-542f-481d-beff-51212ea0e353",
+2026-06-25T14:51:19.5703344Z   "driver": "docker-container",
+2026-06-25T14:51:19.5703894Z   "lastActivity": "2026-06-25T14:51:12.000Z"
+2026-06-25T14:51:19.5704422Z }
+2026-06-25T14:51:19.5705194Z ##[endgroup]
+2026-06-25T14:51:19.7367447Z [command]/usr/bin/docker buildx build --cache-from type=gha --cache-to type=gha,mode=max --file ha-addon/Dockerfile --iidfile /home/runner/work/_temp/docker-actions-toolkit-4jdevY/build-iidfile-a31ab4e249.txt --platform linux/amd64,linux/arm64 --attest type=provenance,mode=min,inline-only=true,builder-id=https://github.com/tgonser/maui_home_assistant/actions/runs/28178869009 --tag ghcr.io/tgonser/maui_home_assistant/wall-kiosk:1.0.0 --tag ghcr.io/tgonser/maui_home_assistant/wall-kiosk:latest --metadata-file /home/runner/work/_temp/docker-actions-toolkit-4jdevY/build-metadata-e2980f7eea.json --push .
+2026-06-25T14:51:20.0634866Z #0 building with "builder-7026f964-542f-481d-beff-51212ea0e353" instance using docker-container driver
+2026-06-25T14:51:20.0635547Z 
+2026-06-25T14:51:20.0635926Z #1 [internal] load build definition from Dockerfile
+2026-06-25T14:51:20.0636558Z #1 transferring dockerfile: 2.12kB done
+2026-06-25T14:51:20.0636895Z #1 DONE 0.0s
+2026-06-25T14:51:20.0637058Z 
+2026-06-25T14:51:20.0637326Z #2 [auth] library/node:pull token for registry-1.docker.io
+2026-06-25T14:51:20.0637739Z #2 DONE 0.0s
+2026-06-25T14:51:20.0637874Z 
+2026-06-25T14:51:20.0638246Z #3 [linux/amd64 internal] load metadata for docker.io/library/node:24-alpine
+2026-06-25T14:51:20.3092641Z #3 DONE 0.5s
+2026-06-25T14:51:20.3094710Z 
+2026-06-25T14:51:20.3104905Z #4 [linux/arm64 internal] load metadata for docker.io/library/node:24-alpine
+2026-06-25T14:51:20.4682229Z #4 ...
+2026-06-25T14:51:20.4682770Z 
+2026-06-25T14:51:20.4682992Z #5 [internal] load .dockerignore
+2026-06-25T14:51:20.4683407Z #5 transferring context: 2B done
+2026-06-25T14:51:20.4683725Z #5 DONE 0.0s
+2026-06-25T14:51:20.5083679Z 
+2026-06-25T14:51:20.5084378Z #4 [linux/arm64 internal] load metadata for docker.io/library/node:24-alpine
+2026-06-25T14:51:20.5085534Z #4 DONE 0.7s
+2026-06-25T14:51:20.6091220Z 
+2026-06-25T14:51:20.6097950Z #6 importing cache manifest from gha:12802716042776040557
+2026-06-25T14:51:20.6098609Z #6 DONE 0.1s
+2026-06-25T14:51:20.6098769Z 
+2026-06-25T14:51:20.6099706Z #7 [linux/amd64 builder  1/19] FROM docker.io/library/node:24-alpine@sha256:a0b9bf06e4e6193cf7a0f58816cc935ff8c2a908f81e6f1a95432d679c54fbfd
+2026-06-25T14:51:20.6101652Z #7 resolve docker.io/library/node:24-alpine@sha256:a0b9bf06e4e6193cf7a0f58816cc935ff8c2a908f81e6f1a95432d679c54fbfd done
+2026-06-25T14:51:20.7124763Z #7 sha256:21af007bacf625b557dda6dbce062088808612be54a955980b3d8efb8ea7d082 448B / 448B 0.0s done
+2026-06-25T14:51:20.7139792Z #7 sha256:57eb903fc7a4b0006b1253f877823b15c51433ccd41a20392812682211c46a6c 1.26MB / 1.26MB 0.0s done
+2026-06-25T14:51:20.8193673Z #7 sha256:7e2a5e2761f53b694faaee16c5ad1e400cb41224f693337aac52e74bee3b2f65 19.92MB / 52.52MB 0.2s
+2026-06-25T14:51:20.9470299Z #7 ...
+2026-06-25T14:51:20.9472987Z 
+2026-06-25T14:51:20.9473631Z #8 [internal] load build context
+2026-06-25T14:51:20.9474376Z #8 transferring context: 8.38MB 0.2s done
+2026-06-25T14:51:20.9474933Z #8 DONE 0.2s
+2026-06-25T14:51:20.9475237Z 
+2026-06-25T14:51:20.9476215Z #7 [linux/amd64 builder  1/19] FROM docker.io/library/node:24-alpine@sha256:a0b9bf06e4e6193cf7a0f58816cc935ff8c2a908f81e6f1a95432d679c54fbfd
+2026-06-25T14:51:20.9477657Z #7 sha256:7e2a5e2761f53b694faaee16c5ad1e400cb41224f693337aac52e74bee3b2f65 52.52MB / 52.52MB 0.3s
+2026-06-25T14:51:20.9478867Z #7 sha256:55afa1ecc21d2bb5e5045f32dafee56272ffd89860bac26f6c32123439af26a4 3.85MB / 3.85MB 0.1s done
+2026-06-25T14:51:20.9480313Z #7 extracting sha256:55afa1ecc21d2bb5e5045f32dafee56272ffd89860bac26f6c32123439af26a4
+2026-06-25T14:51:22.0834180Z #7 sha256:7e2a5e2761f53b694faaee16c5ad1e400cb41224f693337aac52e74bee3b2f65 52.52MB / 52.52MB 1.2s done
+2026-06-25T14:51:22.0853216Z #7 extracting sha256:55afa1ecc21d2bb5e5045f32dafee56272ffd89860bac26f6c32123439af26a4 1.0s done
+2026-06-25T14:51:22.0864869Z #7 extracting sha256:7e2a5e2761f53b694faaee16c5ad1e400cb41224f693337aac52e74bee3b2f65
+2026-06-25T14:51:23.8250647Z #7 ...
+2026-06-25T14:51:23.8251116Z 
+2026-06-25T14:51:23.8253660Z #9 [linux/arm64 builder  1/19] FROM docker.io/library/node:24-alpine@sha256:a0b9bf06e4e6193cf7a0f58816cc935ff8c2a908f81e6f1a95432d679c54fbfd
+2026-06-25T14:51:23.8255041Z #9 resolve docker.io/library/node:24-alpine@sha256:a0b9bf06e4e6193cf7a0f58816cc935ff8c2a908f81e6f1a95432d679c54fbfd done
+2026-06-25T14:51:23.8256160Z #9 sha256:fbb16e238b5730160b1c8c545e144ad22fd30d6bc34dd210c1851a9569c74c91 445B / 445B 0.1s done
+2026-06-25T14:51:23.8257234Z #9 sha256:0672a720b9c1e72994e7c70ea5086a8d7afa7fca4708003f669d314a97199656 1.26MB / 1.26MB 0.1s done
+2026-06-25T14:51:23.8258292Z #9 sha256:5de55e5ef9c033997441461efe7ba23a986db059c0bb78b38f84ee0d72b99167 4.18MB / 4.18MB 0.1s done
+2026-06-25T14:51:23.8259356Z #9 sha256:2526179fc84eae8c1bf3e716a63e5f70b61ac7c7d47e33b744799278b761c598 53.06MB / 53.06MB 1.2s done
+2026-06-25T14:51:23.8260383Z #9 extracting sha256:5de55e5ef9c033997441461efe7ba23a986db059c0bb78b38f84ee0d72b99167 1.0s done
+2026-06-25T14:51:23.8261399Z #9 extracting sha256:2526179fc84eae8c1bf3e716a63e5f70b61ac7c7d47e33b744799278b761c598 1.7s done
+2026-06-25T14:51:23.8262616Z #9 extracting sha256:0672a720b9c1e72994e7c70ea5086a8d7afa7fca4708003f669d314a97199656 0.1s done
+2026-06-25T14:51:23.8263538Z #9 extracting sha256:fbb16e238b5730160b1c8c545e144ad22fd30d6bc34dd210c1851a9569c74c91 done
+2026-06-25T14:51:23.8264121Z #9 DONE 3.1s
+2026-06-25T14:51:23.8264271Z 
+2026-06-25T14:51:23.8265031Z #7 [linux/amd64 builder  1/19] FROM docker.io/library/node:24-alpine@sha256:a0b9bf06e4e6193cf7a0f58816cc935ff8c2a908f81e6f1a95432d679c54fbfd
+2026-06-25T14:51:23.8266233Z #7 extracting sha256:7e2a5e2761f53b694faaee16c5ad1e400cb41224f693337aac52e74bee3b2f65 1.7s done
+2026-06-25T14:51:23.8267187Z #7 extracting sha256:57eb903fc7a4b0006b1253f877823b15c51433ccd41a20392812682211c46a6c
+2026-06-25T14:51:24.5205635Z #7 extracting sha256:57eb903fc7a4b0006b1253f877823b15c51433ccd41a20392812682211c46a6c 0.9s done
+2026-06-25T14:51:24.5209857Z #7 DONE 3.9s
+2026-06-25T14:51:24.5210192Z 
+2026-06-25T14:51:24.5210704Z #10 [linux/arm64 builder  2/19] RUN npm install -g pnpm@10.26.1
+2026-06-25T14:51:26.6649734Z #10 ...
+2026-06-25T14:51:26.6650041Z 
+2026-06-25T14:51:26.6651003Z #7 [linux/amd64 builder  1/19] FROM docker.io/library/node:24-alpine@sha256:a0b9bf06e4e6193cf7a0f58816cc935ff8c2a908f81e6f1a95432d679c54fbfd
+2026-06-25T14:51:26.6652257Z #7 extracting sha256:21af007bacf625b557dda6dbce062088808612be54a955980b3d8efb8ea7d082 2.1s done
+2026-06-25T14:51:26.6653142Z #7 DONE 6.1s
+2026-06-25T14:51:26.8196747Z 
+2026-06-25T14:51:26.8197497Z #11 [linux/amd64 stage-1 2/6] WORKDIR /app
+2026-06-25T14:51:27.3206211Z #11 ...
+2026-06-25T14:51:27.3206515Z 
+2026-06-25T14:51:27.3207070Z #12 [linux/arm64 stage-1 2/6] WORKDIR /app
+2026-06-25T14:51:27.3207602Z #12 DONE 3.6s
+2026-06-25T14:51:27.4763014Z 
+2026-06-25T14:51:27.4763902Z #11 [linux/amd64 stage-1 2/6] WORKDIR /app
+2026-06-25T14:51:27.4764625Z #11 DONE 0.7s
+2026-06-25T14:51:27.4765080Z 
+2026-06-25T14:51:27.4765545Z #13 [linux/amd64 builder  2/19] RUN npm install -g pnpm@10.26.1
+2026-06-25T14:51:28.8400037Z #13 2.172 
+2026-06-25T14:51:28.8400859Z #13 2.172 added 1 package in 2s
+2026-06-25T14:51:28.9944637Z #13 2.173 
+2026-06-25T14:51:28.9946723Z #13 2.174 1 package is looking for funding
+2026-06-25T14:51:28.9947521Z #13 2.174   run `npm fund` for details
+2026-06-25T14:51:28.9948064Z #13 2.176 npm notice
+2026-06-25T14:51:28.9948804Z #13 2.176 npm notice New minor version of npm available! 11.16.0 -> 11.17.0
+2026-06-25T14:51:28.9949785Z #13 2.176 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.17.0
+2026-06-25T14:51:28.9951158Z #13 2.176 npm notice To update run: npm install -g npm@11.17.0
+2026-06-25T14:51:28.9951770Z #13 2.176 npm notice
+2026-06-25T14:51:29.3118893Z #13 DONE 2.6s
+2026-06-25T14:51:29.3121059Z 
+2026-06-25T14:51:29.3123582Z #10 [linux/arm64 builder  2/19] RUN npm install -g pnpm@10.26.1
+2026-06-25T14:51:29.4183418Z #10 ...
+2026-06-25T14:51:29.4183978Z 
+2026-06-25T14:51:29.4184523Z #14 [linux/amd64 builder  3/19] WORKDIR /workspace
+2026-06-25T14:51:29.4185107Z #14 DONE 0.0s
+2026-06-25T14:51:29.4185422Z 
+2026-06-25T14:51:29.4186043Z #15 [linux/amd64 builder  4/19] COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+2026-06-25T14:51:29.4186817Z #15 DONE 0.0s
+2026-06-25T14:51:29.4187118Z 
+2026-06-25T14:51:29.4187617Z #16 [linux/amd64 builder  5/19] COPY tsconfig.base.json tsconfig.json ./
+2026-06-25T14:51:29.4188256Z #16 DONE 0.0s
+2026-06-25T14:51:29.4188547Z 
+2026-06-25T14:51:29.4189090Z #17 [linux/amd64 builder  6/19] COPY lib/api-zod/package.json       ./lib/api-zod/
+2026-06-25T14:51:29.4189805Z #17 DONE 0.0s
+2026-06-25T14:51:29.4190104Z 
+2026-06-25T14:51:29.4190669Z #18 [linux/amd64 builder  7/19] COPY lib/api-spec/package.json      ./lib/api-spec/
+2026-06-25T14:51:29.4191340Z #18 DONE 0.0s
+2026-06-25T14:51:29.4191639Z 
+2026-06-25T14:51:29.4192266Z #19 [linux/amd64 builder  8/19] COPY lib/api-client-react/package.json ./lib/api-client-react/
+2026-06-25T14:51:29.4193225Z #19 DONE 0.0s
+2026-06-25T14:51:29.6112980Z 
+2026-06-25T14:51:29.6153533Z #20 [linux/amd64 builder  9/19] COPY lib/db/package.json            ./lib/db/
+2026-06-25T14:51:29.6162879Z #20 DONE 0.0s
+2026-06-25T14:51:29.6182802Z 
+2026-06-25T14:51:29.6193280Z #21 [linux/amd64 builder 10/19] COPY artifacts/api-server/package.json ./artifacts/api-server/
+2026-06-25T14:51:29.6212849Z #21 DONE 0.0s
+2026-06-25T14:51:29.6213151Z 
+2026-06-25T14:51:29.6213652Z #22 [linux/amd64 builder 11/19] COPY artifacts/ha-yaml/package.json    ./artifacts/ha-yaml/
+2026-06-25T14:51:29.6214266Z #22 DONE 0.0s
+2026-06-25T14:51:29.6214413Z 
+2026-06-25T14:51:29.6214748Z #23 [linux/amd64 builder 12/19] RUN pnpm install --frozen-lockfile
+2026-06-25T14:51:30.3077101Z #23 0.850 Scope: all 7 workspace projects
+2026-06-25T14:51:30.5204715Z #23 1.062 Lockfile is up to date, resolution step is skipped
+2026-06-25T14:51:30.6719042Z #23 1.214 Progress: resolved 1, reused 0, downloaded 0, added 0
+2026-06-25T14:51:30.8999099Z #23 1.291 Packages: +489
+2026-06-25T14:51:30.8999970Z #23 1.291 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2026-06-25T14:51:31.0895165Z #23 1.632 
+2026-06-25T14:51:31.0896432Z #23 1.632    ╭─────────────────────────────────────────╮
+2026-06-25T14:51:31.0897362Z #23 1.632    │                                         │
+2026-06-25T14:51:31.0898123Z #23 1.632    │   Update available! 10.26.1 → 11.9.0.   │
+2026-06-25T14:51:31.0898736Z #23 1.632    │   Changelog: https://pnpm.io/v/11.9.0   │
+2026-06-25T14:51:31.0899298Z #23 1.632    │    To update, run: pnpm add -g pnpm     │
+2026-06-25T14:51:31.0899864Z #23 1.632    │                                         │
+2026-06-25T14:51:31.0900411Z #23 1.632    ╰─────────────────────────────────────────╯
+2026-06-25T14:51:31.0900754Z #23 1.632 
+2026-06-25T14:51:31.6770923Z #23 2.219 Progress: resolved 489, reused 0, downloaded 13, added 0
+2026-06-25T14:51:32.6765934Z #23 3.218 Progress: resolved 489, reused 0, downloaded 124, added 46
+2026-06-25T14:51:33.6785800Z #23 4.220 Progress: resolved 489, reused 0, downloaded 142, added 51
+2026-06-25T14:51:34.6801318Z #23 5.222 Progress: resolved 489, reused 0, downloaded 264, added 128
+2026-06-25T14:51:35.6826066Z #23 6.225 Progress: resolved 489, reused 0, downloaded 295, added 136
+2026-06-25T14:51:36.6846892Z #23 7.226 Progress: resolved 489, reused 0, downloaded 302, added 140
+2026-06-25T14:51:37.6874399Z #23 8.229 Progress: resolved 489, reused 0, downloaded 303, added 140
+2026-06-25T14:51:38.6867108Z #23 9.228 Progress: resolved 489, reused 0, downloaded 309, added 140
+2026-06-25T14:51:39.6874247Z #23 10.23 Progress: resolved 489, reused 0, downloaded 379, added 168
+2026-06-25T14:51:40.6882693Z #23 11.23 Progress: resolved 489, reused 0, downloaded 410, added 180
+2026-06-25T14:51:40.8073274Z #23 ...
+2026-06-25T14:51:40.8073905Z 
+2026-06-25T14:51:40.8074601Z #10 [linux/arm64 builder  2/19] RUN npm install -g pnpm@10.26.1
+2026-06-25T14:51:40.8075317Z #10 17.13 
+2026-06-25T14:51:40.8075828Z #10 17.13 added 1 package in 15s
+2026-06-25T14:51:41.0523264Z #10 17.14 
+2026-06-25T14:51:41.0525045Z #10 17.14 1 package is looking for funding
+2026-06-25T14:51:41.0525760Z #10 17.14   run `npm fund` for details
+2026-06-25T14:51:41.0526304Z #10 17.23 npm notice
+2026-06-25T14:51:41.0526996Z #10 17.23 npm notice New minor version of npm available! 11.16.0 -> 11.17.0
+2026-06-25T14:51:41.0527932Z #10 17.23 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.17.0
+2026-06-25T14:51:41.0528787Z #10 17.23 npm notice To update run: npm install -g npm@11.17.0
+2026-06-25T14:51:41.0529378Z #10 17.23 npm notice
+2026-06-25T14:51:46.9248539Z #10 DONE 23.3s
+2026-06-25T14:51:46.9250128Z 
+2026-06-25T14:51:46.9251723Z #23 [linux/amd64 builder 12/19] RUN pnpm install --frozen-lockfile
+2026-06-25T14:51:46.9256657Z #23 12.23 Progress: resolved 489, reused 0, downloaded 489, added 254
+2026-06-25T14:51:46.9261676Z #23 13.23 Progress: resolved 489, reused 0, downloaded 489, added 348
+2026-06-25T14:51:46.9264200Z #23 13.90 Progress: resolved 489, reused 0, downloaded 489, added 489, done
+2026-06-25T14:51:46.9266121Z #23 14.42 .../esbuild@0.27.3/node_modules/esbuild postinstall$ node install.js
+2026-06-25T14:51:46.9268264Z #23 14.51 .../esbuild@0.27.3/node_modules/esbuild postinstall: Done
+2026-06-25T14:51:46.9269380Z #23 14.96 
+2026-06-25T14:51:46.9269989Z #23 14.96 devDependencies:
+2026-06-25T14:51:46.9270578Z #23 14.96 + prettier 3.8.1
+2026-06-25T14:51:46.9271065Z #23 14.96 + typescript 5.9.3
+2026-06-25T14:51:46.9271519Z #23 14.96 
+2026-06-25T14:51:46.9272876Z #23 14.97 . preinstall$ sh -c 'rm -f package-lock.json yarn.lock; case "$npm_config_user_agent" in pnpm/*) ;; *) echo "Use pnpm instead" >&2; exit 1 ;; esac'
+2026-06-25T14:51:46.9273882Z #23 14.99 . preinstall: Done
+2026-06-25T14:51:46.9274490Z #23 15.08 Done in 14.8s using pnpm v10.26.1
+2026-06-25T14:51:47.0776598Z #23 DONE 17.5s
+2026-06-25T14:51:47.0777025Z 
+2026-06-25T14:51:47.0777579Z #24 [linux/amd64 builder 13/19] COPY lib                ./lib
+2026-06-25T14:51:47.4009239Z #24 ...
+2026-06-25T14:51:47.4009786Z 
+2026-06-25T14:51:47.4010501Z #25 [linux/arm64 builder  3/19] WORKDIR /workspace
+2026-06-25T14:51:47.4010960Z #25 DONE 0.5s
+2026-06-25T14:51:47.5100782Z 
+2026-06-25T14:51:47.5104314Z #24 [linux/amd64 builder 13/19] COPY lib                ./lib
+2026-06-25T14:51:47.5104805Z #24 DONE 0.5s
+2026-06-25T14:51:47.5105009Z 
+2026-06-25T14:51:47.5105454Z #26 [linux/arm64 builder  4/19] COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+2026-06-25T14:51:47.5106141Z #26 DONE 0.0s
+2026-06-25T14:51:47.5107453Z 
+2026-06-25T14:51:47.5107849Z #27 [linux/arm64 builder  5/19] COPY tsconfig.base.json tsconfig.json ./
+2026-06-25T14:51:47.5108409Z #27 DONE 0.1s
+2026-06-25T14:51:47.5108563Z 
+2026-06-25T14:51:47.5108940Z #28 [linux/amd64 builder 14/19] COPY artifacts/api-server ./artifacts/api-server
+2026-06-25T14:51:47.5109457Z #28 DONE 0.1s
+2026-06-25T14:51:47.5109604Z 
+2026-06-25T14:51:47.5109975Z #29 [linux/arm64 builder  6/19] COPY lib/api-zod/package.json       ./lib/api-zod/
+2026-06-25T14:51:47.6239100Z #29 DONE 0.0s
+2026-06-25T14:51:47.6246061Z 
+2026-06-25T14:51:47.6246850Z #30 [linux/arm64 builder  7/19] COPY lib/api-spec/package.json      ./lib/api-spec/
+2026-06-25T14:51:47.6248397Z #30 DONE 0.0s
+2026-06-25T14:51:47.6248792Z 
+2026-06-25T14:51:47.6249442Z #31 [linux/arm64 builder  8/19] COPY lib/api-client-react/package.json ./lib/api-client-react/
+2026-06-25T14:51:47.6250932Z #31 DONE 0.0s
+2026-06-25T14:51:47.6251288Z 
+2026-06-25T14:51:47.6251818Z #32 [linux/amd64 builder 15/19] COPY artifacts/ha-yaml    ./artifacts/ha-yaml
+2026-06-25T14:51:47.6252941Z #32 DONE 0.1s
+2026-06-25T14:51:47.6254054Z 
+2026-06-25T14:51:47.6263683Z #33 [linux/arm64 builder  9/19] COPY lib/db/package.json            ./lib/db/
+2026-06-25T14:51:47.6267463Z #33 DONE 0.0s
+2026-06-25T14:51:47.6268008Z 
+2026-06-25T14:51:47.6268697Z #34 [linux/arm64 builder 10/19] COPY artifacts/api-server/package.json ./artifacts/api-server/
+2026-06-25T14:51:47.6269776Z #34 DONE 0.0s
+2026-06-25T14:51:47.6271599Z 
+2026-06-25T14:51:47.6273257Z #35 [linux/amd64 builder 16/19] RUN mkdir -p attached_assets
+2026-06-25T14:51:47.8133245Z #35 DONE 0.1s
+2026-06-25T14:51:47.8133924Z 
+2026-06-25T14:51:47.8134707Z #36 [linux/arm64 builder 11/19] COPY artifacts/ha-yaml/package.json    ./artifacts/ha-yaml/
+2026-06-25T14:51:47.8135466Z #36 DONE 0.0s
+2026-06-25T14:51:47.8135792Z 
+2026-06-25T14:51:47.8136321Z #37 [linux/amd64 builder 17/19] RUN pnpm run typecheck:libs 2>&1 || true
+2026-06-25T14:51:48.2099024Z #37 0.549 
+2026-06-25T14:51:48.2102023Z #37 0.549 > workspace@0.0.0 typecheck:libs /workspace
+2026-06-25T14:51:48.2104203Z #37 0.549 > tsc --build
+2026-06-25T14:51:48.2104508Z #37 0.549 
+2026-06-25T14:51:52.9765731Z #37 DONE 5.3s
+2026-06-25T14:51:52.9767221Z 
+2026-06-25T14:51:52.9767762Z #38 [linux/arm64 builder 12/19] RUN pnpm install --frozen-lockfile
+2026-06-25T14:51:53.1288162Z #38 ...
+2026-06-25T14:51:53.1288518Z 
+2026-06-25T14:51:53.1289357Z #39 [linux/amd64 builder 18/19] RUN PORT=3000 BASE_PATH=/ pnpm --filter @workspace/ha-yaml run build
+2026-06-25T14:51:53.5849889Z #39 0.607 
+2026-06-25T14:51:53.5853204Z #39 0.607 > @workspace/ha-yaml@0.0.0 build /workspace/artifacts/ha-yaml
+2026-06-25T14:51:53.5853771Z #39 0.607 > vite build --config vite.config.ts
+2026-06-25T14:51:53.5854138Z #39 0.607 
+2026-06-25T14:51:53.7875185Z #39 0.807 /workspace/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/native.js:115
+2026-06-25T14:51:53.7878767Z #39 0.807 		throw new Error(
+2026-06-25T14:51:53.7879400Z #39 0.807 		      ^
+2026-06-25T14:51:53.7879823Z #39 0.807 
+2026-06-25T14:51:53.7881456Z #39 0.807 Error: Cannot find module @rollup/rollup-linux-x64-musl. npm has a bug related to optional dependencies (https://github.com/npm/cli/issues/4828). Please try `npm i` again after removing both package-lock.json and node_modules directory.
+2026-06-25T14:51:53.7883737Z #39 0.807     at requireWithFriendlyError (/workspace/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/native.js:115:9)
+2026-06-25T14:51:53.7885335Z #39 0.807     at Object.<anonymous> (/workspace/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/native.js:124:76)
+2026-06-25T14:51:53.7886816Z #39 0.807     at Module._compile (node:internal/modules/cjs/loader:1871:14)
+2026-06-25T14:51:53.7901909Z #39 0.807     at Object..js (node:internal/modules/cjs/loader:2002:10)
+2026-06-25T14:51:53.7902942Z #39 0.807     at Module.load (node:internal/modules/cjs/loader:1594:32)
+2026-06-25T14:51:53.7903753Z #39 0.807     at Module._load (node:internal/modules/cjs/loader:1396:12)
+2026-06-25T14:51:53.7904577Z #39 0.807     at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+2026-06-25T14:51:53.7905611Z #39 0.807     at loadCJSModuleWithModuleLoad (node:internal/modules/esm/translators:372:15)
+2026-06-25T14:51:53.7906613Z #39 0.807     at ModuleWrap.<anonymous> (node:internal/modules/esm/translators:244:9)
+2026-06-25T14:51:53.7907619Z #39 0.807     at ModuleJob.run (node:internal/modules/esm/module_job:439:25) {
+2026-06-25T14:51:53.7908526Z #39 0.807   [cause]: Error: Cannot find module '@rollup/rollup-linux-x64-musl'
+2026-06-25T14:51:53.7909264Z #39 0.807   Require stack:
+2026-06-25T14:51:53.7910092Z #39 0.807   - /workspace/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/native.js
+2026-06-25T14:51:53.7911173Z #39 0.807       at Module._resolveFilename (node:internal/modules/cjs/loader:1517:15)
+2026-06-25T14:51:53.7912141Z #39 0.807       at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+2026-06-25T14:51:53.7913426Z #39 0.807       at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+2026-06-25T14:51:53.7914486Z #39 0.807       at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1122:12)
+2026-06-25T14:51:53.7915705Z #39 0.807       at Module._load (node:internal/modules/cjs/loader:1294:5)
+2026-06-25T14:51:53.7916635Z #39 0.807       at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+2026-06-25T14:51:53.7917466Z #39 0.807       at Module.require (node:internal/modules/cjs/loader:1617:12)
+2026-06-25T14:51:53.7918194Z #39 0.807       at require (node:internal/modules/helpers:153:16)
+2026-06-25T14:51:53.7919348Z #39 0.807       at requireWithFriendlyError (/workspace/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/native.js:97:10)
+2026-06-25T14:51:53.7920951Z #39 0.807       at Object.<anonymous> (/workspace/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/native.js:124:76) {
+2026-06-25T14:51:53.7922029Z #39 0.807     code: 'MODULE_NOT_FOUND',
+2026-06-25T14:51:53.7922683Z #39 0.807     requireStack: [
+2026-06-25T14:51:53.7923512Z #39 0.807       '/workspace/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/native.js'
+2026-06-25T14:51:53.7924250Z #39 0.807     ]
+2026-06-25T14:51:53.7924665Z #39 0.807   }
+2026-06-25T14:51:53.7925039Z #39 0.807 }
+2026-06-25T14:51:53.7925406Z #39 0.807 
+2026-06-25T14:51:53.7925850Z #39 0.807 Node.js v24.18.0
+2026-06-25T14:51:53.8951441Z #39 0.839 /workspace/artifacts/ha-yaml:
+2026-06-25T14:51:53.8953441Z #39 0.839  ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @workspace/ha-yaml@0.0.0 build: `vite build --config vite.config.ts`
+2026-06-25T14:51:53.8955835Z #39 0.839 Exit status 1
+2026-06-25T14:51:53.8957175Z #39 ERROR: process "/bin/sh -c PORT=3000 BASE_PATH=/ pnpm --filter @workspace/ha-yaml run build" did not complete successfully: exit code: 1
+2026-06-25T14:51:53.8958327Z 
+2026-06-25T14:51:53.8958848Z #38 [linux/arm64 builder 12/19] RUN pnpm install --frozen-lockfile
+2026-06-25T14:51:53.8959624Z #38 CANCELED
+2026-06-25T14:51:53.8960037Z ------
+2026-06-25T14:51:53.8960986Z  > [linux/amd64 builder 18/19] RUN PORT=3000 BASE_PATH=/ pnpm --filter @workspace/ha-yaml run build:
+2026-06-25T14:51:53.8962171Z 0.807     requireStack: [
+2026-06-25T14:51:53.8963439Z 0.807       '/workspace/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/native.js'
+2026-06-25T14:51:53.8964386Z 0.807     ]
+2026-06-25T14:51:53.8964777Z 0.807   }
+2026-06-25T14:51:53.8965352Z 0.807 }
+2026-06-25T14:51:53.8965845Z 0.807 
+2026-06-25T14:51:53.8966251Z 0.807 Node.js v24.18.0
+2026-06-25T14:51:53.8967217Z 0.839 /workspace/artifacts/ha-yaml:
+2026-06-25T14:51:53.8968727Z 0.839  ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @workspace/ha-yaml@0.0.0 build: `vite build --config vite.config.ts`
+2026-06-25T14:51:53.8969765Z 0.839 Exit status 1
+2026-06-25T14:51:53.8977654Z ------
+2026-06-25T14:51:53.9000685Z Dockerfile:34
+2026-06-25T14:51:53.9016641Z --------------------
+2026-06-25T14:51:53.9018150Z   32 |     # Build frontend — BASE_PATH=/ so all asset paths are root-relative;
+2026-06-25T14:51:53.9019932Z   33 |     # PORT is only used for the dev-server config (not the build output)
+2026-06-25T14:51:53.9021224Z   34 | >>> RUN PORT=3000 BASE_PATH=/ pnpm --filter @workspace/ha-yaml run build
+2026-06-25T14:51:53.9022812Z   35 |     
+2026-06-25T14:51:53.9023489Z   36 |     # Build Express server
+2026-06-25T14:51:53.9024491Z --------------------
+2026-06-25T14:51:53.9026778Z ERROR: failed to build: failed to solve: process "/bin/sh -c PORT=3000 BASE_PATH=/ pnpm --filter @workspace/ha-yaml run build" did not complete successfully: exit code: 1
+2026-06-25T14:51:53.9125290Z ##[error]buildx failed with: ERROR: failed to build: failed to solve: process "/bin/sh -c PORT=3000 BASE_PATH=/ pnpm --filter @workspace/ha-yaml run build" did not complete successfully: exit code: 1
