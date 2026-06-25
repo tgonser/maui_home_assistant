@@ -10,23 +10,14 @@ startup: application
 arch:
   - aarch64
   - amd64
-
-# Pre-built image from GitHub Container Registry.
-# GitHub Actions builds this on every push to main — the Pi never needs
-# to compile Node.js/pnpm/Vite.  HA substitutes {version} with the version
-# field above so rollback is just changing the version number.
 image: "ghcr.io/tgonser/maui_home_assistant/wall-kiosk:{version}"
-
 homeassistant: "2023.6"
 ingress: true
 ingress_port: 8099
 ingress_entry: /
 panel_icon: mdi:tablet-dashboard
 panel_title: Wall
-watchdog: http://[HOST]:[PORT:8099]/api/healthz
 ports:
   8099/tcp: 8099
-ports_description:
-  8099/tcp: "Direct kiosk/tablet access (bypasses ingress)"
 options: {}
 schema: {}
