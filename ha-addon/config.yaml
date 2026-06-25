@@ -1,10 +1,7 @@
 name: "Wall Kiosk"
-description: >
-  Solar-aware energy and home control dashboard.
-  Shows cameras, climate, energy, scenes, music, and more
-  on a tablet or kiosk display. Runs fully local — no cloud required.
+description: "Solar-aware energy and home control dashboard for tablet/kiosk display."
 version: "1.0.0"
-slug: "wall-kiosk"
+slug: "wall_kiosk"
 init: false
 startup: application
 arch:
