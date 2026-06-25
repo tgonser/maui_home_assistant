@@ -1,7 +1,7 @@
 # ── Stage 1: build ─────────────────────────────────────────────────────────────
 FROM node:24-alpine AS builder
 
-RUN npm install -g pnpm
+RUN npm install -g pnpm@10.26.1
 
 WORKDIR /workspace
 
