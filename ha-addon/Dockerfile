@@ -22,6 +22,10 @@ COPY lib                ./lib
 COPY artifacts/api-server ./artifacts/api-server
 COPY artifacts/ha-yaml    ./artifacts/ha-yaml
 
+# The @assets alias in vite.config.ts points here; create it so the
+# build doesn't fail if no component actually imports from @assets.
+RUN mkdir -p attached_assets
+
 # Build shared libs (composite TS build)
 RUN pnpm run typecheck:libs 2>&1 || true
 
