@@ -542,12 +542,11 @@ const CATEGORIES: Category[] = [
     label: "Sensors",
     icon: Activity,
     match: (s) => {
-      const dc = deviceClass(s);
-      if (!["temperature", "humidity", "moisture"].includes(dc)) return false;
-      if (domainOf(s.entity_id) !== "sensor") return false;
+      if (domainOf(s.entity_id) !== "binary_sensor") return false;
+      if (deviceClass(s) !== "motion") return false;
       const name = friendly(s);
-      // Only Maui indoor thermostats — no Outdoor duplicates, no other houses
-      return /^Maui-/i.test(name) && !/outdoor/i.test(name);
+      // Alarm system motion sensors: Ubiquiti USL Motion + UP sense
+      return /USL-Motion/i.test(name) || /UP sense/i.test(name);
     },
   },
   {
@@ -1666,41 +1665,44 @@ function MonsteraLeaf() {
   );
 }
 
-// Extract a clean room name: strip "Maui-" prefix and type suffixes.
-// e.g. "Maui-Atrium Temperature" → "Atrium"
-function roomFromSensorName(name: string): string {
+// Extract a clean location name from a USL Motion or UP sense friendly name.
+// "USL-Motion_Bar Motion" → "Bar"
+// "UP sense - stairs Motion" → "Stairs"
+function motionSensorLabel(name: string): string {
   return name
-    .replace(/^Maui-/i, "")
-    .replace(/\s*(temperature|humidity|moisture|sensor)\s*/gi, " ")
-    .replace(/\s+/g, " ")
+    .replace(/^USL-Motion_/i, "")
+    .replace(/^UP sense\s*-\s*/i, "")
+    .replace(/\s*Motion\s*$/i, "")
     .trim() || name;
 }
 
-type SensorRoom = {
-  room: string;
-  temp: HAState | null;
-  humidity: HAState | null;
-};
+function relativeTime(iso: string): string {
+  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (diff < 60) return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+}
 
 function SensorsView({ entities }: { entities: HAState[] }) {
-  const roomMap = new Map<string, SensorRoom>();
-  for (const s of entities) {
-    const room = roomFromSensorName(friendly(s));
-    if (!roomMap.has(room)) roomMap.set(room, { room, temp: null, humidity: null });
-    const entry = roomMap.get(room)!;
-    const dc = deviceClass(s);
-    if (dc === "temperature" && !entry.temp) entry.temp = s;
-    else if ((dc === "humidity" || dc === "moisture") && !entry.humidity) entry.humidity = s;
-  }
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
+  // Re-render when time ticks (now is referenced in relativeTime calls below)
+  void now;
 
-  const rooms = [...roomMap.values()].sort((a, b) => a.room.localeCompare(b.room));
+  const sorted = [...entities].sort((a, b) =>
+    motionSensorLabel(friendly(a)).localeCompare(motionSensorLabel(friendly(b))),
+  );
 
-  if (rooms.length === 0) {
+  if (sorted.length === 0) {
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         className="text-center py-20 text-[var(--cream-muted)]">
         <Activity className="w-12 h-12 mx-auto mb-4 opacity-30" />
-        <p className="text-base">No room sensors found.</p>
+        <p className="text-base">No motion sensors found.</p>
       </motion.div>
     );
   }
@@ -1710,25 +1712,33 @@ function SensorsView({ entities }: { entities: HAState[] }) {
       className="space-y-2">
       <div className="rounded-2xl bg-[rgba(0,0,0,0.25)] border border-[rgba(232,193,120,0.12)] overflow-hidden divide-y divide-[rgba(232,193,120,0.08)]">
         <div className="grid grid-cols-[1fr_auto_auto] items-center gap-6 px-5 py-2">
-          <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--cream-muted)]">Room</div>
-          <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--cream-muted)] w-16 text-right flex items-center justify-end gap-1">
-            <Thermometer className="w-3 h-3" /> Temp
-          </div>
-          <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--cream-muted)] w-16 text-right flex items-center justify-end gap-1">
-            <Droplets className="w-3 h-3" /> Humidity
-          </div>
+          <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--cream-muted)]">Location</div>
+          <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--cream-muted)] text-right">Last changed</div>
+          <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--cream-muted)] w-16 text-right">State</div>
         </div>
-        {rooms.map(({ room, temp, humidity }) => (
-          <div key={room} className="grid grid-cols-[1fr_auto_auto] items-center gap-6 px-5 py-3.5">
-            <div className="text-sm text-[var(--cream)] font-medium">{room}</div>
-            <div className="w-16 text-right text-sm tabular-nums text-[var(--cream-muted)]">
-              {temp ? `${parseFloat(temp.state).toFixed(1)}°` : "—"}
+        {sorted.map((s) => {
+          const on = s.state === "on";
+          return (
+            <div key={s.entity_id}
+              className="grid grid-cols-[1fr_auto_auto] items-center gap-6 px-5 py-3.5">
+              <div className="text-sm text-[var(--cream)] font-medium">
+                {motionSensorLabel(friendly(s))}
+              </div>
+              <div className="text-sm tabular-nums text-[var(--cream-muted)]">
+                {relativeTime(s.last_changed)}
+              </div>
+              <div className="w-16 flex justify-end">
+                <span className={`text-xs font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full ${
+                  on
+                    ? "bg-[rgba(201,153,74,0.20)] text-[var(--brass-bright)] border border-[rgba(232,193,120,0.30)]"
+                    : "bg-[rgba(0,0,0,0.3)] text-[var(--cream-muted)] border border-[rgba(232,193,120,0.10)]"
+                }`}>
+                  {on ? "Active" : "Clear"}
+                </span>
+              </div>
             </div>
-            <div className="w-16 text-right text-sm tabular-nums text-[var(--cream-muted)]">
-              {humidity ? `${Math.round(parseFloat(humidity.state))}%` : "—"}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </motion.div>
   );
