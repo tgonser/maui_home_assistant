@@ -1,0 +1,74 @@
+Fix the Home Assistant add-on repository so it appears in the HA Add-on Store.
+
+Context:
+- Repo: https://github.com/tgonser/maui_home_assistant
+- Add-on folder appears to be: ha-addon/
+- Docker image pushed to: ghcr.io/tgonser/maui_home_assistant/wall-kiosk
+- Target hardware includes Home Assistant Green, so the add-on must support aarch64.
+
+Tasks:
+1. Verify the repo root contains repository.yaml.
+   If missing, create:
+
+   name: Maui Home Assistant Add-ons
+   url: https://github.com/tgonser/maui_home_assistant
+   maintainer: Thomas Gonser
+
+2. Verify ha-addon/config.yaml exists and is valid for a Home Assistant add-on.
+
+3. Ensure config.yaml includes:
+   arch:
+     - aarch64
+     - amd64
+
+4. Ensure config.yaml references the prebuilt GHCR image correctly:
+
+   image: ghcr.io/tgonser/maui_home_assistant/wall-kiosk
+
+   Do not include the :latest or version tag in the image field unless HA add-on docs require it; HA will append the version/arch behavior based on the add-on config.
+
+5. Ensure the Docker image/package in GitHub Container Registry is public, or Home Assistant will not be able to pull it.
+
+6. Confirm the repo structure is:
+
+   repository.yaml
+   ha-addon/
+     config.yaml
+     Dockerfile
+
+7. Validate that ha-addon/config.yaml has at least:
+
+   name: Maui Wall Kiosk
+   slug: maui_wall_kiosk
+   description: Wall kiosk for Maui Home Assistant
+   version: "1.0.0"
+   arch:
+     - aarch64
+     - amd64
+   startup: services
+   boot: auto
+   image: ghcr.io/tgonser/maui_home_assistant/wall-kiosk
+   ports:
+     3000/tcp: 3000
+
+8. Commit changes and push to main.
+
+9. After push, confirm GitHub Actions successfully builds and pushes:
+   ghcr.io/tgonser/maui_home_assistant/wall-kiosk:latest
+   ghcr.io/tgonser/maui_home_assistant/wall-kiosk:<version>
+
+10. In Home Assistant:
+   Settings → Add-ons → Add-on Store → ⋮ → Repositories
+   Add:
+   https://github.com/tgonser/maui_home_assistant
+
+11. If it still does not show, inspect:
+   Settings → System → Logs → Supervisor
+
+Look specifically for:
+- missing repository.yaml
+- invalid config.yaml
+- unsupported architecture
+- image unauthorized/private
+- image not found
+- add-on slug conflict
