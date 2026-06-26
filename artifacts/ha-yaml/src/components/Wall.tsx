@@ -34,6 +34,7 @@ import {
   Pause,
   SlidersHorizontal,
   Zap,
+  Droplets,
 } from "lucide-react";
 import { ComposedChart, AreaChart, Area, Line, ReferenceArea, ResponsiveContainer, XAxis, YAxis, ReferenceLine, Tooltip, BarChart, Bar, Cell, LabelList } from "recharts";
 import "./wall-theme.css";
@@ -541,11 +542,10 @@ const CATEGORIES: Category[] = [
     label: "Sensors",
     icon: Activity,
     match: (s) =>
-      (domainOf(s.entity_id) === "sensor" && !isEnergyEntity(s)) ||
+      (domainOf(s.entity_id) === "sensor" &&
+        ["temperature", "humidity", "moisture"].includes(deviceClass(s))) ||
       (domainOf(s.entity_id) === "binary_sensor" &&
-        !["door", "window", "motion", "opening", "smoke", "gas", "tamper"].includes(
-          deviceClass(s),
-        )),
+        ["motion", "occupancy"].includes(deviceClass(s))),
   },
   {
     key: "settings",
@@ -1663,6 +1663,99 @@ function MonsteraLeaf() {
   );
 }
 
+// Strip common sensor-type suffixes to extract a room name from a friendly name.
+// e.g. "Kitchen Temperature" → "Kitchen", "Bar Motion Sensor" → "Bar"
+function roomFromSensorName(name: string): string {
+  return name
+    .replace(/\s*(temperature|humidity|moisture|motion|occupancy|sensor|detector)\s*/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim() || name;
+}
+
+type SensorRoom = {
+  room: string;
+  temp: HAState | null;
+  humidity: HAState | null;
+  motion: HAState | null;
+};
+
+function SensorsView({ entities }: { entities: HAState[] }) {
+  const roomMap = new Map<string, SensorRoom>();
+  for (const s of entities) {
+    const room = roomFromSensorName(friendly(s));
+    if (!roomMap.has(room)) roomMap.set(room, { room, temp: null, humidity: null, motion: null });
+    const entry = roomMap.get(room)!;
+    const dc = deviceClass(s);
+    if (dc === "temperature" && !entry.temp) entry.temp = s;
+    else if ((dc === "humidity" || dc === "moisture") && !entry.humidity) entry.humidity = s;
+    else if ((dc === "motion" || dc === "occupancy") && !entry.motion) entry.motion = s;
+  }
+
+  const rooms = [...roomMap.values()].sort((a, b) => a.room.localeCompare(b.room));
+
+  if (rooms.length === 0) {
+    return (
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="text-center py-20 text-[var(--cream-muted)]">
+        <Activity className="w-12 h-12 mx-auto mb-4 opacity-30" />
+        <p className="text-base">No room sensors found.</p>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="space-y-2">
+      <div className="rounded-2xl bg-[rgba(0,0,0,0.25)] border border-[rgba(232,193,120,0.12)] overflow-hidden divide-y divide-[rgba(232,193,120,0.08)]">
+        {/* Header row */}
+        <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-4 px-5 py-2">
+          <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--cream-muted)]">Room</div>
+          <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--cream-muted)] w-16 text-right flex items-center justify-end gap-1">
+            <Thermometer className="w-3 h-3" /> Temp
+          </div>
+          <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--cream-muted)] w-16 text-right flex items-center justify-end gap-1">
+            <Droplets className="w-3 h-3" /> Hum
+          </div>
+          <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--cream-muted)] w-16 text-right flex items-center justify-end gap-1">
+            <Activity className="w-3 h-3" /> Motion
+          </div>
+        </div>
+        {rooms.map(({ room, temp, humidity, motion }) => {
+          const tempVal = temp ? `${parseFloat(temp.state).toFixed(1)}°` : "—";
+          const humVal = humidity ? `${Math.round(parseFloat(humidity.state))}%` : "—";
+          const motionOn = motion?.state === "on";
+          const motionLabel = motion ? (motionOn ? "Active" : "Clear") : "—";
+          return (
+            <div key={room}
+              className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-4 px-5 py-3.5">
+              <div className="text-sm text-[var(--cream)] font-medium">{room}</div>
+              <div className="w-16 text-right text-sm tabular-nums text-[var(--cream-muted)]">
+                {tempVal}
+              </div>
+              <div className="w-16 text-right text-sm tabular-nums text-[var(--cream-muted)]">
+                {humVal}
+              </div>
+              <div className="w-16 flex justify-end">
+                {motion ? (
+                  <span className={`text-xs font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full ${
+                    motionOn
+                      ? "bg-[rgba(201,153,74,0.20)] text-[var(--brass-bright)] border border-[rgba(232,193,120,0.30)]"
+                      : "bg-[rgba(0,0,0,0.3)] text-[var(--cream-muted)] border border-[rgba(232,193,120,0.10)]"
+                  }`}>
+                    {motionLabel}
+                  </span>
+                ) : (
+                  <span className="text-sm text-[var(--cream-muted)]">—</span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </motion.div>
+  );
+}
+
 function SecurityView({
   entities,
   onOpen,
@@ -2227,6 +2320,8 @@ export function Wall() {
                 entities={filtered}
                 onOpen={setOpenEntity}
               />
+            ) : active === "sensors" ? (
+              <SensorsView key="sensors" entities={filtered} />
             ) : active === "energy" ? (
               <EnergyDashboard key="energy" states={states} />
             ) : active === "media" ? (
