@@ -541,8 +541,12 @@ const CATEGORIES: Category[] = [
     key: "sensors",
     label: "Sensors",
     icon: Activity,
-    match: (s) =>
-      domainOf(s.entity_id) === "binary_sensor" && deviceClass(s) === "motion",
+    match: (s) => {
+      if (domainOf(s.entity_id) !== "binary_sensor" || deviceClass(s) !== "motion") return false;
+      // Exclude Unifi camera motion sensors (G5/G6 PTZ, Turret, Instant, etc.)
+      const name = friendly(s);
+      return !/\bG[56]\b|PTZ|Turret|Instant\b/i.test(name);
+    },
   },
   {
     key: "settings",
