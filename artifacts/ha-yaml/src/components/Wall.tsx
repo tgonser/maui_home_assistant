@@ -662,7 +662,7 @@ function Tile({
         )}
       </div>
       <div className="relative z-[1]">
-        <div className="label text-xs truncate leading-tight">{label}</div>
+        <div className="label text-sm truncate leading-tight">{label}</div>
         {value !== undefined && (
           <div className="value text-xl font-semibold tabular-nums truncate mt-0.5">
             {value}
@@ -1560,8 +1560,8 @@ function EnergyDashboard({ states }: { states: HAState[] }) {
 // Match against entity_id (snake_case), most-specific pattern first.
 // Bath patterns must come before their parent room pattern.
 const SHADE_ROOM_PATTERNS: { label: string; pattern: RegExp }[] = [
-  { label: "Bed 2 Bath",   pattern: /floor_1_bedroom_2.*bath/   },
-  { label: "Bed 2",        pattern: /floor_1_bedroom_2/          },
+  { label: "Beach Room Bath", pattern: /floor_1_bedroom_2.*bath/   },
+  { label: "Beach Room",      pattern: /floor_1_bedroom_2/          },
   { label: "Utility",      pattern: /floor_1.*util/              },
   { label: "Pub",          pattern: /floor_1_bar/                },
   { label: "Master Bath",  pattern: /floor_2_master.*bath/       },
@@ -1574,7 +1574,7 @@ const SHADE_ROOM_PATTERNS: { label: string; pattern: RegExp }[] = [
 const SHADE_FLOORS: { floor: string; rooms: string[] }[] = [
   {
     floor: "First Floor",
-    rooms: ["Bed 2", "Bed 2 Bath", "Utility", "Pub"],
+    rooms: ["Beach Room", "Beach Room Bath", "Utility", "Pub"],
   },
   {
     floor: "Second Floor",
