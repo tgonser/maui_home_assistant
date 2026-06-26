@@ -539,7 +539,7 @@ const CATEGORIES: Category[] = [
   },
   {
     key: "sensors",
-    label: "Sensors",
+    label: "Motion",
     icon: Activity,
     match: (s) => {
       if (domainOf(s.entity_id) !== "binary_sensor") return false;
