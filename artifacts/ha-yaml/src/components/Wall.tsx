@@ -10,7 +10,6 @@ import { useEntityAliases } from "@/lib/entityAliases";
 import {
   Lightbulb,
   Thermometer,
-  Lock,
   ShieldCheck,
   Speaker,
   Camera,
@@ -26,7 +25,6 @@ import {
   AlertTriangle,
   ArrowLeft,
   Blinds,
-  Wind,
   Sparkles,
   Play,
   Tv,
@@ -52,8 +50,6 @@ type CategoryKey =
   | "switches"
   | "climate"
   | "covers"
-  | "fans"
-  | "locks"
   | "security"
   | "media"
   | "tvs"
@@ -477,18 +473,6 @@ const CATEGORIES: Category[] = [
     match: (s) => domainOf(s.entity_id) === "cover",
   },
   {
-    key: "fans",
-    label: "Fans",
-    icon: Wind,
-    match: (s) => domainOf(s.entity_id) === "fan",
-  },
-  {
-    key: "locks",
-    label: "Locks",
-    icon: Lock,
-    match: (s) => domainOf(s.entity_id) === "lock",
-  },
-  {
     key: "security",
     label: "Security",
     icon: ShieldCheck,
@@ -706,18 +690,6 @@ function ClimateTile({ s }: { s: HAState }) {
   );
 }
 
-function LockTile({ s }: { s: HAState }) {
-  const locked = s.state === "locked";
-  return (
-    <Tile
-      icon={Lock}
-      label={friendly(s)}
-      value={locked ? "Locked" : s.state === "unlocked" ? "Unlocked" : s.state}
-      active={!locked && s.state !== "unavailable"}
-      sub={locked ? "secure" : "open"}
-    />
-  );
-}
 
 function AlarmTile({ s }: { s: HAState }) {
   const armed = s.state.startsWith("armed");
@@ -1664,7 +1636,6 @@ function renderTile(s: HAState, allStates?: HAState[]) {
   if (d === "light") return <LightTile key={s.entity_id} s={s} />;
   if (d === "climate") return <ClimateTile key={s.entity_id} s={s} />;
   if (d === "cover") return <CoverTile key={s.entity_id} s={s} />;
-  if (d === "lock") return <LockTile key={s.entity_id} s={s} />;
   if (d === "alarm_control_panel") return <AlarmTile key={s.entity_id} s={s} />;
   if (d === "media_player")
     return <MediaTile key={s.entity_id} s={s} allStates={allStates} />;
@@ -2325,8 +2296,7 @@ export function Wall() {
                 renderTile={clickableTile}
               />
             ) : active === "lights" ||
-              active === "switches" ||
-              active === "fans" ? (
+              active === "switches" ? (
               <GroupedByRoomView
                 key={`${active}-grouped`}
                 entities={filtered}
