@@ -46,6 +46,7 @@ import {
   useSuperViewOverrides,
   type SuperViewSlot,
 } from "./SuperViewSettings";
+import { useEntityAliases } from "@/lib/entityAliases";
 
 function useResolvedSlot(
   states: HAState[],
@@ -520,17 +521,27 @@ function isInsideMotion(s: HAState): boolean {
   return !/\bG[56]\b|PTZ|Turret|Instant\b/i.test(friendly(s));
 }
 
-function MotionRow({ s, now }: { s: HAState; now: number }) {
+function MotionRow({
+  s,
+  now,
+  aliases,
+}: {
+  s: HAState;
+  now: number;
+  aliases: Record<string, string>;
+}) {
   const active = s.state === "on";
   const ago = formatAgo(new Date(s.last_changed).getTime());
   void now;
+  // User-set alias takes priority; otherwise clean up the HA friendly name
+  const label = aliases[s.entity_id] ?? motionLabel(friendly(s));
   return (
     <div className={`flex items-center justify-between py-1 ${active ? "opacity-100" : "opacity-50"}`}>
       <div className="flex items-center gap-1.5 min-w-0">
         <span
           className={`w-1.5 h-1.5 rounded-full shrink-0 ${active ? "bg-amber-400" : "bg-[var(--cream-muted)]"}`}
         />
-        <span className="text-xs truncate">{motionLabel(friendly(s))}</span>
+        <span className="text-xs truncate">{label}</span>
       </div>
       <span className="text-[10px] text-[var(--cream-muted)] ml-2 shrink-0">{ago}</span>
     </div>
@@ -538,6 +549,7 @@ function MotionRow({ s, now }: { s: HAState; now: number }) {
 }
 
 function RecentMotionTile({ states }: { states: HAState[] }) {
+  const aliases = useEntityAliases((s) => s.aliases);
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), 30_000);
@@ -577,14 +589,14 @@ function RecentMotionTile({ states }: { states: HAState[] }) {
           <div className="text-[9px] uppercase tracking-widest text-[var(--brass)] mb-1">Inside</div>
           {inside.length === 0
             ? <div className="text-xs text-[var(--cream-muted)] opacity-50">No sensors</div>
-            : inside.map((s) => <MotionRow key={s.entity_id} s={s} now={now} />)
+            : inside.map((s) => <MotionRow key={s.entity_id} s={s} now={now} aliases={aliases} />)
           }
         </div>
         <div>
           <div className="text-[9px] uppercase tracking-widest text-[var(--brass)] mb-1">Outside</div>
           {outside.length === 0
             ? <div className="text-xs text-[var(--cream-muted)] opacity-50">No sensors</div>
-            : outside.map((s) => <MotionRow key={s.entity_id} s={s} now={now} />)
+            : outside.map((s) => <MotionRow key={s.entity_id} s={s} now={now} aliases={aliases} />)
           }
         </div>
       </div>
