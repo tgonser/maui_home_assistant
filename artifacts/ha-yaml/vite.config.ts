@@ -36,9 +36,7 @@ export default defineConfig({
     // Replit-only plugins — skipped in Docker / CI builds
     ...(isReplit
       ? [
-          (await import("@replit/vite-plugin-runtime-error-modal")).then(
-            (m) => m.default(),
-          ),
+          (await import("@replit/vite-plugin-runtime-error-modal")).default(),
           ...(isDev
             ? [
                 await import("@replit/vite-plugin-cartographer").then((m) =>
