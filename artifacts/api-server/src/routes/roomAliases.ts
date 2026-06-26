@@ -2,14 +2,19 @@ import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
 import { db, roomAliasesTable } from "@workspace/db";
 import { SetRoomAliasBody } from "@workspace/api-zod";
+import { readStore, writeStore } from "../fileStore";
 
 const router: IRouter = Router();
+const FILE = "room-aliases";
 
 router.get("/room-aliases", async (_req, res) => {
+  if (!db) {
+    return res.json(readStore(FILE));
+  }
   const rows = await db.select().from(roomAliasesTable);
   const out: Record<string, string> = {};
   for (const r of rows) out[r.areaId] = r.name;
-  res.json(out);
+  return res.json(out);
 });
 
 router.put("/room-aliases/:areaId", async (req, res) => {
@@ -25,6 +30,14 @@ router.put("/room-aliases/:areaId", async (req, res) => {
   if (!name) {
     return res.status(400).json({ error: "Name cannot be blank" });
   }
+
+  if (!db) {
+    const store = readStore(FILE);
+    store[areaId] = name;
+    writeStore(FILE, store);
+    return res.json({ areaId, name, updatedAt: new Date().toISOString() });
+  }
+
   const now = new Date();
   const [row] = await db
     .insert(roomAliasesTable)
@@ -42,10 +55,16 @@ router.put("/room-aliases/:areaId", async (req, res) => {
 });
 
 router.delete("/room-aliases/:areaId", async (req, res) => {
+  if (!db) {
+    const store = readStore(FILE);
+    delete store[req.params.areaId];
+    writeStore(FILE, store);
+    return res.status(204).end();
+  }
   await db
     .delete(roomAliasesTable)
     .where(eq(roomAliasesTable.areaId, req.params.areaId));
-  res.status(204).end();
+  return res.status(204).end();
 });
 
 export default router;
