@@ -524,17 +524,17 @@ function isInsideMotion(s: HAState): boolean {
 function MotionRow({
   s,
   now,
-  aliases,
+  aliases = {},
 }: {
   s: HAState;
   now: number;
-  aliases: Record<string, string>;
+  aliases?: Record<string, string>;
 }) {
   const active = s.state === "on";
   const ago = formatAgo(new Date(s.last_changed).getTime());
   void now;
   // User-set alias takes priority; otherwise clean up the HA friendly name
-  const label = aliases[s.entity_id] ?? motionLabel(friendly(s));
+  const label = (aliases)[s.entity_id] ?? motionLabel(friendly(s));
   return (
     <div className={`flex items-center justify-between py-1 ${active ? "opacity-100" : "opacity-50"}`}>
       <div className="flex items-center gap-1.5 min-w-0">
