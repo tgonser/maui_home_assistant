@@ -542,7 +542,12 @@ const CATEGORIES: Category[] = [
     label: "Sensors",
     icon: Activity,
     match: (s) => {
-      if (domainOf(s.entity_id) !== "binary_sensor" || deviceClass(s) !== "motion") return false;
+      if (domainOf(s.entity_id) !== "binary_sensor") return false;
+      const dc = deviceClass(s);
+      // Include if device_class is motion, OR entity_id matches binary_sensor.motion_*
+      // (some alarm sensors are defined without a device_class)
+      const isMotion = dc === "motion" || /^binary_sensor\.motion_/.test(s.entity_id);
+      if (!isMotion) return false;
       // Exclude Unifi camera motion sensors (G5/G6 PTZ, Turret, Instant, etc.)
       const name = friendly(s);
       return !/\bG[56]\b|PTZ|Turret|Instant\b/i.test(name);
