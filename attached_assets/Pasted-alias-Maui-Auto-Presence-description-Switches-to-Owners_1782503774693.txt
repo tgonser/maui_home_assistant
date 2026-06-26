@@ -1,0 +1,71 @@
+alias: Maui Auto Presence
+description: >
+  Switches to Owners Home when indoor motion is detected, back to Vacation after
+  one hour of quiet. Never touches Visitors or Suspend.
+triggers:
+  - trigger: time_pattern
+    minutes: 0
+  - trigger: state
+    entity_id:
+      - binary_sensor.motion_kitchen
+      - binary_sensor.motion_upstairs
+      - binary_sensor.up_stair_motion_motion
+      - binary_sensor.usl_motion_sitting
+      - binary_sensor.usl_motion_motion
+    to: "on"
+conditions:
+  - condition: template
+    value_template: |-
+      {{ not is_state('input_select.maui_house_mode', 'Visitors') and
+         not is_state('input_select.maui_house_mode', 'Suspend') }}
+  - condition: state
+    entity_id: device_tracker.tom_iphone17_temp
+    state: home
+actions:
+  - if:
+      - condition: template
+        value_template: "{{ has_recent_motion }}"
+    then:
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: input_select.maui_house_mode
+            state: Owners Home
+      - action: input_select.select_option
+        target:
+          entity_id: input_select.maui_house_mode
+        data:
+          option: Owners Home
+      - action: persistent_notification.create
+        data:
+          title: Maui Presence Detected
+          message: Motion detected indoors — switching to Owners Home and adjusting AC.
+          notification_id: maui_presence
+      - action: notify.mobile_app_tom_iphone17_temp
+        data:
+          title: 🏠 Maui Presence Detected
+          message: Motion detected indoors — switching to Owners Home and adjusting AC.
+    else:
+      - condition: state
+        entity_id: input_select.maui_house_mode
+        state: Owners Home
+      - action: input_select.select_option
+        target:
+          entity_id: input_select.maui_house_mode
+        data:
+          option: Vacation
+variables:
+  has_recent_motion: >-
+    {% set cutoff = now().timestamp() - 3600 %} {% set ns =
+    namespace(found=false) %} {% for s in states.binary_sensor %}
+      {% if s.entity_id in [
+          'binary_sensor.motion_kitchen',
+          'binary_sensor.motion_upstairs',
+          'binary_sensor.up_stair_motion_motion',
+          'binary_sensor.usl_motion_sitting',
+          'binary_sensor.usl_motion_motion'
+        ] and as_timestamp(s.last_changed) > cutoff %}
+        {% set ns.found = true %}
+      {% endif %}
+    {% endfor %} {{ ns.found }}
+mode: single
