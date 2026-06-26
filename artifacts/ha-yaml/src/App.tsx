@@ -13,6 +13,9 @@ import { useEffect, useState } from "react";
 
 const queryClient = new QueryClient();
 
+// Injected by the Express server when running under HA ingress.
+const ingressBase = (window as { __HA_INGRESS_BASE__?: string }).__HA_INGRESS_BASE__;
+
 function Home() {
   const [mounted, setMounted] = useState(false);
 
@@ -40,32 +43,41 @@ function Home() {
   );
 }
 
-function Router() {
-  // When running as an HA add-on, __HA_INGRESS_BASE__ is injected by the
-  // server.  The add-on always opens at the ingress root ("/"), so we render
-  // Wall there instead of the YAML editor to avoid needing a sub-path.
-  const isAddon = !!(window as { __HA_INGRESS_BASE__?: string }).__HA_INGRESS_BASE__;
-  return (
-    <Switch>
-      <Route path="/" component={isAddon ? Wall : Home} />
-      <Route path="/wall" component={Wall} />
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
-
-function App() {
+function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <WouterRouter base={((window as { __HA_INGRESS_BASE__?: string }).__HA_INGRESS_BASE__ ?? import.meta.env.BASE_URL).replace(/\/$/, "")}>
-            <Router />
-          </WouterRouter>
+          {children}
           <Toaster />
         </TooltipProvider>
       </QueryClientProvider>
     </ThemeProvider>
+  );
+}
+
+function App() {
+  // When __HA_INGRESS_BASE__ is present we are running as an HA add-on.
+  // Skip Wouter entirely — path-based routing is meaningless inside the
+  // ingress iframe and has caused persistent 404s due to base-path math.
+  if (ingressBase) {
+    return (
+      <AppProviders>
+        <Wall />
+      </AppProviders>
+    );
+  }
+
+  return (
+    <AppProviders>
+      <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+        <Switch>
+          <Route path="/" component={Home} />
+          <Route path="/wall" component={Wall} />
+          <Route component={NotFound} />
+        </Switch>
+      </WouterRouter>
+    </AppProviders>
   );
 }
 
