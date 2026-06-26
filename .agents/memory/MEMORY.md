@@ -2,3 +2,4 @@
 - [HA duplicate entity disambiguation](ha-duplicate-entity-ids.md) — same friendly name across integrations creates `_2`/`_3` suffixes; sibling lookups must strip them
 - [Bluesound/Sonos group slaves in HA](bluesound-group-slaves.md) — slaves report idle with no metadata; use `master`/`group_leader` to inherit; unjoin 500s without entity_id or when not actually grouped
 - [HA friendly-name renames & multi-house climate](ha-friendly-name-propagation.md) — Honeywell TCC entities inherit device name (rename the device, not entity); Maui kiosk filters climate by entity_id allowlist, not name prefix
+- [HA add-on supervisor proxy](ha-addon-supervisor-proxy.md) — core API needs `homeassistant_api: true` (else 401); `new URL().origin` drops `/core`; bump config `version:` for HA to detect updates
