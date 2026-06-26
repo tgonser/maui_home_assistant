@@ -545,8 +545,11 @@ const CATEGORIES: Category[] = [
       if (domainOf(s.entity_id) !== "binary_sensor") return false;
       const dc = deviceClass(s);
       // Include if device_class is motion, OR entity_id matches binary_sensor.motion_*
-      // (some alarm sensors are defined without a device_class)
-      const isMotion = dc === "motion" || /^binary_sensor\.motion_/.test(s.entity_id);
+      // but NOT diagnostic sub-entities (battery, tamper, contact, moisture, alarm)
+      const isMotion =
+        dc === "motion" ||
+        (/^binary_sensor\.motion_/.test(s.entity_id) &&
+          !/_battery|_tamper|_contact|_moisture|_alarm/.test(s.entity_id));
       if (!isMotion) return false;
       // Exclude Unifi camera motion sensors (G5/G6 PTZ, Turret, Instant, etc.)
       const name = friendly(s);
