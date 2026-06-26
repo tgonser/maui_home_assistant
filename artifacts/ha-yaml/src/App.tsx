@@ -55,7 +55,7 @@ function App() {
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+          <WouterRouter base={(document.querySelector('base')?.getAttribute('href') ?? import.meta.env.BASE_URL).replace(/\/$/, "")}>
             <Router />
           </WouterRouter>
           <Toaster />
