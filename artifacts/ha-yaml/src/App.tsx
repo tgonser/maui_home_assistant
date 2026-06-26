@@ -41,9 +41,13 @@ function Home() {
 }
 
 function Router() {
+  // When running as an HA add-on, __HA_INGRESS_BASE__ is injected by the
+  // server.  The add-on always opens at the ingress root ("/"), so we render
+  // Wall there instead of the YAML editor to avoid needing a sub-path.
+  const isAddon = !!(window as { __HA_INGRESS_BASE__?: string }).__HA_INGRESS_BASE__;
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      <Route path="/" component={isAddon ? Wall : Home} />
       <Route path="/wall" component={Wall} />
       <Route component={NotFound} />
     </Switch>

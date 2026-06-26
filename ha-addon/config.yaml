@@ -1,6 +1,6 @@
 name: "Wall Kiosk"
 description: "Solar-aware tablet dashboard for Maui home."
-version: "1.0.6"
+version: "1.0.7"
 slug: "wall_kiosk"
 startup: application
 boot: auto
@@ -11,7 +11,7 @@ arch:
 image: "ghcr.io/tgonser/maui_home_assistant/wall-kiosk"
 ingress: true
 ingress_port: 8099
-ingress_entry: /wall
+ingress_entry: /
 panel_icon: mdi:tablet-dashboard
 panel_title: Wall
 options: {}
