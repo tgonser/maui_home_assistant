@@ -51,7 +51,11 @@ router.post("/ha/call", async (req, res) => {
     return res.status(400).json({ error: "URL must be http(s)" });
   }
 
-  const target = `${base.origin}${path}`;
+  // Use base.origin + base.pathname so that supervisor URLs like
+  // http://supervisor/core correctly become http://supervisor/core/api/states
+  // (base.origin alone would drop the /core path segment).
+  const basePath = base.pathname === "/" ? "" : base.pathname.replace(/\/$/, "");
+  const target = `${base.origin}${basePath}${path}`;
   const httpMethod = (typeof method === "string" ? method : "GET").toUpperCase();
 
   try {
@@ -131,7 +135,8 @@ router.post("/ha/ws-batch", async (req, res) => {
     return res.status(400).json({ error: "Invalid 'url'" });
   }
   const wsScheme = base.protocol === "https:" ? "wss:" : "ws:";
-  const wsUrl = `${wsScheme}//${base.host}/api/websocket`;
+  const wBasePath = base.pathname === "/" ? "" : base.pathname.replace(/\/$/, "");
+  const wsUrl = `${wsScheme}//${base.host}${wBasePath}/api/websocket`;
 
   type Result = {
     id: number;

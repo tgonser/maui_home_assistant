@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useHAStore, haStates, haCameraImage, haCallService, haHistory, haStatistics, haAutoConnectIfAddon, type HAState, type HAStatisticPoint } from "@/lib/ha";
+import { useHAStore, haStates, haTest, haCameraImage, haCallService, haHistory, haStatistics, haAutoConnectIfAddon, type HAState, type HAStatisticPoint } from "@/lib/ha";
 import {
   isMediaActive,
   displayMediaState,
@@ -1946,14 +1946,22 @@ export function Wall() {
   useEffect(() => {
     if (!url || !token) return;
     let cancelled = false;
+    const { setStatus, setConfig } = useHAStore.getState();
+    setStatus("connecting");
     const load = async () => {
       const r = await haStates();
       if (cancelled) return;
       if (r.ok) {
         setStates(r.data);
         setError(null);
+        setStatus("connected");
+        // Fetch config (location name, timezone) on first successful load.
+        if (!useHAStore.getState().config) {
+          haTest().catch(() => undefined);
+        }
       } else {
         setError(r.error);
+        setStatus("error", r.error);
       }
     };
     load();

@@ -330,6 +330,13 @@ export async function haAddonConfig(): Promise<{ addon: boolean }> {
 export async function haAutoConnectIfAddon(): Promise<boolean> {
   const { url } = useHAStore.getState();
   if (url) return false; // already configured by user
+  // Fast path: server injects __HA_ADDON__ when SUPERVISOR_TOKEN is present,
+  // so we don't need a network round-trip to discover the add-on context.
+  if ((window as { __HA_ADDON__?: boolean }).__HA_ADDON__) {
+    useHAStore.getState().setCredentials("__supervisor__", "addon");
+    return true;
+  }
+  // Fallback for direct-access (non-ingress) scenarios.
   const { addon } = await haAddonConfig();
   if (!addon) return false;
   useHAStore.getState().setCredentials("__supervisor__", "addon");

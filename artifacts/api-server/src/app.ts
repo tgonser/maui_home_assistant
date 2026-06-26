@@ -74,8 +74,9 @@ if (staticDir) {
     // Inject the ingress base as a JS global AND as a <base> tag.
     // The JS global is the reliable source for Wouter's base prop because
     // <base>.getAttribute('href') can return an absolute URL in some browsers.
+    const addonFlag = process.env.SUPERVISOR_TOKEN ? `window.__HA_ADDON__=true;` : "";
     const ingressScript = ingressPath
-      ? `<script>window.__HA_INGRESS_BASE__=${JSON.stringify(ingressPath)};</script>`
+      ? `<script>window.__HA_INGRESS_BASE__=${JSON.stringify(ingressPath)};${addonFlag}</script>`
       : "";
     const basePath = ingressPath ? `${ingressPath}/` : "/";
     html = html.replace(
