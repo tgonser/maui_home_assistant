@@ -89,8 +89,12 @@ function applyRoomAlias(name: string): string {
   return out;
 }
 
-const friendly = (s: HAState) =>
-  applyRoomAlias((s.attributes.friendly_name as string | undefined) ?? s.entity_id);
+const friendly = (s: HAState) => {
+  // __alias__ marks a user-set override — skip applyRoomAlias so "Beach Room"
+  // doesn't get silently transformed back to "Bed 2".
+  if (s.attributes.__alias__) return s.attributes.__alias__ as string;
+  return applyRoomAlias((s.attributes.friendly_name as string | undefined) ?? s.entity_id);
+};
 const unit = (s: HAState) =>
   (s.attributes.unit_of_measurement as string | undefined) ?? "";
 const domainOf = (id: string) => id.split(".")[0] ?? "";
@@ -2031,7 +2035,7 @@ export function Wall() {
     if (!alias) return s;
     return {
       ...s,
-      attributes: { ...s.attributes, friendly_name: alias },
+      attributes: { ...s.attributes, friendly_name: alias, __alias__: alias },
     };
   };
 
