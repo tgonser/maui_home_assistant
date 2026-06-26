@@ -541,13 +541,8 @@ const CATEGORIES: Category[] = [
     key: "sensors",
     label: "Sensors",
     icon: Activity,
-    match: (s) => {
-      if (domainOf(s.entity_id) !== "binary_sensor") return false;
-      if (deviceClass(s) !== "motion") return false;
-      const name = friendly(s);
-      // Alarm system motion sensors: Ubiquiti USL Motion + UP sense
-      return /USL-Motion/i.test(name) || /UP sense/i.test(name);
-    },
+    match: (s) =>
+      domainOf(s.entity_id) === "binary_sensor" && deviceClass(s) === "motion",
   },
   {
     key: "settings",
@@ -1665,15 +1660,23 @@ function MonsteraLeaf() {
   );
 }
 
-// Extract a clean location name from a USL Motion or UP sense friendly name.
+// Extract a clean location name from any motion sensor friendly name.
 // "USL-Motion_Bar Motion" → "Bar"
 // "UP sense - stairs Motion" → "Stairs"
+// "MOTION KITCHEN" → "Kitchen"
+// "MOTION BATHROOM 2" → "Bathroom 2"
 function motionSensorLabel(name: string): string {
-  return name
+  const cleaned = name
     .replace(/^USL-Motion_/i, "")
     .replace(/^UP sense\s*-\s*/i, "")
+    .replace(/^MOTION\s+/i, "")
     .replace(/\s*Motion\s*$/i, "")
     .trim() || name;
+  // Title-case if the result is all-caps
+  if (cleaned === cleaned.toUpperCase()) {
+    return cleaned.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+  return cleaned;
 }
 
 function relativeTime(iso: string): string {
