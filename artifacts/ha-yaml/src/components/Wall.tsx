@@ -7,7 +7,9 @@ import {
   effectiveMedia,
 } from "@/lib/mediaState";
 import { useEntityAliases } from "@/lib/entityAliases";
-import { friendlyName, motionSensorLabel } from "@/lib/display";
+import { useRoomAliases } from "@/lib/roomAliases";
+import { useRegistry } from "@/lib/rooms";
+import { friendlyName, motionSensorLabel, displayNameWithRoom } from "@/lib/display";
 import {
   Lightbulb,
   Thermometer,
@@ -2009,9 +2011,19 @@ export function Wall() {
   const [openEntity, setOpenEntity] = useState<HAState | null>(null);
   const entityAliases = useEntityAliases((s) => s.aliases);
   const loadEntityAliases = useEntityAliases((s) => s.load);
+  const roomAliases = useRoomAliases((s) => s.aliases);
+  const loadRoomAliases = useRoomAliases((s) => s.load);
+  const registry = useRegistry();
+  const loadRegistry = useRegistry((s) => s.load);
+  const areaNames = useMemo(
+    () => new Map(registry.areas.map((a) => [a.area_id, a.name])),
+    [registry.areas],
+  );
   useEffect(() => {
     loadEntityAliases();
-  }, [loadEntityAliases]);
+    loadRoomAliases();
+    loadRegistry();
+  }, [loadEntityAliases, loadRoomAliases, loadRegistry]);
 
   // In add-on mode the server holds SUPERVISOR_TOKEN and we auto-connect
   // without showing the connect dialog. Runs once on mount; skipped if the
@@ -2021,11 +2033,12 @@ export function Wall() {
   }, []);
 
   const applyAlias = (s: HAState): HAState => {
-    const alias = entityAliases[s.entity_id];
-    if (!alias) return s;
+    const areaId = registry.entityArea.get(s.entity_id);
+    const name = displayNameWithRoom(s, entityAliases, roomAliases, areaNames, areaId);
+    if (name === friendlyName(s)) return s;
     return {
       ...s,
-      attributes: { ...s.attributes, friendly_name: alias },
+      attributes: { ...s.attributes, friendly_name: name },
     };
   };
 

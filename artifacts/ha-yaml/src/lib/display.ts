@@ -36,3 +36,34 @@ export function motionSensorLabel(name: string): string {
 export function displayName(s: HAState, aliases?: Record<string, string>): string {
   return aliases?.[s.entity_id] ?? friendlyName(s);
 }
+
+/**
+ * Display name with full precedence:
+ *   1. Entity alias (user-set per tile)
+ *   2. Room alias prefix replacement — if friendly name starts with the HA
+ *      area name and that area has been aliased, substitute the new room name
+ *      (e.g. "Bedroom 3 Light" + alias "Board Room" → "Board Room Light")
+ *   3. Raw HA friendly name
+ */
+export function displayNameWithRoom(
+  s: HAState,
+  entityAliases?: Record<string, string>,
+  roomAliases?: Record<string, string>,
+  /** area_id → HA canonical area name */
+  areaNames?: Map<string, string>,
+  /** resolved area_id for this entity */
+  areaId?: string,
+): string {
+  if (entityAliases?.[s.entity_id]) return entityAliases[s.entity_id];
+
+  if (areaId && roomAliases?.[areaId] && areaNames) {
+    const haRoom = areaNames.get(areaId);
+    const fn = friendlyName(s);
+    if (haRoom && fn.toLowerCase().startsWith(haRoom.toLowerCase())) {
+      const suffix = fn.slice(haRoom.length);
+      return (roomAliases[areaId] + suffix).trim();
+    }
+  }
+
+  return friendlyName(s);
+}
