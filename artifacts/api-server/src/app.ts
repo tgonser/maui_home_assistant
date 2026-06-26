@@ -43,7 +43,7 @@ if (staticDir) {
   // SPA catch-all: serve index.html for every non-API route, injecting a
   // <base> tag so that root-relative asset/API paths work correctly both
   // through HA ingress (which prefixes a hash path) and via direct access.
-  app.get("*", (req: Request, res: Response, _next: NextFunction) => {
+  app.get("/{*splat}", (req: Request, res: Response, _next: NextFunction) => {
     const indexPath = path.join(staticDir, "index.html");
     let html: string;
     try {
