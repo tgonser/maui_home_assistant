@@ -56,6 +56,13 @@ if (staticDir) {
     // /api/hassio_ingress/<hash>  — the browser resolves all paths relative to
     // this base, so we inject it so React Router and fetch() work correctly.
     const ingressPath = (req.headers["x-ingress-path"] as string | undefined) ?? "";
+    if (ingressPath) {
+      // Vite builds with absolute asset paths (/assets/...) which bypass the
+      // <base> tag and break under HA ingress.  Rewrite them so they carry
+      // the ingress prefix, e.g. /api/hassio_ingress/<hash>/assets/...
+      // The negative lookahead (?!\/) avoids touching protocol-relative URLs.
+      html = html.replace(/((?:src|href)=")\/(?!\/)/g, `$1${ingressPath}/`);
+    }
     const basePath = ingressPath ? `${ingressPath}/` : "/";
     html = html.replace("<head>", `<head><base href="${basePath}">`);
     res.setHeader("Content-Type", "text/html; charset=utf-8");
