@@ -70,8 +70,27 @@ type Category = {
   match: (s: HAState) => boolean;
 };
 
+// Central room name aliases — applied everywhere a friendly name is displayed.
+const ROOM_ALIAS_PATTERNS: [RegExp, string][] = [
+  [/Maui-?Molokini/gi,   "Bed 4"],
+  [/Maui-?UpMauka/gi,    "Bed 5"],
+  [/Maui-?BoardRm/gi,    "Bed 3"],
+  [/Maui-?Beach\s*Rm/gi, "Bed 2"],
+  [/\bMolokini\b/gi,     "Bed 4"],
+  [/\bUpMauka\b/gi,      "Bed 5"],
+  [/\bBoardRm\b/gi,      "Bed 3"],
+  [/\bBeach\s+Rm\b/gi,   "Bed 2"],
+  [/\bBeach\s+Room\b/gi, "Bed 2"],
+  [/\bMauka\b/gi,        "Bed 5"],
+];
+function applyRoomAlias(name: string): string {
+  let out = name;
+  for (const [pattern, alias] of ROOM_ALIAS_PATTERNS) out = out.replace(pattern, alias);
+  return out;
+}
+
 const friendly = (s: HAState) =>
-  (s.attributes.friendly_name as string | undefined) ?? s.entity_id;
+  applyRoomAlias((s.attributes.friendly_name as string | undefined) ?? s.entity_id);
 const unit = (s: HAState) =>
   (s.attributes.unit_of_measurement as string | undefined) ?? "";
 const domainOf = (id: string) => id.split(".")[0] ?? "";
@@ -1537,25 +1556,25 @@ function EnergyDashboard({ states }: { states: HAState[] }) {
 // Match against entity_id (snake_case), most-specific pattern first.
 // Bath patterns must come before their parent room pattern.
 const SHADE_ROOM_PATTERNS: { label: string; pattern: RegExp }[] = [
-  { label: "Beach Room Bath",  pattern: /floor_1_bedroom_2.*bath/   },
-  { label: "Beach Room",       pattern: /floor_1_bedroom_2/          },
-  { label: "Utility",          pattern: /floor_1.*util/              },
-  { label: "Pub",              pattern: /floor_1_bar/                },
-  { label: "Master Bath",      pattern: /floor_2_master.*bath/       },
-  { label: "Master Bed",       pattern: /floor_2_master/             },
-  { label: "Mauka Bed",        pattern: /floor_2_bedroom_5/          },
-  { label: "Molokini Bath",    pattern: /floor_2_bedroom_4.*bath/    },
-  { label: "Molokini Bed",     pattern: /floor_2_bedroom_4/          },
+  { label: "Bed 2 Bath",   pattern: /floor_1_bedroom_2.*bath/   },
+  { label: "Bed 2",        pattern: /floor_1_bedroom_2/          },
+  { label: "Utility",      pattern: /floor_1.*util/              },
+  { label: "Pub",          pattern: /floor_1_bar/                },
+  { label: "Master Bath",  pattern: /floor_2_master.*bath/       },
+  { label: "Master Bed",   pattern: /floor_2_master/             },
+  { label: "Bed 5",        pattern: /floor_2_bedroom_5/          },
+  { label: "Bed 4 Bath",   pattern: /floor_2_bedroom_4.*bath/    },
+  { label: "Bed 4",        pattern: /floor_2_bedroom_4/          },
 ];
 
 const SHADE_FLOORS: { floor: string; rooms: string[] }[] = [
   {
     floor: "First Floor",
-    rooms: ["Beach Room", "Beach Room Bath", "Utility", "Pub"],
+    rooms: ["Bed 2", "Bed 2 Bath", "Utility", "Pub"],
   },
   {
     floor: "Second Floor",
-    rooms: ["Master Bed", "Master Bath", "Mauka Bed", "Molokini Bed", "Molokini Bath"],
+    rooms: ["Master Bed", "Master Bath", "Bed 5", "Bed 4", "Bed 4 Bath"],
   },
 ];
 
