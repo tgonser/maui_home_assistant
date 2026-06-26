@@ -47,6 +47,7 @@ import {
   type SuperViewSlot,
 } from "./SuperViewSettings";
 import { useEntityAliases } from "@/lib/entityAliases";
+import { friendlyName as friendlyName_, motionSensorLabel, displayName } from "@/lib/display";
 
 function useResolvedSlot(
   states: HAState[],
@@ -57,8 +58,7 @@ function useResolvedSlot(
   return states.find((s) => s.entity_id === overrideId);
 }
 
-const friendly = (s: HAState) =>
-  (s.attributes.friendly_name as string | undefined) ?? s.entity_id;
+const friendly = friendlyName_;
 const domainOf = (id: string) => id.split(".")[0] ?? "";
 const deviceClass = (s: HAState) =>
   (s.attributes.device_class as string | undefined) ?? "";
@@ -486,19 +486,6 @@ function PowerwallStat({ states }: { states: HAState[] }) {
   );
 }
 
-// Clean label from motion sensor name — mirrors motionSensorLabel in Wall.tsx
-function motionLabel(name: string): string {
-  const cleaned = name
-    .replace(/^USL-Motion_/i, "")
-    .replace(/^UP sense\s*-\s*/i, "")
-    .replace(/^MOTION\s+/i, "")
-    .replace(/\s*Motion\s*$/i, "")
-    .trim() || name;
-  if (cleaned === cleaned.toUpperCase()) {
-    return cleaned.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-  }
-  return cleaned;
-}
 
 // Cameras outside = device_class motion binary sensors under camera domain names,
 // or binary_sensor.* whose friendly name contains camera model keywords.
@@ -534,7 +521,8 @@ function MotionRow({
   const ago = formatAgo(new Date(s.last_changed).getTime());
   void now;
   // User-set alias takes priority; otherwise clean up the HA friendly name
-  const label = (aliases)[s.entity_id] ?? motionLabel(friendly(s));
+  const alias = aliases?.[s.entity_id];
+  const label = alias ?? motionSensorLabel(friendly(s));
   return (
     <div className={`flex items-center justify-between py-1 ${active ? "opacity-100" : "opacity-50"}`}>
       <div className="flex items-center gap-1.5 min-w-0">

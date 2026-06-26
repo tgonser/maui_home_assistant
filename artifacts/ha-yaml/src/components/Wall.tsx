@@ -7,6 +7,7 @@ import {
   effectiveMedia,
 } from "@/lib/mediaState";
 import { useEntityAliases } from "@/lib/entityAliases";
+import { friendlyName, motionSensorLabel } from "@/lib/display";
 import {
   Lightbulb,
   Thermometer,
@@ -67,11 +68,9 @@ type Category = {
 };
 
 const friendly = (s: HAState) => {
-  // User-set entity alias (via rename UI) takes top priority.
-  if (s.attributes.__alias__) return s.attributes.__alias__ as string;
   // Shade section label injected by ShadesView — keeps tile names matching headers.
   if (s.attributes.__shade_room__) return s.attributes.__shade_room__ as string;
-  return (s.attributes.friendly_name as string | undefined) ?? s.entity_id;
+  return friendlyName(s);
 };
 const unit = (s: HAState) =>
   (s.attributes.unit_of_measurement as string | undefined) ?? "";
@@ -1658,24 +1657,6 @@ function MonsteraLeaf() {
   );
 }
 
-// Extract a clean location name from any motion sensor friendly name.
-// "USL-Motion_Bar Motion" → "Bar"
-// "UP sense - stairs Motion" → "Stairs"
-// "MOTION KITCHEN" → "Kitchen"
-// "MOTION BATHROOM 2" → "Bathroom 2"
-function motionSensorLabel(name: string): string {
-  const cleaned = name
-    .replace(/^USL-Motion_/i, "")
-    .replace(/^UP sense\s*-\s*/i, "")
-    .replace(/^MOTION\s+/i, "")
-    .replace(/\s*Motion\s*$/i, "")
-    .trim() || name;
-  // Title-case if the result is all-caps
-  if (cleaned === cleaned.toUpperCase()) {
-    return cleaned.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-  }
-  return cleaned;
-}
 
 function relativeTime(iso: string): string {
   const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
@@ -2044,7 +2025,7 @@ export function Wall() {
     if (!alias) return s;
     return {
       ...s,
-      attributes: { ...s.attributes, friendly_name: alias, __alias__: alias },
+      attributes: { ...s.attributes, friendly_name: alias },
     };
   };
 

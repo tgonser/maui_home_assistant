@@ -4,9 +4,9 @@ import { useRegistry } from "@/lib/rooms";
 import { useRoomAliases } from "@/lib/roomAliases";
 import { isSceneToggle } from "./Wall";
 import type { HAState } from "@/lib/ha";
+import { friendlyName as friendly_ } from "@/lib/display";
 
-const friendly = (s: HAState) =>
-  (s.attributes.friendly_name as string | undefined) ?? s.entity_id;
+const friendly = friendly_;
 
 export function GroupedByRoomView({
   entities,

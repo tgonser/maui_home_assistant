@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useHAStore, haStates, type HAState } from "@/lib/ha";
+import { friendlyName as friendly_ } from "@/lib/display";
 import {
   Lightbulb,
   ToggleRight,
@@ -49,9 +50,7 @@ function domainOf(entityId: string) {
   return entityId.split(".")[0] ?? "other";
 }
 
-function friendly(s: HAState) {
-  return (s.attributes.friendly_name as string | undefined) ?? s.entity_id;
-}
+const friendly = friendly_;
 
 function unit(s: HAState) {
   return (s.attributes.unit_of_measurement as string | undefined) ?? "";
