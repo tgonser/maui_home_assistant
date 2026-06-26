@@ -3,6 +3,7 @@ set -e
 
 # Port the Express server listens on (matches ingress_port in config.yaml)
 export PORT="${PORT:-8099}"
+export NODE_ENV="production"
 
 # Tell Express where to find the built Vite static files
 export STATIC_DIR="/app/public"
