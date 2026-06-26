@@ -1628,7 +1628,9 @@ function ShadesView({
                     {room}
                   </div>
                   <div className="grid grid-cols-2 auto-rows-[110px] gap-3">
-                    {items.map(rt)}
+                    {items.map((s) =>
+                      rt({ ...s, attributes: { ...s.attributes, __shade_room__: room } })
+                    )}
                   </div>
                 </div>
               );
@@ -1656,7 +1658,15 @@ function CoverTile({ s }: { s: HAState }) {
   const stateLabel = s.state.charAt(0).toUpperCase() + s.state.slice(1);
   const valueText = pct !== undefined ? `${stateLabel} ${pct}%` : stateLabel;
   return (
-    <Tile icon={Blinds} label={friendly(s)} sub="shade">
+    <Tile
+      icon={Blinds}
+      label={
+        (s.attributes.__alias__ as string | undefined) ??
+        (s.attributes.__shade_room__ as string | undefined) ??
+        friendly(s)
+      }
+      sub="shade"
+    >
       <div
         className="text-xl font-semibold tabular-nums truncate mt-0.5"
         style={{ color: isOpen ? "var(--brass-bright)" : undefined }}
