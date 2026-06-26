@@ -1920,6 +1920,10 @@ const HOUSE_MODES = [
   { option: "Suspend",     icon: Pause,    label: "Suspend" },
 ] as const;
 
+// Presence entity for vacation guard — case-insensitive search below
+const PHONE_TRACKER_PATTERN = /tom.*iphone.*temp|iphone.*tom/i;
+const VACATION_GUARD_HOURS = 48;
+
 function HouseModeStrip({
   states,
   onChanged,
@@ -1935,8 +1939,32 @@ function HouseModeStrip({
 
   if (!entity) return null;
 
+  // Find phone tracker — matches device_tracker.tom_iphone17_temp or similar
+  const phoneTracker = states.find(
+    (s) =>
+      domainOf(s.entity_id) === "device_tracker" &&
+      PHONE_TRACKER_PATTERN.test(s.entity_id),
+  );
+
+  // Vacation guard: if currently Vacation AND phone hasn't been "home" recently,
+  // block switching to Owners from this kiosk (worker motion shouldn't flip it).
+  const vacationLocked = (() => {
+    if (current !== "Vacation") return false;
+    if (!phoneTracker) return false;
+    const isHome = phoneTracker.state === "home";
+    if (isHome) return false;
+    // Check how long since it was last "home" using last_changed
+    // (last_changed updates whenever state changes, so if it's not "home" now
+    // and last_changed is >48h ago, the phone hasn't been home in that time)
+    const lastChanged = new Date(phoneTracker.last_changed).getTime();
+    const hoursAgo = (Date.now() - lastChanged) / 3_600_000;
+    return hoursAgo >= VACATION_GUARD_HOURS;
+  })();
+
   const select = async (option: string) => {
     if (busy || option === current) return;
+    // Block Owners if vacation-locked
+    if (vacationLocked && option === "Owners Home") return;
     setBusy(true);
     await haCallService("input_select", "select_option", {
       entity_id: "input_select.maui_house_mode",
@@ -1947,20 +1975,23 @@ function HouseModeStrip({
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 flex-wrap">
       {HOUSE_MODES.map(({ option, icon: Icon, label }) => {
         const isActive = current === option;
+        const isBlocked = vacationLocked && option === "Owners Home";
         return (
           <button
             key={option}
             type="button"
             onClick={() => select(option)}
-            disabled={busy}
+            disabled={busy || isBlocked}
             aria-pressed={isActive}
-            aria-label={`Set house mode to ${option}`}
+            aria-label={`Set house mode to ${option}${isBlocked ? " (locked — phone not home for 48h)" : ""}`}
+            title={isBlocked ? "Phone hasn't been home for 48h — vacation lock active" : undefined}
             className={[
               "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all wall-tile",
               isActive ? "wall-tile--active" : "opacity-50 hover:opacity-80",
+              isBlocked ? "opacity-25 cursor-not-allowed line-through" : "",
               busy ? "cursor-wait" : "",
             ].join(" ")}
           >
@@ -1969,6 +2000,13 @@ function HouseModeStrip({
           </button>
         );
       })}
+      {vacationLocked && (
+        <span className="text-[10px] uppercase tracking-wider text-[var(--brass)] opacity-70 ml-1">
+          vacation lock · phone away {Math.floor(
+            (Date.now() - new Date(phoneTracker!.last_changed).getTime()) / 3_600_000
+          )}h
+        </span>
+      )}
     </div>
   );
 }

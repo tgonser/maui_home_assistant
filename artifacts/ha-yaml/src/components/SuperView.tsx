@@ -30,6 +30,8 @@ import {
   Tv,
   Apple,
   Settings,
+  Home,
+  Wifi,
 } from "lucide-react";
 import {
   haCallService,
@@ -483,6 +485,113 @@ function PowerwallStat({ states }: { states: HAState[] }) {
   );
 }
 
+// Clean label from motion sensor name — mirrors motionSensorLabel in Wall.tsx
+function motionLabel(name: string): string {
+  const cleaned = name
+    .replace(/^USL-Motion_/i, "")
+    .replace(/^UP sense\s*-\s*/i, "")
+    .replace(/^MOTION\s+/i, "")
+    .replace(/\s*Motion\s*$/i, "")
+    .trim() || name;
+  if (cleaned === cleaned.toUpperCase()) {
+    return cleaned.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+  return cleaned;
+}
+
+// Cameras outside = device_class motion binary sensors under camera domain names,
+// or binary_sensor.* whose friendly name contains camera model keywords.
+// Inside = binary_sensor.motion_* that are NOT camera-model sensors.
+function isOutsideMotion(s: HAState): boolean {
+  return (
+    domainOf(s.entity_id) === "binary_sensor" &&
+    deviceClass(s) === "motion" &&
+    /\bG[56]\b|PTZ|Turret|Instant\b/i.test(friendly(s))
+  );
+}
+function isInsideMotion(s: HAState): boolean {
+  if (domainOf(s.entity_id) !== "binary_sensor") return false;
+  const dc = deviceClass(s);
+  const isMotion =
+    dc === "motion" ||
+    (/^binary_sensor\.motion_/.test(s.entity_id) &&
+      !/_battery|_tamper|_contact|_moisture|_alarm/.test(s.entity_id));
+  if (!isMotion) return false;
+  return !/\bG[56]\b|PTZ|Turret|Instant\b/i.test(friendly(s));
+}
+
+function MotionRow({ s, now }: { s: HAState; now: number }) {
+  const active = s.state === "on";
+  const ago = formatAgo(new Date(s.last_changed).getTime());
+  void now;
+  return (
+    <div className={`flex items-center justify-between py-1 ${active ? "opacity-100" : "opacity-50"}`}>
+      <div className="flex items-center gap-1.5 min-w-0">
+        <span
+          className={`w-1.5 h-1.5 rounded-full shrink-0 ${active ? "bg-amber-400" : "bg-[var(--cream-muted)]"}`}
+        />
+        <span className="text-xs truncate">{motionLabel(friendly(s))}</span>
+      </div>
+      <span className="text-[10px] text-[var(--cream-muted)] ml-2 shrink-0">{ago}</span>
+    </div>
+  );
+}
+
+function RecentMotionTile({ states }: { states: HAState[] }) {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const inside = useMemo(
+    () =>
+      [...states.filter(isInsideMotion)].sort(
+        (a, b) => new Date(b.last_changed).getTime() - new Date(a.last_changed).getTime(),
+      ).slice(0, 6),
+    [states],
+  );
+  const outside = useMemo(
+    () =>
+      [...states.filter(isOutsideMotion)].sort(
+        (a, b) => new Date(b.last_changed).getTime() - new Date(a.last_changed).getTime(),
+      ).slice(0, 6),
+    [states],
+  );
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, scale: 0.96 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="wall-tile col-span-2 row-span-2 p-4 flex flex-col"
+    >
+      <div className="flex items-center gap-2 mb-3 relative z-[1]">
+        <div className="wall-icon-wrap p-1.5">
+          <Activity className="w-4 h-4" />
+        </div>
+        <span className="text-xs uppercase tracking-[0.18em] text-[var(--cream-muted)]">Recent Motion</span>
+      </div>
+      <div className="grid grid-cols-2 gap-x-4 flex-1 relative z-[1]">
+        <div>
+          <div className="text-[9px] uppercase tracking-widest text-[var(--brass)] mb-1">Inside</div>
+          {inside.length === 0
+            ? <div className="text-xs text-[var(--cream-muted)] opacity-50">No sensors</div>
+            : inside.map((s) => <MotionRow key={s.entity_id} s={s} now={now} />)
+          }
+        </div>
+        <div>
+          <div className="text-[9px] uppercase tracking-widest text-[var(--brass)] mb-1">Outside</div>
+          {outside.length === 0
+            ? <div className="text-xs text-[var(--cream-muted)] opacity-50">No sensors</div>
+            : outside.map((s) => <MotionRow key={s.entity_id} s={s} now={now} />)
+          }
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 function LastMotionCamera({ states }: { states: HAState[] }) {
   const cameraOverride = useResolvedSlot(states, "lastMotionCamera");
   const motionSensors = findEntities(
@@ -831,6 +940,7 @@ export function SuperView({ states }: { states: HAState[] }) {
         <SolarProduction states={states} />
         <EnergyUsage states={states} />
         {stats.lights.length === 0 ? null : <PowerwallStat states={states} />}
+        <RecentMotionTile states={states} />
         <LastMotionCamera states={states} />
       </div>
       <SuperViewSettings
