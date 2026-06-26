@@ -70,30 +70,12 @@ type Category = {
   match: (s: HAState) => boolean;
 };
 
-// Central room name aliases — applied everywhere a friendly name is displayed.
-const ROOM_ALIAS_PATTERNS: [RegExp, string][] = [
-  [/Maui-?Molokini/gi,   "Bed 4"],
-  [/Maui-?UpMauka/gi,    "Bed 5"],
-  [/Maui-?BoardRm/gi,    "Bed 3"],
-  [/Maui-?Beach\s*Rm/gi, "Bed 2"],
-  [/\bMolokini\b/gi,     "Bed 4"],
-  [/\bUpMauka\b/gi,      "Bed 5"],
-  [/\bBoardRm\b/gi,      "Bed 3"],
-  [/\bBeach\s+Rm\b/gi,   "Bed 2"],
-  [/\bBeach\s+Room\b/gi, "Bed 2"],
-  [/\bMauka\b/gi,        "Bed 5"],
-];
-function applyRoomAlias(name: string): string {
-  let out = name;
-  for (const [pattern, alias] of ROOM_ALIAS_PATTERNS) out = out.replace(pattern, alias);
-  return out;
-}
-
 const friendly = (s: HAState) => {
-  // __alias__ marks a user-set override — skip applyRoomAlias so "Beach Room"
-  // doesn't get silently transformed back to "Bed 2".
+  // User-set entity alias (via rename UI) takes top priority.
   if (s.attributes.__alias__) return s.attributes.__alias__ as string;
-  return applyRoomAlias((s.attributes.friendly_name as string | undefined) ?? s.entity_id);
+  // Shade section label injected by ShadesView — keeps tile names matching headers.
+  if (s.attributes.__shade_room__) return s.attributes.__shade_room__ as string;
+  return (s.attributes.friendly_name as string | undefined) ?? s.entity_id;
 };
 const unit = (s: HAState) =>
   (s.attributes.unit_of_measurement as string | undefined) ?? "";
