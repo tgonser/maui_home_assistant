@@ -2000,13 +2000,21 @@ function HouseModeStrip({
           </button>
         );
       })}
-      {vacationLocked && (
-        <span className="text-[10px] uppercase tracking-wider text-[var(--brass)] opacity-70 ml-1">
-          vacation lock · phone away {Math.floor(
-            (Date.now() - new Date(phoneTracker!.last_changed).getTime()) / 3_600_000
-          )}h
-        </span>
-      )}
+      {current === "Vacation" && phoneTracker && (() => {
+        const isHome = phoneTracker.state === "home";
+        const hoursAway = Math.floor(
+          (Date.now() - new Date(phoneTracker.last_changed).getTime()) / 3_600_000
+        );
+        return (
+          <span className={[
+            "text-[10px] uppercase tracking-wider ml-2 flex items-center gap-1",
+            isHome ? "text-emerald-400" : "text-[var(--cream-muted)]",
+          ].join(" ")}>
+            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isHome ? "bg-emerald-400" : "bg-[var(--cream-muted)]"}`} />
+            {isHome ? "Present" : `Not Present · ${hoursAway}h away`}
+          </span>
+        );
+      })()}
     </div>
   );
 }
