@@ -18,8 +18,12 @@ export function motionSensorLabel(name: string): string {
     .replace(/^UP sense\s*-\s*/i, "")
     .replace(/^MOTION\s+/i, "")
     .replace(/\s*Motion\s*$/i, "")
+    // Strip UniFi camera generation numbers — not descriptive
+    .replace(/\bG[56]\b/gi, "")
+    .replace(/\s+/g, " ")
     .trim() || name;
-  if (cleaned === cleaned.toUpperCase()) {
+  // Title-case if all-caps or all-lowercase
+  if (cleaned === cleaned.toUpperCase() || cleaned === cleaned.toLowerCase()) {
     return cleaned.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
   }
   return cleaned;
