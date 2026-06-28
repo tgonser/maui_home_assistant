@@ -30,6 +30,7 @@ import {
   Blinds,
   Sparkles,
   Play,
+  Pencil,
   Tv,
   Users,
   Pause,
@@ -1741,8 +1742,16 @@ function relativeTime(iso: string): string {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
-function SensorsView({ entities }: { entities: HAState[] }) {
+function SensorsView({
+  entities,
+  onOpen,
+}: {
+  entities: HAState[];
+  onOpen: (s: HAState) => void;
+}) {
   const [now, setNow] = useState(Date.now());
+  // Aliases are loaded once by the parent Wall on mount; just read them here.
+  const aliases = useEntityAliases((s) => s.aliases);
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), 30_000);
     return () => window.clearInterval(id);
@@ -1750,8 +1759,12 @@ function SensorsView({ entities }: { entities: HAState[] }) {
   // Re-render when time ticks (now is referenced in relativeTime calls below)
   void now;
 
+  // User-set alias wins; otherwise fall back to the cleaned-up HA friendly name.
+  const labelOf = (s: HAState) =>
+    aliases[s.entity_id] ?? motionSensorLabel(friendly(s));
+
   const sorted = [...entities].sort((a, b) =>
-    motionSensorLabel(friendly(a)).localeCompare(motionSensorLabel(friendly(b))),
+    labelOf(a).localeCompare(labelOf(b)),
   );
 
   if (sorted.length === 0) {
@@ -1776,10 +1789,18 @@ function SensorsView({ entities }: { entities: HAState[] }) {
         {sorted.map((s) => {
           const on = s.state === "on";
           return (
-            <div key={s.entity_id}
-              className="grid grid-cols-[1fr_auto_auto] items-center gap-6 px-5 py-3.5">
-              <div className="text-sm text-[var(--cream)] font-medium">
-                {motionSensorLabel(friendly(s))}
+            <button
+              type="button"
+              key={s.entity_id}
+              onClick={() => onOpen(s)}
+              aria-label={`Open ${labelOf(s)} to rename or view details`}
+              className="w-full text-left grid grid-cols-[1fr_auto_auto] items-center gap-6 px-5 py-3.5 transition-colors hover:bg-[rgba(232,193,120,0.06)] focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--cream)]/50"
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-sm text-[var(--cream)] font-medium truncate">
+                  {labelOf(s)}
+                </span>
+                <Pencil className="w-3 h-3 text-[var(--cream-muted)] opacity-40 shrink-0" />
               </div>
               <div className="text-sm tabular-nums text-[var(--cream-muted)]">
                 {relativeTime(s.last_changed)}
@@ -1793,7 +1814,7 @@ function SensorsView({ entities }: { entities: HAState[] }) {
                   {on ? "Active" : "Clear"}
                 </span>
               </div>
-            </div>
+            </button>
           );
         })}
       </div>
@@ -2431,7 +2452,7 @@ export function Wall() {
                 onOpen={setOpenEntity}
               />
             ) : active === "sensors" ? (
-              <SensorsView key="sensors" entities={filtered} />
+              <SensorsView key="sensors" entities={filtered} onOpen={setOpenEntity} />
             ) : active === "energy" ? (
               <EnergyDashboard key="energy" states={states} />
             ) : active === "media" ? (

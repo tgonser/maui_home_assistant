@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.41
+
+- **Fixed: motion sensors couldn't be renamed, and renames didn't show on the
+  main screen** — The Motion tab listed sensors as plain, non-tappable rows, so
+  there was no way to rename them, and the list always showed the cleaned-up HA
+  name instead of your custom one.
+  - Motion-tab rows are now tappable (with a small pencil hint) and open the
+    detail panel where you can rename the sensor for this kiosk.
+  - Both the Motion tab and the main-screen "Recent Motion" widget now show your
+    custom name as soon as you set it.
+
 ## 1.0.40
 
 - **Fixed: scenes showed a meaningless number (e.g. "2,026") instead of a
