@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.0.33
+
+- **Fixed: Rooms whose lights are HA `switch.*` entities were invisible** —
+  Areas like "Floor 1 Exterior" (Color Niche Left/Right) and "Floor 2 Exterior"
+  (Lanai Sconces) never appeared in the Rooms tab. Their Lutron Caséta loads are
+  exposed by Home Assistant as `switch.*` entities (device type "None" —
+  switched/non-dimming), and the kiosk only counted `light.*` entities, so each
+  area resolved to 0 lights and was hidden.
+  - `deriveRooms` now also treats a `switch.*` entity as a room light when its
+    name matches a lighting-fixture keyword (light, lamp, sconce, niche,
+    chandelier, pendant, downlight, spotlight, cove, lantern, vanity), while
+    excluding network/camera status LEDs.
+  - Room and per-light controls are now domain-aware: service calls are split
+    between `light.*` and `switch.*` so toggling/turning a room on/off actually
+    works (calling `light.turn_on` on a switch silently no-ops in HA).
+  - Switch-backed lights render as a simple on/off toggle (no dimmer slider) and
+    show "On"/"Off" instead of a misleading brightness percentage.
+
 ## 1.0.32
 
 - **Fixed: Entity and room renames instantly reverted in add-on mode** — API save

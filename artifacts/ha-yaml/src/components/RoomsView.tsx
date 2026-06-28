@@ -324,6 +324,8 @@ function RoomDetailSheet({
     ),
   );
   const effectiveMaster = masterPct ?? room.avgPctOfOn;
+  // A room made entirely of switch.* lighting loads can't dim — show On/Off only.
+  const hasDimmable = room.lights.some((l) => l.domain === "light");
 
   const applyMaster = async (pct: number) => {
     setPendingMaster(true);
@@ -371,19 +373,23 @@ function RoomDetailSheet({
             <span className="text-sm font-medium text-[var(--cream)]">
               All lights in room
             </span>
-            <span className="text-sm tabular-nums text-[var(--brass-bright)] font-semibold">
-              {effectiveMaster}%
-            </span>
+            {hasDimmable && (
+              <span className="text-sm tabular-nums text-[var(--brass-bright)] font-semibold">
+                {effectiveMaster}%
+              </span>
+            )}
           </div>
-          <Slider
-            value={[effectiveMaster]}
-            min={0}
-            max={100}
-            step={5}
-            disabled={pendingMaster}
-            onValueChange={(v) => setMasterPct(v[0])}
-            onValueCommit={(v) => applyMaster(v[0])}
-          />
+          {hasDimmable && (
+            <Slider
+              value={[effectiveMaster]}
+              min={0}
+              max={100}
+              step={5}
+              disabled={pendingMaster}
+              onValueChange={(v) => setMasterPct(v[0])}
+              onValueCommit={(v) => applyMaster(v[0])}
+            />
+          )}
           <div className="grid grid-cols-2 gap-2 mt-3">
             <Button
               variant="outline"
@@ -448,6 +454,8 @@ function LightRow({
   const pct = localPct ?? light.pct;
   const on = pct > 0;
   const name = displayName;
+  // switch.* lighting loads are on/off only — no dimmer.
+  const dimmable = light.domain === "light";
 
   const commit = async (newPct: number) => {
     setPending(true);
@@ -502,20 +510,22 @@ function LightRow({
             {name}
           </div>
           <div className="text-[10px] uppercase tabular-nums text-[var(--cream-muted)]">
-            {on ? `${pct}%` : "Off"}
+            {on ? (dimmable ? `${pct}%` : "On") : "Off"}
           </div>
         </div>
       </div>
-      <Slider
-        className="mt-3"
-        value={[pct]}
-        min={0}
-        max={100}
-        step={5}
-        disabled={pending}
-        onValueChange={(v) => setLocalPct(v[0])}
-        onValueCommit={(v) => commit(v[0])}
-      />
+      {dimmable && (
+        <Slider
+          className="mt-3"
+          value={[pct]}
+          min={0}
+          max={100}
+          step={5}
+          disabled={pending}
+          onValueChange={(v) => setLocalPct(v[0])}
+          onValueCommit={(v) => commit(v[0])}
+        />
+      )}
     </div>
   );
 }

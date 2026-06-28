@@ -3,3 +3,4 @@
 - [Bluesound/Sonos group slaves in HA](bluesound-group-slaves.md) — slaves report idle with no metadata; use `master`/`group_leader` to inherit; unjoin 500s without entity_id or when not actually grouped
 - [HA friendly-name renames & multi-house climate](ha-friendly-name-propagation.md) — Honeywell TCC entities inherit device name (rename the device, not entity); Maui kiosk filters climate by entity_id allowlist, not name prefix
 - [HA add-on supervisor proxy](ha-addon-supervisor-proxy.md) — core API needs `homeassistant_api: true` (else 401); `new URL().origin` drops `/core`; bump config `version:` for HA to detect updates
+- [HA switch.* lighting loads](ha-switch-domain-lights.md) — Lutron Caséta device-type "None" loads are `switch.*` not `light.*`; rooms must count lighting-named switches and route service calls by domain (light.turn_on no-ops on a switch)

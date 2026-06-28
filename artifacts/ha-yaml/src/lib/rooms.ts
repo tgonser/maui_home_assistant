@@ -104,6 +104,11 @@ export type RoomLight = {
   pct: number;
   /** does this light count toward "room on" */
   contributes: boolean;
+  /**
+   * "light" entities are dimmable; "switch" lighting loads (e.g. Lutron Caséta
+   * switched/non-dimming circuits, or device-type "None") are on/off only.
+   */
+  domain: "light" | "switch";
 };
 
 export type Room = {
@@ -127,6 +132,40 @@ const friendly = (s: HAState) =>
   (s.attributes.friendly_name as string | undefined) ?? s.entity_id;
 const domainOf = (id: string) => id.split(".")[0] ?? "";
 
+// Some lighting loads are exposed by HA as switch.* entities rather than
+// light.* — e.g. Lutron Caséta "switched" (non-dimming) circuits, or dimmers
+// whose device type is left as "None". They control real lights, so a room
+// should count them. We detect them by lighting-fixture keywords in the name.
+const LIGHT_SWITCH_PATTERNS: RegExp[] = [
+  /\blight(s)?\b/,
+  /\blamp(s)?\b/,
+  /\bsconce(s)?\b/,
+  /\bniche\b/,
+  /\bchandelier\b/,
+  /\bpendant(s)?\b/,
+  /\bdownlight(s)?\b/,
+  /\bspot ?light(s)?\b/,
+  /\bcove\b/,
+  /\blantern(s)?\b/,
+  /\bvanity\b/,
+];
+// Guard against network/camera status LEDs that contain "light"/"led".
+const LIGHT_SWITCH_EXCLUDE: RegExp[] = [
+  /_led$/i,
+  /status[\s_-]*(led|light)/,
+];
+const isLightingSwitch = (s: HAState) => {
+  if (domainOf(s.entity_id) !== "switch") return false;
+  const id = s.entity_id.toLowerCase();
+  const name = (
+    (s.attributes.friendly_name as string | undefined) ?? id
+  ).toLowerCase();
+  const idWords = id.replace(/[._-]/g, " ");
+  if (LIGHT_SWITCH_EXCLUDE.some((re) => re.test(name) || re.test(id)))
+    return false;
+  return LIGHT_SWITCH_PATTERNS.some((re) => re.test(name) || re.test(idWords));
+};
+
 export function deriveRooms(states: HAState[], registry: Registry): Room[] {
   const byArea = new Map<string, HAState[]>();
   for (const s of states) {
@@ -140,10 +179,22 @@ export function deriveRooms(states: HAState[], registry: Registry): Room[] {
   const rooms: Room[] = registry.areas.map((area) => {
     const all = byArea.get(area.area_id) ?? [];
     const lightStates = all.filter(
-      (s) => domainOf(s.entity_id) === "light" && s.state !== "unavailable",
+      (s) =>
+        s.state !== "unavailable" &&
+        (domainOf(s.entity_id) === "light" || isLightingSwitch(s)),
     );
     const lights: RoomLight[] = lightStates.map((s) => {
       const on = s.state === "on";
+      // switch.* lighting loads are on/off only (no brightness attribute).
+      if (domainOf(s.entity_id) === "switch") {
+        return {
+          state: s,
+          on,
+          pct: on ? 100 : 0,
+          contributes: on,
+          domain: "switch",
+        };
+      }
       const brightness = (s.attributes.brightness as number | undefined) ?? 0;
       const pct = on ? Math.round((brightness / 255) * 100) : 0;
       // If a light is on but reports no brightness attribute (some non-dimmable
@@ -155,6 +206,7 @@ export function deriveRooms(states: HAState[], registry: Registry): Room[] {
         on,
         pct: effectivePct,
         contributes: on && effectivePct >= ROOM_ON_THRESHOLD_PCT,
+        domain: "light",
       };
     });
     const onCount = lights.filter((l) => l.contributes).length;
@@ -188,40 +240,76 @@ export function deriveRooms(states: HAState[], registry: Registry): Room[] {
 
 // ---------- Room actions ----------
 
+// Lighting loads can be either light.* (dimmable) or switch.* entities. Service
+// calls must target the entity's own domain — calling light.turn_on on a switch
+// silently no-ops (HA returns 200), so we always split ids by domain.
+const splitRoomIds = (room: Room) => {
+  const lightIds: string[] = [];
+  const switchIds: string[] = [];
+  for (const l of room.lights) {
+    (l.domain === "switch" ? switchIds : lightIds).push(l.state.entity_id);
+  }
+  return { lightIds, switchIds };
+};
+const clampPct = (pct: number) => Math.max(1, Math.min(100, Math.round(pct)));
+
 /** Turn the whole room on by setting every light to the threshold brightness. */
 export async function turnRoomOn(
   room: Room,
   pct: number = ROOM_ON_THRESHOLD_PCT,
 ) {
-  const ids = room.lights.map((l) => l.state.entity_id);
-  if (ids.length === 0) return;
-  await haCallService("light", "turn_on", {
-    entity_id: ids,
-    brightness_pct: pct,
-  });
+  const { lightIds, switchIds } = splitRoomIds(room);
+  const calls: Promise<unknown>[] = [];
+  if (lightIds.length)
+    calls.push(
+      haCallService("light", "turn_on", {
+        entity_id: lightIds,
+        brightness_pct: pct,
+      }),
+    );
+  if (switchIds.length)
+    calls.push(haCallService("switch", "turn_on", { entity_id: switchIds }));
+  await Promise.all(calls);
 }
 
 /** Turn every light in the room off. */
 export async function turnRoomOff(room: Room) {
-  const ids = room.lights.map((l) => l.state.entity_id);
-  if (ids.length === 0) return;
-  await haCallService("light", "turn_off", { entity_id: ids });
+  const { lightIds, switchIds } = splitRoomIds(room);
+  const calls: Promise<unknown>[] = [];
+  if (lightIds.length)
+    calls.push(haCallService("light", "turn_off", { entity_id: lightIds }));
+  if (switchIds.length)
+    calls.push(haCallService("switch", "turn_off", { entity_id: switchIds }));
+  await Promise.all(calls);
 }
 
 /** Set a single light to a specific brightness percentage (0 = off). */
 export async function setLightBrightness(entityId: string, pct: number) {
+  // switch.* lighting loads are on/off only — ignore the brightness target.
+  if (domainOf(entityId) === "switch") {
+    await haCallService("switch", pct <= 0 ? "turn_off" : "turn_on", {
+      entity_id: entityId,
+    });
+    return;
+  }
   if (pct <= 0) {
     await haCallService("light", "turn_off", { entity_id: entityId });
     return;
   }
   await haCallService("light", "turn_on", {
     entity_id: entityId,
-    brightness_pct: Math.max(1, Math.min(100, Math.round(pct))),
+    brightness_pct: clampPct(pct),
   });
 }
 
 /** Toggle a single light on (to 35%) or off. */
 export async function toggleLight(entityId: string, on: boolean) {
+  if (domainOf(entityId) === "switch") {
+    await haCallService("switch", on ? "turn_on" : "turn_off", {
+      entity_id: entityId,
+    });
+    return;
+  }
   if (on) {
     await haCallService("light", "turn_on", {
       entity_id: entityId,
@@ -235,10 +323,17 @@ export async function toggleLight(entityId: string, on: boolean) {
 /** Set every light in the room to a specific brightness percentage (0 = off). */
 export async function setRoomBrightness(room: Room, pct: number) {
   if (pct <= 0) return turnRoomOff(room);
-  const ids = room.lights.map((l) => l.state.entity_id);
-  if (ids.length === 0) return;
-  await haCallService("light", "turn_on", {
-    entity_id: ids,
-    brightness_pct: Math.max(1, Math.min(100, Math.round(pct))),
-  });
+  const { lightIds, switchIds } = splitRoomIds(room);
+  const calls: Promise<unknown>[] = [];
+  if (lightIds.length)
+    calls.push(
+      haCallService("light", "turn_on", {
+        entity_id: lightIds,
+        brightness_pct: clampPct(pct),
+      }),
+    );
+  // switches can't dim — any non-zero target just turns them on.
+  if (switchIds.length)
+    calls.push(haCallService("switch", "turn_on", { entity_id: switchIds }));
+  await Promise.all(calls);
 }
