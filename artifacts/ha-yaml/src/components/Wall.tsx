@@ -28,7 +28,6 @@ import {
   AlertTriangle,
   ArrowLeft,
   Blinds,
-  Sparkles,
   Play,
   Tv,
   Users,
@@ -57,7 +56,6 @@ type CategoryKey =
   | "media"
   | "tvs"
   | "cameras"
-  | "scenes"
   | "energy"
   | "sensors"
   | "settings";
@@ -511,18 +509,6 @@ const CATEGORIES: Category[] = [
     label: "Cameras",
     icon: Camera,
     match: (s) => domainOf(s.entity_id) === "camera",
-  },
-  {
-    key: "scenes",
-    label: "Scenes",
-    icon: Sparkles,
-    // Real scenes (scene.*) plus tappable scripts (script.*). Automations
-    // (automation.*) are background trigger rules, not wall-tablet buttons, so
-    // they're intentionally excluded to keep this view to things you'd actually
-    // tap.
-    match: (s) =>
-      domainOf(s.entity_id) === "scene" ||
-      domainOf(s.entity_id) === "script",
   },
   {
     key: "energy",

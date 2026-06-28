@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.38
+
+- **Removed the Scenes tab entirely** — The only entities it could show were
+  Home Assistant's auto-generated `scene.*`/`script.*` entries, none of which are
+  things a wall-tablet user needs to tap. The tab is gone, removing that
+  clutter from the navigation.
+  - When you create real, user-facing scenes in HA and want them on the wall
+    tablet, the tab can be brought back filtered to just those scenes (as one-tap
+    or On/Off buttons).
+
 ## 1.0.37
 
 - **Scenes tab no longer shows background automations** — The tab was pulling in
