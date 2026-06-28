@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.0.34
+
+- **Fixed: Shades tab room headers couldn't be renamed** — Rooms like "Bed 4",
+  "Bed 5", and "Bed 4 Bath" were stuck with their built-in names; renaming did
+  nothing. Unlike the Rooms tab (driven by HA areas), the Shades tab groups
+  shades into synthetic rooms via entity-id regex patterns, so they have no HA
+  `area_id` and the alias system never reached them.
+  - Shade room headers are now tappable and rename per-kiosk, reusing the same
+    room-alias store under a namespaced `shade:<label>` key (no collision with
+    real HA area aliases).
+  - The rename propagates to the shade tile labels under that header, so headers
+    and tiles stay in sync.
+
 ## 1.0.33
 
 - **Fixed: Rooms whose lights are HA `switch.*` entities were invisible** —

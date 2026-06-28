@@ -1557,6 +1557,25 @@ function ShadesView({
     return { map, other };
   }, [entities]);
 
+  // Shade rooms are synthetic regex groupings, not HA areas, so they have no
+  // area_id. Reuse the room-alias store with a namespaced key so the headers
+  // (and the tile labels that mirror them) can be renamed per-kiosk.
+  const roomAliases = useRoomAliases((s) => s.aliases);
+  const setRoomAlias = useRoomAliases((s) => s.setAlias);
+  const shadeKey = (label: string) => `shade:${label}`;
+  const displayRoom = (label: string) =>
+    roomAliases[shadeKey(label)]?.trim() || label;
+  const renameShadeRoom = (label: string) => {
+    const key = shadeKey(label);
+    const current = roomAliases[key] ?? "";
+    const next = window.prompt(
+      `Rename "${label}" for this kiosk only.\nLeave blank to reset.`,
+      current,
+    );
+    if (next === null) return;
+    void setRoomAlias(key, next);
+  };
+
   return (
     <motion.div
       key="shades"
@@ -1579,12 +1598,23 @@ function ShadesView({
               if (items.length === 0) return null;
               return (
                 <div key={room}>
-                  <div className="text-[11px] uppercase tracking-wider text-[var(--brass)] mb-2 ml-1">
-                    {room}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => renameShadeRoom(room)}
+                    title={`Rename "${room}" for this kiosk`}
+                    className="text-[11px] uppercase tracking-wider text-[var(--brass)] hover:text-[var(--brass-bright)] transition-colors mb-2 ml-1"
+                  >
+                    {displayRoom(room)}
+                  </button>
                   <div className="grid grid-cols-2 auto-rows-[110px] gap-3">
                     {items.map((s) =>
-                      rt({ ...s, attributes: { ...s.attributes, __shade_room__: room } })
+                      rt({
+                        ...s,
+                        attributes: {
+                          ...s.attributes,
+                          __shade_room__: displayRoom(room),
+                        },
+                      })
                     )}
                   </div>
                 </div>
