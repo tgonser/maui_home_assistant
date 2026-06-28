@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.0.35
+
+- **Fixed: Shades room rename is now unified with the rest of the app** — In
+  1.0.34 the Shades headers got their own separate rename, so renaming "Bed 5"
+  to "UpMauka Room" only affected the Shades tab and did not match the room
+  rename used everywhere else. Renaming a Shades room now writes to the **same**
+  HA `area_id` alias the Rooms tab and device tiles use, so a single rename
+  shows up everywhere that room appears (and across every kiosk).
+  - The Shades view resolves each synthetic room ("Bed 5", "Bed 4", "Bed 4
+    Bath", etc.) to the dominant HA area of its shade entities and keys the
+    rename off that area.
+  - If a room's shades have no HA area assigned, it falls back to the per-kiosk
+    `shade:<label>` key so renaming still works.
+  - Note: requires redeploying the add-on — the rename fix is not live until the
+    new version is built and installed.
+
 ## 1.0.34
 
 - **Fixed: Shades tab room headers couldn't be renamed** — Rooms like "Bed 4",

@@ -1540,9 +1540,12 @@ const SHADE_FLOORS: { floor: string; rooms: string[] }[] = [
 function ShadesView({
   entities,
   renderTile: rt,
+  entityArea,
 }: {
   entities: HAState[];
   renderTile: (s: HAState) => ReactNode;
+  /** entity_id -> resolved HA area_id (for unified room renaming) */
+  entityArea: Map<string, string>;
 }) {
   const bucketed = useMemo(() => {
     const allRooms = SHADE_ROOM_PATTERNS.map((r) => r.label);
@@ -1557,19 +1560,39 @@ function ShadesView({
     return { map, other };
   }, [entities]);
 
-  // Shade rooms are synthetic regex groupings, not HA areas, so they have no
-  // area_id. Reuse the room-alias store with a namespaced key so the headers
-  // (and the tile labels that mirror them) can be renamed per-kiosk.
+  // Shade rooms are synthetic regex groupings, but their cover entities still
+  // belong to real HA areas. Key renames off the SAME area_id the Rooms tab
+  // uses so one rename shows up everywhere (Rooms tab, device tiles, and here),
+  // instead of being a separate Shades-only name. Falls back to a synthetic
+  // `shade:<label>` key only when a room's entities have no HA area assigned.
   const roomAliases = useRoomAliases((s) => s.aliases);
   const setRoomAlias = useRoomAliases((s) => s.setAlias);
-  const shadeKey = (label: string) => `shade:${label}`;
+  const roomAliasKey = (label: string): string => {
+    const items = bucketed.map.get(label) ?? [];
+    const counts = new Map<string, number>();
+    for (const e of items) {
+      const a = entityArea.get(e.entity_id);
+      if (a) counts.set(a, (counts.get(a) ?? 0) + 1);
+    }
+    let best: string | undefined;
+    let bestN = 0;
+    for (const [a, n] of counts) {
+      // Deterministic tie-break (lexicographic area_id) so the resolved key
+      // can't flap between renders when a bucket spans two areas equally.
+      if (n > bestN || (n === bestN && best !== undefined && a < best)) {
+        best = a;
+        bestN = n;
+      }
+    }
+    return best ?? `shade:${label}`;
+  };
   const displayRoom = (label: string) =>
-    roomAliases[shadeKey(label)]?.trim() || label;
+    roomAliases[roomAliasKey(label)]?.trim() || label;
   const renameShadeRoom = (label: string) => {
-    const key = shadeKey(label);
+    const key = roomAliasKey(label);
     const current = roomAliases[key] ?? "";
     const next = window.prompt(
-      `Rename "${label}" for this kiosk only.\nLeave blank to reset.`,
+      `Rename "${label}" — applies everywhere this room appears.\nLeave blank to reset.`,
       current,
     );
     if (next === null) return;
@@ -2364,6 +2387,7 @@ export function Wall() {
                 key="shades"
                 entities={filtered}
                 renderTile={clickableTile}
+                entityArea={registry.entityArea}
               />
             ) : active === "lights" ||
               active === "switches" ? (
