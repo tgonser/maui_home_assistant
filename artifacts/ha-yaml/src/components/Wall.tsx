@@ -1688,8 +1688,25 @@ function CoverTile({ s }: { s: HAState }) {
   );
 }
 
+function SceneTile({ s }: { s: HAState }) {
+  // Scene entities have no on/off state — their HA state is the ISO timestamp of
+  // when they were last activated. Rendering that through SensorTile parsed the
+  // timestamp as a number (e.g. "2026-06-28T..." -> "2,026"). Show a run
+  // affordance plus the last-run time instead.
+  const lastRun = isNaN(Date.parse(s.state)) ? null : relativeTime(s.state);
+  return (
+    <Tile
+      icon={Sparkles}
+      label={friendly(s)}
+      value="Tap to run"
+      sub={lastRun ? `Ran ${lastRun}` : "Scene"}
+    />
+  );
+}
+
 function renderTile(s: HAState, allStates?: HAState[]) {
   const d = domainOf(s.entity_id);
+  if (d === "scene") return <SceneTile key={s.entity_id} s={s} />;
   if (d === "light") return <LightTile key={s.entity_id} s={s} />;
   if (d === "climate") return <ClimateTile key={s.entity_id} s={s} />;
   if (d === "cover") return <CoverTile key={s.entity_id} s={s} />;

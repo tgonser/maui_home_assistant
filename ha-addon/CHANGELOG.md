@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.40
+
+- **Fixed: scenes showed a meaningless number (e.g. "2,026") instead of a
+  status** — A scene has no on/off state; Home Assistant reports a scene's state
+  as the timestamp it was last activated. The generic sensor tile was parsing
+  that timestamp as a number ("2026-06-28T…" → "2,026"). Scenes now render with
+  their own tile showing "Tap to run" plus when they last ran (e.g. "Ran 3h
+  ago"). Tapping opens the detail panel with the existing "Activate Scene"
+  button. Automations are unaffected — their state genuinely is on/off (enabled/
+  disabled).
+
 ## 1.0.39
 
 - **Brought the Scenes tab back — now for real scenes AND automations** — Once
