@@ -1,6 +1,7 @@
 import { create } from "zustand";
+import { getApiBase } from "./apiBase";
 
-const API = `${import.meta.env.BASE_URL}api`.replace(/\/+$/, "");
+const API = getApiBase();
 
 type EntityAliasStore = {
   aliases: Record<string, string>;
