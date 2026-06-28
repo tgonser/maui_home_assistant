@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.39
+
+- **Brought the Scenes tab back — now for real scenes AND automations** — Once
+  you create user-facing entries in HA (e.g. the "Entertain Evening" scene, or
+  "Night Motion Pub", "Night Motion Stairs", "BBQ Path" automations) they need a
+  home on the wall tablet.
+  - The tab now matches Scenes (`scene.*`) and Automations (`automation.*`).
+  - Scripts (`script.*`) remain excluded to keep auto-generated clutter out.
+  - If specific entries still show that you don't want, tell me their names/IDs
+    and I'll filter those out individually.
+
 ## 1.0.38
 
 - **Removed the Scenes tab entirely** — The only entities it could show were

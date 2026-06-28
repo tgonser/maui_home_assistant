@@ -28,6 +28,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   Blinds,
+  Sparkles,
   Play,
   Tv,
   Users,
@@ -56,6 +57,7 @@ type CategoryKey =
   | "media"
   | "tvs"
   | "cameras"
+  | "scenes"
   | "energy"
   | "sensors"
   | "settings";
@@ -509,6 +511,18 @@ const CATEGORIES: Category[] = [
     label: "Cameras",
     icon: Camera,
     match: (s) => domainOf(s.entity_id) === "camera",
+  },
+  {
+    key: "scenes",
+    label: "Scenes",
+    icon: Sparkles,
+    // Shows real scenes (scene.*) plus automations (automation.*) so user-created
+    // entries like the "Entertain Evening" scene and motion/path automations are
+    // tappable from the wall. Scripts (script.*) are intentionally excluded to
+    // keep auto-generated clutter out.
+    match: (s) =>
+      domainOf(s.entity_id) === "scene" ||
+      domainOf(s.entity_id) === "automation",
   },
   {
     key: "energy",
