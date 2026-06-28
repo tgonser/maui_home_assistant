@@ -36,6 +36,14 @@ that `displayNameWithRoom` would normally apply. So inject the **resolved** disp
 name (alias ?? label) as `__shade_room__`, or shade tiles will keep showing the raw
 synthetic label even after the area is renamed.
 
+**`__alias__` must be explicitly populated.** CoverTile reads `__alias__` first, but
+`applyAlias` only set `friendly_name` — so an explicit per-tile rename never reached
+the shade tile and it fell back to `__shade_room__` (the room label). `applyAlias`
+must set `__alias__` from `entityAliases[entity_id]` (the EXPLICIT per-entity alias
+only, NOT room-prefix substitutions) so a per-tile rename wins over the room label,
+while room renames keep flowing through `__shade_room__`. Precedence intent:
+per-tile alias > room label > raw friendly name.
+
 ## Deploy caveat
 The kiosk runs as a deployed HA add-on built from GitHub CI. A fix committed in
 Replit is NOT live until the add-on version is bumped, pushed, rebuilt, and

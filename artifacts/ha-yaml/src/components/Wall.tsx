@@ -2088,10 +2088,18 @@ export function Wall() {
   const applyAlias = (s: HAState): HAState => {
     const areaId = registry.entityArea.get(s.entity_id);
     const name = displayNameWithRoom(s, entityAliases, roomAliases, areaNames, areaId);
-    if (name === friendlyName(s)) return s;
+    // An explicit per-tile rename must win over the synthetic shade-room label
+    // (CoverTile reads `__alias__` first). Room-prefix substitutions are NOT
+    // explicit aliases, so they keep flowing through the room label instead.
+    const explicitAlias = entityAliases[s.entity_id];
+    if (name === friendlyName(s) && !explicitAlias) return s;
     return {
       ...s,
-      attributes: { ...s.attributes, friendly_name: name },
+      attributes: {
+        ...s.attributes,
+        friendly_name: name,
+        ...(explicitAlias ? { __alias__: explicitAlias } : {}),
+      },
     };
   };
 

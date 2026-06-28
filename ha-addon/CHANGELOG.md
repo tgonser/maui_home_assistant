@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.0.36
+
+- **Fixed: a shade tile's own rename was ignored, showing the room name
+  instead** — If you renamed an individual shade in its detail (pencil) view —
+  e.g. "Master deck" — the Shades tile still showed the room grouping name
+  ("Master Bed"). The tile was set up to prefer a per-tile alias but that alias
+  value was never actually filled in, so it always fell back to the room label.
+  - A shade's explicit per-tile name now takes priority on the tile, matching
+    what the pencil/detail view shows.
+  - Room renames (renaming the whole group) still flow through the room label as
+    before, so the two naming levels no longer collide.
+
 ## 1.0.35
 
 - **Fixed: Shades room rename is now unified with the rest of the app** — In
