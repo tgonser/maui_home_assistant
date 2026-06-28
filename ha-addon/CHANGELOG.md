@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.0.37
+
+- **Scenes tab no longer shows background automations** — The tab was pulling in
+  three Home Assistant types: Scenes (`scene.*`), Scripts (`script.*`), and
+  Automations (`automation.*`). Automations are background trigger rules (e.g.
+  "porch light at sunset"), not things you tap on a wall tablet, so they were
+  the bulk of the clutter.
+  - The tab now shows only real Scenes plus tappable Scripts.
+  - Note: the kiosk can only show what HA exposes as `scene.*`/`script.*`
+    entities. Lutron Caséta scenes created in the Lutron app are generally not
+    surfaced to HA as scene entities, so they won't appear here until they exist
+    as a Home Assistant scene or script.
+
 ## 1.0.36
 
 - **Fixed: a shade tile's own rename was ignored, showing the room name

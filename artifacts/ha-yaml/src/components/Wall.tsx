@@ -516,10 +516,13 @@ const CATEGORIES: Category[] = [
     key: "scenes",
     label: "Scenes",
     icon: Sparkles,
+    // Real scenes (scene.*) plus tappable scripts (script.*). Automations
+    // (automation.*) are background trigger rules, not wall-tablet buttons, so
+    // they're intentionally excluded to keep this view to things you'd actually
+    // tap.
     match: (s) =>
       domainOf(s.entity_id) === "scene" ||
-      domainOf(s.entity_id) === "script" ||
-      domainOf(s.entity_id) === "automation",
+      domainOf(s.entity_id) === "script",
   },
   {
     key: "energy",
