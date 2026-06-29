@@ -1,6 +1,6 @@
 name: "Wall Kiosk"
 description: "Solar-aware tablet dashboard for Maui home."
-version: "1.0.46"
+version: "1.0.47"
 slug: "wall_kiosk"
 startup: application
 boot: auto
@@ -14,6 +14,14 @@ hassio_api: true
 ingress: true
 ingress_port: 8099
 ingress_entry: /
+# Publish the kiosk on the host network so wall tablets on the SAME local
+# network can open it chrome-free at http://<home-assistant-ip>:8099/ in a
+# browser (Safari "Add to Home Screen" for a standalone window). This is
+# LAN-only: it is NOT reachable through Nabu Casa remote access.
+ports:
+  "8099/tcp": 8099
+ports_description:
+  "8099/tcp": "Direct chrome-free kiosk URL for wall tablets on the local network (http://<HA-ip>:8099)"
 panel_icon: mdi:tablet-dashboard
 panel_title: Wall
 options: {}

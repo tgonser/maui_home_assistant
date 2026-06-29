@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.0.47
+
+- **Added: a direct, chrome-free kiosk URL for wall tablets** — The add-on now
+  also publishes itself on your local network at `http://<home-assistant-ip>:8099/`.
+  Open that in Safari (then "Add to Home Screen" for a standalone, full-screen
+  window) and you get the kiosk with **no** Home Assistant header or sidebar
+  around it. Connect once with your Home Assistant address + token and it
+  sticks. Note: this is **local-network only** — it is not reachable through
+  Nabu Casa remote access, and it has no Home Assistant login, so anyone on your
+  Wi-Fi can open it. The "Wall" panel inside Home Assistant still works exactly
+  as before.
+
 ## 1.0.46
 
 - **Fixed: on iPad the "Full screen" button was cut off below the side menu,
