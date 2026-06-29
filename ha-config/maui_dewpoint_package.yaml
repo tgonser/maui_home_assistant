@@ -118,29 +118,44 @@ template:
         state_class: measurement
         availability: "{{ true }}"
         state: >-
-          {# 1) Prefer the Tempest's native dew point sensor (Maui = Makena 4). #}
+          {# Outdoor dew point — tried in order, so a Tempest/WeatherFlow outage
+             still yields real data instead of jumping straight to fail-safe:
+               1) Tempest native dew point sensor (Maui = Makena 4)
+               2) Magnus from the Tempest's own temp + humidity
+               3) An INDEPENDENT online weather integration (survives a Tempest
+                  outage because it is a different integration/cloud)
+               4) Fail safe -> unknown (floor then picks the warmest band) #}
           {% set native = 'sensor.makena_4_dew_point' %}
-          {# 2) Fallback raw temp/humidity if the native dew point is missing. #}
           {% set outdoor_temp = 'sensor.makena_4_air_temperature' %}
           {% set outdoor_humidity = 'sensor.makena_4_relative_humidity' %}
+          {# Backup weather entity — Met.no's default 'weather.forecast_home'
+             needs no API key and is NOT WeatherFlow. Point this at whatever
+             weather.* entity you prefer (it exposes temperature + humidity). #}
+          {% set backup_weather = 'weather.forecast_home' %}
 
           {% set bad = ['unknown', 'unavailable', 'none', ''] %}
+          {%- macro dewpoint(tf, rh) -%}
+            {%- set tc = (tf | float - 32) * 5 / 9 -%}
+            {%- set g = log(rh | float / 100) + (17.625 * tc) / (243.04 + tc) -%}
+            {%- set tdc = 243.04 * g / (17.625 - g) -%}
+            {{- (tdc * 9 / 5 + 32) | round(1) -}}
+          {%- endmacro -%}
+
           {% set nv = states(native) %}
+          {% set t2 = states(outdoor_temp) %}
+          {% set h2 = states(outdoor_humidity) %}
+          {% set tw = state_attr(backup_weather, 'temperature') %}
+          {% set hw = state_attr(backup_weather, 'humidity') %}
+
           {% if nv | lower not in bad and nv | float(None) is not none %}
             {{ nv | float | round(1) }}
+          {% elif t2 | lower not in bad and h2 | lower not in bad
+                  and t2 | float(None) is not none and h2 | float(0) > 0 %}
+            {{ dewpoint(t2, h2) }}
+          {% elif tw is not none and hw is not none and hw | float(0) > 0 %}
+            {{ dewpoint(tw, hw) }}
           {% else %}
-            {% set t = states(outdoor_temp) %}
-            {% set h = states(outdoor_humidity) %}
-            {% if t | lower not in bad and h | lower not in bad
-                  and t | float(None) is not none and h | float(0) > 0 %}
-              {% set tc = (t | float - 32) * 5 / 9 %}
-              {% set g = log(h | float / 100) + (17.625 * tc) / (243.04 + tc) %}
-              {% set tdc = 243.04 * g / (17.625 - g) %}
-              {{ (tdc * 9 / 5 + 32) | round(1) }}
-            {% else %}
-              {# Fail safe: report unknown so the floor goes to its safest band #}
-              unknown
-            {% endif %}
+            unknown
           {% endif %}
 
       # ---------- Indoor dew point (worst-case room) ----------

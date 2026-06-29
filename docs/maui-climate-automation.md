@@ -103,7 +103,7 @@ Dew point is computed with the Magnus formula from temperature + relative humidi
 
 | Sensor | Source | Notes |
 |---|---|---|
-| `sensor.maui_outdoor_dew_point` | Tempest weather station | Prefers the Tempest's native dew point reading; falls back to Magnus from its temp/humidity. **Fails safe** (reports unknown) if the Tempest is offline. |
+| `sensor.maui_outdoor_dew_point` | Tempest → online weather → fail safe | Tries the Tempest's native dew point, then Magnus from its temp/humidity, then an **independent online weather entity** (`weather.forecast_home` — Met.no, no API key, survives a Tempest outage). Reports unknown only if all sources are down. |
 | `sensor.maui_indoor_dew_point` | Honeywell `climate.*` zones | The **maximum** dew point across rooms — the wettest air drives protection. |
 | `sensor.maui_indoor_dew_point_status` | derived | Excellent / Target / Acceptable / Warning / High humidity risk. |
 | `sensor.maui_dew_point_setpoint_floor` | derived | The minimum allowed setpoint for the current outdoor dew point (table below). |
@@ -121,7 +121,7 @@ The final setpoint is `max(solar/battery target, dew point floor)`. A high outdo
 | 73–75 °F | 76 °F | `maui_dewfloor_73_75` |
 | > 75 °F | 78 °F | `maui_dewfloor_over75` |
 
-If the outdoor dew point is unknown (e.g. the Tempest integration is disconnected), the floor defaults to the **warmest** band so a dead sensor can never cause aggressive over-cooling.
+If the Tempest goes offline, the outdoor dew point automatically falls back to an independent online weather source (`weather.forecast_home`) so the floor keeps using real data. Only if **every** source is unavailable does the outdoor dew point report unknown — in which case the floor defaults to the **warmest** band so a dead sensor can never cause aggressive over-cooling.
 
 ### Indoor Dew Point Targets & Dehumidification
 

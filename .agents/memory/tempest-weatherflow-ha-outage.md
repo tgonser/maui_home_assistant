@@ -3,7 +3,7 @@ name: Tempest/WeatherFlow HA integration outages
 description: Why Tempest weather stations go "unavailable" in Home Assistant and how to diagnose across the owner's 3 properties
 ---
 
-The owner (Maui/Makena, Michigan, Sun Valley) runs Home Assistant at three
+The owner (Maui/Makena, Mercer Island (MI), Sun Valley) runs Home Assistant at three
 properties, each with a Tempest weather station (Maui station = "Makena 4",
 native dew point entity `sensor.makena_4_dew_point`, reports °F).
 
