@@ -123,6 +123,15 @@ The final setpoint is `max(solar/battery target, dew point floor)`. A high outdo
 
 If the Tempest goes offline, the outdoor dew point automatically falls back to an independent online weather source (`weather.forecast_home`) so the floor keeps using real data. Only if **every** source is unavailable does the outdoor dew point report unknown — in which case the floor defaults to the **warmest** band so a dead sensor can never cause aggressive over-cooling.
 
+### Setpoint conflict warnings
+
+If someone sets **any** AC unit below the current outdoor dew point (e.g. dew point 77 °F, unit set to 75 °F), the system warns immediately — it does **not** silently override the person's choice:
+
+- **Wall kiosk** — the room's temperature tile shows an amber badge: `⚠ Dewpoint conflict at 77°F`.
+- **Phone** — the `Maui Dew Point Setpoint Conflict` automation triggers the instant the setpoint changes (Honeywell app, kiosk, or voice) and sends a push notification, plus an in-HA persistent notification.
+
+The warning fires whenever a unit's cooling target is below the outdoor dew point, naming the room, its setpoint, and the safe floor. Update the `notify.mobile_app_tom` action to your phone's notify service.
+
 ### Indoor Dew Point Targets & Dehumidification
 
 | Indoor Dew Point | Status |

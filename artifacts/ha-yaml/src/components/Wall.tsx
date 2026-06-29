@@ -666,7 +666,7 @@ function LightTile({ s }: { s: HAState }) {
   );
 }
 
-function ClimateTile({ s }: { s: HAState }) {
+function ClimateTile({ s, allStates }: { s: HAState; allStates?: HAState[] }) {
   const cur = s.attributes.current_temperature as number | undefined;
   const target = s.attributes.temperature as number | undefined;
   const u = (s.attributes.temperature_unit as string | undefined) ?? "°";
@@ -679,6 +679,20 @@ function ClimateTile({ s }: { s: HAState }) {
     : atOrBelowTarget
       ? "text-emerald-400"
       : "";
+  // Dew point conflict: cooling target set BELOW the current outdoor dew point
+  // invites condensation. Read the package's outdoor dew point sensor and warn
+  // right on the tile (e.g. "Dewpoint conflict at 77°F"). Warn-only — we never
+  // change the user's setting from here.
+  const outdoorDpRaw = allStates?.find(
+    (st) => st.entity_id === "sensor.maui_outdoor_dew_point",
+  )?.state;
+  const outdoorDp =
+    outdoorDpRaw !== undefined ? parseFloat(outdoorDpRaw) : NaN;
+  const dewConflict =
+    active &&
+    target !== undefined &&
+    Number.isFinite(outdoorDp) &&
+    target < outdoorDp;
   return (
     <Tile icon={Thermometer} label={friendly(s)} active={active}>
       {cur !== undefined && (
@@ -689,6 +703,12 @@ function ClimateTile({ s }: { s: HAState }) {
       {target !== undefined && (
         <div className="text-xs mt-1 text-[var(--cream-muted)]">
           target <span className="font-semibold text-[var(--cream)]">{target}{u}</span>
+        </div>
+      )}
+      {dewConflict && (
+        <div className="mt-1.5 flex items-center gap-1 rounded-md bg-amber-500/15 px-1.5 py-1 text-[11px] font-medium leading-tight text-amber-400">
+          <AlertTriangle className="w-3 h-3 shrink-0" />
+          <span>Dewpoint conflict at {Math.round(outdoorDp)}°F</span>
         </div>
       )}
     </Tile>
@@ -1709,7 +1729,8 @@ function renderTile(s: HAState, allStates?: HAState[]) {
   const d = domainOf(s.entity_id);
   if (d === "scene") return <SceneTile key={s.entity_id} s={s} />;
   if (d === "light") return <LightTile key={s.entity_id} s={s} />;
-  if (d === "climate") return <ClimateTile key={s.entity_id} s={s} />;
+  if (d === "climate")
+    return <ClimateTile key={s.entity_id} s={s} allStates={allStates} />;
   if (d === "cover") return <CoverTile key={s.entity_id} s={s} />;
   if (d === "alarm_control_panel") return <AlarmTile key={s.entity_id} s={s} />;
   if (d === "media_player")

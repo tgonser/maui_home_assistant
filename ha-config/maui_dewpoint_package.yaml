@@ -286,3 +286,57 @@ automation:
       - action: input_boolean.turn_off
         target:
           entity_id: input_boolean.maui_infiltration_active
+
+  - id: maui_dewpoint_setpoint_conflict
+    alias: Maui Dew Point Setpoint Conflict
+    description: >
+      Warn-only. Fires the instant ANY AC unit's cooling target is set below the
+      current outdoor dew point (a condensation risk), no matter how it was set
+      (Honeywell app, kiosk, voice). It does NOT change the setting. The Wall
+      kiosk shows the same warning on that room's temperature tile.
+    triggers:
+      # Fires on any setpoint (temperature attribute) change for these units.
+      - trigger: state
+        entity_id:
+          - climate.atrium
+          - climate.bar
+          - climate.beach_room
+          - climate.boardroom
+          - climate.kitchen
+          - climate.master_bed_2
+          - climate.maui_bar
+          - climate.sitting
+          - climate.upper_mauka
+        attribute: temperature
+    conditions:
+      - condition: template
+        value_template: >-
+          {% set dp = states('sensor.maui_outdoor_dew_point') | float(None) %}
+          {% set tgt = state_attr(trigger.entity_id, 'temperature') | float(None) %}
+          {{ dp is not none and tgt is not none and tgt < dp
+             and trigger.to_state.state in ['cool', 'heat_cool', 'auto'] }}
+    actions:
+      # Phone push. CHANGE notify.mobile_app_tom to your phone's notify service
+      # (Developer Tools -> Actions -> type "notify." to find yours).
+      # continue_on_error keeps the in-HA notification working even if this
+      # service name has not been customized yet, so the YAML is safe as-is.
+      - action: notify.mobile_app_tom
+        continue_on_error: true
+        data:
+          title: "Dew point conflict"
+          message: >-
+            {{ state_attr(trigger.entity_id, 'friendly_name') }} is set to
+            {{ state_attr(trigger.entity_id, 'temperature') | round(0) }}°F — below
+            the outdoor dew point of {{ states('sensor.maui_outdoor_dew_point') }}°F.
+            Condensation risk; consider raising it to at least
+            {{ states('sensor.maui_dew_point_setpoint_floor') }}°F.
+      # Also surface it inside Home Assistant itself (dashboard bell).
+      - action: persistent_notification.create
+        data:
+          notification_id: "maui_dewpoint_{{ trigger.entity_id }}"
+          title: "Dew point conflict"
+          message: >-
+            {{ state_attr(trigger.entity_id, 'friendly_name') }} is set to
+            {{ state_attr(trigger.entity_id, 'temperature') | round(0) }}°F, below the
+            outdoor dew point of {{ states('sensor.maui_outdoor_dew_point') }}°F.
+            Safe floor is {{ states('sensor.maui_dew_point_setpoint_floor') }}°F.
