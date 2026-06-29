@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.43
+
+- **Camera names now follow Home Assistant automatically in "Recent Motion"** — the Outside rows previously showed the motion-sensor's own name, which is a separate entity from the camera. Now each motion sensor is linked to its camera (same device) and displays the camera's HA name. Rename a camera once in Home Assistant and the kiosk follows — no second rename needed. A per-kiosk rename still overrides if you set one.
+
 ## 1.0.42
 
 - **Fixed: camera motion names in the "Recent Motion" widget couldn't be changed**

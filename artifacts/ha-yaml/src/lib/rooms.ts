@@ -29,6 +29,8 @@ export type Registry = {
   devices: DeviceEntry[];
   /** entity_id -> resolved area_id (entity area falls back to its device area) */
   entityArea: Map<string, string>;
+  /** entity_id -> device_id (for linking sibling entities on the same device) */
+  entityDevice: Map<string, string>;
   loadedAt: number | null;
 };
 
@@ -43,6 +45,7 @@ const empty: Registry = {
   entities: [],
   devices: [],
   entityArea: new Map(),
+  entityDevice: new Map(),
   loadedAt: null,
 };
 
@@ -76,15 +79,18 @@ export const useRegistry = create<RegistryStore>((set, get) => ({
       if (d.area_id) deviceArea.set(d.id, d.area_id);
     }
     const entityArea = new Map<string, string>();
+    const entityDevice = new Map<string, string>();
     for (const e of entities) {
       const a = e.area_id ?? (e.device_id ? deviceArea.get(e.device_id) : null);
       if (a) entityArea.set(e.entity_id, a);
+      if (e.device_id) entityDevice.set(e.entity_id, e.device_id);
     }
     set({
       areas,
       devices,
       entities,
       entityArea,
+      entityDevice,
       loadedAt: Date.now(),
       loading: false,
       error: null,

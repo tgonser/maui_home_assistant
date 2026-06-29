@@ -30,6 +30,28 @@ export function motionSensorLabel(name: string): string {
 }
 
 /**
+ * Camera motion-detection binary_sensors have their own friendly name that is
+ * independent of the camera entity. Users rename the *camera* in Home Assistant,
+ * so resolve the motion sensor to its sibling camera (same device) and return
+ * that camera's friendly name. Returns undefined when there is no sibling camera
+ * (e.g. ordinary room motion sensors), so callers fall back to the sensor name.
+ */
+export function cameraSiblingName(
+  s: HAState,
+  states: HAState[],
+  entityDevice: Map<string, string>,
+): string | undefined {
+  const deviceId = entityDevice.get(s.entity_id);
+  if (!deviceId) return undefined;
+  const camera = states.find(
+    (e) =>
+      e.entity_id.startsWith("camera.") &&
+      entityDevice.get(e.entity_id) === deviceId,
+  );
+  return camera ? friendlyName(camera) : undefined;
+}
+
+/**
  * Display name for an entity: user alias wins, then HA friendly name.
  * Single source of truth for entity labels across the UI.
  */
