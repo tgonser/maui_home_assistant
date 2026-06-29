@@ -37,8 +37,6 @@ import {
   SlidersHorizontal,
   Zap,
   Droplets,
-  Menu,
-  X,
 } from "lucide-react";
 import { ComposedChart, AreaChart, Area, Line, ReferenceArea, ResponsiveContainer, XAxis, YAxis, ReferenceLine, Tooltip, BarChart, Bar, Cell, LabelList } from "recharts";
 import "./wall-theme.css";
@@ -2125,7 +2123,6 @@ export function Wall() {
   const [active, setActive] = useState<CategoryKey>("overview");
   const [error, setError] = useState<string | null>(null);
   const [immersive, setImmersive] = useState(false);
-  const [navOpen, setNavOpen] = useState(false);
   const [openEntity, setOpenEntity] = useState<HAState | null>(null);
   const entityAliases = useEntityAliases((s) => s.aliases);
   const loadEntityAliases = useEntityAliases((s) => s.load);
@@ -2222,20 +2219,14 @@ export function Wall() {
 
   useEffect(() => {
     // Native fullscreen is unreliable on iOS/iPad, so immersive mode is driven
-    // in-app (it hides the fixed sidebar but keeps a slide-out section menu).
-    // Mirror a native exit (Esc / browser chrome) back into immersive, and let
-    // Escape close the section menu / leave immersive everywhere.
+    // in-app. The section sidebar stays visible either way; immersive only adds
+    // best-effort native fullscreen and flips the toggle label. Mirror a native
+    // exit (Esc / browser chrome) back into immersive.
     const onFsChange = () => {
-      if (!document.fullscreenElement) {
-        setImmersive(false);
-        setNavOpen(false);
-      }
+      if (!document.fullscreenElement) setImmersive(false);
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setImmersive(false);
-        setNavOpen(false);
-      }
+      if (e.key === "Escape") setImmersive(false);
     };
     document.addEventListener("fullscreenchange", onFsChange);
     window.addEventListener("keydown", onKey);
@@ -2333,14 +2324,12 @@ export function Wall() {
     const next = !immersive;
     setImmersive(next);
     // Best-effort native fullscreen where supported (desktop); optional chaining
-    // makes it a safe no-op on iOS/iPad where it isn't available. Immersive mode
-    // hides the fixed sidebar to maximize the view; the section selector stays
-    // reachable via the floating "Sections" menu while immersive.
+    // makes it a safe no-op on iOS/iPad where it isn't available. The section
+    // sidebar stays visible either way, so navigation always works.
     if (next) {
       document.documentElement.requestFullscreen?.().catch(() => {});
-    } else {
-      setNavOpen(false);
-      if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+    } else if (document.fullscreenElement) {
+      document.exitFullscreen?.().catch(() => {});
     }
   };
 
@@ -2349,9 +2338,8 @@ export function Wall() {
     window.location.href = `${base}/`;
   };
 
-  // Section selector buttons, shared by the fixed sidebar and the full-screen
-  // slide-out menu. `onPick` lets the drawer close itself after a choice.
-  const renderCategoryButtons = (onPick?: () => void) =>
+  // Section selector buttons, rendered in the always-visible sidebar.
+  const renderCategoryButtons = () =>
     CATEGORIES.map((c) => {
       const count = counts.get(c.key) ?? 0;
       const isActive = active === c.key;
@@ -2362,10 +2350,7 @@ export function Wall() {
       return (
         <button
           key={c.key}
-          onClick={() => {
-            setActive(c.key);
-            onPick?.();
-          }}
+          onClick={() => setActive(c.key)}
           disabled={dim}
           className={`wall-nav-btn w-24 h-20 shrink-0 flex flex-col items-center justify-center gap-1 relative ${
             isActive ? "wall-nav-btn--active" : ""
@@ -2411,74 +2396,35 @@ export function Wall() {
   return (
     <div className="wall-root h-screen w-full flex overflow-hidden">
       <MonsteraLeaf />
-      {!immersive && (
-        <aside className="wall-aside w-32 shrink-0 flex flex-col items-center py-6 gap-2">
-          <button
-            onClick={goBack}
-            className="wall-nav-btn w-16 h-16 shrink-0 flex items-center justify-center mb-2"
-            title="Back to Studio"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          {/* Only the category list scrolls; Back (top) and Full screen
-              (bottom) stay pinned so they're always reachable on iPad. */}
-          <div className="wall-aside-scroll flex-1 min-h-0 w-full overflow-y-auto flex flex-col items-center gap-2">
-            {renderCategoryButtons()}
-          </div>
-          <button
-            onClick={toggleFs}
-            className="wall-nav-btn w-24 h-16 shrink-0 mt-2 flex flex-col items-center justify-center gap-1"
-            title="Full screen"
-          >
-            <Maximize className="w-5 h-5" />
-            <span className="text-[11px] tracking-tight font-medium">Full screen</span>
-          </button>
-        </aside>
-      )}
-
-      {immersive && (
-        <>
-          {!navOpen && (
-            <button
-              onClick={() => setNavOpen(true)}
-              className="wall-fs-exit fixed top-4 left-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl"
-              title="Sections"
-            >
-              <Menu className="w-5 h-5" />
-              <span className="text-sm font-medium">Sections</span>
-            </button>
-          )}
-          <button
-            onClick={toggleFs}
-            className="wall-fs-exit fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl"
-            title="Exit full screen"
-          >
+      <aside className="wall-aside w-32 shrink-0 flex flex-col items-center py-6 gap-2">
+        <button
+          onClick={goBack}
+          className="wall-nav-btn w-16 h-16 shrink-0 flex items-center justify-center mb-2"
+          title="Back to Studio"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        {/* Only the category list scrolls; Back (top) and the full-screen
+            toggle (bottom) stay pinned. The section selector is always visible,
+            including in full screen, so navigation never disappears. */}
+        <div className="wall-aside-scroll flex-1 min-h-0 w-full overflow-y-auto flex flex-col items-center gap-2">
+          {renderCategoryButtons()}
+        </div>
+        <button
+          onClick={toggleFs}
+          className="wall-nav-btn w-24 h-16 shrink-0 mt-2 flex flex-col items-center justify-center gap-1"
+          title={immersive ? "Exit full screen" : "Full screen"}
+        >
+          {immersive ? (
             <Minimize className="w-5 h-5" />
-            <span className="text-sm font-medium">Exit full screen</span>
-          </button>
-          {navOpen && (
-            <>
-              <div
-                className="fixed inset-0 z-40"
-                style={{ background: "rgba(0,0,0,0.45)" }}
-                onClick={() => setNavOpen(false)}
-              />
-              <aside className="wall-aside wall-fs-drawer fixed top-0 left-0 bottom-0 z-50 w-32 flex flex-col items-center py-6 gap-2">
-                <button
-                  onClick={() => setNavOpen(false)}
-                  className="wall-nav-btn w-16 h-16 shrink-0 flex items-center justify-center mb-2"
-                  title="Close menu"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-                <div className="wall-aside-scroll flex-1 min-h-0 w-full overflow-y-auto flex flex-col items-center gap-2">
-                  {renderCategoryButtons(() => setNavOpen(false))}
-                </div>
-              </aside>
-            </>
+          ) : (
+            <Maximize className="w-5 h-5" />
           )}
-        </>
-      )}
+          <span className="text-[11px] tracking-tight font-medium">
+            {immersive ? "Exit full" : "Full screen"}
+          </span>
+        </button>
+      </aside>
 
       <main className="wall-main flex-1 overflow-y-auto">
         <header className="wall-header flex items-center justify-between px-10 py-7 sticky top-0 z-10">

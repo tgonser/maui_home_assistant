@@ -454,23 +454,3 @@
 .wall-aside-scroll::-webkit-scrollbar {
   display: none;
 }
-
-/* Floating "exit full screen" control shown while the sidebar is hidden.
-   Guarantees a way back on iOS/iPad where native fullscreen has no UI. */
-.wall-fs-exit {
-  background: rgba(0, 0, 0, 0.55);
-  border: 1px solid rgba(232, 193, 120, 0.35);
-  color: var(--cream);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
-  transition: background 0.15s ease;
-}
-.wall-fs-exit:hover {
-  background: rgba(0, 0, 0, 0.72);
-}
-
-/* Slide-out section menu shown while in full-screen (immersive) mode */
-.wall-fs-drawer {
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
-}

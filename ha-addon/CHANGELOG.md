@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.49
+
+- **Full screen now keeps the section menu permanently visible** — Instead of a
+  hide/show "Sections" button, the side menu (Overview / Rooms / Lights / etc.)
+  stays on screen at all times, including in full screen, so you can jump between
+  sections with a single tap. The bottom button flips to "Exit full" while in
+  full screen.
+
 ## 1.0.48
 
 - **Fixed: Full screen also hid the section selector, so you were stuck on one
