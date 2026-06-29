@@ -469,3 +469,8 @@
 .wall-fs-exit:hover {
   background: rgba(0, 0, 0, 0.72);
 }
+
+/* Slide-out section menu shown while in full-screen (immersive) mode */
+.wall-fs-drawer {
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+}

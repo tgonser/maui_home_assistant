@@ -37,6 +37,8 @@ import {
   SlidersHorizontal,
   Zap,
   Droplets,
+  Menu,
+  X,
 } from "lucide-react";
 import { ComposedChart, AreaChart, Area, Line, ReferenceArea, ResponsiveContainer, XAxis, YAxis, ReferenceLine, Tooltip, BarChart, Bar, Cell, LabelList } from "recharts";
 import "./wall-theme.css";
@@ -2123,6 +2125,7 @@ export function Wall() {
   const [active, setActive] = useState<CategoryKey>("overview");
   const [error, setError] = useState<string | null>(null);
   const [immersive, setImmersive] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
   const [openEntity, setOpenEntity] = useState<HAState | null>(null);
   const entityAliases = useEntityAliases((s) => s.aliases);
   const loadEntityAliases = useEntityAliases((s) => s.load);
@@ -2219,13 +2222,20 @@ export function Wall() {
 
   useEffect(() => {
     // Native fullscreen is unreliable on iOS/iPad, so immersive mode is driven
-    // in-app (it hides the sidebar). Still mirror a native exit (Esc / browser
-    // chrome) back into immersive, and let Escape leave immersive everywhere.
+    // in-app (it hides the fixed sidebar but keeps a slide-out section menu).
+    // Mirror a native exit (Esc / browser chrome) back into immersive, and let
+    // Escape close the section menu / leave immersive everywhere.
     const onFsChange = () => {
-      if (!document.fullscreenElement) setImmersive(false);
+      if (!document.fullscreenElement) {
+        setImmersive(false);
+        setNavOpen(false);
+      }
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setImmersive(false);
+      if (e.key === "Escape") {
+        setImmersive(false);
+        setNavOpen(false);
+      }
     };
     document.addEventListener("fullscreenchange", onFsChange);
     window.addEventListener("keydown", onKey);
@@ -2320,24 +2330,58 @@ export function Wall() {
   );
 
   const toggleFs = () => {
-    setImmersive((on) => {
-      const next = !on;
-      // Best-effort native fullscreen where supported (desktop); optional
-      // chaining makes it a safe no-op on iOS/iPad where it isn't available,
-      // and immersive mode still hides the sidebar so the view is maximized.
-      if (next) {
-        document.documentElement.requestFullscreen?.().catch(() => {});
-      } else if (document.fullscreenElement) {
-        document.exitFullscreen?.().catch(() => {});
-      }
-      return next;
-    });
+    const next = !immersive;
+    setImmersive(next);
+    // Best-effort native fullscreen where supported (desktop); optional chaining
+    // makes it a safe no-op on iOS/iPad where it isn't available. Immersive mode
+    // hides the fixed sidebar to maximize the view; the section selector stays
+    // reachable via the floating "Sections" menu while immersive.
+    if (next) {
+      document.documentElement.requestFullscreen?.().catch(() => {});
+    } else {
+      setNavOpen(false);
+      if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+    }
   };
 
   const goBack = () => {
     const base = import.meta.env.BASE_URL.replace(/\/$/, "");
     window.location.href = `${base}/`;
   };
+
+  // Section selector buttons, shared by the fixed sidebar and the full-screen
+  // slide-out menu. `onPick` lets the drawer close itself after a choice.
+  const renderCategoryButtons = (onPick?: () => void) =>
+    CATEGORIES.map((c) => {
+      const count = counts.get(c.key) ?? 0;
+      const isActive = active === c.key;
+      const dim =
+        c.key !== "overview" && c.key !== "rooms" && c.key !== "settings" && count === 0;
+      const showBadge =
+        c.key !== "overview" && c.key !== "rooms" && c.key !== "settings" && !dim && count > 0;
+      return (
+        <button
+          key={c.key}
+          onClick={() => {
+            setActive(c.key);
+            onPick?.();
+          }}
+          disabled={dim}
+          className={`wall-nav-btn w-24 h-20 shrink-0 flex flex-col items-center justify-center gap-1 relative ${
+            isActive ? "wall-nav-btn--active" : ""
+          } ${dim ? "wall-nav-btn--dim" : ""}`}
+          title={c.label}
+        >
+          <c.icon className="w-6 h-6" />
+          <span className="text-[11px] tracking-tight font-medium">{c.label}</span>
+          {showBadge && (
+            <span className="badge absolute top-1.5 right-2 text-[10px] tabular-nums">
+              {count}
+            </span>
+          )}
+        </button>
+      );
+    });
 
   if (!url || !token) {
     return (
@@ -2379,35 +2423,7 @@ export function Wall() {
           {/* Only the category list scrolls; Back (top) and Full screen
               (bottom) stay pinned so they're always reachable on iPad. */}
           <div className="wall-aside-scroll flex-1 min-h-0 w-full overflow-y-auto flex flex-col items-center gap-2">
-            {CATEGORIES.map((c) => {
-              const count = counts.get(c.key) ?? 0;
-              const isActive = active === c.key;
-              const dim =
-                c.key !== "overview" && c.key !== "rooms" && c.key !== "settings" && count === 0;
-              const showBadge =
-                c.key !== "overview" && c.key !== "rooms" && c.key !== "settings" && !dim && count > 0;
-              return (
-                <button
-                  key={c.key}
-                  onClick={() => setActive(c.key)}
-                  disabled={dim}
-                  className={`wall-nav-btn w-24 h-20 shrink-0 flex flex-col items-center justify-center gap-1 relative ${
-                    isActive ? "wall-nav-btn--active" : ""
-                  } ${dim ? "wall-nav-btn--dim" : ""}`}
-                  title={c.label}
-                >
-                  <c.icon className="w-6 h-6" />
-                  <span className="text-[11px] tracking-tight font-medium">
-                    {c.label}
-                  </span>
-                  {showBadge && (
-                    <span className="badge absolute top-1.5 right-2 text-[10px] tabular-nums">
-                      {count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+            {renderCategoryButtons()}
           </div>
           <button
             onClick={toggleFs}
@@ -2421,14 +2437,47 @@ export function Wall() {
       )}
 
       {immersive && (
-        <button
-          onClick={toggleFs}
-          className="wall-fs-exit fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl"
-          title="Exit full screen"
-        >
-          <Minimize className="w-5 h-5" />
-          <span className="text-sm font-medium">Exit full screen</span>
-        </button>
+        <>
+          {!navOpen && (
+            <button
+              onClick={() => setNavOpen(true)}
+              className="wall-fs-exit fixed top-4 left-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl"
+              title="Sections"
+            >
+              <Menu className="w-5 h-5" />
+              <span className="text-sm font-medium">Sections</span>
+            </button>
+          )}
+          <button
+            onClick={toggleFs}
+            className="wall-fs-exit fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl"
+            title="Exit full screen"
+          >
+            <Minimize className="w-5 h-5" />
+            <span className="text-sm font-medium">Exit full screen</span>
+          </button>
+          {navOpen && (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                style={{ background: "rgba(0,0,0,0.45)" }}
+                onClick={() => setNavOpen(false)}
+              />
+              <aside className="wall-aside wall-fs-drawer fixed top-0 left-0 bottom-0 z-50 w-32 flex flex-col items-center py-6 gap-2">
+                <button
+                  onClick={() => setNavOpen(false)}
+                  className="wall-nav-btn w-16 h-16 shrink-0 flex items-center justify-center mb-2"
+                  title="Close menu"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+                <div className="wall-aside-scroll flex-1 min-h-0 w-full overflow-y-auto flex flex-col items-center gap-2">
+                  {renderCategoryButtons(() => setNavOpen(false))}
+                </div>
+              </aside>
+            </>
+          )}
+        </>
       )}
 
       <main className="wall-main flex-1 overflow-y-auto">

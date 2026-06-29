@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.48
+
+- **Fixed: Full screen also hid the section selector, so you were stuck on one
+  page** — Going full screen hid the whole side menu, including the Overview /
+  Rooms / Lights / etc. selector, leaving no way to switch sections. Now in full
+  screen a floating **Sections** button (top-left) slides out the section menu so
+  you can still navigate, then tap a section (or the backdrop) to close it. The
+  **Exit full screen** button stays top-right.
+
 ## 1.0.47
 
 - **Added: a direct, chrome-free kiosk URL for wall tablets** — The add-on now
