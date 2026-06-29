@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.0.42
+
+- **Fixed: camera motion names in the "Recent Motion" widget couldn't be changed**
+  — The OUTSIDE column lists each camera's *motion-detection sensor*, which is a
+  separate entity from the camera itself. Renaming a camera in Home Assistant does
+  not rename its motion sensor, so the widget kept showing the old names. These
+  camera motion sensors are also intentionally excluded from the Motion tab, so
+  there was no place to rename them.
+  - The "Recent Motion" rows (both INSIDE and OUTSIDE) are now tappable, with a
+    small pencil hint, and open the detail panel where you can rename each sensor
+    for this kiosk. The new name appears immediately in the widget.
+
 ## 1.0.41
 
 - **Fixed: motion sensors couldn't be renamed, and renames didn't show on the

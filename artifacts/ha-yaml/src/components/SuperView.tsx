@@ -16,6 +16,7 @@ import {
   BatteryCharging,
   Camera,
   Activity,
+  Pencil,
   ChevronUp,
   ChevronDown,
   ChevronLeft,
@@ -512,10 +513,12 @@ function MotionRow({
   s,
   now,
   aliases = {},
+  onOpen,
 }: {
   s: HAState;
   now: number;
   aliases?: Record<string, string>;
+  onOpen?: (s: HAState) => void;
 }) {
   const active = s.state === "on";
   const ago = formatAgo(new Date(s.last_changed).getTime());
@@ -523,20 +526,45 @@ function MotionRow({
   // User-set alias takes priority; otherwise clean up the HA friendly name
   const alias = aliases?.[s.entity_id];
   const label = alias ?? motionSensorLabel(friendly(s));
-  return (
-    <div className={`flex items-center justify-between py-1 ${active ? "opacity-100" : "opacity-50"}`}>
+  const cls = `flex items-center justify-between py-1 ${active ? "opacity-100" : "opacity-50"}`;
+  const inner = (
+    <>
       <div className="flex items-center gap-1.5 min-w-0">
         <span
           className={`w-1.5 h-1.5 rounded-full shrink-0 ${active ? "bg-amber-400" : "bg-[var(--cream-muted)]"}`}
         />
         <span className="text-xs truncate">{label}</span>
+        {onOpen && (
+          <Pencil className="w-2.5 h-2.5 text-[var(--cream-muted)] opacity-40 shrink-0" />
+        )}
       </div>
       <span className="text-[10px] text-[var(--cream-muted)] ml-2 shrink-0">{ago}</span>
-    </div>
+    </>
   );
+  // When an onOpen handler is provided, the row is tappable and opens the detail
+  // sheet where the sensor can be renamed for this kiosk.
+  if (onOpen) {
+    return (
+      <button
+        type="button"
+        onClick={() => onOpen(s)}
+        aria-label={`Open ${label} to rename or view details`}
+        className={`${cls} w-full text-left rounded-md px-1 -mx-1 transition-colors hover:bg-[rgba(232,193,120,0.08)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cream)]/50`}
+      >
+        {inner}
+      </button>
+    );
+  }
+  return <div className={cls}>{inner}</div>;
 }
 
-function RecentMotionTile({ states }: { states: HAState[] }) {
+function RecentMotionTile({
+  states,
+  onOpen,
+}: {
+  states: HAState[];
+  onOpen?: (s: HAState) => void;
+}) {
   const aliases = useEntityAliases((s) => s.aliases);
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
@@ -577,14 +605,14 @@ function RecentMotionTile({ states }: { states: HAState[] }) {
           <div className="text-[9px] uppercase tracking-widest text-[var(--brass)] mb-1">Inside</div>
           {inside.length === 0
             ? <div className="text-xs text-[var(--cream-muted)] opacity-50">No sensors</div>
-            : inside.map((s) => <MotionRow key={s.entity_id} s={s} now={now} aliases={aliases} />)
+            : inside.map((s) => <MotionRow key={s.entity_id} s={s} now={now} aliases={aliases} onOpen={onOpen} />)
           }
         </div>
         <div>
           <div className="text-[9px] uppercase tracking-widest text-[var(--brass)] mb-1">Outside</div>
           {outside.length === 0
             ? <div className="text-xs text-[var(--cream-muted)] opacity-50">No sensors</div>
-            : outside.map((s) => <MotionRow key={s.entity_id} s={s} now={now} aliases={aliases} />)
+            : outside.map((s) => <MotionRow key={s.entity_id} s={s} now={now} aliases={aliases} onOpen={onOpen} />)
           }
         </div>
       </div>
@@ -911,7 +939,13 @@ function AtriumTvRemote({ states }: { states: HAState[] }) {
   );
 }
 
-export function SuperView({ states }: { states: HAState[] }) {
+export function SuperView({
+  states,
+  onOpen,
+}: {
+  states: HAState[];
+  onOpen?: (s: HAState) => void;
+}) {
   const stats = useMemo(
     () => ({
       lights: states.filter((s) => domainOf(s.entity_id) === "light"),
@@ -940,7 +974,7 @@ export function SuperView({ states }: { states: HAState[] }) {
         <SolarProduction states={states} />
         <EnergyUsage states={states} />
         {stats.lights.length === 0 ? null : <PowerwallStat states={states} />}
-        <RecentMotionTile states={states} />
+        <RecentMotionTile states={states} onOpen={onOpen} />
         <LastMotionCamera states={states} />
       </div>
       <SuperViewSettings

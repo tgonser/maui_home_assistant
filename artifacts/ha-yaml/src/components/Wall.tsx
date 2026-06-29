@@ -2428,7 +2428,7 @@ export function Wall() {
             {active === "settings" ? (
               <ClimateSettings key="settings" states={states} onChanged={refresh} />
             ) : active === "overview" ? (
-              <SuperView key="super" states={states} />
+              <SuperView key="super" states={states} onOpen={setOpenEntity} />
             ) : active === "rooms" ? (
               <RoomsView key="rooms" states={states} refresh={refresh} />
             ) : active === "covers" ? (
