@@ -1,0 +1,98 @@
+Here's a concise design summary for your AI agent writing the Home Assistant YAML:
+
+# Maui HVAC Dew Point Enhancement
+
+The existing HVAC automation already adjusts temperatures based on:
+
+* Solar production
+* Battery state of charge
+* Time of day
+* Occupancy
+* House mode
+
+Add a new control input:
+
+## Dew Point Awareness
+
+The objective is not occupant comfort alone. The primary goal is to prevent condensation, mold, and moisture damage to wood, steel, glass, artwork, and finishes in a tropical oceanfront environment.
+
+### Core Principle
+
+Condensation occurs when a surface temperature falls below the surrounding air dew point.
+
+The automation should avoid aggressively cooling the home when outside dew points are high.
+
+### New Sensors
+
+Monitor:
+
+* Outdoor temperature
+* Outdoor humidity
+* Outdoor dew point
+* Indoor temperature
+* Indoor humidity
+* Indoor dew point
+
+### Outdoor Dew Point Rules
+
+| Outdoor Dew Point | Minimum Allowed Indoor Setpoint |
+| ----------------- | ------------------------------- |
+| < 65°F            | 72°F                            |
+| 65-69°F           | 74°F                            |
+| 70-72°F           | 75°F                            |
+| 73-75°F           | 76°F                            |
+| >75°F             | 77-78°F                         |
+
+The dew-point-based minimum setpoint overrides solar pre-cooling logic.
+
+Example:
+
+If excess solar would normally cool the house to 72°F but outdoor dew point is 74°F, limit cooling to 76°F.
+
+### Indoor Dew Point Targets
+
+| Indoor Dew Point | Status             |
+| ---------------- | ------------------ |
+| <58°F            | Excellent          |
+| 58-62°F          | Target             |
+| 62-65°F          | Acceptable         |
+| 65-68°F          | Warning            |
+| >68°F            | High humidity risk |
+
+When indoor dew point exceeds 64°F:
+
+* Prioritize dehumidification over lowering temperature.
+* Reduce fan speeds if supported by equipment.
+* Increase compressor runtime rather than air movement.
+
+### Infiltration Detection
+
+Rapid indoor dew point increases likely indicate:
+
+* Doors opened
+* Windows opened
+* Large outside air infiltration
+
+Example trigger:
+
+* Indoor dew point increase >3°F in 15 minutes
+
+Possible responses:
+
+* Temporarily raise cooling setpoint.
+* Increase dehumidification.
+* Suspend aggressive solar pre-cooling.
+
+### Design Priority Order
+
+1. Prevent condensation
+2. Protect building materials
+3. Maintain comfort
+4. Optimize battery usage
+5. Maximize solar self-consumption
+
+The house should optimize for humidity and dew point first, temperature second.
+
+In Maui, a house at 78°F and 58°F dew point is generally more comfortable and safer than a house at 73°F and 70°F dew point.
+
+This is how many high-end tropical resorts and museums operate their HVAC systems: controlling moisture first and temperature second.
