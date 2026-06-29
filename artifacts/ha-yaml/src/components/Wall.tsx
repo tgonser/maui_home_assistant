@@ -2122,7 +2122,7 @@ export function Wall() {
   const [states, setStates] = useState<HAState[]>([]);
   const [active, setActive] = useState<CategoryKey>("overview");
   const [error, setError] = useState<string | null>(null);
-  const [isFs, setIsFs] = useState(false);
+  const [immersive, setImmersive] = useState(false);
   const [openEntity, setOpenEntity] = useState<HAState | null>(null);
   const entityAliases = useEntityAliases((s) => s.aliases);
   const loadEntityAliases = useEntityAliases((s) => s.load);
@@ -2218,9 +2218,21 @@ export function Wall() {
   }, [url, token]);
 
   useEffect(() => {
-    const onFs = () => setIsFs(!!document.fullscreenElement);
-    document.addEventListener("fullscreenchange", onFs);
-    return () => document.removeEventListener("fullscreenchange", onFs);
+    // Native fullscreen is unreliable on iOS/iPad, so immersive mode is driven
+    // in-app (it hides the sidebar). Still mirror a native exit (Esc / browser
+    // chrome) back into immersive, and let Escape leave immersive everywhere.
+    const onFsChange = () => {
+      if (!document.fullscreenElement) setImmersive(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setImmersive(false);
+    };
+    document.addEventListener("fullscreenchange", onFsChange);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("fullscreenchange", onFsChange);
+      window.removeEventListener("keydown", onKey);
+    };
   }, []);
 
   const counts = useMemo(() => {
@@ -2308,8 +2320,18 @@ export function Wall() {
   );
 
   const toggleFs = () => {
-    if (document.fullscreenElement) document.exitFullscreen();
-    else document.documentElement.requestFullscreen().catch(() => {});
+    setImmersive((on) => {
+      const next = !on;
+      // Best-effort native fullscreen where supported (desktop); optional
+      // chaining makes it a safe no-op on iOS/iPad where it isn't available,
+      // and immersive mode still hides the sidebar so the view is maximized.
+      if (next) {
+        document.documentElement.requestFullscreen?.().catch(() => {});
+      } else if (document.fullscreenElement) {
+        document.exitFullscreen?.().catch(() => {});
+      }
+      return next;
+    });
   };
 
   const goBack = () => {
@@ -2345,56 +2367,69 @@ export function Wall() {
   return (
     <div className="wall-root h-screen w-full flex overflow-hidden">
       <MonsteraLeaf />
-      <aside className="wall-aside w-32 shrink-0 flex flex-col items-center py-6 gap-2">
-        <button
-          onClick={goBack}
-          className="wall-nav-btn w-16 h-16 flex items-center justify-center mb-2"
-          title="Back to Studio"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        {CATEGORIES.map((c) => {
-          const count = counts.get(c.key) ?? 0;
-          const isActive = active === c.key;
-          const dim =
-            c.key !== "overview" && c.key !== "rooms" && c.key !== "settings" && count === 0;
-          const showBadge =
-            c.key !== "overview" && c.key !== "rooms" && c.key !== "settings" && !dim && count > 0;
-          return (
-            <button
-              key={c.key}
-              onClick={() => setActive(c.key)}
-              disabled={dim}
-              className={`wall-nav-btn w-24 h-20 flex flex-col items-center justify-center gap-1 relative ${
-                isActive ? "wall-nav-btn--active" : ""
-              } ${dim ? "wall-nav-btn--dim" : ""}`}
-              title={c.label}
-            >
-              <c.icon className="w-6 h-6" />
-              <span className="text-[11px] tracking-tight font-medium">
-                {c.label}
-              </span>
-              {showBadge && (
-                <span className="badge absolute top-1.5 right-2 text-[10px] tabular-nums">
-                  {count}
-                </span>
-              )}
-            </button>
-          );
-        })}
-        <div className="flex-1" />
+      {!immersive && (
+        <aside className="wall-aside w-32 shrink-0 flex flex-col items-center py-6 gap-2">
+          <button
+            onClick={goBack}
+            className="wall-nav-btn w-16 h-16 shrink-0 flex items-center justify-center mb-2"
+            title="Back to Studio"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          {/* Only the category list scrolls; Back (top) and Full screen
+              (bottom) stay pinned so they're always reachable on iPad. */}
+          <div className="wall-aside-scroll flex-1 min-h-0 w-full overflow-y-auto flex flex-col items-center gap-2">
+            {CATEGORIES.map((c) => {
+              const count = counts.get(c.key) ?? 0;
+              const isActive = active === c.key;
+              const dim =
+                c.key !== "overview" && c.key !== "rooms" && c.key !== "settings" && count === 0;
+              const showBadge =
+                c.key !== "overview" && c.key !== "rooms" && c.key !== "settings" && !dim && count > 0;
+              return (
+                <button
+                  key={c.key}
+                  onClick={() => setActive(c.key)}
+                  disabled={dim}
+                  className={`wall-nav-btn w-24 h-20 shrink-0 flex flex-col items-center justify-center gap-1 relative ${
+                    isActive ? "wall-nav-btn--active" : ""
+                  } ${dim ? "wall-nav-btn--dim" : ""}`}
+                  title={c.label}
+                >
+                  <c.icon className="w-6 h-6" />
+                  <span className="text-[11px] tracking-tight font-medium">
+                    {c.label}
+                  </span>
+                  {showBadge && (
+                    <span className="badge absolute top-1.5 right-2 text-[10px] tabular-nums">
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          <button
+            onClick={toggleFs}
+            className="wall-nav-btn w-24 h-16 shrink-0 mt-2 flex flex-col items-center justify-center gap-1"
+            title="Full screen"
+          >
+            <Maximize className="w-5 h-5" />
+            <span className="text-[11px] tracking-tight font-medium">Full screen</span>
+          </button>
+        </aside>
+      )}
+
+      {immersive && (
         <button
           onClick={toggleFs}
-          className="wall-nav-btn w-16 h-16 flex items-center justify-center"
-          title={isFs ? "Exit fullscreen" : "Enter fullscreen"}
+          className="wall-fs-exit fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl"
+          title="Exit full screen"
         >
-          {isFs ? (
-            <Minimize className="w-5 h-5" />
-          ) : (
-            <Maximize className="w-5 h-5" />
-          )}
+          <Minimize className="w-5 h-5" />
+          <span className="text-sm font-medium">Exit full screen</span>
         </button>
-      </aside>
+      )}
 
       <main className="wall-main flex-1 overflow-y-auto">
         <header className="wall-header flex items-center justify-between px-10 py-7 sticky top-0 z-10">

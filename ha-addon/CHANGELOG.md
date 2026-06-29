@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.0.46
+
+- **Fixed: on iPad the "Full screen" button was cut off below the side menu,
+  and there was no way back out of full screen** — The side menu didn't scroll,
+  so on shorter iPad screens the Full screen control at the bottom was
+  unreachable. The menu now keeps **Back** pinned at the top and **Full screen**
+  pinned at the bottom, with only the category icons scrolling in between, so
+  both are always tappable. "Full screen" now hides the side menu for a clean
+  wall view (and still uses true browser full screen on devices that support
+  it), and a floating **Exit full screen** button appears in the top-right so
+  you can always get back — on iPad/iOS too. The Esc key also exits.
+
 ## 1.0.45
 
 - **Fixed: "Recent Motion" still showed raw UniFi names (e.g. "South Pool G6
