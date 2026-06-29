@@ -591,11 +591,11 @@ function RecentMotionTile({
     [states],
   );
 
-  // Camera renames live on the camera entity in HA; mirror that onto its motion
-  // sensor so renaming once in HA is enough. A kiosk alias still wins if set.
+  // Camera renames live on the camera entity (in HA or as a kiosk alias);
+  // mirror that onto its motion sensor so a rename in either place is enough.
   const labelFor = (s: HAState) =>
     aliases[s.entity_id] ??
-    cameraSiblingName(s, states, entityDevice) ??
+    cameraSiblingName(s, states, entityDevice, aliases) ??
     motionSensorLabel(friendly(s));
 
   return (

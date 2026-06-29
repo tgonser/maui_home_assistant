@@ -40,15 +40,30 @@ export function cameraSiblingName(
   s: HAState,
   states: HAState[],
   entityDevice: Map<string, string>,
+  aliases?: Record<string, string>,
 ): string | undefined {
   const deviceId = entityDevice.get(s.entity_id);
   if (!deviceId) return undefined;
-  const camera = states.find(
+  const cameras = states.filter(
     (e) =>
       e.entity_id.startsWith("camera.") &&
       entityDevice.get(e.entity_id) === deviceId,
   );
-  return camera ? friendlyName(camera) : undefined;
+  if (cameras.length === 0) return undefined;
+  // A single UniFi camera device exposes several camera.* entities (high- and
+  // low-resolution streams, package camera). Picking the first match often
+  // lands on "… High resolution channel" instead of the primary camera. Prefer,
+  // in order: a camera the user has aliased on this kiosk, then a "primary"
+  // entity whose name is not a secondary stream, then whatever is first.
+  const SECONDARY =
+    /high[\s_-]*res|low[\s_-]*res|resolution|package|sub[\s_-]*stream|channel/i;
+  const chosen =
+    cameras.find((c) => aliases?.[c.entity_id]) ??
+    cameras.find((c) => !SECONDARY.test(friendlyName(c))) ??
+    cameras[0];
+  // Mirror the same alias-first precedence the rest of the UI uses, so a camera
+  // renamed on this kiosk (not just in HA) flows through to its motion rows.
+  return aliases?.[chosen.entity_id] ?? friendlyName(chosen);
 }
 
 /**

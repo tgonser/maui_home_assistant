@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.45
+
+- **Fixed: "Recent Motion" still showed raw UniFi names (e.g. "South Pool G6
+  PTZ High resolution…") instead of your camera names** — The OUTSIDE column
+  resolves each motion sensor to its camera, but it was reading the camera's raw
+  Home Assistant name and, on UniFi devices that expose several camera entities,
+  often latched onto the "High resolution channel" stream. It now (1) honors a
+  camera renamed on this kiosk — not just in Home Assistant — and (2) skips the
+  secondary stream entities and picks the primary camera. The OUTSIDE rows now
+  match the names shown on the Cameras tab.
+
 ## 1.0.44
 
 - **Dew-point–aware temperatures: tiles now warn before you over-cool** — In a
