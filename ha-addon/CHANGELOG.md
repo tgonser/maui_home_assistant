@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.44
+
+- **Dew-point–aware temperatures: tiles now warn before you over-cool** — In a
+  tropical oceanfront home, setting an AC below the outdoor dew point invites
+  condensation and mold. Climate tiles now read the live outdoor dew point and,
+  whenever a unit is cooling to a target *below* it, show an amber warning right
+  on the room's temperature tile: **"Dewpoint conflict at 77°F."** It's
+  warn-only — your setting is never changed for you. (A companion Home Assistant
+  automation also sends a phone push the instant any unit is set below the dew
+  point, however it was set — Honeywell app, kiosk, or voice.)
+
 ## 1.0.43
 
 - **Camera names now follow Home Assistant automatically in "Recent Motion"** — the Outside rows previously showed the motion-sensor's own name, which is a separate entity from the camera. Now each motion sensor is linked to its camera (same device) and displays the camera's HA name. Rename a camera once in Home Assistant and the kiosk follows — no second rename needed. A per-kiosk rename still overrides if you set one.
