@@ -118,11 +118,11 @@ template:
         state_class: measurement
         availability: "{{ true }}"
         state: >-
-          {# 1) Prefer the Tempest's native dew point sensor. SET THIS. #}
-          {% set native = 'sensor.tempest_dew_point' %}
-          {# 2) Fallback raw temp/humidity entities (also Tempest). SET THESE. #}
-          {% set outdoor_temp = 'sensor.tempest_temperature' %}
-          {% set outdoor_humidity = 'sensor.tempest_humidity' %}
+          {# 1) Prefer the Tempest's native dew point sensor (Maui = Makena 4). #}
+          {% set native = 'sensor.makena_4_dew_point' %}
+          {# 2) Fallback raw temp/humidity if the native dew point is missing. #}
+          {% set outdoor_temp = 'sensor.makena_4_air_temperature' %}
+          {% set outdoor_humidity = 'sensor.makena_4_relative_humidity' %}
 
           {% set bad = ['unknown', 'unavailable', 'none', ''] %}
           {% set nv = states(native) %}

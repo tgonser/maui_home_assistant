@@ -62,7 +62,7 @@ actions:
           target:
             entity_id: '{{ repeat.item }}'
           data:
-            temperature: '{{ east_target }}'
+            temperature: '{{ east_target | int }}'
           continue_on_error: true
   # ---- West rooms (Owners Home: master only) ----
   - repeat:
@@ -83,7 +83,7 @@ actions:
           target:
             entity_id: '{{ repeat.item }}'
           data:
-            temperature: '{{ west_target }}'
+            temperature: '{{ west_target | int }}'
           continue_on_error: true
   # ---- East guest rooms (Visitors / Vacation only) ----
   - if:
@@ -110,7 +110,7 @@ actions:
               target:
                 entity_id: '{{ repeat.item }}'
               data:
-                temperature: '{{ east_target }}'
+                temperature: '{{ east_target | int }}'
               continue_on_error: true
   # ---- West guest rooms (Visitors / Vacation only) ----
   - if:
@@ -141,7 +141,7 @@ actions:
               target:
                 entity_id: '{{ repeat.item }}'
               data:
-                temperature: '{{ west_target }}'
+                temperature: '{{ west_target | int }}'
               continue_on_error: true
   # ---- DEHUMIDIFY PRIORITY: indoor dew point high -> slow the fan so the coil
   #      runs longer and removes more latent heat (moisture). No-ops on
@@ -216,9 +216,9 @@ variables:
   east_target: >-
     {% set t = [east_base | int, dew_floor] | max %}
     {% if infiltration %}{% set t = t + 2 %}{% endif %}
-    {{ t }}
+    {{ [t, 84] | min }}
   west_target: >-
     {% set t = [west_base | int, dew_floor] | max %}
     {% if infiltration %}{% set t = t + 2 %}{% endif %}
-    {{ t }}
+    {{ [t, 84] | min }}
 mode: single

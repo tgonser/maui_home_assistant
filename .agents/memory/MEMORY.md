@@ -5,3 +5,4 @@
 - [HA add-on supervisor proxy](ha-addon-supervisor-proxy.md) — core API needs `homeassistant_api: true` (else 401); `new URL().origin` drops `/core`; bump config `version:` for HA to detect updates
 - [HA Shades synthetic rooms](ha-shades-synthetic-rooms.md) — Shades tab buckets covers by regex (no area_id); rename must key off dominant entity area_id to unify with app-wide rename, not a separate `shade:` key
 - [HA switch.* lighting loads](ha-switch-domain-lights.md) — Lutron Caséta device-type "None" loads are `switch.*` not `light.*`; rooms must count lighting-named switches and route service calls by domain (light.turn_on no-ops on a switch)
+- [Tempest/WeatherFlow multi-site HA outage](tempest-weatherflow-ha-outage.md) — simultaneous "unavailable" across the 3 HA properties = HA-side library/version bug or shared cloud token, never local network; HA 2026.3.x crashes in Tempest's own dew point calc and recurs after restart

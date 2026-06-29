@@ -140,7 +140,7 @@ When indoor dew point rises above the target (`maui_indoor_dewpoint_target`, def
 A rapid indoor dew point rise means doors/windows were opened or a slug of humid outside air got in. When `sensor.maui_indoor_dew_point_rate` exceeds `maui_infiltration_rate` (default **0.2 °F/min ≈ 3 °F in 15 min**) for one minute:
 
 - `input_boolean.maui_infiltration_active` turns on and a **30‑minute hold** (`timer.maui_infiltration`) starts.
-- Aggressive solar pre-cooling is suspended and a **+2 °F buffer** is added to setpoints, so the system does not chase a moving humidity target with cold surfaces.
+- Aggressive solar pre-cooling is suspended and a **+2 °F buffer** is added to setpoints (never above the 84 °F protect ceiling), so the system does not chase a moving humidity target with cold surfaces.
 - The hold clears automatically when the timer finishes.
 
 ### New Configurable Parameters
