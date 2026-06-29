@@ -1,0 +1,224 @@
+# =============================================================================
+# Maui Solar-Aware Climate  —  with Dew Point Awareness
+# =============================================================================
+# Replaces the existing "Maui Solar-Aware Climate" automation.
+# Requires the helpers/sensors defined in  maui_dewpoint_package.yaml.
+#
+# WHAT CHANGED vs the original solar-only version:
+#   1. DEW POINT FLOOR (priority): the computed solar/battery target is raised
+#      to at least sensor.maui_dew_point_setpoint_floor. High outdoor dew point
+#      -> warmer minimum -> surfaces never fall below the outdoor dew point,
+#      which is what causes condensation. This OVERRIDES solar pre-cooling.
+#   2. INFILTRATION HOLD: while input_boolean.maui_infiltration_active is on,
+#      aggressive pre-cooling is suspended and a +2°F buffer is added.
+#   3. DEHUMIDIFY PRIORITY: when indoor dew point is above the target, fan speed
+#      is reduced (if the equipment supports a low setting) so the coil runs
+#      longer and wrings out more moisture instead of just moving air.
+#
+# Priority order (matches the design brief):
+#   1) Prevent condensation   2) Protect materials   3) Comfort
+#   4) Battery usage          5) Solar self-consumption
+# =============================================================================
+id: '1781981986844'
+alias: Maui Solar-Aware Climate
+description: >
+  Sets AC targets every 15 min based on solar, battery, time of day, and house
+  mode — then enforces a dew-point-based minimum setpoint to prevent
+  condensation. East rooms 9am–2pm, west rooms noon–9am. Backs off during peak
+  pricing (5–9pm) and when battery is low (<25%). Dew point floor overrides
+  solar pre-cooling; infiltration events suspend aggressive cooling.
+triggers:
+  - trigger: time_pattern
+    minutes: /15
+  - trigger: state
+    entity_id: input_select.maui_house_mode
+  - trigger: state
+    entity_id: sensor.maui_dew_point_setpoint_floor
+  - trigger: state
+    entity_id: input_boolean.maui_infiltration_active
+  - trigger: homeassistant
+    event: start
+conditions:
+  - condition: template
+    value_template: '{{ not is_state(''input_select.maui_house_mode'', ''Suspend'') }}'
+actions:
+  # ---- East rooms (always controlled) ----
+  - repeat:
+      for_each:
+        - climate.boardroom
+        - climate.sitting
+      sequence:
+        - condition: template
+          value_template: |-
+            {{ state_attr(repeat.item, 'hvac_mode') != 'cool'
+               or (state_attr(repeat.item, 'temperature') | int) != (east_target | int) }}
+        - action: climate.set_hvac_mode
+          target:
+            entity_id: '{{ repeat.item }}'
+          data:
+            hvac_mode: cool
+          continue_on_error: true
+        - action: climate.set_temperature
+          target:
+            entity_id: '{{ repeat.item }}'
+          data:
+            temperature: '{{ east_target }}'
+          continue_on_error: true
+  # ---- West rooms (Owners Home: master only) ----
+  - repeat:
+      for_each:
+        - climate.master_bed_2
+      sequence:
+        - condition: template
+          value_template: |-
+            {{ state_attr(repeat.item, 'hvac_mode') != 'cool'
+               or (state_attr(repeat.item, 'temperature') | int) != (west_target | int) }}
+        - action: climate.set_hvac_mode
+          target:
+            entity_id: '{{ repeat.item }}'
+          data:
+            hvac_mode: cool
+          continue_on_error: true
+        - action: climate.set_temperature
+          target:
+            entity_id: '{{ repeat.item }}'
+          data:
+            temperature: '{{ west_target }}'
+          continue_on_error: true
+  # ---- East guest rooms (Visitors / Vacation only) ----
+  - if:
+      - condition: template
+        value_template: |-
+          {{ is_state('input_select.maui_house_mode', 'Visitors')
+             or is_state('input_select.maui_house_mode', 'Vacation') }}
+    then:
+      - repeat:
+          for_each:
+            - climate.upper_mauka
+          sequence:
+            - condition: template
+              value_template: |-
+                {{ state_attr(repeat.item, 'hvac_mode') != 'cool'
+                   or (state_attr(repeat.item, 'temperature') | int) != (east_target | int) }}
+            - action: climate.set_hvac_mode
+              target:
+                entity_id: '{{ repeat.item }}'
+              data:
+                hvac_mode: cool
+              continue_on_error: true
+            - action: climate.set_temperature
+              target:
+                entity_id: '{{ repeat.item }}'
+              data:
+                temperature: '{{ east_target }}'
+              continue_on_error: true
+  # ---- West guest rooms (Visitors / Vacation only) ----
+  - if:
+      - condition: template
+        value_template: |-
+          {{ is_state('input_select.maui_house_mode', 'Visitors')
+             or is_state('input_select.maui_house_mode', 'Vacation') }}
+    then:
+      - repeat:
+          for_each:
+            - climate.atrium
+            - climate.bar
+            - climate.beach_room
+            - climate.kitchen
+            - climate.maui_bar
+          sequence:
+            - condition: template
+              value_template: |-
+                {{ state_attr(repeat.item, 'hvac_mode') != 'cool'
+                   or (state_attr(repeat.item, 'temperature') | int) != (west_target | int) }}
+            - action: climate.set_hvac_mode
+              target:
+                entity_id: '{{ repeat.item }}'
+              data:
+                hvac_mode: cool
+              continue_on_error: true
+            - action: climate.set_temperature
+              target:
+                entity_id: '{{ repeat.item }}'
+              data:
+                temperature: '{{ west_target }}'
+              continue_on_error: true
+  # ---- DEHUMIDIFY PRIORITY: indoor dew point high -> slow the fan so the coil
+  #      runs longer and removes more latent heat (moisture). No-ops on
+  #      equipment that has no low fan setting (continue_on_error). ----
+  - if:
+      - condition: numeric_state
+        entity_id: sensor.maui_indoor_dew_point
+        above: input_number.maui_indoor_dewpoint_target
+    then:
+      - repeat:
+          for_each:
+            - climate.boardroom
+            - climate.sitting
+            - climate.master_bed_2
+            - climate.atrium
+            - climate.bar
+            - climate.beach_room
+            - climate.kitchen
+            - climate.maui_bar
+            - climate.upper_mauka
+          sequence:
+            - choose:
+                - conditions:
+                    - condition: template
+                      value_template: >-
+                        {{ is_state(repeat.item, 'cool')
+                           and (state_attr(repeat.item, 'fan_modes') or [])
+                               | map('lower') | select('in', ['low','min','quiet'])
+                               | list | length > 0 }}
+                  sequence:
+                    - action: climate.set_fan_mode
+                      target:
+                        entity_id: '{{ repeat.item }}'
+                      data:
+                        fan_mode: >-
+                          {{ (state_attr(repeat.item, 'fan_modes')
+                              | select('in', ['low','Low','LOW','min','Min','quiet','Quiet'])
+                              | list | first) }}
+                      continue_on_error: true
+variables:
+  home: '{{ is_state(''input_select.maui_house_mode'', ''Owners Home'') }}'
+  visitors: '{{ is_state(''input_select.maui_house_mode'', ''Visitors'') }}'
+  batt: |-
+    {{ [states('sensor.gonser_4680_system_1_percentage_charged') | float(0),
+        states('sensor.4680_system_2_percentage_charged') | float(0)] | min }}
+  solar: '{{ states(''sensor.total_solar'') | float(0) }}'
+  peak: '{{ 17 <= now().hour < 21 }}'
+  east_active: '{{ 9 <= now().hour < 14 }}'
+  west_active: '{{ now().hour >= 12 or now().hour < 9 }}'
+  # Dew-point minimum setpoint (the floor) and infiltration hold flag.
+  dew_floor: '{{ states(''sensor.maui_dew_point_setpoint_floor'') | int(78) }}'
+  infiltration: '{{ is_state(''input_boolean.maui_infiltration_active'', ''on'') }}'
+  # Base solar/battery target for east zones (original logic).
+  east_base: >-
+    {% if batt < 25 or peak %}84 {% elif not east_active %}82 {% elif batt >= 80
+    or solar > 10 %}
+      {{ 74 if home else (76 if visitors else 80) }}
+    {% else %}
+      {{ 79 if home else (81 if visitors else 84) }}
+    {% endif %}
+  west_base: >-
+    {% if batt < 25 or peak %}84 {% elif not west_active %}82 {% elif batt >= 80
+    or solar > 10 %}
+      {{ 74 if home else (76 if visitors else 80) }}
+    {% else %}
+      {{ 79 if home else (81 if visitors else 84) }}
+    {% endif %}
+  # Final targets: enforce the dew point floor (overrides solar pre-cooling)
+  # and add an infiltration buffer. The floor is always <= 78°F, so it only
+  # ever raises the aggressive solar targets — it never overrides the 84°F
+  # peak/low-battery backoff.
+  east_target: >-
+    {% set t = [east_base | int, dew_floor] | max %}
+    {% if infiltration %}{% set t = t + 2 %}{% endif %}
+    {{ t }}
+  west_target: >-
+    {% set t = [west_base | int, dew_floor] | max %}
+    {% if infiltration %}{% set t = t + 2 %}{% endif %}
+    {{ t }}
+mode: single

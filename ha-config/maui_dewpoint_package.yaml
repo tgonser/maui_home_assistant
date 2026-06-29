@@ -1,0 +1,273 @@
+# =============================================================================
+# Maui HVAC — Dew Point Awareness package
+# =============================================================================
+# Drop this file in Home Assistant under  config/packages/  and make sure your
+# configuration.yaml has:
+#
+#   homeassistant:
+#     packages: !include_dir_named packages
+#
+# It adds:
+#   * Outdoor + indoor dew point sensors (Tempest native, with a Magnus-formula
+#     fallback that fails SAFE when the Tempest is offline)
+#   * The outdoor-dew-point -> minimum-setpoint "floor" table
+#   * Tunable helpers (kiosk-friendly input_number / input_boolean)
+#   * Infiltration detection (rapid indoor dew point rise)
+#
+# The companion automation  maui_solar_aware_climate.yaml  consumes these.
+# -----------------------------------------------------------------------------
+# IMPORTANT — set your real Tempest entity ids below.
+# WeatherFlow/Tempest natively publishes a dew point sensor. Find yours under
+# Developer Tools -> States (search "dew"), then update the three entity ids in
+# the `outdoor_*` template variables in the "Outdoor dew point" sensor.
+# Likely names: sensor.tempest_dew_point / sensor.<station>_dew_point
+# =============================================================================
+
+# ----------------------------------------------------------------------------
+# Tunable helpers (all adjustable live from the kiosk, no YAML edits needed)
+# ----------------------------------------------------------------------------
+input_number:
+  # --- Minimum allowed indoor setpoint by OUTDOOR dew point band (°F) ---
+  # Higher outdoor dew point -> warmer minimum setpoint -> colder surfaces are
+  # never driven below the outdoor dew point, which is what causes condensation.
+  maui_dewfloor_under65:
+    name: Dew Floor — outdoor < 65°F
+    min: 68
+    max: 80
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:water-thermometer
+    initial: 72
+  maui_dewfloor_65_69:
+    name: Dew Floor — outdoor 65–69°F
+    min: 68
+    max: 80
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:water-thermometer
+    initial: 74
+  maui_dewfloor_70_72:
+    name: Dew Floor — outdoor 70–72°F
+    min: 68
+    max: 80
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:water-thermometer
+    initial: 75
+  maui_dewfloor_73_75:
+    name: Dew Floor — outdoor 73–75°F
+    min: 68
+    max: 80
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:water-thermometer
+    initial: 76
+  maui_dewfloor_over75:
+    name: Dew Floor — outdoor > 75°F
+    min: 68
+    max: 82
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:water-thermometer
+    initial: 78
+
+  # --- Indoor dew point target: above this, prioritise dehumidification ---
+  maui_indoor_dewpoint_target:
+    name: Indoor Dew Point — dehumidify above
+    min: 55
+    max: 70
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:water-percent
+    initial: 64
+
+  # --- Infiltration trigger: indoor dew point rise rate (°F per minute) ---
+  # 0.2 °F/min ≈ a 3°F rise over 15 minutes (doors/windows opened).
+  maui_infiltration_rate:
+    name: Infiltration — dew point rise rate
+    min: 0.1
+    max: 1.0
+    step: 0.05
+    unit_of_measurement: "°F/min"
+    icon: mdi:door-open
+    initial: 0.2
+
+input_boolean:
+  maui_infiltration_active:
+    name: Maui Infiltration Active
+    icon: mdi:door-open
+
+timer:
+  maui_infiltration:
+    name: Maui Infiltration Hold
+    # How long aggressive pre-cooling is suspended after an infiltration event.
+    duration: "00:30:00"
+    restore: true
+
+# ----------------------------------------------------------------------------
+# Dew point sensors (Magnus formula). Inputs assumed in °F (US unit system).
+# Td(°C) = 243.04*g / (17.625 - g),  g = ln(RH/100) + 17.625*Tc/(243.04+Tc)
+# ----------------------------------------------------------------------------
+template:
+  # ---------- Outdoor dew point (Tempest, with safe fallback) ----------
+  - sensor:
+      - name: Maui Outdoor Dew Point
+        unique_id: maui_outdoor_dew_point
+        unit_of_measurement: "°F"
+        device_class: temperature
+        state_class: measurement
+        availability: "{{ true }}"
+        state: >-
+          {# 1) Prefer the Tempest's native dew point sensor. SET THIS. #}
+          {% set native = 'sensor.tempest_dew_point' %}
+          {# 2) Fallback raw temp/humidity entities (also Tempest). SET THESE. #}
+          {% set outdoor_temp = 'sensor.tempest_temperature' %}
+          {% set outdoor_humidity = 'sensor.tempest_humidity' %}
+
+          {% set bad = ['unknown', 'unavailable', 'none', ''] %}
+          {% set nv = states(native) %}
+          {% if nv | lower not in bad and nv | float(None) is not none %}
+            {{ nv | float | round(1) }}
+          {% else %}
+            {% set t = states(outdoor_temp) %}
+            {% set h = states(outdoor_humidity) %}
+            {% if t | lower not in bad and h | lower not in bad
+                  and t | float(None) is not none and h | float(0) > 0 %}
+              {% set tc = (t | float - 32) * 5 / 9 %}
+              {% set g = log(h | float / 100) + (17.625 * tc) / (243.04 + tc) %}
+              {% set tdc = 243.04 * g / (17.625 - g) %}
+              {{ (tdc * 9 / 5 + 32) | round(1) }}
+            {% else %}
+              {# Fail safe: report unknown so the floor goes to its safest band #}
+              unknown
+            {% endif %}
+          {% endif %}
+
+      # ---------- Indoor dew point (worst-case room) ----------
+      # Uses each zone's current_temperature/current_humidity (Honeywell).
+      # MAX across rooms = the wettest air in the house drives protection.
+      - name: Maui Indoor Dew Point
+        unique_id: maui_indoor_dew_point
+        unit_of_measurement: "°F"
+        device_class: temperature
+        state_class: measurement
+        state: >-
+          {% set bad = ['unknown', 'unavailable', 'none', ''] %}
+          {% set zones = [
+            'climate.boardroom', 'climate.sitting', 'climate.master_bed_2',
+            'climate.atrium', 'climate.bar', 'climate.beach_room',
+            'climate.kitchen', 'climate.maui_bar', 'climate.upper_mauka'] %}
+          {% set ns = namespace(dps=[]) %}
+          {% for z in zones %}
+            {% set t = state_attr(z, 'current_temperature') %}
+            {% set h = state_attr(z, 'current_humidity') %}
+            {% if t is not none and h is not none and h | float(0) > 0 %}
+              {% set tc = (t | float - 32) * 5 / 9 %}
+              {% set g = log(h | float / 100) + (17.625 * tc) / (243.04 + tc) %}
+              {% set tdc = 243.04 * g / (17.625 - g) %}
+              {% set ns.dps = ns.dps + [(tdc * 9 / 5 + 32)] %}
+            {% endif %}
+          {% endfor %}
+          {{ (ns.dps | max) | round(1) if ns.dps | length > 0 else 'unknown' }}
+
+      # ---------- Indoor dew point status (Excellent..High) ----------
+      - name: Maui Indoor Dew Point Status
+        unique_id: maui_indoor_dew_point_status
+        icon: mdi:water-check
+        state: >-
+          {% set dp = states('sensor.maui_indoor_dew_point') | float(None) %}
+          {% if dp is none %} Unknown
+          {% elif dp < 58 %} Excellent
+          {% elif dp < 62 %} Target
+          {% elif dp < 65 %} Acceptable
+          {% elif dp < 68 %} Warning
+          {% else %} High humidity risk
+          {% endif %}
+
+      # ---------- Minimum-setpoint floor from OUTDOOR dew point ----------
+      # This is the heart of the feature. It OVERRIDES solar pre-cooling: the
+      # main automation never cools below this value. Unknown outdoor dew point
+      # -> safest (warmest) floor.
+      - name: Maui Dew Point Setpoint Floor
+        unique_id: maui_dewpoint_setpoint_floor
+        unit_of_measurement: "°F"
+        device_class: temperature
+        icon: mdi:thermostat-box
+        state: >-
+          {% set dp = states('sensor.maui_outdoor_dew_point') | float(None) %}
+          {% if dp is none %}
+            {{ states('input_number.maui_dewfloor_over75') | int(78) }}
+          {% elif dp < 65 %}
+            {{ states('input_number.maui_dewfloor_under65') | int(72) }}
+          {% elif dp < 70 %}
+            {{ states('input_number.maui_dewfloor_65_69') | int(74) }}
+          {% elif dp < 73 %}
+            {{ states('input_number.maui_dewfloor_70_72') | int(75) }}
+          {% elif dp < 76 %}
+            {{ states('input_number.maui_dewfloor_73_75') | int(76) }}
+          {% else %}
+            {{ states('input_number.maui_dewfloor_over75') | int(78) }}
+          {% endif %}
+
+# ----------------------------------------------------------------------------
+# Rate of change of indoor dew point — used for infiltration detection.
+# unit_time: min  ->  value is °F per minute, smoothed over a 15-minute window.
+# ----------------------------------------------------------------------------
+sensor:
+  - platform: derivative
+    source: sensor.maui_indoor_dew_point
+    name: Maui Indoor Dew Point Rate
+    unique_id: maui_indoor_dew_point_rate
+    unit_time: min
+    time_window: "00:15:00"
+    round: 3
+
+# ----------------------------------------------------------------------------
+# Infiltration detection: a rapid indoor dew point rise means a door/window was
+# opened or a large slug of humid outside air got in.
+# ----------------------------------------------------------------------------
+automation:
+  - id: maui_infiltration_detect
+    alias: Maui Infiltration Detect
+    description: >
+      Rapid indoor dew point rise (doors/windows opened). Suspends aggressive
+      solar pre-cooling for a hold period and bumps cooling up temporarily so we
+      do not chase a moving humidity target with cold surfaces.
+    triggers:
+      - trigger: numeric_state
+        entity_id: sensor.maui_indoor_dew_point_rate
+        above: input_number.maui_infiltration_rate
+        for:
+          minutes: 1
+    conditions:
+      - condition: template
+        value_template: "{{ not is_state('input_select.maui_house_mode', 'Suspend') }}"
+    actions:
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.maui_infiltration_active
+      - action: timer.start
+        target:
+          entity_id: timer.maui_infiltration
+      - action: logbook.log
+        data:
+          name: Maui Dew Point
+          message: >-
+            Infiltration detected — indoor dew point rising at
+            {{ states('sensor.maui_indoor_dew_point_rate') }} °F/min
+            (indoor dew point {{ states('sensor.maui_indoor_dew_point') }} °F).
+            Suspending aggressive pre-cooling for 30 min.
+          entity_id: sensor.maui_indoor_dew_point
+
+  - id: maui_infiltration_clear
+    alias: Maui Infiltration Clear
+    description: Clears the infiltration hold when the timer finishes.
+    triggers:
+      - trigger: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.maui_infiltration
+    actions:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.maui_infiltration_active

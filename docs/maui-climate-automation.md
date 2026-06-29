@@ -89,6 +89,76 @@ If none of the above apply, the setpoint is chosen by solar tier and house mode:
 
 ---
 
+## Dew Point Awareness (Moisture-First Control)
+
+In a tropical oceanfront house the real enemy is not heat, it is **moisture**. Condensation forms whenever a surface falls below the surrounding air's dew point, which damages wood, steel, glass, artwork, and finishes. This layer makes the automation control humidity first and temperature second — the way high-end resorts and museums run their HVAC.
+
+**Priority order:** 1) Prevent condensation → 2) Protect materials → 3) Comfort → 4) Battery → 5) Solar self-consumption.
+
+> A house at 78 °F / 58 °F dew point is safer and more comfortable than one at 73 °F / 70 °F dew point.
+
+### Dew Point Sensors
+
+Dew point is computed with the Magnus formula from temperature + relative humidity.
+
+| Sensor | Source | Notes |
+|---|---|---|
+| `sensor.maui_outdoor_dew_point` | Tempest weather station | Prefers the Tempest's native dew point reading; falls back to Magnus from its temp/humidity. **Fails safe** (reports unknown) if the Tempest is offline. |
+| `sensor.maui_indoor_dew_point` | Honeywell `climate.*` zones | The **maximum** dew point across rooms — the wettest air drives protection. |
+| `sensor.maui_indoor_dew_point_status` | derived | Excellent / Target / Acceptable / Warning / High humidity risk. |
+| `sensor.maui_dew_point_setpoint_floor` | derived | The minimum allowed setpoint for the current outdoor dew point (table below). |
+| `sensor.maui_indoor_dew_point_rate` | derivative | °F/min rise, smoothed over 15 min — used for infiltration detection. |
+
+### Outdoor Dew Point Floor (overrides solar pre-cooling)
+
+The final setpoint is `max(solar/battery target, dew point floor)`. A high outdoor dew point **raises** the minimum setpoint so cold surfaces are never driven below the outside dew point. This overrides aggressive solar pre-cooling — e.g. if excess solar would normally cool to 72 °F but the outdoor dew point is 74 °F, cooling is limited to 76 °F.
+
+| Outdoor Dew Point | Minimum Indoor Setpoint | Helper |
+|---|---|---|
+| < 65 °F | 72 °F | `maui_dewfloor_under65` |
+| 65–69 °F | 74 °F | `maui_dewfloor_65_69` |
+| 70–72 °F | 75 °F | `maui_dewfloor_70_72` |
+| 73–75 °F | 76 °F | `maui_dewfloor_73_75` |
+| > 75 °F | 78 °F | `maui_dewfloor_over75` |
+
+If the outdoor dew point is unknown (e.g. the Tempest integration is disconnected), the floor defaults to the **warmest** band so a dead sensor can never cause aggressive over-cooling.
+
+### Indoor Dew Point Targets & Dehumidification
+
+| Indoor Dew Point | Status |
+|---|---|
+| < 58 °F | Excellent |
+| 58–62 °F | Target |
+| 62–65 °F | Acceptable |
+| 65–68 °F | Warning |
+| > 68 °F | High humidity risk |
+
+When indoor dew point rises above the target (`maui_indoor_dewpoint_target`, default **64 °F**), the automation **prioritises dehumidification**: it reduces fan speed where the equipment supports a low/quiet setting so the coil runs longer and removes more moisture (latent heat) rather than just moving air. On equipment with no low fan setting this step safely no-ops.
+
+### Infiltration Detection
+
+A rapid indoor dew point rise means doors/windows were opened or a slug of humid outside air got in. When `sensor.maui_indoor_dew_point_rate` exceeds `maui_infiltration_rate` (default **0.2 °F/min ≈ 3 °F in 15 min**) for one minute:
+
+- `input_boolean.maui_infiltration_active` turns on and a **30‑minute hold** (`timer.maui_infiltration`) starts.
+- Aggressive solar pre-cooling is suspended and a **+2 °F buffer** is added to setpoints, so the system does not chase a moving humidity target with cold surfaces.
+- The hold clears automatically when the timer finishes.
+
+### New Configurable Parameters
+
+| Helper | Default | Description |
+|---|---|---|
+| `maui_dewfloor_under65` | 72 °F | Min setpoint, outdoor dew point < 65 °F |
+| `maui_dewfloor_65_69` | 74 °F | Min setpoint, outdoor dew point 65–69 °F |
+| `maui_dewfloor_70_72` | 75 °F | Min setpoint, outdoor dew point 70–72 °F |
+| `maui_dewfloor_73_75` | 76 °F | Min setpoint, outdoor dew point 73–75 °F |
+| `maui_dewfloor_over75` | 78 °F | Min setpoint, outdoor dew point > 75 °F |
+| `maui_indoor_dewpoint_target` | 64 °F | Indoor dew point above which dehumidification is prioritised |
+| `maui_infiltration_rate` | 0.2 °F/min | Indoor dew point rise rate that flags infiltration |
+
+> **Setup:** the YAML lives in `ha-config/` — `maui_dewpoint_package.yaml` (sensors, helpers, infiltration) and `maui_solar_aware_climate.yaml` (the updated main automation). Set your real Tempest entity ids in the outdoor dew point sensor before enabling.
+
+---
+
 ## Room Windows (East vs West)
 
 The house has a distinct east/west solar exposure pattern. The automation treats rooms differently based on which direction they face.
