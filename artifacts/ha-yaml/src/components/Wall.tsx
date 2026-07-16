@@ -2270,10 +2270,11 @@ export function Wall() {
       ),
     [states],
   );
-  const lightsOnCount = allLightingLoads.filter((s) => s.state === "on").length;
+  const lightsOn = allLightingLoads.filter((s) => s.state === "on");
+  const lightsOnCount = lightsOn.length;
 
   const allLightsOff = async () => {
-    const on = allLightingLoads.filter((s) => s.state === "on");
+    const on = lightsOn;
     const lights = on
       .filter((s) => domainOf(s.entity_id) === "light")
       .map((s) => s.entity_id);
@@ -2541,9 +2542,16 @@ export function Wall() {
                 <div className="flex items-center justify-end gap-2 mb-4">
                   {confirmAllOff ? (
                     <>
-                      <span className="text-sm text-[var(--cream-muted)]">
-                        Turn off {lightsOnCount} light
-                        {lightsOnCount === 1 ? "" : "s"}?
+                      {/* Name exactly what will be turned off — the count can
+                          include lights hidden from the list (no room assigned
+                          in HA), so the names are the source of truth. */}
+                      <span className="text-sm text-[var(--cream-muted)] text-right max-w-2xl">
+                        Turn off{" "}
+                        {lightsOn
+                          .map((s) => friendlyName(s))
+                          .sort((a, b) => a.localeCompare(b))
+                          .join(", ")}
+                        ?
                       </span>
                       <button
                         onClick={allLightsOff}

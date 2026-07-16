@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.52
+
+- **"All off" now names exactly what it will turn off** — The confirmation
+  prompt lists each light by name (e.g. "Turn off Bar Sconces, Kitchen Cans,
+  Lanai Lantern?") instead of just a count. Useful because the count can include
+  lights that don't appear in the Lighting list — typically ones not assigned to
+  any room in Home Assistant.
+
 ## 1.0.51
 
 - **Lighting list now shows everything "All off" controls** — Lighting loads
