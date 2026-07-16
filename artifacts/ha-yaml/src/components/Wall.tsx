@@ -451,16 +451,22 @@ const CATEGORIES: Category[] = [
     key: "lights",
     label: "Lighting",
     icon: Lightbulb,
-    match: (s) => domainOf(s.entity_id) === "light" && !isCameraLight(s),
+    // Includes lighting loads wired through switch modules (Lutron etc.) so
+    // the list matches exactly what the "All off" button will turn off.
+    match: (s) =>
+      (domainOf(s.entity_id) === "light" && !isCameraLight(s)) ||
+      isLightingSwitch(s),
   },
   {
     key: "switches",
     label: "Switches",
     icon: Power,
+    // Lighting-type switch loads live in the Lighting section instead.
     match: (s) =>
       (domainOf(s.entity_id) === "switch" ||
         domainOf(s.entity_id) === "input_boolean") &&
-      !isNonSwitch(s),
+      !isNonSwitch(s) &&
+      !isLightingSwitch(s),
   },
   {
     key: "climate",

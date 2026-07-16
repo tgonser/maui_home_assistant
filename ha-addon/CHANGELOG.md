@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.51
+
+- **Lighting list now shows everything "All off" controls** — Lighting loads
+  wired through switch modules (Lutron etc.) now appear in the Lighting section
+  (and no longer under Switches), so the "All off" count always matches the list
+  you see.
+
 ## 1.0.50
 
 - **Added: "All off" button in the Lighting section** — Turns off every light in
