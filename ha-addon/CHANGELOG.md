@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.50
+
+- **Added: "All off" button in the Lighting section** — Turns off every light in
+  the house with one action, including lighting loads wired through Lutron-style
+  switch modules (which Home Assistant treats as switches, not lights). Shows how
+  many lights are currently on, asks "Turn off N lights?" before acting (the
+  prompt auto-dismisses after a few seconds), and is disabled when nothing is on.
+
 ## 1.0.49
 
 - **Full screen now keeps the section menu permanently visible** — Instead of a

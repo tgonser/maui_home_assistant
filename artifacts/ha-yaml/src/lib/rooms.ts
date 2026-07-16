@@ -160,7 +160,7 @@ const LIGHT_SWITCH_EXCLUDE: RegExp[] = [
   /_led$/i,
   /status[\s_-]*(led|light)/,
 ];
-const isLightingSwitch = (s: HAState) => {
+export const isLightingSwitch = (s: HAState) => {
   if (domainOf(s.entity_id) !== "switch") return false;
   const id = s.entity_id.toLowerCase();
   const name = (

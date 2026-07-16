@@ -8,7 +8,7 @@ import {
 } from "@/lib/mediaState";
 import { useEntityAliases } from "@/lib/entityAliases";
 import { useRoomAliases } from "@/lib/roomAliases";
-import { useRegistry } from "@/lib/rooms";
+import { useRegistry, isLightingSwitch } from "@/lib/rooms";
 import { friendlyName, motionSensorLabel, displayNameWithRoom } from "@/lib/display";
 import {
   Lightbulb,
@@ -2123,6 +2123,7 @@ export function Wall() {
   const [active, setActive] = useState<CategoryKey>("overview");
   const [error, setError] = useState<string | null>(null);
   const [immersive, setImmersive] = useState(false);
+  const [confirmAllOff, setConfirmAllOff] = useState(false);
   const [openEntity, setOpenEntity] = useState<HAState | null>(null);
   const entityAliases = useEntityAliases((s) => s.aliases);
   const loadEntityAliases = useEntityAliases((s) => s.load);
@@ -2249,6 +2250,46 @@ export function Wall() {
     const r = await haStates();
     if (r.ok) setStates(r.data);
   };
+
+  // Every real lighting load in the house: light.* entities (minus camera
+  // status LEDs) plus lighting-type switch.* loads (Lutron modules etc.).
+  // "All off" must route by domain — light.turn_off no-ops on a switch.
+  const allLightingLoads = useMemo(
+    () =>
+      states.filter(
+        (s) =>
+          s.state !== "unavailable" &&
+          ((domainOf(s.entity_id) === "light" && !isCameraLight(s)) ||
+            isLightingSwitch(s)),
+      ),
+    [states],
+  );
+  const lightsOnCount = allLightingLoads.filter((s) => s.state === "on").length;
+
+  const allLightsOff = async () => {
+    const on = allLightingLoads.filter((s) => s.state === "on");
+    const lights = on
+      .filter((s) => domainOf(s.entity_id) === "light")
+      .map((s) => s.entity_id);
+    const switches = on
+      .filter((s) => domainOf(s.entity_id) === "switch")
+      .map((s) => s.entity_id);
+    if (lights.length)
+      await haCallService("light", "turn_off", { entity_id: lights });
+    if (switches.length)
+      await haCallService("switch", "turn_off", { entity_id: switches });
+    setConfirmAllOff(false);
+    await refresh();
+  };
+
+  // The confirm prompt auto-dismisses so a stray first tap can't leave a
+  // "Yes, all off" button armed on a wall kiosk indefinitely.
+  useEffect(() => {
+    if (!confirmAllOff) return;
+    const t = window.setTimeout(() => setConfirmAllOff(false), 6000);
+    return () => window.clearTimeout(t);
+  }, [confirmAllOff]);
+  useEffect(() => setConfirmAllOff(false), [active]);
 
   const filtered = useMemo(() => {
     if (active === "overview") {
@@ -2489,10 +2530,52 @@ export function Wall() {
                 renderTile={clickableTile}
                 entityArea={registry.entityArea}
               />
-            ) : active === "lights" ||
-              active === "switches" ? (
+            ) : active === "lights" ? (
+              <div key="lights-grouped">
+                <div className="flex items-center justify-end gap-2 mb-4">
+                  {confirmAllOff ? (
+                    <>
+                      <span className="text-sm text-[var(--cream-muted)]">
+                        Turn off {lightsOnCount} light
+                        {lightsOnCount === 1 ? "" : "s"}?
+                      </span>
+                      <button
+                        onClick={allLightsOff}
+                        className="wall-nav-btn px-4 py-2 text-sm font-medium"
+                      >
+                        Yes, all off
+                      </button>
+                      <button
+                        onClick={() => setConfirmAllOff(false)}
+                        className="wall-nav-btn px-4 py-2 text-sm"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmAllOff(true)}
+                      disabled={lightsOnCount === 0}
+                      className={`wall-nav-btn px-4 py-2 flex items-center gap-2 text-sm font-medium ${
+                        lightsOnCount === 0 ? "wall-nav-btn--dim" : ""
+                      }`}
+                      title="Turn all lights off"
+                    >
+                      <Power className="w-4 h-4" />
+                      <span>
+                        All off{lightsOnCount > 0 ? ` (${lightsOnCount} on)` : ""}
+                      </span>
+                    </button>
+                  )}
+                </div>
+                <GroupedByRoomView
+                  entities={filtered}
+                  renderTile={clickableTile}
+                />
+              </div>
+            ) : active === "switches" ? (
               <GroupedByRoomView
-                key={`${active}-grouped`}
+                key="switches-grouped"
                 entities={filtered}
                 renderTile={clickableTile}
               />
