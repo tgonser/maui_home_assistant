@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.53
+
+- **Fixed: UniFi network-gear status LEDs no longer count as lights** — Access
+  point and PoE switch LEDs (UAP-AC-Lite, UAP-AC-M-Pro, USW-Lite-8-PoE, UDM,
+  etc.) were included in the Lighting section's "All off" count. They're now
+  filtered out like camera lights, so "All off" only touches real room lights.
+
 ## 1.0.52
 
 - **"All off" now names exactly what it will turn off** — The confirmation

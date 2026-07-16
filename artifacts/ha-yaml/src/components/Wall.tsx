@@ -85,6 +85,14 @@ const domainOf = (id: string) => id.split(".")[0] ?? "";
 const CAMERA_LIGHT_PATTERNS = [
   /\bubiquiti\b/,
   /\bunifi\b/,
+  // UniFi network gear model names (APs, switches, gateways) whose status
+  // LEDs are exposed as light.* entities: UAP-AC-Lite, USW-Lite-8-PoE, UDM...
+  /\buap\b/,
+  /\busw\b/,
+  /\budm\b/,
+  /\budr\b/,
+  /\buxg\b/,
+  /\bpoe\b/,
   /\bu6\b/,
   /\bu7\b/,
   /\bg4\b/,
