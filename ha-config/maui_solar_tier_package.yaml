@@ -1,0 +1,393 @@
+# =============================================================================
+# Maui Solar Tier Matrix  —  cooling targets per house mode x solar tier
+# =============================================================================
+# Paste into your packages folder (or configuration.yaml under the matching
+# keys). Defines:
+#   1. sensor.maui_solar_tier  — Poor / Fair / Good / Strong / Excellent from
+#      sensor.total_solar (kW):  <=5 Poor, <=10 Fair, <=15 Good, <=20 Strong,
+#      >20 Excellent.
+#   2. 45 input_number helpers — the cooling matrix. One target (deg F) per
+#      house mode (Owners / Visitors / Vacation) x tier x room group
+#      (Master / Sitting / Rest). Editable from the Wall Kiosk settings menu
+#      or from HA Settings > Devices & Services > Helpers.
+#      NOTE: values are NOT set here (an "initial:" key would reset them on
+#      every HA restart). After adding this package, open the Wall Kiosk
+#      Settings > Cooling Matrix and tap "Load recommended defaults" once.
+# Room groups used by the automation:
+#   Master  = climate.master_bed_2
+#   Sitting = climate.sitting
+#   Rest    = climate.boardroom, climate.beach_room, climate.upper_mauka
+#   (Atrium / Bar / Kitchen are NOT in the matrix - doors open; they are still
+#    forced OFF during peak 5-9pm.)
+# =============================================================================
+
+template:
+  - sensor:
+      - name: Maui Solar Tier
+        unique_id: maui_solar_tier
+        icon: mdi:solar-power-variant
+        state: >-
+          {% set s = states("sensor.total_solar") | float(0) %}
+          {% if s <= 5 %}Poor{% elif s <= 10 %}Fair{% elif s <= 15 %}Good{% elif s <= 20 %}Strong{% else %}Excellent{% endif %}
+
+input_number:
+  maui_ct_owners_poor_master:
+    name: "CT Owners · Poor · Master"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_owners_poor_sitting:
+    name: "CT Owners · Poor · Sitting"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_owners_poor_rest:
+    name: "CT Owners · Poor · Rest"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_owners_fair_master:
+    name: "CT Owners · Fair · Master"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_owners_fair_sitting:
+    name: "CT Owners · Fair · Sitting"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_owners_fair_rest:
+    name: "CT Owners · Fair · Rest"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_owners_good_master:
+    name: "CT Owners · Good · Master"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_owners_good_sitting:
+    name: "CT Owners · Good · Sitting"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_owners_good_rest:
+    name: "CT Owners · Good · Rest"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_owners_strong_master:
+    name: "CT Owners · Strong · Master"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_owners_strong_sitting:
+    name: "CT Owners · Strong · Sitting"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_owners_strong_rest:
+    name: "CT Owners · Strong · Rest"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_owners_excellent_master:
+    name: "CT Owners · Excellent · Master"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_owners_excellent_sitting:
+    name: "CT Owners · Excellent · Sitting"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_owners_excellent_rest:
+    name: "CT Owners · Excellent · Rest"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_visitors_poor_master:
+    name: "CT Visitors · Poor · Master"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_visitors_poor_sitting:
+    name: "CT Visitors · Poor · Sitting"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_visitors_poor_rest:
+    name: "CT Visitors · Poor · Rest"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_visitors_fair_master:
+    name: "CT Visitors · Fair · Master"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_visitors_fair_sitting:
+    name: "CT Visitors · Fair · Sitting"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_visitors_fair_rest:
+    name: "CT Visitors · Fair · Rest"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_visitors_good_master:
+    name: "CT Visitors · Good · Master"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_visitors_good_sitting:
+    name: "CT Visitors · Good · Sitting"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_visitors_good_rest:
+    name: "CT Visitors · Good · Rest"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_visitors_strong_master:
+    name: "CT Visitors · Strong · Master"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_visitors_strong_sitting:
+    name: "CT Visitors · Strong · Sitting"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_visitors_strong_rest:
+    name: "CT Visitors · Strong · Rest"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_visitors_excellent_master:
+    name: "CT Visitors · Excellent · Master"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_visitors_excellent_sitting:
+    name: "CT Visitors · Excellent · Sitting"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_visitors_excellent_rest:
+    name: "CT Visitors · Excellent · Rest"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_vacation_poor_master:
+    name: "CT Vacation · Poor · Master"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_vacation_poor_sitting:
+    name: "CT Vacation · Poor · Sitting"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_vacation_poor_rest:
+    name: "CT Vacation · Poor · Rest"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_vacation_fair_master:
+    name: "CT Vacation · Fair · Master"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_vacation_fair_sitting:
+    name: "CT Vacation · Fair · Sitting"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_vacation_fair_rest:
+    name: "CT Vacation · Fair · Rest"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_vacation_good_master:
+    name: "CT Vacation · Good · Master"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_vacation_good_sitting:
+    name: "CT Vacation · Good · Sitting"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_vacation_good_rest:
+    name: "CT Vacation · Good · Rest"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_vacation_strong_master:
+    name: "CT Vacation · Strong · Master"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_vacation_strong_sitting:
+    name: "CT Vacation · Strong · Sitting"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_vacation_strong_rest:
+    name: "CT Vacation · Strong · Rest"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_vacation_excellent_master:
+    name: "CT Vacation · Excellent · Master"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_vacation_excellent_sitting:
+    name: "CT Vacation · Excellent · Sitting"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box
+  maui_ct_vacation_excellent_rest:
+    name: "CT Vacation · Excellent · Rest"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+    mode: box

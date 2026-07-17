@@ -357,38 +357,66 @@ function HouseStatusTile({ states }: { states: HAState[] }) {
 
   const hour = new Date().getHours();
   const peak = hour >= 17 && hour < 21;
-  const lowBatt = !isNaN(batt) && batt < 25;
-  const solarStrong = (!isNaN(batt) && batt >= 80) || (!isNaN(solarKw) && solarKw > 10);
 
-  // Base comfort target per mode, mirroring the automation's east/west_base.
+  // Solar tier — prefer HA's own sensor.maui_solar_tier so the tile always
+  // agrees with the automation; fall back to bucketing solar kW locally.
+  const tierSensor = states.find(
+    (e) => e.entity_id === "sensor.maui_solar_tier",
+  );
+  const tierFromKw = (kw: number) =>
+    kw <= 5
+      ? "Poor"
+      : kw <= 10
+        ? "Fair"
+        : kw <= 15
+          ? "Good"
+          : kw <= 20
+            ? "Strong"
+            : "Excellent";
+  const TIER_NAMES = ["Poor", "Fair", "Good", "Strong", "Excellent"];
+  const sensorTier = tierSensor
+    ? TIER_NAMES.find((t) => t.toLowerCase() === tierSensor.state.toLowerCase())
+    : undefined;
+  const tier =
+    sensorTier ?? (!isNaN(solarKw) ? tierFromKw(solarKw) : undefined);
+
+  // Matrix targets for the current mode + tier (from the input_number
+  // helpers, so the tile shows exactly what the automation will set).
   const modeState = mode?.state ?? "";
-  const baseTarget =
-    peak || lowBatt
-      ? 84
-      : modeState === "Owners Home"
-        ? solarStrong
-          ? 74
-          : 79
-        : modeState === "Visitors"
-          ? solarStrong
-            ? 76
-            : 81
-          : solarStrong
-            ? 80
-            : 84;
+  const modeKey =
+    modeState === "Owners Home"
+      ? "owners"
+      : modeState === "Visitors"
+        ? "visitors"
+        : "vacation";
+  const matrixVal = (group: string): number | null => {
+    if (!tier) return null;
+    const e = states.find(
+      (s) =>
+        s.entity_id ===
+        `input_number.maui_ct_${modeKey}_${tier.toLowerCase()}_${group}`,
+    );
+    const n = e ? parseFloat(e.state) : NaN;
+    return isNaN(n) ? null : Math.round(n);
+  };
+  const mT = matrixVal("master");
+  const sT = matrixVal("sitting");
+  const rT = matrixVal("rest");
 
   let threshold: string;
   if (peak) threshold = "Peak backoff (5–9pm) · AC eased to 84°";
-  else if (lowBatt) threshold = "Low battery (<25%) · AC eased to 84°";
-  else if (solarStrong)
-    threshold = `Solar-strong · cooling to ${baseTarget}°`;
-  else threshold = `Standard · cooling to ${baseTarget}°`;
+  else if (tier && mT !== null && sT !== null && rT !== null)
+    threshold = `Solar ${tier.toLowerCase()} · master ${mT}° / sitting ${sT}° / rest ${rT}°`;
+  else if (tier) threshold = `Solar ${tier.toLowerCase()}`;
+  else threshold = "Solar tier unavailable";
 
-  // Only mention the dew floor when it is actually raising the setpoint
-  // above the computed base target (the floor never exceeds 84°).
+  // Only mention the dew floor when it is actually raising a setpoint above
+  // the lowest matrix target (the floor never exceeds 84°).
+  const lowestTarget =
+    mT !== null && sT !== null && rT !== null ? Math.min(mT, sT, rT) : NaN;
   const floorNum = dewFloor ? parseFloat(dewFloor.state) : NaN;
   const floorNote =
-    !isNaN(floorNum) && floorNum > baseTarget
+    !peak && !isNaN(floorNum) && !isNaN(lowestTarget) && floorNum > lowestTarget
       ? ` · dew floor raises to ${Math.round(floorNum)}°`
       : "";
 

@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { X, Search, Check } from "lucide-react";
 import type { HAState } from "@/lib/ha";
+import { CoolingMatrix } from "./CoolingMatrix";
 
 export type SuperViewSlot =
   | "weather"
@@ -289,6 +290,8 @@ export function SuperViewSettings({
           </button>
         </div>
         <div className="p-6 space-y-5">
+          <CoolingMatrix states={states} />
+          <div className="border-t border-stone-800" />
           {SLOTS.map((spec) => (
             <EntityPicker
               key={spec.slot}

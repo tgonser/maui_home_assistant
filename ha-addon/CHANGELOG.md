@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.0.56
+
+- **Added: Solar-tier cooling matrix** — Cooling is now driven by five named
+  solar tiers (Poor ≤5 kW · Fair 5–10 · Good 10–15 · Strong 15–20 ·
+  Excellent >20). Each house mode (Owners / Visitors / Vacation) has its own
+  editable matrix of AC targets for three room groups (Master / Sitting /
+  Rest), stored as Home Assistant `input_number` helpers.
+- **Added: Cooling matrix editor in Settings** — Pick Entities → Cooling
+  matrix. Tap +/− per cell; "Load recommended defaults" seeds the starting
+  values. Requires the new `maui_solar_tier_package.yaml` in HA.
+- **Changed: House status card** — Threshold line now shows the solar tier
+  name and the live matrix targets (e.g. "Solar good · master 76° / sitting
+  76° / rest 84°").
+
 ## 1.0.55
 
 - **Fixed: House status card was clipping the climate threshold line** — The

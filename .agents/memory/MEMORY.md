@@ -5,6 +5,7 @@
 - [HA add-on supervisor proxy](ha-addon-supervisor-proxy.md) — core API needs `homeassistant_api: true` (else 401); `new URL().origin` drops `/core`; bump config `version:` for HA to detect updates
 - [HA Shades synthetic rooms](ha-shades-synthetic-rooms.md) — Shades tab buckets covers by regex (no area_id); rename must key off dominant entity area_id to unify with app-wide rename, not a separate `shade:` key
 - [UniFi gear LEDs as lights](unifi-led-light-entities.md) — AP/switch status LEDs are `light.*` named by model (UAP/USW/UDM), not brand; filters must match model prefixes
+- [Solar tier cooling matrix](ha-solar-tier-matrix.md) — climate targets come from per-mode×tier×group input_numbers; never use `initial:` (resets on restart); entity-ID Jinja must be single-line
 - [HA switch.* lighting loads](ha-switch-domain-lights.md) — Lutron Caséta device-type "None" loads are `switch.*` not `light.*`; rooms must count lighting-named switches and route service calls by domain (light.turn_on no-ops on a switch)
 - [HA camera motion-row naming](ha-camera-motion-sibling-naming.md) — motion→camera name lookup must honor the camera's kiosk alias AND skip UniFi secondary stream entities (high/low-res channel), or rows show raw "G6 … High resolution" names
 - [Tempest/WeatherFlow multi-site HA outage](tempest-weatherflow-ha-outage.md) — simultaneous "unavailable" across the 3 HA properties = HA-side library/version bug or shared cloud token, never local network; HA 2026.3.x crashes in Tempest's own dew point calc and recurs after restart
