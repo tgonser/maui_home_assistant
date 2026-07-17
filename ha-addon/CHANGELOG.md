@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.55
+
+- **Fixed: House status card was clipping the climate threshold line** — The
+  card now spans two grid rows (like the Weather tile), so the "Solar-strong /
+  Standard / Peak backoff" line and the dew-floor note are fully visible.
+
 ## 1.0.54
 
 - **Added: House status card on the Overview page** — A double-width tile

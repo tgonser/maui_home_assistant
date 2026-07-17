@@ -397,7 +397,7 @@ function HouseStatusTile({ states }: { states: HAState[] }) {
       layout
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="wall-tile wall-tile--active p-5 flex flex-col justify-between min-h-[180px] col-span-2"
+      className="wall-tile wall-tile--active p-6 col-span-2 row-span-2 flex flex-col justify-between"
     >
       <div className="flex items-start justify-between relative z-[1]">
         <div className="wall-icon-wrap p-3">
