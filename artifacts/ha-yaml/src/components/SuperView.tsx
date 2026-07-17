@@ -281,6 +281,165 @@ function StatTile({
   );
 }
 
+// ---------------------------------------------------------------------------
+// House status tile — current mode + which climate threshold is in effect.
+// Mirrors the logic of the "Maui Solar-Aware Climate" automation:
+//   peak 5-9pm or battery <25%  -> 84° backoff
+//   battery >=80% or solar >10kW -> solar-strong comfort targets
+//   otherwise                    -> standard targets
+// The dew-point floor can raise (never lower) the final setpoint.
+// ---------------------------------------------------------------------------
+function HouseStatusTile({ states }: { states: HAState[] }) {
+  const mode = findFirst(
+    states,
+    (e) => /^input_select\..*house_mode/i.test(e.entity_id),
+  );
+
+  // Only sensors reporting instantaneous power (W/kW) qualify — this keeps
+  // cumulative energy sensors (kWh) from skewing the threshold decision.
+  const isPowerUnit = (e: HAState) =>
+    /^k?W$/i.test(
+      ((e.attributes.unit_of_measurement as string | undefined) ?? "").trim(),
+    );
+  // Prefer the exact sensor the automation itself uses, then fall back to
+  // power-unit heuristics.
+  const solarSensor =
+    states.find((e) => e.entity_id === "sensor.total_solar") ??
+    findFirst(
+      states,
+      (e) =>
+        domainOf(e.entity_id) === "sensor" &&
+        isPowerUnit(e) &&
+        /envoy.*production|solar.*power|current_power_production|pv_power/i.test(
+          e.entity_id,
+        ),
+    );
+  const drawSensor = findFirst(
+    states,
+    (e) =>
+      domainOf(e.entity_id) === "sensor" &&
+      isPowerUnit(e) &&
+      /load|consumption|home.*power|grid.*power|current_power_consumption/i.test(
+        e.entity_id,
+      ),
+  );
+  const battSensors = findEntities(
+    states,
+    (e) =>
+      domainOf(e.entity_id) === "sensor" &&
+      /(powerwall|tesla|4680|gonser|home_battery)/i.test(e.entity_id) &&
+      /(percentage_charged|state_of_charge|charge_level|battery_percent|soc)/i.test(
+        e.entity_id,
+      ) &&
+      e.attributes.unit_of_measurement === "%",
+  );
+  const dewFloor = findFirst(states, (e) =>
+    /dew_point_setpoint_floor|dewpoint_setpoint_floor/i.test(e.entity_id),
+  );
+
+  const toKw = (s?: HAState): number => {
+    if (!s) return NaN;
+    const n = parseFloat(s.state);
+    if (isNaN(n)) return NaN;
+    const unit = (
+      (s.attributes.unit_of_measurement as string | undefined) ?? ""
+    ).toLowerCase();
+    return unit === "w" ? n / 1000 : n;
+  };
+  const fmtKw = (n: number) => (isNaN(n) ? "—" : `${n.toFixed(1)} kW`);
+
+  const solarKw = toKw(solarSensor);
+  const drawKw = toKw(drawSensor);
+  const battVals = battSensors
+    .map((e) => parseFloat(e.state))
+    .filter((n) => !isNaN(n));
+  const batt = battVals.length > 0 ? Math.min(...battVals) : NaN;
+
+  const hour = new Date().getHours();
+  const peak = hour >= 17 && hour < 21;
+  const lowBatt = !isNaN(batt) && batt < 25;
+  const solarStrong = (!isNaN(batt) && batt >= 80) || (!isNaN(solarKw) && solarKw > 10);
+
+  // Base comfort target per mode, mirroring the automation's east/west_base.
+  const modeState = mode?.state ?? "";
+  const baseTarget =
+    peak || lowBatt
+      ? 84
+      : modeState === "Owners Home"
+        ? solarStrong
+          ? 74
+          : 79
+        : modeState === "Visitors"
+          ? solarStrong
+            ? 76
+            : 81
+          : solarStrong
+            ? 80
+            : 84;
+
+  let threshold: string;
+  if (peak) threshold = "Peak backoff (5–9pm) · AC eased to 84°";
+  else if (lowBatt) threshold = "Low battery (<25%) · AC eased to 84°";
+  else if (solarStrong)
+    threshold = `Solar-strong · cooling to ${baseTarget}°`;
+  else threshold = `Standard · cooling to ${baseTarget}°`;
+
+  // Only mention the dew floor when it is actually raising the setpoint
+  // above the computed base target (the floor never exceeds 84°).
+  const floorNum = dewFloor ? parseFloat(dewFloor.state) : NaN;
+  const floorNote =
+    !isNaN(floorNum) && floorNum > baseTarget
+      ? ` · dew floor raises to ${Math.round(floorNum)}°`
+      : "";
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, scale: 0.96 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="wall-tile wall-tile--active p-5 flex flex-col justify-between min-h-[180px] col-span-2"
+    >
+      <div className="flex items-start justify-between relative z-[1]">
+        <div className="wall-icon-wrap p-3">
+          <Home className="w-6 h-6" />
+        </div>
+        <div className="text-right">
+          <div className="label text-sm">House mode</div>
+          <div className="value text-2xl font-light">
+            {mode ? mode.state : "—"}
+          </div>
+        </div>
+      </div>
+      <div className="relative z-[1]">
+        <div className="flex items-end gap-6">
+          <div>
+            <div className="label text-[11px] uppercase">Solar</div>
+            <div className="value text-2xl font-light tabular-nums">
+              {fmtKw(solarKw)}
+            </div>
+          </div>
+          <div>
+            <div className="label text-[11px] uppercase">Draw</div>
+            <div className="value text-2xl font-light tabular-nums">
+              {fmtKw(drawKw)}
+            </div>
+          </div>
+          <div>
+            <div className="label text-[11px] uppercase">Battery</div>
+            <div className="value text-2xl font-light tabular-nums">
+              {isNaN(batt) ? "—" : `${Math.round(batt)}%`}
+            </div>
+          </div>
+        </div>
+        <div className="sub text-[11px] uppercase mt-2">
+          {threshold}
+          {floorNote}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 function isLightGroup(s: HAState) {
   // Group/helper entities expose entity_id as an array of member IDs
   return Array.isArray(s.attributes.entity_id);
@@ -978,6 +1137,7 @@ export function SuperView({
         </button>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 auto-rows-[160px] gap-4">
+        <HouseStatusTile states={states} />
         <WeatherTile states={states} />
         <LightsCount states={states} />
         <ShadesCount states={states} />

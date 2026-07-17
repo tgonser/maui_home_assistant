@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.54
+
+- **Added: House status card on the Overview page** — A double-width tile
+  showing the current house mode (Owners Home / Visitors / Vacation / Suspend),
+  live solar production, home power draw, battery charge (lowest of the two
+  Powerwalls), and which climate threshold is currently in effect: Peak backoff
+  (5–9pm), Low battery (<25%), Solar-strong, or Standard — plus the dew-point
+  floor when it is raising setpoints.
+
 ## 1.0.53
 
 - **Fixed: UniFi network-gear status LEDs no longer count as lights** — Access
