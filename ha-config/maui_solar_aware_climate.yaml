@@ -25,8 +25,9 @@ description: >
   Sets AC targets every 15 min based on solar, battery, time of day, and house
   mode — then enforces a dew-point-based minimum setpoint to prevent
   condensation. East rooms 9am–2pm, west rooms noon–9am. Backs off during peak
-  pricing (5–9pm) and when battery is low (<25%). Dew point floor overrides
-  solar pre-cooling; infiltration events suspend aggressive cooling.
+  pricing (5–9pm) and when battery is low (<25%); open-air rooms (Atrium, Bar,
+  Kitchen) are forced OFF entirely during peak in every mode. Dew point floor
+  overrides solar pre-cooling; infiltration events suspend aggressive cooling.
 triggers:
   - trigger: time_pattern
     minutes: /15
@@ -38,6 +39,12 @@ triggers:
     entity_id: input_boolean.maui_infiltration_active
   - trigger: homeassistant
     event: start
+  # Fire exactly at the peak window edges so the open-air shutdown / recovery
+  # happens on time instead of up to 15 minutes late.
+  - trigger: time
+    at: '17:00:00'
+  - trigger: time
+    at: '21:00:00'
 conditions:
   - condition: template
     value_template: '{{ not is_state(''input_select.maui_house_mode'', ''Suspend'') }}'
@@ -127,6 +134,10 @@ actions:
             - climate.kitchen
             - climate.maui_bar
           sequence:
+            # Open-air rooms are handled by the peak shutdown below — skip
+            # them here during peak so we don't set them to cool first.
+            - condition: template
+              value_template: '{{ not (peak and repeat.item in openair_rooms) }}'
             - condition: template
               value_template: |-
                 {{ state_attr(repeat.item, 'hvac_mode') != 'cool'
@@ -142,6 +153,29 @@ actions:
                 entity_id: '{{ repeat.item }}'
               data:
                 temperature: '{{ west_target | int }}'
+              continue_on_error: true
+  # ---- PEAK SHUTDOWN for open-air rooms (Atrium / Bar / Kitchen) ----
+  #      These rooms are usually open to the outside when the house is
+  #      occupied, so from 5pm to 9pm they are forced OFF in every mode —
+  #      Owners Home, Visitors, and Vacation alike. (Suspend mode skips this
+  #      automation entirely.) A guest turning one on during peak will be
+  #      switched back off within 15 minutes.
+  - if:
+      - condition: template
+        value_template: '{{ peak }}'
+    then:
+      - repeat:
+          for_each:
+            - climate.atrium
+            - climate.bar
+            - climate.maui_bar
+            - climate.kitchen
+          sequence:
+            - condition: template
+              value_template: "{{ states(repeat.item) != 'off' }}"
+            - action: climate.turn_off
+              target:
+                entity_id: '{{ repeat.item }}'
               continue_on_error: true
   # ---- DEHUMIDIFY PRIORITY: indoor dew point high -> slow the fan so the coil
   #      runs longer and removes more latent heat (moisture). No-ops on
@@ -189,6 +223,12 @@ variables:
         states('sensor.4680_system_2_percentage_charged') | float(0)] | min }}
   solar: '{{ states(''sensor.total_solar'') | float(0) }}'
   peak: '{{ 17 <= now().hour < 21 }}'
+  # Rooms usually open to the outside — forced OFF during peak (see below).
+  openair_rooms:
+    - climate.atrium
+    - climate.bar
+    - climate.maui_bar
+    - climate.kitchen
   east_active: '{{ 9 <= now().hour < 14 }}'
   west_active: '{{ now().hour >= 12 or now().hour < 9 }}'
   # Dew-point minimum setpoint (the floor) and infiltration hold flag.
