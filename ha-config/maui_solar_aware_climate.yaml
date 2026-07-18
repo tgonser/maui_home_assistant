@@ -20,9 +20,12 @@
 #               sitting = climate.sitting
 #               rest    = climate.boardroom, climate.beach_room,
 #                         climate.upper_mauka
-#      Atrium / Bar / Kitchen are excluded from the matrix (doors open).
-#   3. PEAK BACKOFF (5–9pm): every controlled room is eased to 84°F, and the
-#      open-air rooms (Atrium / Bar / Kitchen) are forced OFF in every mode.
+#      Atrium / Bar / Kitchen (open-air rooms) are excluded from the matrix
+#      in Owners Home / Visitors (doors open), but in Vacation the doors are
+#      closed, so they follow the rest-group target.
+#   3. PEAK BACKOFF (5–9pm): every controlled room is eased to 84°F. The
+#      open-air rooms are forced OFF during peak in Owners Home / Visitors;
+#      in Vacation they back off to 84°F like everything else.
 #   4. DEW POINT FLOOR (priority): each target is raised to at least
 #      sensor.maui_dew_point_setpoint_floor (never above 84°F) so surfaces
 #      never fall below the outdoor dew point (condensation).
@@ -34,7 +37,8 @@
 # Priority order (highest wins):
 #   1) Suspend mode (automation does nothing)
 #   2) Dew-point floor — absolute, even over manual holds (raises only)
-#   3) Open-air peak shutoff (Atrium/Bar/Kitchen OFF 5-9pm, holds ignored)
+#   3) Open-air peak shutoff (Atrium/Bar/Kitchen OFF 5-9pm in Owners/
+#      Visitors, holds ignored; in Vacation they follow the rest target)
 #   4) Manual hold (8h, Owners/Visitors only)
 #   5) Peak backoff to 84°F
 #   6) Night row (9pm-7am) or solar-tier matrix
@@ -48,8 +52,10 @@ description: >
   Master/Sitting/Rest input_number helpers) — then enforces a dew-point-based
   minimum setpoint to prevent condensation. Backs off to 84°F during peak
   pricing (5–9pm); open-air rooms (Atrium, Bar, Kitchen) are forced OFF
-  entirely during peak in every mode. Dew point floor overrides solar
-  pre-cooling; infiltration events suspend aggressive cooling.
+  during peak in Owners Home / Visitors (doors open), but in Vacation the
+  doors are closed so they follow the rest-group target instead. Dew point
+  floor overrides solar pre-cooling; infiltration events suspend aggressive
+  cooling.
 triggers:
   - trigger: time_pattern
     minutes: /15
@@ -201,15 +207,44 @@ actions:
               data:
                 temperature: '{{ rest_target | int }}'
               continue_on_error: true
-  # ---- PEAK SHUTDOWN for open-air rooms (Atrium / Bar / Kitchen) ----
-  #      These rooms are usually open to the outside when the house is
-  #      occupied, so from 5pm to 9pm they are forced OFF in every mode —
-  #      Owners Home, Visitors, and Vacation alike. (Suspend mode skips this
-  #      automation entirely.) A guest turning one on during peak will be
-  #      switched back off within 15 minutes.
+  # ---- OPEN-AIR ROOMS (Atrium / Bar / Kitchen) ----
+  #      Occupied modes (Owners Home / Visitors): doors are usually open, so
+  #      these rooms are never given targets, and from 5pm to 9pm they are
+  #      forced OFF. A guest turning one on during peak will be switched back
+  #      off within 15 minutes.
+  #      Vacation: doors are closed, so these rooms ARE managed — they follow
+  #      the rest-group target (incl. the 84° peak backoff) instead of being
+  #      shut off.
   - if:
       - condition: template
-        value_template: '{{ peak }}'
+        value_template: "{{ mode_key == 'vacation' }}"
+    then:
+      - repeat:
+          for_each:
+            - climate.atrium
+            - climate.bar
+            - climate.maui_bar
+            - climate.kitchen
+          sequence:
+            - condition: template
+              value_template: |-
+                {{ state_attr(repeat.item, 'hvac_mode') != 'cool'
+                   or (state_attr(repeat.item, 'temperature') | int) != (rest_target | int) }}
+            - action: climate.set_hvac_mode
+              target:
+                entity_id: '{{ repeat.item }}'
+              data:
+                hvac_mode: cool
+              continue_on_error: true
+            - action: climate.set_temperature
+              target:
+                entity_id: '{{ repeat.item }}'
+              data:
+                temperature: '{{ rest_target | int }}'
+              continue_on_error: true
+  - if:
+      - condition: template
+        value_template: "{{ peak and mode_key != 'vacation' }}"
     then:
       - repeat:
           for_each:
