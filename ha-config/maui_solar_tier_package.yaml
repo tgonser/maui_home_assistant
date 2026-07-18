@@ -6,7 +6,7 @@
 #   1. sensor.maui_solar_tier  — Poor / Fair / Good / Strong / Excellent from
 #      sensor.total_solar (kW):  <=5 Poor, <=10 Fair, <=15 Good, <=20 Strong,
 #      >20 Excellent.
-#   2. 45 input_number helpers — the cooling matrix. One target (deg F) per
+#   2. 51 input_number helpers (incl. the Night row) — the cooling matrix. One target (deg F) per
 #      house mode (Owners / Visitors / Vacation) x tier x room group
 #      (Master / Sitting / Rest). Editable from the Wall Kiosk settings menu
 #      or from HA Settings > Devices & Services > Helpers.
@@ -53,6 +53,54 @@ timer:
     restore: true
 
 input_number:
+  # --- Night row (9pm–7am) -------------------------------------------------
+  # At night the automation uses these instead of the solar tier (Owners Home
+  # and Visitors only — Vacation always follows the solar tier). Lets the
+  # bedrooms cool for sleeping, e.g. Owners: master 78 / others 84;
+  # Visitors: all bedrooms 78.
+  maui_ct_owners_night_master:
+    name: "CT Owners · Night · Master"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:weather-night
+  maui_ct_owners_night_sitting:
+    name: "CT Owners · Night · Sitting"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:weather-night
+  maui_ct_owners_night_rest:
+    name: "CT Owners · Night · Rest"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:weather-night
+  maui_ct_visitors_night_master:
+    name: "CT Visitors · Night · Master"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:weather-night
+  maui_ct_visitors_night_sitting:
+    name: "CT Visitors · Night · Sitting"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:weather-night
+  maui_ct_visitors_night_rest:
+    name: "CT Visitors · Night · Rest"
+    min: 68
+    max: 84
+    step: 1
+    unit_of_measurement: "°F"
+    icon: mdi:weather-night
+  # --- Solar tier rows -------------------------------------------------------
   maui_ct_owners_poor_master:
     name: "CT Owners · Poor · Master"
     min: 68

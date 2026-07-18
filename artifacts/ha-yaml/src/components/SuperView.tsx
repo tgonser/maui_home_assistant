@@ -377,8 +377,11 @@ function HouseStatusTile({ states }: { states: HAState[] }) {
   const sensorTier = tierSensor
     ? TIER_NAMES.find((t) => t.toLowerCase() === tierSensor.state.toLowerCase())
     : undefined;
-  const tier =
+  const solarTier =
     sensorTier ?? (!isNaN(solarKw) ? tierFromKw(solarKw) : undefined);
+  // Night (9pm–7am): Owners Home / Visitors use the Night matrix row instead
+  // of the solar tier — mirror the automation so the tile shows real targets.
+  const night = hour >= 21 || hour < 7;
 
   // Matrix targets for the current mode + tier (from the input_number
   // helpers, so the tile shows exactly what the automation will set).
@@ -389,6 +392,8 @@ function HouseStatusTile({ states }: { states: HAState[] }) {
       : modeState === "Visitors"
         ? "visitors"
         : "vacation";
+  const tier =
+    night && modeKey !== "vacation" ? "Night" : solarTier;
   const matrixVal = (group: string): number | null => {
     if (!tier) return null;
     const e = states.find(
@@ -403,11 +408,12 @@ function HouseStatusTile({ states }: { states: HAState[] }) {
   const sT = matrixVal("sitting");
   const rT = matrixVal("rest");
 
+  const tierLabel = tier === "Night" ? "Night" : `Solar ${tier?.toLowerCase()}`;
   let threshold: string;
   if (peak) threshold = "Peak backoff (5–9pm) · AC eased to 84°";
   else if (tier && mT !== null && sT !== null && rT !== null)
-    threshold = `Solar ${tier.toLowerCase()} · master ${mT}° / sitting ${sT}° / rest ${rT}°`;
-  else if (tier) threshold = `Solar ${tier.toLowerCase()}`;
+    threshold = `${tierLabel} · master ${mT}° / sitting ${sT}° / rest ${rT}°`;
+  else if (tier) threshold = tierLabel;
   else threshold = "Solar tier unavailable";
 
   // Only mention the dew floor when it is actually raising a setpoint above

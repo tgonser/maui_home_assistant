@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Minus, Plus, Sun } from "lucide-react";
+import { Minus, Moon, Plus, Sun } from "lucide-react";
 import { haCallService, type HAState } from "@/lib/ha";
 
 const MODES = [
@@ -16,6 +16,11 @@ const TIERS = [
   { key: "excellent", label: "Excellent", range: "> 20 kW" },
 ] as const;
 
+// Night row (9pm–7am): replaces the solar tier at night in Owners/Visitors
+// modes. Vacation has no night row — it always follows the solar tier.
+const NIGHT_TIER = { key: "night", label: "Night", range: "9pm–7am" } as const;
+const NIGHT_MODES = new Set(["owners", "visitors"]);
+
 const GROUPS = [
   { key: "master", label: "Master" },
   { key: "sitting", label: "Sitting" },
@@ -24,6 +29,7 @@ const GROUPS = [
 
 const DEFAULTS: Record<string, Record<string, [number, number, number]>> = {
   owners: {
+    night: [78, 84, 84],
     poor: [84, 84, 84],
     fair: [78, 84, 84],
     good: [76, 76, 84],
@@ -31,6 +37,7 @@ const DEFAULTS: Record<string, Record<string, [number, number, number]>> = {
     excellent: [76, 76, 76],
   },
   visitors: {
+    night: [78, 78, 78],
     poor: [84, 84, 84],
     fair: [78, 84, 84],
     good: [76, 76, 84],
@@ -108,8 +115,9 @@ export function CoolingMatrix({ states }: { states: HAState[] }) {
     setError(null);
     let failures = 0;
     try {
-      for (const m of MODES)
-        for (const t of TIERS)
+      for (const m of MODES) {
+        const tiers = NIGHT_MODES.has(m.key) ? [NIGHT_TIER, ...TIERS] : TIERS;
+        for (const t of tiers)
           for (let g = 0; g < GROUPS.length; g++) {
             const ok = await writeValue(
               entityId(m.key, t.key, GROUPS[g].key),
@@ -117,6 +125,7 @@ export function CoolingMatrix({ states }: { states: HAState[] }) {
             );
             if (!ok) failures++;
           }
+      }
     } finally {
       setSeeding(false);
       if (failures > 0)
@@ -134,8 +143,9 @@ export function CoolingMatrix({ states }: { states: HAState[] }) {
             <Sun className="w-3.5 h-3.5 text-amber-400" /> Cooling matrix
           </div>
           <div className="text-[10px] text-stone-500 mt-0.5">
-            AC targets (°F) per solar tier. Peak (5–9pm) always eases to 84°;
-            the dew-point floor can raise these.
+            AC targets (°F) per solar tier. Night (9pm–7am) replaces the solar
+            tier in Owners/Visitors. Peak (5–9pm) always eases to 84°; the
+            dew-point floor can raise these.
           </div>
         </div>
       </div>
@@ -175,13 +185,18 @@ export function CoolingMatrix({ states }: { states: HAState[] }) {
                 </div>
               ))}
             </div>
-            {TIERS.map((t) => (
+            {(NIGHT_MODES.has(mode) ? [NIGHT_TIER, ...TIERS] : TIERS).map((t) => (
               <div
                 key={t.key}
                 className="grid grid-cols-[1.2fr_repeat(3,1fr)] items-center border-b border-stone-800/60 last:border-b-0"
               >
                 <div className="px-3 py-2">
-                  <div className="text-sm text-amber-100">{t.label}</div>
+                  <div className="text-sm text-amber-100 flex items-center gap-1">
+                    {t.key === "night" && (
+                      <Moon className="w-3 h-3 text-indigo-300" />
+                    )}
+                    {t.label}
+                  </div>
                   <div className="text-[10px] text-stone-500">{t.range}</div>
                 </div>
                 {GROUPS.map((g) => {

@@ -4,12 +4,15 @@
 # Replaces the existing "Maui Solar-Aware Climate" automation.
 # Requires:
 #   - maui_dewpoint_package.yaml      (dew point floor + infiltration helpers)
-#   - maui_solar_tier_package.yaml    (sensor.maui_solar_tier + the 45
+#   - maui_solar_tier_package.yaml    (sensor.maui_solar_tier + the 51
 #                                      input_number matrix helpers)
 #
 # HOW IT WORKS (v2 — solar tier matrix):
 #   1. SOLAR TIER: sensor.total_solar (kW) is bucketed into a tier:
 #        <=5 Poor · <=10 Fair · <=15 Good · <=20 Strong · >20 Excellent
+#   1b. NIGHT ROW (9pm–7am): in Owners Home and Visitors modes the "night"
+#       matrix row is used instead of the solar tier so bedrooms can be set
+#       for sleeping. Vacation mode ignores the night row (solar tier only).
 #   2. MATRIX LOOKUP: the target for each room group comes from the
 #      input_number matrix for the current house mode + tier:
 #        input_number.maui_ct_<mode>_<tier>_<group>
@@ -61,6 +64,9 @@ triggers:
     at: '17:00:00'
   - trigger: time
     at: '21:00:00'
+  # Night window ends at 7am — fire so rooms return to the solar matrix on time.
+  - trigger: time
+    at: '07:00:00'
 conditions:
   - condition: template
     value_template: '{{ not is_state(''input_select.maui_house_mode'', ''Suspend'') }}'
@@ -216,7 +222,12 @@ variables:
   # the sensor is unavailable so the automation never stalls.
   tier_sensor: "{{ states('sensor.maui_solar_tier') | lower | trim }}"
   tier_from_kw: "{% set s = states('sensor.total_solar') | float(0) %}{% if s <= 5 %}poor{% elif s <= 10 %}fair{% elif s <= 15 %}good{% elif s <= 20 %}strong{% else %}excellent{% endif %}"
-  tier: "{{ tier_sensor if tier_sensor in ['poor','fair','good','strong','excellent'] else tier_from_kw }}"
+  tier_solar: "{{ tier_sensor if tier_sensor in ['poor','fair','good','strong','excellent'] else tier_from_kw }}"
+  # NIGHT (9pm–7am): Owners Home and Visitors use the Night matrix row instead
+  # of the solar tier, so bedrooms can be pre-set for sleeping (e.g. 78°).
+  # Vacation always follows the solar tier — no Night row.
+  night: '{{ now().hour >= 21 or now().hour < 7 }}'
+  tier: "{{ 'night' if (night and mode_key != 'vacation') else tier_solar }}"
   peak: '{{ 17 <= now().hour < 21 }}'
   # Rooms usually open to the outside — forced OFF during peak (see below).
   openair_rooms:

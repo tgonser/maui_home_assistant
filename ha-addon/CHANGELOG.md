@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.57
+
+- **Added: Night row in the cooling matrix** — Between 9pm and 7am the
+  automation uses a new "Night" matrix row instead of the solar tier, so
+  bedrooms can be pre-set for sleeping (Owners default: master 78°, others
+  84°; Visitors default: all 78°). Vacation mode has no Night row and always
+  follows the solar tier. Requires the updated `maui_solar_tier_package.yaml`
+  and `maui_solar_aware_climate.yaml`.
+- **Changed: House status card** — Shows "Night · …" with the live Night
+  targets during the night window in Owners/Visitors modes.
+
 ## 1.0.56
 
 - **Added: Solar-tier cooling matrix** — Cooling is now driven by five named
