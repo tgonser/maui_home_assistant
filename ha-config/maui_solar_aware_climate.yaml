@@ -305,7 +305,7 @@ variables:
   # Solar tier from the template sensor; recomputed inline as a fallback if
   # the sensor is unavailable so the automation never stalls.
   tier_sensor: "{{ states('sensor.maui_solar_tier') | lower | trim }}"
-  tier_from_kw: "{% set s = states('sensor.total_solar') | float(0) %}{% if s <= 5 %}poor{% elif s <= 10 %}fair{% elif s <= 15 %}good{% elif s <= 20 %}strong{% else %}excellent{% endif %}"
+  tier_from_kw: "{% set s = states('sensor.maui_solar_smoothed') | float(states('sensor.total_solar') | float(0)) %}{% if s <= 5 %}poor{% elif s <= 10 %}fair{% elif s <= 15 %}good{% elif s <= 20 %}strong{% else %}excellent{% endif %}"
   tier_solar: "{{ tier_sensor if tier_sensor in ['poor','fair','good','strong','excellent'] else tier_from_kw }}"
   # NIGHT (9pm–7am): Owners Home and Visitors use the Night matrix row instead
   # of the solar tier, so bedrooms can be pre-set for sleeping (e.g. 78°).

@@ -3,9 +3,12 @@
 # =============================================================================
 # Paste into your packages folder (or configuration.yaml under the matching
 # keys). Defines:
-#   1. sensor.maui_solar_tier  — Poor / Fair / Good / Strong / Excellent from
-#      sensor.total_solar (kW):  <=5 Poor, <=10 Fair, <=15 Good, <=20 Strong,
-#      >20 Excellent.
+#   1. sensor.maui_solar_smoothed — 15-min rolling average of sensor.total_solar.
+#   1b. sensor.maui_solar_tier — Poor / Fair / Good / Strong / Excellent from
+#      the SMOOTHED kW, with hysteresis (down at 5/10/15/20, up at 8/13/18/23),
+#      a 20-min minimum dwell between changes, and one-step-at-a-time moves.
+#      Solar is treated as a trend, not a momentary value — passing clouds do
+#      not move the tier or touch the thermostats.
 #   2. 51 input_number helpers (incl. the Night row) — the cooling matrix. One target (deg F) per
 #      house mode (Owners / Visitors / Vacation) x tier x room group
 #      (Master / Sitting / Rest). Editable from the Wall Kiosk settings menu
@@ -21,14 +24,61 @@
 #    forced OFF during peak 5-9pm.)
 # =============================================================================
 
+# -----------------------------------------------------------------------------
+# Solar smoothing: 15-minute rolling average of instantaneous production.
+# The tier decision is based on this, never on raw sensor.total_solar, so a
+# passing cloud cannot move the tier.
+# -----------------------------------------------------------------------------
+sensor:
+  - platform: filter
+    name: "Maui Solar Smoothed"
+    unique_id: maui_solar_smoothed
+    entity_id: sensor.total_solar
+    filters:
+      - filter: time_simple_moving_average
+        window_size: "00:15:00"
+        precision: 1
+
+# -----------------------------------------------------------------------------
+# Solar tier — trend-following state machine (evaluated every 5 minutes):
+#   * Input is the 15-min smoothed average (above), not instantaneous power.
+#   * Hysteresis: stepping DOWN uses the base boundaries (5/10/15/20 kW);
+#     stepping UP requires clearing the boundary by +3 kW (8/13/18/23 kW),
+#     so hovering near a boundary cannot cause oscillation.
+#   * Minimum dwell: after any tier change, no further automatic change for
+#     20 minutes.
+#   * Moves at most ONE tier per evaluation (no jumps).
+# House-mode changes, manual holds, peak backoff, and the dew-point floor are
+# handled in the climate automation and are NOT delayed by this sensor.
+# -----------------------------------------------------------------------------
 template:
-  - sensor:
+  - triggers:
+      - trigger: time_pattern
+        minutes: /5
+      - trigger: homeassistant
+        event: start
+    sensor:
       - name: Maui Solar Tier
         unique_id: maui_solar_tier
         icon: mdi:solar-power-variant
         state: >-
-          {% set s = states("sensor.total_solar") | float(0) %}
-          {% if s <= 5 %}Poor{% elif s <= 10 %}Fair{% elif s <= 15 %}Good{% elif s <= 20 %}Strong{% else %}Excellent{% endif %}
+          {% set tiers = ['Poor', 'Fair', 'Good', 'Strong', 'Excellent'] %}
+          {% set s = states('sensor.maui_solar_smoothed') | float(states('sensor.total_solar') | float(0)) %}
+          {% set r_down = 0 if s <= 5 else (1 if s <= 10 else (2 if s <= 15 else (3 if s <= 20 else 4))) %}
+          {% set r_up = 0 if s <= 8 else (1 if s <= 13 else (2 if s <= 18 else (3 if s <= 23 else 4))) %}
+          {% if this.state not in tiers %}
+            {{ tiers[r_down] }}
+          {% else %}
+            {% set c = tiers.index(this.state) %}
+            {% set dwell_ok = (now() - this.last_changed).total_seconds() >= 1200 %}
+            {% if r_up > c and dwell_ok %}
+              {{ tiers[c + 1] }}
+            {% elif r_down < c and dwell_ok %}
+              {{ tiers[c - 1] }}
+            {% else %}
+              {{ this.state }}
+            {% endif %}
+          {% endif %}
 
 # Manual-hold timers: while a room's timer is running, the climate automation
 # leaves that room alone (Owners Home / Visitors modes only — Vacation always
