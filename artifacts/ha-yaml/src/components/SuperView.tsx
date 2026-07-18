@@ -481,7 +481,11 @@ function HouseStatusTile({ states }: { states: HAState[] }) {
       return HOLD_NAMES[slug] ?? slug.replace(/_/g, " ");
     });
   const holdLine =
-    heldRooms.length > 0 ? `Manual hold: ${heldRooms.join(", ")}` : "";
+    heldRooms.length > 0
+      ? `Manual hold: ${heldRooms.join(", ")}${
+          modeKey === "vacation" ? " (ignored in Vacation)" : ""
+        }`
+      : "";
 
   return (
     <motion.div

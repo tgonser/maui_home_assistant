@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.60
+
+- **Clarified: hold list in Vacation mode** — The house status card now
+  appends "(ignored in Vacation)" to the manual-hold line, since Vacation
+  mode always follows the matrix regardless of holds.
+
 ## 1.0.59
 
 - **Improved: house status card now explains itself** — Instead of a single
