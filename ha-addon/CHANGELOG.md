@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.0.59
+
+- **Improved: house status card now explains itself** — Instead of a single
+  summary line, the card shows: the target source (which matrix row is in
+  charge and its raw values), the applied targets after adjustments (with the
+  reason — peak backoff, dew-point protection, or an open door/window), and
+  which rooms are under a manual hold. No more guessing why a thermostat
+  differs from the matrix.
+- **Changed: the dew-point floor is now absolute** — A manually held room
+  keeps its hand-set temperature, but never below the condensation floor.
+  If someone sets a held room colder than the dew-point floor, the
+  automation raises it back to the floor (requires re-pasting the
+  "Maui Solar-Aware Climate" automation from `ha-config/`).
+
 ## 1.0.58
 
 - **Fixed: Settings tab showed the obsolete pre-matrix screen** — The

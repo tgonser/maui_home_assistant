@@ -7,3 +7,8 @@ description: Maui climate is driven by a per-mode x solar-tier x room-group inpu
 - Battery no longer affects targets (user chose purely solar-driven). Peak still forces 84; dew floor raises only; infiltration +2; cap 84.
 - **Why pitfalls matter:** `initial:` on input_number resets the value on every HA restart — never use it for user-editable settings; kiosk seeds defaults via set_value instead. Jinja variables concatenated into entity IDs must be single-line templates (folded `>-` blocks emit whitespace, breaking states() lookups and silently falling back to 84).
 - Kiosk haCallService returns {ok:false} instead of throwing — always check .ok and roll back optimistic UI.
+
+## Priority hierarchy (user-approved July 2026)
+1. Suspend 2. Dew-point floor (absolute — raises even manually-held rooms; falls back to 78° when sensor missing) 3. Open-air peak shutoff 5-9pm (ignores holds) 4. Manual hold (8h) 5. Peak backoff 84° 6. Night/solar matrix 7. Fan dehumidify.
+**Why:** user explicitly ruled that safety/hard-waste rules beat manual holds; holds only beat comfort rules.
+**How to apply:** any new rule must be slotted into this order; kiosk status card must mirror the automation's final-target math exactly (incl. the 78° fallback) or displayed "applied" targets diverge from HA.

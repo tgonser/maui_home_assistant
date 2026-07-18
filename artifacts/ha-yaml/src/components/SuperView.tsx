@@ -282,12 +282,12 @@ function StatTile({
 }
 
 // ---------------------------------------------------------------------------
-// House status tile — current mode + which climate threshold is in effect.
-// Mirrors the logic of the "Maui Solar-Aware Climate" automation:
-//   peak 5-9pm or battery <25%  -> 84° backoff
-//   battery >=80% or solar >10kW -> solar-strong comfort targets
-//   otherwise                    -> standard targets
-// The dew-point floor can raise (never lower) the final setpoint.
+// House status tile — current mode + which climate rule is in effect.
+// Mirrors the "Maui Solar-Aware Climate" automation: targets come from the
+// solar-tier / Night matrix row, peak (5-9pm) forces 84°, the dew-point
+// floor raises (never lowers, fallback 78° when the sensor is missing),
+// infiltration adds +2°, capped at 84°. Shows target source, applied
+// targets with reason, and any active manual holds.
 // ---------------------------------------------------------------------------
 function HouseStatusTile({ states }: { states: HAState[] }) {
   const mode = findFirst(
@@ -409,22 +409,79 @@ function HouseStatusTile({ states }: { states: HAState[] }) {
   const rT = matrixVal("rest");
 
   const tierLabel = tier === "Night" ? "Night" : `Solar ${tier?.toLowerCase()}`;
-  let threshold: string;
-  if (peak) threshold = "Peak backoff (5–9pm) · AC eased to 84°";
-  else if (tier && mT !== null && sT !== null && rT !== null)
-    threshold = `${tierLabel} · master ${mT}° / sitting ${sT}° / rest ${rT}°`;
-  else if (tier) threshold = tierLabel;
-  else threshold = "Solar tier unavailable";
 
-  // Only mention the dew floor when it is actually raising a setpoint above
-  // the lowest matrix target (the floor never exceeds 84°).
-  const lowestTarget =
-    mT !== null && sT !== null && rT !== null ? Math.min(mT, sT, rT) : NaN;
-  const floorNum = dewFloor ? parseFloat(dewFloor.state) : NaN;
-  const floorNote =
-    !peak && !isNaN(floorNum) && !isNaN(lowestTarget) && floorNum > lowestTarget
-      ? ` · dew floor raises to ${Math.round(floorNum)}°`
+  // ---- Explainable status: target source -> applied target -> why ----
+  // Mirrors the automation's final-target math: peak forces 84, the dew-point
+  // floor raises (never lowers), infiltration adds +2, capped at 84.
+  // The automation falls back to a 78° floor when the sensor is missing or
+  // unavailable ( | int(78) ) — mirror that exactly so the tile never shows
+  // a colder "applied" target than HA will actually set.
+  const floorRaw = dewFloor ? parseFloat(dewFloor.state) : NaN;
+  const floorNum = isNaN(floorRaw) ? 78 : floorRaw;
+  const floorIsFallback = isNaN(floorRaw);
+  const infiltration = states.some(
+    (e) =>
+      e.entity_id === "input_boolean.maui_infiltration_active" &&
+      e.state === "on",
+  );
+  const applied = (t: number | null): number | null => {
+    if (t === null) return null;
+    let a = Math.max(peak ? 84 : t, floorNum);
+    if (infiltration) a += 2;
+    return Math.min(84, Math.round(a));
+  };
+  const mA = applied(mT);
+  const sA = applied(sT);
+  const rA = applied(rT);
+
+  const sourceLine =
+    tier && mT !== null && sT !== null && rT !== null
+      ? `Target source: ${tierLabel} row · ${mT}° / ${sT}° / ${rT}°`
+      : tier
+        ? `Target source: ${tierLabel} row`
+        : "Target source: solar tier unavailable";
+
+  const adjusted =
+    mA !== null && (mA !== mT || sA !== sT || rA !== rT);
+  const reasons: string[] = [];
+  if (peak) reasons.push("peak backoff (5–9pm)");
+  if (
+    !peak &&
+    mT !== null &&
+    sT !== null &&
+    rT !== null &&
+    floorNum > Math.min(mT, sT, rT)
+  )
+    reasons.push(
+      floorIsFallback
+        ? "dew-point protection (sensor missing — 78° safety floor)"
+        : "dew-point protection",
+    );
+  if (infiltration) reasons.push("door/window open (+2°)");
+  const appliedLine =
+    mA !== null && sA !== null && rA !== null && adjusted
+      ? `Applied: ${mA}° / ${sA}° / ${rA}° — ${reasons.join(", ") || "adjusted"}`
       : "";
+
+  // Manual holds: any active timer.maui_hold_* means that room follows the
+  // human's setpoint (dew floor still applies) until the timer ends.
+  const HOLD_NAMES: Record<string, string> = {
+    master_bed_2: "Master",
+    sitting: "Sitting",
+    boardroom: "Boardroom",
+    beach_room: "Beach Rm",
+    upper_mauka: "UpMauka",
+  };
+  const heldRooms = states
+    .filter(
+      (e) => e.entity_id.startsWith("timer.maui_hold_") && e.state === "active",
+    )
+    .map((e) => {
+      const slug = e.entity_id.replace("timer.maui_hold_", "");
+      return HOLD_NAMES[slug] ?? slug.replace(/_/g, " ");
+    });
+  const holdLine =
+    heldRooms.length > 0 ? `Manual hold: ${heldRooms.join(", ")}` : "";
 
   return (
     <motion.div
@@ -465,9 +522,10 @@ function HouseStatusTile({ states }: { states: HAState[] }) {
             </div>
           </div>
         </div>
-        <div className="sub text-[11px] uppercase mt-2">
-          {threshold}
-          {floorNote}
+        <div className="sub text-[11px] uppercase mt-2 space-y-0.5">
+          <div>{sourceLine}</div>
+          {appliedLine && <div>{appliedLine}</div>}
+          {holdLine && <div>{holdLine}</div>}
         </div>
       </div>
     </motion.div>

@@ -31,9 +31,14 @@
 #
 # Battery no longer affects targets (purely solar-driven by design).
 #
-# Priority order:
-#   1) Prevent condensation   2) Protect materials   3) Comfort
-#   4) Solar self-consumption
+# Priority order (highest wins):
+#   1) Suspend mode (automation does nothing)
+#   2) Dew-point floor — absolute, even over manual holds (raises only)
+#   3) Open-air peak shutoff (Atrium/Bar/Kitchen OFF 5-9pm, holds ignored)
+#   4) Manual hold (8h, Owners/Visitors only)
+#   5) Peak backoff to 84°F
+#   6) Night row (9pm-7am) or solar-tier matrix
+#   7) Dehumidify fan refinements
 # =============================================================================
 id: '1781981986844'
 alias: Maui Solar-Aware Climate
@@ -76,54 +81,84 @@ actions:
       for_each:
         - climate.master_bed_2
       sequence:
-        # Skip this room while a manual hold is active (someone changed the
-        # thermostat by hand). Vacation mode ignores holds — matrix always wins.
-        - condition: template
-          value_template: |-
-            {{ mode_key == 'vacation'
-               or is_state('timer.maui_hold_' ~ repeat.item.split('.')[1], 'idle') }}
-        - condition: template
-          value_template: |-
-            {{ state_attr(repeat.item, 'hvac_mode') != 'cool'
-               or (state_attr(repeat.item, 'temperature') | int) != (master_target | int) }}
-        - action: climate.set_hvac_mode
-          target:
-            entity_id: '{{ repeat.item }}'
-          data:
-            hvac_mode: cool
-          continue_on_error: true
-        - action: climate.set_temperature
-          target:
-            entity_id: '{{ repeat.item }}'
-          data:
-            temperature: '{{ master_target | int }}'
-          continue_on_error: true
+        - choose:
+            # Manual hold active (Owners/Visitors only — Vacation ignores
+            # holds). The hold is respected EXCEPT for the dew-point floor,
+            # which is absolute: if the held setpoint is below the floor,
+            # raise it to the floor. Never lower a held setpoint.
+            - conditions:
+                - condition: template
+                  value_template: |-
+                    {{ mode_key != 'vacation'
+                       and not is_state('timer.maui_hold_' ~ repeat.item.split('.')[1], 'idle') }}
+              sequence:
+                - condition: template
+                  value_template: |-
+                    {{ is_state(repeat.item, 'cool')
+                       and (state_attr(repeat.item, 'temperature') | int(84)) < (dew_floor | int) }}
+                - action: climate.set_temperature
+                  target:
+                    entity_id: '{{ repeat.item }}'
+                  data:
+                    temperature: '{{ dew_floor | int }}'
+                  continue_on_error: true
+          default:
+            - condition: template
+              value_template: |-
+                {{ state_attr(repeat.item, 'hvac_mode') != 'cool'
+                   or (state_attr(repeat.item, 'temperature') | int) != (master_target | int) }}
+            - action: climate.set_hvac_mode
+              target:
+                entity_id: '{{ repeat.item }}'
+              data:
+                hvac_mode: cool
+              continue_on_error: true
+            - action: climate.set_temperature
+              target:
+                entity_id: '{{ repeat.item }}'
+              data:
+                temperature: '{{ master_target | int }}'
+              continue_on_error: true
   # ---- Sitting group ----
   - repeat:
       for_each:
         - climate.sitting
       sequence:
-        # Skip this room while a manual hold is active.
-        - condition: template
-          value_template: |-
-            {{ mode_key == 'vacation'
-               or is_state('timer.maui_hold_' ~ repeat.item.split('.')[1], 'idle') }}
-        - condition: template
-          value_template: |-
-            {{ state_attr(repeat.item, 'hvac_mode') != 'cool'
-               or (state_attr(repeat.item, 'temperature') | int) != (sitting_target | int) }}
-        - action: climate.set_hvac_mode
-          target:
-            entity_id: '{{ repeat.item }}'
-          data:
-            hvac_mode: cool
-          continue_on_error: true
-        - action: climate.set_temperature
-          target:
-            entity_id: '{{ repeat.item }}'
-          data:
-            temperature: '{{ sitting_target | int }}'
-          continue_on_error: true
+        - choose:
+            # Manual hold: respected except the dew-point floor (absolute).
+            - conditions:
+                - condition: template
+                  value_template: |-
+                    {{ mode_key != 'vacation'
+                       and not is_state('timer.maui_hold_' ~ repeat.item.split('.')[1], 'idle') }}
+              sequence:
+                - condition: template
+                  value_template: |-
+                    {{ is_state(repeat.item, 'cool')
+                       and (state_attr(repeat.item, 'temperature') | int(84)) < (dew_floor | int) }}
+                - action: climate.set_temperature
+                  target:
+                    entity_id: '{{ repeat.item }}'
+                  data:
+                    temperature: '{{ dew_floor | int }}'
+                  continue_on_error: true
+          default:
+            - condition: template
+              value_template: |-
+                {{ state_attr(repeat.item, 'hvac_mode') != 'cool'
+                   or (state_attr(repeat.item, 'temperature') | int) != (sitting_target | int) }}
+            - action: climate.set_hvac_mode
+              target:
+                entity_id: '{{ repeat.item }}'
+              data:
+                hvac_mode: cool
+              continue_on_error: true
+            - action: climate.set_temperature
+              target:
+                entity_id: '{{ repeat.item }}'
+              data:
+                temperature: '{{ sitting_target | int }}'
+              continue_on_error: true
   # ---- Rest group (Boardroom / Beach Room / Upper Mauka) ----
   - repeat:
       for_each:
@@ -131,27 +166,41 @@ actions:
         - climate.beach_room
         - climate.upper_mauka
       sequence:
-        # Skip this room while a manual hold is active.
-        - condition: template
-          value_template: |-
-            {{ mode_key == 'vacation'
-               or is_state('timer.maui_hold_' ~ repeat.item.split('.')[1], 'idle') }}
-        - condition: template
-          value_template: |-
-            {{ state_attr(repeat.item, 'hvac_mode') != 'cool'
-               or (state_attr(repeat.item, 'temperature') | int) != (rest_target | int) }}
-        - action: climate.set_hvac_mode
-          target:
-            entity_id: '{{ repeat.item }}'
-          data:
-            hvac_mode: cool
-          continue_on_error: true
-        - action: climate.set_temperature
-          target:
-            entity_id: '{{ repeat.item }}'
-          data:
-            temperature: '{{ rest_target | int }}'
-          continue_on_error: true
+        - choose:
+            # Manual hold: respected except the dew-point floor (absolute).
+            - conditions:
+                - condition: template
+                  value_template: |-
+                    {{ mode_key != 'vacation'
+                       and not is_state('timer.maui_hold_' ~ repeat.item.split('.')[1], 'idle') }}
+              sequence:
+                - condition: template
+                  value_template: |-
+                    {{ is_state(repeat.item, 'cool')
+                       and (state_attr(repeat.item, 'temperature') | int(84)) < (dew_floor | int) }}
+                - action: climate.set_temperature
+                  target:
+                    entity_id: '{{ repeat.item }}'
+                  data:
+                    temperature: '{{ dew_floor | int }}'
+                  continue_on_error: true
+          default:
+            - condition: template
+              value_template: |-
+                {{ state_attr(repeat.item, 'hvac_mode') != 'cool'
+                   or (state_attr(repeat.item, 'temperature') | int) != (rest_target | int) }}
+            - action: climate.set_hvac_mode
+              target:
+                entity_id: '{{ repeat.item }}'
+              data:
+                hvac_mode: cool
+              continue_on_error: true
+            - action: climate.set_temperature
+              target:
+                entity_id: '{{ repeat.item }}'
+              data:
+                temperature: '{{ rest_target | int }}'
+              continue_on_error: true
   # ---- PEAK SHUTDOWN for open-air rooms (Atrium / Bar / Kitchen) ----
   #      These rooms are usually open to the outside when the house is
   #      occupied, so from 5pm to 9pm they are forced OFF in every mode —
