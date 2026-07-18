@@ -70,6 +70,12 @@ actions:
       for_each:
         - climate.master_bed_2
       sequence:
+        # Skip this room while a manual hold is active (someone changed the
+        # thermostat by hand). Vacation mode ignores holds — matrix always wins.
+        - condition: template
+          value_template: |-
+            {{ mode_key == 'vacation'
+               or is_state('timer.maui_hold_' ~ repeat.item.split('.')[1], 'idle') }}
         - condition: template
           value_template: |-
             {{ state_attr(repeat.item, 'hvac_mode') != 'cool'
@@ -91,6 +97,11 @@ actions:
       for_each:
         - climate.sitting
       sequence:
+        # Skip this room while a manual hold is active.
+        - condition: template
+          value_template: |-
+            {{ mode_key == 'vacation'
+               or is_state('timer.maui_hold_' ~ repeat.item.split('.')[1], 'idle') }}
         - condition: template
           value_template: |-
             {{ state_attr(repeat.item, 'hvac_mode') != 'cool'
@@ -114,6 +125,11 @@ actions:
         - climate.beach_room
         - climate.upper_mauka
       sequence:
+        # Skip this room while a manual hold is active.
+        - condition: template
+          value_template: |-
+            {{ mode_key == 'vacation'
+               or is_state('timer.maui_hold_' ~ repeat.item.split('.')[1], 'idle') }}
         - condition: template
           value_template: |-
             {{ state_attr(repeat.item, 'hvac_mode') != 'cool'

@@ -1,0 +1,62 @@
+# =============================================================================
+# Maui Manual Setpoint Hold
+# =============================================================================
+# Add this as a NEW automation (Settings > Automations > + Create Automation >
+# three-dot menu > Edit in YAML > paste).
+#
+# WHAT IT DOES:
+#   When a person changes one of the matrix-controlled thermostats by hand —
+#   wall control, HA app, or the Wall Kiosk — this starts an 8-hour hold timer
+#   for that room. While the timer runs, the "Maui Solar-Aware Climate"
+#   automation skips the room, so the person's setting sticks. After 8 hours
+#   (or an HA restart mid-hold — timers are restored) control returns to the
+#   solar-tier matrix.
+#
+#   Holds only start in Owners Home and Visitors modes. In Vacation mode the
+#   matrix always stays in control (nobody should be overriding an empty
+#   house). To adjust the hold length, change the duration below.
+#
+# HOW IT TELLS A PERSON FROM THE AUTOMATION:
+#   Service calls made by an automation carry a parent context id; changes
+#   made by a person (UI, kiosk API, or the unit's own controls) do not.
+# =============================================================================
+id: maui_manual_setpoint_hold
+alias: Maui Manual Setpoint Hold
+description: >
+  Starts an 8-hour per-room hold when someone manually changes a thermostat,
+  so the solar-tier matrix automation doesn't fight them. Owners Home /
+  Visitors modes only.
+triggers:
+  - trigger: state
+    entity_id:
+      - climate.master_bed_2
+      - climate.sitting
+      - climate.boardroom
+      - climate.beach_room
+      - climate.upper_mauka
+conditions:
+  # Only real changes to the mode or target temperature (ignore sensor
+  # updates like current_temperature).
+  - condition: template
+    value_template: >-
+      {{ trigger.from_state is not none and trigger.to_state is not none
+         and (trigger.to_state.state != trigger.from_state.state
+              or trigger.to_state.attributes.get('temperature')
+                 != trigger.from_state.attributes.get('temperature')) }}
+  # Not caused by an automation (automation service calls have a parent id).
+  - condition: template
+    value_template: '{{ trigger.to_state.context.parent_id is none }}'
+  # Holds only when people are around; Vacation/Suspend keep matrix control.
+  - condition: template
+    value_template: >-
+      {{ is_state('input_select.maui_house_mode', 'Owners Home')
+         or is_state('input_select.maui_house_mode', 'Visitors') }}
+actions:
+  - action: timer.start
+    target:
+      entity_id: "timer.maui_hold_{{ trigger.entity_id.split('.')[1] }}"
+    data:
+      duration: '08:00:00'
+    continue_on_error: true
+mode: parallel
+max: 10

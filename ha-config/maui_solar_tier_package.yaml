@@ -30,6 +30,28 @@ template:
           {% set s = states("sensor.total_solar") | float(0) %}
           {% if s <= 5 %}Poor{% elif s <= 10 %}Fair{% elif s <= 15 %}Good{% elif s <= 20 %}Strong{% else %}Excellent{% endif %}
 
+# Manual-hold timers: while a room's timer is running, the climate automation
+# leaves that room alone (Owners Home / Visitors modes only — Vacation always
+# reclaims control). Started by the "Maui Manual Setpoint Hold" automation
+# whenever a person changes a thermostat by hand. restore: true keeps holds
+# across HA restarts.
+timer:
+  maui_hold_master_bed_2:
+    name: "Hold: Master Bedroom"
+    restore: true
+  maui_hold_sitting:
+    name: "Hold: Sitting"
+    restore: true
+  maui_hold_boardroom:
+    name: "Hold: Boardroom"
+    restore: true
+  maui_hold_beach_room:
+    name: "Hold: Beach Room"
+    restore: true
+  maui_hold_upper_mauka:
+    name: "Hold: Upper Mauka"
+    restore: true
+
 input_number:
   maui_ct_owners_poor_master:
     name: "CT Owners · Poor · Master"
