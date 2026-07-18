@@ -20,7 +20,9 @@
 #   Service calls made by an automation carry a parent context id; changes
 #   made by a person (UI, kiosk API, or the unit's own controls) do not.
 # =============================================================================
-id: maui_manual_setpoint_hold
+# NOTE: no "id:" line on purpose — when pasting into the HA automation editor,
+# HA assigns its own id. A manual id here makes the editor refuse to save
+# ("Only automations in automations.yaml are editable").
 alias: Maui Manual Setpoint Hold
 description: >
   Starts an 8-hour per-room hold when someone manually changes a thermostat,
