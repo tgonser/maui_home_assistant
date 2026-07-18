@@ -44,7 +44,7 @@ import { SuperView } from "./SuperView";
 import { WallControls } from "./WallControls";
 import { RoomsView } from "./RoomsView";
 import { GroupedByRoomView } from "./GroupedByRoomView";
-import { ClimateSettings } from "./ClimateSettings";
+import { SettingsPanelBody } from "./SuperViewSettings";
 import { Home as HomeIcon } from "lucide-react";
 
 type CategoryKey =
@@ -2533,7 +2533,9 @@ export function Wall() {
 
           <AnimatePresence mode="popLayout">
             {active === "settings" ? (
-              <ClimateSettings key="settings" states={states} onChanged={refresh} />
+              <div key="settings" className="max-w-2xl">
+                <SettingsPanelBody states={states} />
+              </div>
             ) : active === "overview" ? (
               <SuperView key="super" states={states} onOpen={setOpenEntity} />
             ) : active === "rooms" ? (

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.58
+
+- **Fixed: Settings tab showed the obsolete pre-matrix screen** — The
+  top-level Settings tab was still the old "Solar Awesome / Good / Moderate"
+  setpoint list, whose helpers no longer exist (everything read "NaN"). It
+  now shows the current settings: the Cooling matrix (with the Night row)
+  and the Super View entity pickers — the same panel as "Pick entities" on
+  the front page.
+
 ## 1.0.57
 
 - **Added: Night row in the cooling matrix** — Between 9pm and 7am the

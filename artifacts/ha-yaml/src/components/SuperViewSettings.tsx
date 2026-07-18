@@ -250,6 +250,43 @@ function EntityPicker({
   );
 }
 
+// Shared settings content: the cooling matrix editor plus the Super View
+// entity pickers. Rendered both in the "Pick entities" popover on the front
+// page and as the top-level Settings tab.
+export function SettingsPanelBody({ states }: { states: HAState[] }) {
+  const { overrides, setOverride, reset } = useSuperViewOverrides();
+  return (
+    <div className="space-y-5">
+      <CoolingMatrix states={states} />
+      <div className="border-t border-stone-800" />
+      <div className="text-xs uppercase tracking-wider text-stone-300">
+        Super View entities
+      </div>
+      <p className="text-xs text-stone-400 -mt-3">
+        Pick the exact entity for each tile. Leave blank to auto-detect by
+        name.
+      </p>
+      {SLOTS.map((spec) => (
+        <EntityPicker
+          key={spec.slot}
+          spec={spec}
+          states={states}
+          value={overrides[spec.slot]}
+          onChange={(id) => setOverride(spec.slot, id)}
+        />
+      ))}
+      <div className="pt-2">
+        <button
+          onClick={reset}
+          className="text-xs text-stone-400 hover:text-rose-300"
+        >
+          Reset all to auto-detect
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function SuperViewSettings({
   open,
   onClose,
@@ -259,8 +296,6 @@ export function SuperViewSettings({
   onClose: () => void;
   states: HAState[];
 }) {
-  const { overrides, setOverride, reset } = useSuperViewOverrides();
-
   if (!open) return null;
   return (
     <div
@@ -290,24 +325,8 @@ export function SuperViewSettings({
           </button>
         </div>
         <div className="p-6 space-y-5">
-          <CoolingMatrix states={states} />
-          <div className="border-t border-stone-800" />
-          {SLOTS.map((spec) => (
-            <EntityPicker
-              key={spec.slot}
-              spec={spec}
-              states={states}
-              value={overrides[spec.slot]}
-              onChange={(id) => setOverride(spec.slot, id)}
-            />
-          ))}
-          <div className="pt-2 flex justify-between">
-            <button
-              onClick={reset}
-              className="text-xs text-stone-400 hover:text-rose-300"
-            >
-              Reset all to auto-detect
-            </button>
+          <SettingsPanelBody states={states} />
+          <div className="flex justify-end">
             <button
               onClick={onClose}
               className="px-4 py-2 rounded-lg bg-amber-700 hover:bg-amber-600 text-amber-50 text-sm font-medium"
