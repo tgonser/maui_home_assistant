@@ -1,0 +1,163 @@
+
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+panel_custom:
+  - name: developer-tools
+    sidebar_title: Tools
+    sidebar_icon: mdi:application-cog-outline
+    js_url: /api/hassio/app/entrypoint.js
+    url_path: developer-tools
+    embed_iframe: true
+    
+template:
+  - binary_sensor:
+      - name: "Maui Someone Home"
+        unique_id: maui_someone_home
+        device_class: occupancy
+        state: >
+          {{ is_state('binary_sensor.usl_motion_motion', 'on')
+             or is_state('binary_sensor.usl_motion_sitting', 'on')
+             or is_state('binary_sensor.usl_motion_motion_3', 'on')
+             or is_state('binary_sensor.up_stair_motion_motion', 'on')
+             or is_state('binary_sensor.motion_upstairs', 'on')
+             or is_state('binary_sensor.motion_kitchen', 'on') }}
+        delay_off:
+          minutes: 30
+          
+sensor:
+  - platform: statistics
+    name: "Solar 15min Avg"
+    entity_id: sensor.total_solar
+    state_characteristic: mean
+    max_age:
+      minutes: 15          
+          
+          
+input_number:
+  maui_temp_owners_good:
+    name: "Maui: Owners Home - Solar Good"
+    min: 65
+    max: 85
+    step: 1
+    unit_of_measurement: "°F"
+    initial: 74
+  maui_temp_visitors_good:
+    name: "Maui: Visitors - Solar Good"
+    min: 65
+    max: 85
+    step: 1
+    unit_of_measurement: "°F"
+    initial: 76
+  maui_temp_vacation_good:
+    name: "Maui: Vacation - Solar Good"
+    min: 65
+    max: 85
+    step: 1
+    unit_of_measurement: "°F"
+    initial: 80
+  maui_temp_owners_mod:
+    name: "Maui: Owners Home - Moderate"
+    min: 65
+    max: 85
+    step: 1
+    unit_of_measurement: "°F"
+    initial: 79
+  maui_temp_visitors_mod:
+    name: "Maui: Visitors - Moderate"
+    min: 65
+    max: 85
+    step: 1
+    unit_of_measurement: "°F"
+    initial: 81
+  maui_temp_vacation_mod:
+    name: "Maui: Vacation - Moderate"
+    min: 65
+    max: 85
+    step: 1
+    unit_of_measurement: "°F"
+    initial: 84
+  maui_temp_inactive:
+    name: "Maui: Outside Active Window"
+    min: 65
+    max: 85
+    step: 1
+    unit_of_measurement: "°F"
+    initial: 82
+  maui_temp_protect:
+    name: "Maui: Protect / Peak Mode"
+    min: 65
+    max: 90
+    step: 1
+    unit_of_measurement: "°F"
+    initial: 84
+  maui_temp_boardroom_max:
+    name: "Maui: Boardroom Max Cap"
+    min: 65
+    max: 85
+    step: 1
+    unit_of_measurement: "°F"
+    initial: 78
+  maui_solar_good:
+    name: "Maui: Solar Good Threshold (kW)"
+    min: 1
+    max: 30
+    step: 1
+    unit_of_measurement: "kW"
+    initial: 10
+  maui_batt_good:
+    name: "Maui: Battery Good Threshold (%)"
+    min: 50
+    max: 100
+    step: 5
+    unit_of_measurement: "%"
+    initial: 80
+  maui_batt_protect:
+    name: "Maui: Battery Protect Threshold (%)"
+    min: 5
+    max: 50
+    step: 5
+    unit_of_measurement: "%"
+    initial: 25
+  maui_temp_owners_awesome:
+    name: "Maui: Owners Home - Solar Awesome"
+    min: 65
+    max: 85
+    step: 1
+    unit_of_measurement: "°F"
+    initial: 72
+  maui_temp_visitors_awesome:
+    name: "Maui: Visitors - Solar Awesome"
+    min: 65
+    max: 85
+    step: 1
+    unit_of_measurement: "°F"
+    initial: 74
+  maui_temp_vacation_awesome:
+    name: "Maui: Vacation - Solar Awesome"
+    min: 65
+    max: 85
+    step: 1
+    unit_of_measurement: "°F"
+    initial: 80
+  maui_solar_awesome:
+    name: "Maui: Solar Awesome Threshold (kW)"
+    min: 1
+    max: 30
+    step: 1
+    unit_of_measurement: "kW"
+    initial: 14
+  maui_grid_protect_kw:
+    name: "Maui: Vacation Grid Draw Limit (kW)"
+    min: 0
+    max: 10
+    step: 0.5
+    unit_of_measurement: "kW"
+    initial: 0
