@@ -1,0 +1,350 @@
+# =============================================================================
+# Maui Solar-Aware Climate  —  Solar Tier Matrix + Dew Point Awareness
+# =============================================================================
+# Replaces the existing "Maui Solar-Aware Climate" automation.
+# Requires:
+#   - maui_dewpoint_package.yaml      (dew point floor + infiltration helpers)
+#   - maui_solar_tier_package.yaml    (sensor.maui_solar_tier + the 51
+#                                      input_number matrix helpers)
+#
+# HOW IT WORKS (v2 — solar tier matrix):
+#   1. SOLAR TIER: sensor.total_solar (kW) is bucketed into a tier:
+#        <=5 Poor · <=10 Fair · <=15 Good · <=20 Strong · >20 Excellent
+#   1b. NIGHT ROW (9pm–7am): in Owners Home and Visitors modes the "night"
+#       matrix row is used instead of the solar tier so bedrooms can be set
+#       for sleeping. Vacation mode ignores the night row (solar tier only).
+#   2. MATRIX LOOKUP: the target for each room group comes from the
+#      input_number matrix for the current house mode + tier:
+#        input_number.maui_ct_<mode>_<tier>_<group>
+#      Groups:  master  = climate.master_bed_2
+#               sitting = climate.sitting
+#               rest    = climate.boardroom, climate.beach_room,
+#                         climate.upper_mauka
+#      Atrium / Bar / Kitchen (open-air rooms) are excluded from the matrix
+#      in Owners Home / Visitors (doors open), but in Vacation the doors are
+#      closed, so they follow the rest-group target.
+#   3. PEAK BACKOFF (5–9pm): every controlled room is eased to 84°F. The
+#      open-air rooms are forced OFF during peak in Owners Home / Visitors;
+#      in Vacation they back off to 84°F like everything else.
+#   4. DEW POINT FLOOR (priority): each target is raised to at least
+#      sensor.maui_dew_point_setpoint_floor (never above 84°F) so surfaces
+#      never fall below the outdoor dew point (condensation).
+#   5. INFILTRATION HOLD: +2°F buffer while infiltration is active.
+#   6. DEHUMIDIFY PRIORITY: fan slowed when indoor dew point is high.
+#
+# Battery no longer affects targets (purely solar-driven by design).
+#
+# Priority order (highest wins):
+#   1) Suspend mode (automation does nothing)
+#   2) Dew-point floor — absolute, even over manual holds (raises only)
+#   3) Open-air peak shutoff (Atrium/Bar/Kitchen OFF 5-9pm in Owners/
+#      Visitors, holds ignored; in Vacation they follow the rest target)
+#   4) Manual hold (8h, Owners/Visitors only)
+#   5) Peak backoff to 84°F
+#   6) Night row (9pm-7am) or solar-tier matrix
+#   7) Dehumidify fan refinements
+# =============================================================================
+id: '1781981986844'
+alias: Maui Solar-Aware Climate
+description: >
+  Sets AC targets every 15 min from the solar-tier cooling matrix
+  (Poor/Fair/Good/Strong/Excellent x Owners/Visitors/Vacation x
+  Master/Sitting/Rest input_number helpers) — then enforces a dew-point-based
+  minimum setpoint to prevent condensation. Backs off to 84°F during peak
+  pricing (5–9pm); open-air rooms (Atrium, Bar, Kitchen) are forced OFF
+  during peak in Owners Home / Visitors (doors open), but in Vacation the
+  doors are closed so they follow the rest-group target instead. Dew point
+  floor overrides solar pre-cooling; infiltration events suspend aggressive
+  cooling.
+triggers:
+  - trigger: time_pattern
+    minutes: /15
+  - trigger: state
+    entity_id: input_select.maui_house_mode
+  - trigger: state
+    entity_id: sensor.maui_solar_tier
+  - trigger: state
+    entity_id: sensor.maui_dew_point_setpoint_floor
+  - trigger: state
+    entity_id: input_boolean.maui_infiltration_active
+  - trigger: homeassistant
+    event: start
+  # Fire exactly at the peak window edges so the open-air shutdown / recovery
+  # happens on time instead of up to 15 minutes late.
+  - trigger: time
+    at: '17:00:00'
+  - trigger: time
+    at: '21:00:00'
+  # Night window ends at 7am — fire so rooms return to the solar matrix on time.
+  - trigger: time
+    at: '07:00:00'
+conditions:
+  - condition: template
+    value_template: '{{ not is_state(''input_select.maui_house_mode'', ''Suspend'') }}'
+actions:
+  # ---- Master group ----
+  - repeat:
+      for_each:
+        - climate.master_bed_2
+      sequence:
+        - choose:
+            # Manual hold active (Owners/Visitors only — Vacation ignores
+            # holds). The hold is respected EXCEPT for the dew-point floor,
+            # which is absolute: if the held setpoint is below the floor,
+            # raise it to the floor. Never lower a held setpoint.
+            - conditions:
+                - condition: template
+                  value_template: |-
+                    {{ mode_key != 'vacation'
+                       and not is_state('timer.maui_hold_' ~ repeat.item.split('.')[1], 'idle') }}
+              sequence:
+                - condition: template
+                  value_template: |-
+                    {{ is_state(repeat.item, 'cool')
+                       and (state_attr(repeat.item, 'temperature') | int(84)) < (dew_floor | int) }}
+                - action: climate.set_temperature
+                  target:
+                    entity_id: '{{ repeat.item }}'
+                  data:
+                    temperature: '{{ dew_floor | int }}'
+                  continue_on_error: true
+          default:
+            - condition: template
+              value_template: |-
+                {{ state_attr(repeat.item, 'hvac_mode') != 'cool'
+                   or (state_attr(repeat.item, 'temperature') | int) != (master_target | int) }}
+            - action: climate.set_hvac_mode
+              target:
+                entity_id: '{{ repeat.item }}'
+              data:
+                hvac_mode: cool
+              continue_on_error: true
+            - action: climate.set_temperature
+              target:
+                entity_id: '{{ repeat.item }}'
+              data:
+                temperature: '{{ master_target | int }}'
+              continue_on_error: true
+  # ---- Sitting group ----
+  - repeat:
+      for_each:
+        - climate.sitting
+      sequence:
+        - choose:
+            # Manual hold: respected except the dew-point floor (absolute).
+            - conditions:
+                - condition: template
+                  value_template: |-
+                    {{ mode_key != 'vacation'
+                       and not is_state('timer.maui_hold_' ~ repeat.item.split('.')[1], 'idle') }}
+              sequence:
+                - condition: template
+                  value_template: |-
+                    {{ is_state(repeat.item, 'cool')
+                       and (state_attr(repeat.item, 'temperature') | int(84)) < (dew_floor | int) }}
+                - action: climate.set_temperature
+                  target:
+                    entity_id: '{{ repeat.item }}'
+                  data:
+                    temperature: '{{ dew_floor | int }}'
+                  continue_on_error: true
+          default:
+            - condition: template
+              value_template: |-
+                {{ state_attr(repeat.item, 'hvac_mode') != 'cool'
+                   or (state_attr(repeat.item, 'temperature') | int) != (sitting_target | int) }}
+            - action: climate.set_hvac_mode
+              target:
+                entity_id: '{{ repeat.item }}'
+              data:
+                hvac_mode: cool
+              continue_on_error: true
+            - action: climate.set_temperature
+              target:
+                entity_id: '{{ repeat.item }}'
+              data:
+                temperature: '{{ sitting_target | int }}'
+              continue_on_error: true
+  # ---- Rest group (Boardroom / Beach Room / Upper Mauka) ----
+  - repeat:
+      for_each:
+        - climate.boardroom
+        - climate.beach_room
+        - climate.upper_mauka
+      sequence:
+        - choose:
+            # Manual hold: respected except the dew-point floor (absolute).
+            - conditions:
+                - condition: template
+                  value_template: |-
+                    {{ mode_key != 'vacation'
+                       and not is_state('timer.maui_hold_' ~ repeat.item.split('.')[1], 'idle') }}
+              sequence:
+                - condition: template
+                  value_template: |-
+                    {{ is_state(repeat.item, 'cool')
+                       and (state_attr(repeat.item, 'temperature') | int(84)) < (dew_floor | int) }}
+                - action: climate.set_temperature
+                  target:
+                    entity_id: '{{ repeat.item }}'
+                  data:
+                    temperature: '{{ dew_floor | int }}'
+                  continue_on_error: true
+          default:
+            - condition: template
+              value_template: |-
+                {{ state_attr(repeat.item, 'hvac_mode') != 'cool'
+                   or (state_attr(repeat.item, 'temperature') | int) != (rest_target | int) }}
+            - action: climate.set_hvac_mode
+              target:
+                entity_id: '{{ repeat.item }}'
+              data:
+                hvac_mode: cool
+              continue_on_error: true
+            - action: climate.set_temperature
+              target:
+                entity_id: '{{ repeat.item }}'
+              data:
+                temperature: '{{ rest_target | int }}'
+              continue_on_error: true
+  # ---- OPEN-AIR ROOMS (Atrium / Bar / Kitchen) ----
+  #      Occupied modes (Owners Home / Visitors): doors are usually open, so
+  #      these rooms are never given targets, and from 5pm to 9pm they are
+  #      forced OFF. A guest turning one on during peak will be switched back
+  #      off within 15 minutes.
+  #      Vacation: doors are closed, so these rooms ARE managed — they follow
+  #      the rest-group target (incl. the 84° peak backoff) instead of being
+  #      shut off.
+  - if:
+      - condition: template
+        value_template: "{{ mode_key == 'vacation' }}"
+    then:
+      - repeat:
+          for_each:
+            - climate.atrium
+            - climate.bar
+            - climate.maui_bar
+            - climate.kitchen
+          sequence:
+            - condition: template
+              value_template: |-
+                {{ state_attr(repeat.item, 'hvac_mode') != 'cool'
+                   or (state_attr(repeat.item, 'temperature') | int) != (rest_target | int) }}
+            - action: climate.set_hvac_mode
+              target:
+                entity_id: '{{ repeat.item }}'
+              data:
+                hvac_mode: cool
+              continue_on_error: true
+            - action: climate.set_temperature
+              target:
+                entity_id: '{{ repeat.item }}'
+              data:
+                temperature: '{{ rest_target | int }}'
+              continue_on_error: true
+  - if:
+      - condition: template
+        value_template: "{{ peak and mode_key != 'vacation' }}"
+    then:
+      - repeat:
+          for_each:
+            - climate.atrium
+            - climate.bar
+            - climate.maui_bar
+            - climate.kitchen
+          sequence:
+            - condition: template
+              value_template: "{{ states(repeat.item) != 'off' }}"
+            - action: climate.turn_off
+              target:
+                entity_id: '{{ repeat.item }}'
+              continue_on_error: true
+  # ---- DEHUMIDIFY PRIORITY: indoor dew point high -> slow the fan so the coil
+  #      runs longer and removes more latent heat (moisture). No-ops on
+  #      equipment that has no low fan setting (continue_on_error). ----
+  - if:
+      - condition: numeric_state
+        entity_id: sensor.maui_indoor_dew_point
+        above: input_number.maui_indoor_dewpoint_target
+    then:
+      - repeat:
+          for_each:
+            - climate.boardroom
+            - climate.sitting
+            - climate.master_bed_2
+            - climate.atrium
+            - climate.bar
+            - climate.beach_room
+            - climate.kitchen
+            - climate.maui_bar
+            - climate.upper_mauka
+          sequence:
+            - choose:
+                - conditions:
+                    - condition: template
+                      value_template: >-
+                        {{ is_state(repeat.item, 'cool')
+                           and (state_attr(repeat.item, 'fan_modes') or [])
+                               | map('lower') | select('in', ['low','min','quiet'])
+                               | list | length > 0 }}
+                  sequence:
+                    - action: climate.set_fan_mode
+                      target:
+                        entity_id: '{{ repeat.item }}'
+                      data:
+                        fan_mode: >-
+                          {{ (state_attr(repeat.item, 'fan_modes')
+                              | select('in', ['low','Low','LOW','min','Min','quiet','Quiet'])
+                              | list | first) }}
+                      continue_on_error: true
+variables:
+  # House mode -> matrix key.
+  # NOTE: mode_key and tier are concatenated into entity IDs, so they must
+  # render with zero surrounding whitespace — single-line expressions only.
+  mode_key: "{{ 'owners' if is_state('input_select.maui_house_mode', 'Owners Home') else ('visitors' if is_state('input_select.maui_house_mode', 'Visitors') else 'vacation') }}"
+  # Solar tier from the template sensor; recomputed inline as a fallback if
+  # the sensor is unavailable so the automation never stalls.
+  tier_sensor: "{{ states('sensor.maui_solar_tier') | lower | trim }}"
+  tier_from_kw: "{% set s = states('sensor.maui_solar_smoothed') | float(states('sensor.total_solar') | float(0)) %}{% if s <= 5 %}poor{% elif s <= 10 %}fair{% elif s <= 15 %}good{% elif s <= 20 %}strong{% else %}excellent{% endif %}"
+  tier_solar: "{{ tier_sensor if tier_sensor in ['poor','fair','good','strong','excellent'] else tier_from_kw }}"
+  # NIGHT (9pm–7am): Owners Home and Visitors use the Night matrix row instead
+  # of the solar tier, so bedrooms can be pre-set for sleeping (e.g. 78°).
+  # Vacation always follows the solar tier — no Night row.
+  night: '{{ now().hour >= 21 or now().hour < 7 }}'
+  tier: "{{ 'night' if (night and mode_key != 'vacation') else tier_solar }}"
+  peak: '{{ 17 <= now().hour < 21 }}'
+  # Rooms usually open to the outside — forced OFF during peak (see below).
+  openair_rooms:
+    - climate.atrium
+    - climate.bar
+    - climate.maui_bar
+    - climate.kitchen
+  # Dew-point minimum setpoint (the floor) and infiltration hold flag.
+  dew_floor: '{{ states(''sensor.maui_dew_point_setpoint_floor'') | int(78) }}'
+  infiltration: '{{ is_state(''input_boolean.maui_infiltration_active'', ''on'') }}'
+  # Matrix lookups. If a helper is missing/unreadable, fall back to 84°F
+  # (safe: minimal cooling) so a missing package never over-cools.
+  master_base: >-
+    {{ states('input_number.maui_ct_' ~ mode_key ~ '_' ~ tier ~ '_master') | int(84) }}
+  sitting_base: >-
+    {{ states('input_number.maui_ct_' ~ mode_key ~ '_' ~ tier ~ '_sitting') | int(84) }}
+  rest_base: >-
+    {{ states('input_number.maui_ct_' ~ mode_key ~ '_' ~ tier ~ '_rest') | int(84) }}
+  # Final targets: peak forces 84, then enforce the dew point floor (raises
+  # only), add the infiltration buffer, and cap at 84°F.
+  master_target: >-
+    {% set t = 84 if peak else master_base | int %}
+    {% set t = [t, dew_floor] | max %}
+    {% if infiltration %}{% set t = t + 2 %}{% endif %}
+    {{ [t, 84] | min }}
+  sitting_target: >-
+    {% set t = 84 if peak else sitting_base | int %}
+    {% set t = [t, dew_floor] | max %}
+    {% if infiltration %}{% set t = t + 2 %}{% endif %}
+    {{ [t, 84] | min }}
+  rest_target: >-
+    {% set t = 84 if peak else rest_base | int %}
+    {% set t = [t, dew_floor] | max %}
+    {% if infiltration %}{% set t = t + 2 %}{% endif %}
+    {{ [t, 84] | min }}
+mode: single
