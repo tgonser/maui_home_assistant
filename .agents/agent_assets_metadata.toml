@@ -6,3 +6,15 @@ id = "_YXDBRhgGvl0uL_apubCy"
 uri = "file://docs/maui-climate-automation.md"
 type = "text"
 title = "Maui Climate Automation — System Document"
+
+[[outputs]]
+id = "7Sj1pdH0mRKH14WSZk0e8"
+uri = "file://ha-config/maui_solar_tier_package.yaml"
+type = "unspecified"
+title = "Maui Solar Tier package (upload to /config/packages)"
+
+[[outputs]]
+id = "g6z_RoimMZEF5ps9KUh8o"
+uri = "file://ha-config/maui_solar_aware_climate.yaml"
+type = "unspecified"
+title = "Maui Solar-Aware Climate automation (for the automation editor)"
