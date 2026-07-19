@@ -775,14 +775,23 @@ function MotionRow({
   now,
   label,
   onOpen,
+  suppressed,
 }: {
   s: HAState;
   now: number;
   label: string;
   onOpen?: (s: HAState) => void;
+  suppressed?: boolean;
 }) {
   const active = s.state === "on";
-  const ago = formatAgo(new Date(s.last_changed).getTime());
+  // When many idle sensors share an identical "last changed" time it means the
+  // integration reconnected (or HA restarted) — not real motion. Show "quiet"
+  // instead of a misleading timestamp.
+  const ago = active
+    ? formatAgo(new Date(s.last_changed).getTime())
+    : suppressed
+      ? "quiet"
+      : formatAgo(new Date(s.last_changed).getTime());
   void now;
   const cls = `flex items-center justify-between py-1 ${active ? "opacity-100" : "opacity-50"}`;
   const inner = (
@@ -853,6 +862,23 @@ function RecentMotionTile({
     cameraSiblingName(s, states, entityDevice, aliases) ??
     motionSensorLabel(friendly(s));
 
+  // Detect reconnect artifacts: HA stamps EVERY sensor with a new
+  // "last changed" when an integration reconnects or HA restarts. If 3+ idle
+  // sensors share the same timestamp (within a 2-minute bucket), those times
+  // are not real motion — suppress them.
+  const artifactBuckets = useMemo(() => {
+    const buckets = new Map<number, number>();
+    for (const s of [...inside, ...outside]) {
+      if (s.state === "on") continue;
+      const b = Math.round(new Date(s.last_changed).getTime() / 120_000);
+      buckets.set(b, (buckets.get(b) ?? 0) + 1);
+    }
+    return new Set([...buckets.entries()].filter(([, n]) => n >= 3).map(([b]) => b));
+  }, [inside, outside]);
+  const isArtifact = (s: HAState) =>
+    s.state !== "on" &&
+    artifactBuckets.has(Math.round(new Date(s.last_changed).getTime() / 120_000));
+
   return (
     <motion.div
       layout
@@ -871,14 +897,14 @@ function RecentMotionTile({
           <div className="text-[9px] uppercase tracking-widest text-[var(--brass)] mb-1">Inside</div>
           {inside.length === 0
             ? <div className="text-xs text-[var(--cream-muted)] opacity-50">No sensors</div>
-            : inside.map((s) => <MotionRow key={s.entity_id} s={s} now={now} label={labelFor(s)} onOpen={onOpen} />)
+            : inside.map((s) => <MotionRow key={s.entity_id} s={s} now={now} label={labelFor(s)} onOpen={onOpen} suppressed={isArtifact(s)} />)
           }
         </div>
         <div>
           <div className="text-[9px] uppercase tracking-widest text-[var(--brass)] mb-1">Outside</div>
           {outside.length === 0
             ? <div className="text-xs text-[var(--cream-muted)] opacity-50">No sensors</div>
-            : outside.map((s) => <MotionRow key={s.entity_id} s={s} now={now} label={labelFor(s)} onOpen={onOpen} />)
+            : outside.map((s) => <MotionRow key={s.entity_id} s={s} now={now} label={labelFor(s)} onOpen={onOpen} suppressed={isArtifact(s)} />)
           }
         </div>
       </div>

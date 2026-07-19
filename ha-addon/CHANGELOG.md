@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.61
+
+- **Fixed: phantom "motion X ago" times after reconnects** — When Home
+  Assistant restarts or an integration (e.g. UniFi Protect) reconnects, HA
+  stamps every motion sensor with a new "last changed" time, making all rows
+  show the same fake recent time. The Recent Motion tile now detects that
+  pattern (3+ idle sensors sharing the same timestamp) and shows "quiet"
+  instead of a misleading time. Real detections are unaffected.
+
 ## 1.0.60
 
 - **Clarified: hold list in Vacation mode** — The house status card now
