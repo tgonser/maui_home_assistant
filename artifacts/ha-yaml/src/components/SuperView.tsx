@@ -483,7 +483,7 @@ function HouseStatusTile({ states }: { states: HAState[] }) {
   const holdLine =
     heldRooms.length > 0
       ? `Manual hold: ${heldRooms.join(", ")}${
-          modeKey === "vacation" ? " (ignored in Vacation)" : ""
+          modeKey === "vacation" ? " (2h in Vacation)" : ""
         }`
       : "";
 

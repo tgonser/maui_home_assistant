@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.62
+
+- **Changed: manual holds now work in Vacation mode (2 hours)** — Previously
+  Vacation always reclaimed thermostats within 15 minutes of a manual change.
+  Now a hand-adjusted thermostat holds for 2 hours in Vacation (8 hours in
+  Owners/Visitors, unchanged), so someone working at the house gets temporary
+  control before the matrix takes back over. The status card hold line now
+  reads "(2h in Vacation)". Requires re-pasting BOTH the "Maui Manual Setpoint
+  Hold" and "Maui Solar-Aware Climate" automations.
+
 ## 1.0.61
 
 - **Fixed: phantom "motion X ago" times after reconnects** — When Home

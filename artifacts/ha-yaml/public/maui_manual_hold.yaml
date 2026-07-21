@@ -6,11 +6,11 @@
 #
 # WHAT IT DOES:
 #   When a person changes one of the matrix-controlled thermostats by hand —
-#   wall control, HA app, or the Wall Kiosk — this starts a hold timer for
-#   that room. While the timer runs, the "Maui Solar-Aware Climate" automation
-#   skips the room, so the person's setting sticks. When the timer ends (or
-#   after an HA restart mid-hold — timers are restored) control returns to
-#   the solar-tier matrix.
+#   wall control, HA app, or the Wall Kiosk — this starts an 8-hour hold timer
+#   for that room. While the timer runs, the "Maui Solar-Aware Climate"
+#   automation skips the room, so the person's setting sticks. After 8 hours
+#   (or an HA restart mid-hold — timers are restored) control returns to the
+#   solar-tier matrix.
 #
 #   Hold length depends on house mode: 8 hours in Owners Home / Visitors,
 #   2 hours in Vacation (someone working at the house gets temporary control,

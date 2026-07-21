@@ -39,7 +39,7 @@
 #   2) Dew-point floor — absolute, even over manual holds (raises only)
 #   3) Open-air peak shutoff (Atrium/Bar/Kitchen OFF 5-9pm in Owners/
 #      Visitors, holds ignored; in Vacation they follow the rest target)
-#   4) Manual hold (8h, Owners/Visitors only)
+#   4) Manual hold (8h in Owners/Visitors, 2h in Vacation)
 #   5) Peak backoff to 84°F
 #   6) Night row (9pm-7am) or solar-tier matrix
 #   7) Dehumidify fan refinements
@@ -88,15 +88,14 @@ actions:
         - climate.master_bed_2
       sequence:
         - choose:
-            # Manual hold active (Owners/Visitors only — Vacation ignores
-            # holds). The hold is respected EXCEPT for the dew-point floor,
-            # which is absolute: if the held setpoint is below the floor,
-            # raise it to the floor. Never lower a held setpoint.
+            # Manual hold active (8h in Owners/Visitors, 2h in Vacation).
+            # The hold is respected EXCEPT for the dew-point floor, which is
+            # absolute: if the held setpoint is below the floor, raise it to
+            # the floor. Never lower a held setpoint.
             - conditions:
                 - condition: template
                   value_template: |-
-                    {{ mode_key != 'vacation'
-                       and not is_state('timer.maui_hold_' ~ repeat.item.split('.')[1], 'idle') }}
+                    {{ not is_state('timer.maui_hold_' ~ repeat.item.split('.')[1], 'idle') }}
               sequence:
                 - condition: template
                   value_template: |-
@@ -135,8 +134,7 @@ actions:
             - conditions:
                 - condition: template
                   value_template: |-
-                    {{ mode_key != 'vacation'
-                       and not is_state('timer.maui_hold_' ~ repeat.item.split('.')[1], 'idle') }}
+                    {{ not is_state('timer.maui_hold_' ~ repeat.item.split('.')[1], 'idle') }}
               sequence:
                 - condition: template
                   value_template: |-
@@ -177,8 +175,7 @@ actions:
             - conditions:
                 - condition: template
                   value_template: |-
-                    {{ mode_key != 'vacation'
-                       and not is_state('timer.maui_hold_' ~ repeat.item.split('.')[1], 'idle') }}
+                    {{ not is_state('timer.maui_hold_' ~ repeat.item.split('.')[1], 'idle') }}
               sequence:
                 - condition: template
                   value_template: |-
