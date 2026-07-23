@@ -355,7 +355,17 @@ function HouseStatusTile({ states }: { states: HAState[] }) {
     .filter((n) => !isNaN(n));
   const batt = battVals.length > 0 ? Math.min(...battVals) : NaN;
 
-  const hour = new Date().getHours();
+  // Peak/night windows follow the HOUSE's clock (Hawaii), not the viewing
+  // device's — otherwise the card wrongly shows "peak backoff" to someone
+  // checking in from another timezone while HA (on Hawaii time) is not in
+  // peak at all.
+  const hour = Number(
+    new Intl.DateTimeFormat("en-US", {
+      hour: "numeric",
+      hour12: false,
+      timeZone: "Pacific/Honolulu",
+    }).format(new Date()),
+  ) % 24;
   const peak = hour >= 17 && hour < 21;
 
   // Solar tier — prefer HA's own sensor.maui_solar_tier so the tile always

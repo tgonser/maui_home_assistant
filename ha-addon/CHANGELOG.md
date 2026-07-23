@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.63
+
+- **Fixed: wrong "peak backoff" shown when viewing from another timezone** —
+  The status card computed the 5–9pm peak window (and the 9pm–7am night
+  window) from the viewing device's clock. Checking the kiosk from the
+  mainland during mainland evening hours made the card claim "Applied: 84° —
+  peak backoff" while the house (on Hawaii time) was actually mid-day and
+  correctly following the solar matrix. Both windows now always use the
+  house's clock (Pacific/Honolulu), matching the automation.
+
 ## 1.0.62
 
 - **Changed: manual holds now work in Vacation mode (2 hours)** — Previously
