@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.64
+
+- **Fixed: misleading matrix footnote in Vacation mode** — The cooling matrix
+  caption claimed Atrium / Bar / Kitchen are excluded in all modes. They are
+  only excluded in Owners Home / Visitors (doors open); in Vacation they follow
+  the Rest target. The caption now changes with the selected mode tab.
+
 ## 1.0.63
 
 - **Fixed: wrong "peak backoff" shown when viewing from another timezone** —

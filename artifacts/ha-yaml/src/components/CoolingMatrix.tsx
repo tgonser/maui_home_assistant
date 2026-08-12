@@ -241,8 +241,10 @@ export function CoolingMatrix({ states }: { states: HAState[] }) {
           <div className="flex items-center justify-between">
             <div className="text-[10px] text-stone-500">
               Master = master bedroom · Sitting = sitting room · Rest =
-              boardroom, beach room, upper mauka. Atrium / Bar / Kitchen are
-              excluded (doors open).
+              boardroom, beach room, upper mauka.{" "}
+              {mode === "vacation"
+                ? "Atrium / Bar / Kitchen follow the Rest target (doors closed)."
+                : "Atrium / Bar / Kitchen are excluded (doors open)."}
             </div>
             <button
               onClick={seedDefaults}
