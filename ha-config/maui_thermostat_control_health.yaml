@@ -1,0 +1,114 @@
+# =============================================================================
+# Maui Thermostat Control Health
+# =============================================================================
+# Add this as a NEW automation (Settings > Automations > + Create Automation >
+# Edit in YAML). It watches the nine Maui Honeywell thermostats as one control
+# group and alerts only when several are unavailable together — the signature
+# of an expired Honeywell login or integration outage, rather than one device
+# briefly updating.
+#
+# CHANGE notify.mobile_app_tom to the desired mobile notify service. The
+# persistent notification is always created, so the alert is still visible in
+# Home Assistant if the phone service has a different name.
+# =============================================================================
+id: maui_thermostat_control_health
+alias: Maui Thermostat Control Health
+description: >
+  Alerts when three or more managed Maui thermostats are unavailable together,
+  which prevents the solar-aware cooling schedule from applying targets.
+  Sends a recovery message automatically once all thermostats are available
+  again after Honeywell reauthentication.
+triggers:
+  # A template threshold fires once when the group crosses into outage, rather
+  # than once per thermostat (which would send several duplicate phone alerts).
+  - trigger: template
+    value_template: >-
+      {{ [states('climate.atrium'), states('climate.bar'),
+          states('climate.beach_room'), states('climate.boardroom'),
+          states('climate.kitchen'), states('climate.master_bed_2'),
+          states('climate.maui_bar'), states('climate.sitting'),
+          states('climate.upper_mauka')]
+         | select('in', ['unavailable', 'unknown']) | list | count >= 3 }}
+    id: outage
+  - trigger: template
+    value_template: >-
+      {{ [states('climate.atrium'), states('climate.bar'),
+          states('climate.beach_room'), states('climate.boardroom'),
+          states('climate.kitchen'), states('climate.master_bed_2'),
+          states('climate.maui_bar'), states('climate.sitting'),
+          states('climate.upper_mauka')]
+         | reject('in', ['unavailable', 'unknown']) | list | count == 9 }}
+    id: recovered
+  - trigger: homeassistant
+    event: start
+    id: check
+variables:
+  thermostats:
+    - climate.atrium
+    - climate.bar
+    - climate.beach_room
+    - climate.boardroom
+    - climate.kitchen
+    - climate.master_bed_2
+    - climate.maui_bar
+    - climate.sitting
+    - climate.upper_mauka
+  unavailable: >-
+    {{ thermostats | select('is_state', 'unavailable') | list
+       + thermostats | select('is_state', 'unknown') | list }}
+  unavailable_names: >-
+    {% set ns = namespace(names=[]) %}
+    {% for entity_id in unavailable %}
+      {% set ns.names = ns.names
+         + [state_attr(entity_id, 'friendly_name') or entity_id] %}
+    {% endfor %}
+    {{ ns.names | join(', ') }}
+  outage: "{{ unavailable | count >= 3 }}"
+  fully_recovered: "{{ unavailable | count == 0 }}"
+actions:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.id in ['outage', 'check'] }}"
+          - condition: template
+            value_template: "{{ outage }}"
+        sequence:
+          - action: persistent_notification.create
+            data:
+              notification_id: maui_thermostat_control_outage
+              title: Thermostat control outage
+              message: >-
+                {{ unavailable | count }} of {{ thermostats | count }} managed Maui
+                thermostats are unavailable ({{ unavailable_names }}). The cooling
+                schedule cannot apply Vacation or peak-cost targets. This is an
+                integration outage, not Suspend mode; reauthenticate Honeywell.
+          - action: notify.mobile_app_tom
+            continue_on_error: true
+            data:
+              title: Thermostat control outage
+              message: >-
+                {{ unavailable | count }} Maui thermostats are unavailable. Cooling
+                targets cannot be applied; reauthenticate Honeywell.
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.id == 'recovered' }}"
+          - condition: template
+            value_template: "{{ fully_recovered }}"
+          # Prevent a "restored" push when this automation is first loaded
+          # while every thermostat is already healthy.
+          - condition: template
+            value_template: >-
+              {{ states('persistent_notification.maui_thermostat_control_outage')
+                 not in ['unknown', 'unavailable'] }}
+        sequence:
+          - action: persistent_notification.dismiss
+            data:
+              notification_id: maui_thermostat_control_outage
+          - action: notify.mobile_app_tom
+            continue_on_error: true
+            data:
+              title: Thermostat control restored
+              message: >-
+                All managed Maui thermostats are available again. The cooling
+                schedule can resume applying targets.
+mode: single

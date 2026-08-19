@@ -410,6 +410,8 @@ const isMauiClimate = (s: HAState) => {
     .trim();
   return MAUI_NAME_RE.test(name);
 };
+const isUnavailableClimateState = (s: HAState | undefined) =>
+  !s || s.state === "unavailable" || s.state === "unknown";
 const deviceClass = (s: HAState) =>
   (s.attributes.device_class as string | undefined) ?? "";
 
@@ -2330,6 +2332,23 @@ export function Wall() {
     return map;
   }, [states]);
 
+  // The climate section normally hides unavailable entities to avoid filling
+  // the wall with dead controls. Keep the expected Maui set separate so a
+  // Honeywell/TCC outage cannot turn into a misleading empty Climate page.
+  const thermostatControl = useMemo(() => {
+    const byId = new Map(states.map((s) => [s.entity_id, s]));
+    const unavailable = [...MAUI_CLIMATE_IDS].filter((entityId) =>
+      isUnavailableClimateState(byId.get(entityId)),
+    );
+    const houseMode = byId.get("input_select.maui_house_mode")?.state;
+    return {
+      unavailable,
+      expected: MAUI_CLIMATE_IDS.size,
+      isOutage: unavailable.length >= 3,
+      isSuspended: houseMode === "Suspend",
+    };
+  }, [states]);
+
   const refresh = async () => {
     const r = await haStates();
     if (r.ok) setStates(r.data);
@@ -2588,6 +2607,33 @@ export function Wall() {
         </header>
 
         <div className="px-10 py-8 relative z-[1]">
+          {status === "connected" && thermostatControl.isOutage && (
+            <section
+              role="alert"
+              aria-live="assertive"
+              className="mb-6 rounded-2xl border border-red-400/60 bg-red-950/70 px-5 py-4 shadow-lg shadow-red-950/30"
+            >
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="mt-0.5 h-6 w-6 shrink-0 text-red-300" />
+                <div>
+                  <h2 className="text-lg font-semibold text-red-100">
+                    Thermostat control outage
+                  </h2>
+                  <p className="mt-1 text-sm leading-6 text-red-100/90">
+                    {thermostatControl.unavailable.length} of{" "}
+                    {thermostatControl.expected} Maui thermostats are unavailable.
+                    The cooling schedule cannot apply targets until the Honeywell
+                    integration reconnects.
+                  </p>
+                  <p className="mt-1 text-xs text-red-200/80">
+                    {thermostatControl.isSuspended
+                      ? "Suspend mode is also active, but this is an integration outage—not an intentional pause."
+                      : "This is an integration outage, not Suspend mode. Reauthenticate Honeywell, then this alert clears automatically."}
+                  </p>
+                </div>
+              </div>
+            </section>
+          )}
           <div className="flex items-end justify-between mb-6">
             <h2 className="wall-section-title text-3xl">
               {CATEGORIES.find((c) => c.key === active)?.label}
