@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useHAStore, haStates, haTest, haCameraImage, haCallService, haHistory, haStatistics, haAutoConnectIfAddon, type HAState, type HAStatisticPoint } from "@/lib/ha";
+import { useHAStore, haStates, haTest, haCameraImage, haCallService, haHistory, haStatistics, haAutoConnectIfAddon, type HAState } from "@/lib/ha";
+import {
+  calculateGridCosts,
+  GRID_RATES,
+  GRID_STAT_IDS,
+  type GridCostSummary,
+} from "@/lib/gridCost";
 import {
   isMediaActive,
   displayMediaState,
@@ -1101,54 +1107,126 @@ function NetGridChart() {
   );
 }
 
-const GRID_RATES = { sell: 0.04, offPeak: 0.17, peak: 0.52, midPeak: 0.35 };
+type GridCostLoadState = {
+  summary: GridCostSummary | null;
+  loading: boolean;
+  error: string | null;
+  warning: string | null;
+};
 
-function hstRate(hstHour: number) {
-  if (hstHour >= 9 && hstHour < 17) return GRID_RATES.offPeak;
-  if (hstHour >= 17 && hstHour < 21) return GRID_RATES.peak;
-  return GRID_RATES.midPeak;
+function useGridCostStatistics(): GridCostLoadState {
+  const [result, setResult] = useState<GridCostLoadState>({
+    summary: null,
+    loading: true,
+    error: null,
+    warning: null,
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const now = new Date();
+      const start = new Date(now.getTime() - 2 * 365 * 24 * 3600_000);
+      const response = await haStatistics(
+        [...GRID_STAT_IDS],
+        "hour",
+        start,
+        now,
+      );
+      if (cancelled) return;
+      if (!response.ok) {
+        setResult((previous) =>
+          previous.summary
+            ? {
+                ...previous,
+                loading: false,
+                warning: `Hourly statistics refresh failed: ${response.error}`,
+              }
+            : {
+                summary: null,
+                loading: false,
+                error: response.error,
+                warning: null,
+              },
+        );
+        return;
+      }
+
+      const summary = calculateGridCosts(response.data, now.getTime());
+      const warnings = [...summary.dataIssues];
+      if (summary.latestBucketEndMs === null) {
+        warnings.push("No hourly grid-energy statistics were returned");
+      }
+
+      setResult({
+        summary,
+        loading: false,
+        error: null,
+        warning: warnings.length > 0 ? warnings.join(" · ") : null,
+      });
+    };
+
+    void load();
+    const id = window.setInterval(load, 5 * 60_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, []);
+
+  return result;
 }
 
-function DollarFlowChart() {
-  const sys1Pts = useEntityHistory("sensor.gonser_4680_system_1_grid_power");
-  const sys2Pts = useEntityHistory("sensor.4680_system_2_grid_power");
+const hstTimeFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: "Pacific/Honolulu",
+  hour: "numeric",
+  minute: "2-digit",
+});
 
-  const { data, totalDollars } = useMemo(() => {
-    if (sys1Pts.length === 0 && sys2Pts.length === 0) return { data: [], totalDollars: 0 };
-    const BIN = 5 * 60000;
-    const binKey = (t: number) => Math.round(t / BIN) * BIN;
-    const map = new Map<number, { t: number; sys1: number; sys2: number }>();
-    for (const p of sys1Pts) {
-      const b = binKey(p.t); const e = map.get(b) ?? { t: b, sys1: 0, sys2: 0 }; e.sys1 = p.v; map.set(b, e);
-    }
-    for (const p of sys2Pts) {
-      const b = binKey(p.t); const e = map.get(b) ?? { t: b, sys1: 0, sys2: 0 }; e.sys2 = p.v; map.set(b, e);
-    }
-    const sorted = Array.from(map.values()).sort((a, b) => a.t - b.t);
-    let cum = 0;
-    const pts = sorted.map(({ t, sys1, sys2 }, i) => {
-      const net = -(sys1 + sys2);
-      const hstHour = Math.floor(((t / 3600000) - 10 + 240) % 24);
-      const rate = net > 0.01 ? GRID_RATES.sell : hstRate(hstHour);
-      const dt = i > 0 ? (t - sorted[i - 1].t) / 3600000 : 0;
-      cum += net * rate * dt; // cumulative $ balance
-      return {
-        t,
-        cum,
-        pos: cum >= 0 ? cum : (null as number | null),
-        neg: cum <  0 ? cum : (null as number | null),
-      };
-    });
-    return { data: pts, totalDollars: cum };
-  }, [sys1Pts, sys2Pts]);
+function fmtHstTime(t: number) {
+  return hstTimeFormatter.format(new Date(t)).toLowerCase().replace(" ", "");
+}
 
-  if (data.length === 0) return null;
+function describeNetCost(cost: number, digits = 2) {
+  return `$${Math.abs(cost).toFixed(digits)} net ${
+    cost < 0 ? "credit" : "cost"
+  }`;
+}
 
-  const fmtTime = (t: number) => {
-    const h = Math.floor(((t / 3600000) - 10 + 48) % 24);
-    const m = Math.floor((t % 3600000) / 60000);
-    return `${h % 12 || 12}:${m.toString().padStart(2, "0")}${h < 12 ? "a" : "p"}`;
-  };
+function GridCostMessage({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className="wall-tile rounded-2xl p-4 flex items-center justify-center text-sm text-[var(--cream-muted)]"
+      style={{ minHeight: 170 }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function DollarFlowChart({
+  costs,
+}: {
+  costs: GridCostLoadState;
+}) {
+  if (costs.loading && !costs.summary) {
+    return <GridCostMessage>Loading hourly grid costs…</GridCostMessage>;
+  }
+  if (costs.error || !costs.summary) {
+    return (
+      <GridCostMessage>
+        Hourly grid costs unavailable — {costs.error ?? "no statistics"}
+      </GridCostMessage>
+    );
+  }
+
+  const { summary } = costs;
+  const data = summary.dailyPoints;
+  const totalDollars = summary.todayBalance;
 
   const domain = (() => {
     const vals = data.map((d) => d.cum);
@@ -1158,32 +1236,38 @@ function DollarFlowChart() {
   })();
 
   const rateBands = (() => {
-    const ms0 = (Math.floor((data[0].t / 3600000 - 10) / 24) * 24 + 10) * 3600000;
-    const tS = data[0].t; const tE = data[data.length - 1].t;
+    const ms0 = summary.dayStartMs;
+    const tS = ms0;
+    const tE = data[data.length - 1]?.t ?? ms0;
     const cl = (t: number) => Math.max(tS, Math.min(tE, t));
-    // Two days of bands so overnight data is always covered
     const raw = [
       { h0:  0, h1:  9, fill: "rgba(201,153,74,0.10)",  key: "mid0",  name: "Mid-Peak",  nameColor: "#c99a4a" },
       { h0:  9, h1: 17, fill: "rgba(74,222,128,0.06)",  key: "off0",  name: "Off-Peak",  nameColor: "rgba(200,200,200,0.6)" },
       { h0: 17, h1: 21, fill: "rgba(248,113,113,0.14)", key: "peak0", name: "Peak",      nameColor: "#f87171" },
       { h0: 21, h1: 24, fill: "rgba(201,153,74,0.10)",  key: "mid1",  name: "Mid-Peak",  nameColor: "#c99a4a" },
-      { h0: 24, h1: 33, fill: "rgba(201,153,74,0.10)",  key: "mid2",  name: "Mid-Peak",  nameColor: "#c99a4a" },
-      { h0: 33, h1: 41, fill: "rgba(74,222,128,0.06)",  key: "off1",  name: "Off-Peak",  nameColor: "rgba(200,200,200,0.6)" },
-      { h0: 41, h1: 45, fill: "rgba(248,113,113,0.14)", key: "peak1", name: "Peak",      nameColor: "#f87171" },
-      { h0: 45, h1: 48, fill: "rgba(201,153,74,0.10)",  key: "mid3",  name: "Mid-Peak",  nameColor: "#c99a4a" },
     ];
     return raw
       .map((b) => ({ ...b, x1: cl(ms0 + b.h0 * 3600000), x2: cl(ms0 + b.h1 * 3600000) }))
       .filter((b) => b.x1 < b.x2);
   })();
 
-  const totalColor = totalDollars >= 0 ? "#4ade80" : "#f87171";
-  const totalStr = `${totalDollars >= 0 ? "+" : "−"}$${Math.abs(totalDollars).toFixed(2)}`;
+  const totalColor = summary.isTodayComplete
+    ? totalDollars >= 0
+      ? "#4ade80"
+      : "#f87171"
+    : "#fbbf24";
+  const totalStr = `${summary.isTodayComplete ? "" : "~"}${
+    totalDollars >= 0 ? "+" : "−"
+  }$${Math.abs(totalDollars).toFixed(2)}${
+    summary.isTodayComplete ? "" : " partial"
+  }`;
 
   return (
     <div className="wall-tile rounded-2xl p-4">
       <div className="flex items-baseline justify-between mb-1">
-        <div className="text-xs uppercase tracking-[0.18em] text-[var(--cream-muted)]">Running $ Balance — Today</div>
+        <div className="text-xs uppercase tracking-[0.18em] text-[var(--cream-muted)]">
+          Running net balance — Hawaii today
+        </div>
         <div className="flex items-center gap-4">
           <div className="text-[10px] flex gap-3">
             <span style={{ color: "#f87171" }}>peak $0.52</span>
@@ -1194,8 +1278,14 @@ function DollarFlowChart() {
           <div className="text-sm font-bold tabular-nums" style={{ color: totalColor }}>{totalStr}</div>
         </div>
       </div>
-      <ResponsiveContainer width="100%" height={130}>
-        <ComposedChart data={data} margin={{ top: 8, right: 4, left: 28, bottom: 0 }}>
+      {costs.warning && (
+        <div className="mb-2 text-[10px] text-amber-300">
+          Partial data — {costs.warning}
+        </div>
+      )}
+      {summary.hasTodayData ? (
+        <ResponsiveContainer width="100%" height={130}>
+          <ComposedChart data={data} margin={{ top: 8, right: 4, left: 28, bottom: 0 }}>
           <defs>
             <linearGradient id="dfPos" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%"  stopColor="#4ade80" stopOpacity={0.40} />
@@ -1206,7 +1296,7 @@ function DollarFlowChart() {
               <stop offset="95%" stopColor="#f87171" stopOpacity={0.04} />
             </linearGradient>
           </defs>
-          <XAxis dataKey="t" tickFormatter={fmtTime} tick={{ fontSize: 12, fill: "var(--cream-muted)" }} tickLine={false} axisLine={false} interval={Math.floor(data.length / 6)} />
+          <XAxis dataKey="t" tickFormatter={fmtHstTime} tick={{ fontSize: 12, fill: "var(--cream-muted)" }} tickLine={false} axisLine={false} interval={Math.max(0, Math.floor(data.length / 6))} />
           <YAxis
             domain={domain}
             tickFormatter={(v: number) => `$${Math.abs(v) < 0.01 ? "0" : v.toFixed(2)}`}
@@ -1225,7 +1315,7 @@ function DollarFlowChart() {
               const n = v as number;
               return [`${n >= 0 ? "+" : "−"}$${Math.abs(n).toFixed(2)}`, "Balance"];
             }}
-            labelFormatter={(t: unknown) => fmtTime(t as number)}
+            labelFormatter={(t: unknown) => fmtHstTime(t as number)}
             contentStyle={{ background: "rgba(20,12,4,0.92)", border: "1px solid rgba(201,153,74,0.3)", borderRadius: 8, fontSize: 11 }}
           />
           <Area type="monotone" dataKey="pos" stroke="#4ade80" strokeWidth={2} fill="url(#dfPos)" dot={false} isAnimationActive={false} baseValue={0} connectNulls={false} />
@@ -1239,115 +1329,58 @@ function DollarFlowChart() {
               label={{ value: b.name, position: "insideTopLeft", fontSize: 10, fill: b.nameColor }}
             />
           ))}
-        </ComposedChart>
-      </ResponsiveContainer>
+          </ComposedChart>
+        </ResponsiveContainer>
+      ) : (
+        <div className="h-[130px] flex items-center justify-center text-sm text-[var(--cream-muted)]">
+          Today’s first completed hourly statistics have not posted yet.
+        </div>
+      )}
+      <div className="text-[10px] text-[var(--cream-muted)] mt-1">
+        {summary.latestBucketEndMs !== null
+          ? `Same hourly energy records as the monthly chart · through ${fmtHstTime(summary.latestBucketEndMs)} HST`
+          : "Waiting for Home Assistant hourly energy statistics"}
+      </div>
     </div>
   );
 }
 
 const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-const STAT_IMPORT_IDS = [
-  "sensor.gonser_4680_system_1_grid_imported",
-  "sensor.4680_system_2_grid_imported",
-];
-const STAT_EXPORT_IDS = [
-  "sensor.gonser_4680_system_1_grid_exported",
-  "sensor.4680_system_2_grid_exported",
-];
+function MonthlyCostChart({
+  costs,
+}: {
+  costs: GridCostLoadState;
+}) {
+  type MonthBar = {
+    key: string;
+    label: string;
+    cost: number;
+    isCurrent: boolean;
+    partial: boolean;
+  };
+  if (costs.loading && !costs.summary) {
+    return <GridCostMessage>Loading monthly grid costs…</GridCostMessage>;
+  }
+  if (costs.error || !costs.summary) {
+    return (
+      <GridCostMessage>
+        Monthly grid costs unavailable — {costs.error ?? "no statistics"}
+      </GridCostMessage>
+    );
+  }
 
-function MonthlyCostChart() {
-  type MonthBar = { key: string; label: string; cost: number; isCurrent: boolean };
-  const [bars, setBars] = useState<MonthBar[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      const start = new Date(Date.now() - 2 * 365 * 24 * 3600_000);
-      // Use hourly period so we can apply exact rate per HST hour — no blending needed
-      const [impRes, expRes] = await Promise.all([
-        haStatistics(STAT_IMPORT_IDS, "hour", start),
-        haStatistics(STAT_EXPORT_IDS, "hour", start),
-      ]);
-      if (cancelled) return;
-      if (!impRes.ok || !expRes.ok) {
-        setErr(!impRes.ok ? impRes.error : !expRes.ok ? expRes.error : "Unknown error");
-        setLoading(false);
-        return;
-      }
-
-      // costByMonth: accumulate exact $ cost per hourly bucket → sum by month key
-      const costMap = new Map<string, number>();
-
-      // Process all hourly import buckets
-      for (const pts of Object.values(impRes.data)) {
-        for (const pt of pts) {
-          const tMs = new Date(pt.start).getTime();
-          const hstHour = Math.floor(((tMs / 3600_000) - 10 + 240) % 24);
-          const rate = hstRate(hstHour);
-          const kwh = pt.change ?? 0;
-          // Month key in HST
-          const hstDate = new Date(tMs - 10 * 3600_000);
-          const mKey = `${hstDate.getUTCFullYear()}-${String(hstDate.getUTCMonth() + 1).padStart(2, "0")}`;
-          costMap.set(mKey, (costMap.get(mKey) ?? 0) + kwh * rate);
-        }
-      }
-
-      // Process all hourly export buckets — credit at sell rate
-      for (const pts of Object.values(expRes.data)) {
-        for (const pt of pts) {
-          const tMs = new Date(pt.start).getTime();
-          const kwh = pt.change ?? 0;
-          const hstDate = new Date(tMs - 10 * 3600_000);
-          const mKey = `${hstDate.getUTCFullYear()}-${String(hstDate.getUTCMonth() + 1).padStart(2, "0")}`;
-          costMap.set(mKey, (costMap.get(mKey) ?? 0) - kwh * GRID_RATES.sell);
-        }
-      }
-
-      // Current month key in HST (UTC-10)
-      const nowHst = new Date(Date.now() - 10 * 3600_000);
-      const curKey = `${nowHst.getUTCFullYear()}-${String(nowHst.getUTCMonth() + 1).padStart(2, "0")}`;
-
-      const allKeys = Array.from(costMap.keys()).sort();
-      const newBars: MonthBar[] = allKeys.map((key) => {
-        const cost = Math.max(0, costMap.get(key) ?? 0);
-        const [yr, mo] = key.split("-");
-        return {
-          key,
-          label: `${MONTH_NAMES[parseInt(mo) - 1]} '${yr.slice(2)}`,
-          cost,
-          isCurrent: key === curKey,
-        };
-      });
-
-      setBars(newBars);
-      setLoading(false);
-      setErr(null);
+  const { summary } = costs;
+  const bars: MonthBar[] = summary.monthlyCosts.map(({ key, cost, partial }) => {
+    const [yr, mo] = key.split("-");
+    return {
+      key,
+      label: `${MONTH_NAMES[parseInt(mo) - 1]} '${yr.slice(2)}`,
+      cost,
+      isCurrent: key === summary.currentMonthKey,
+      partial,
     };
-
-    load();
-    const id = window.setInterval(load, 5 * 60_000);
-    return () => { cancelled = true; window.clearInterval(id); };
-  }, []);
-
-  if (loading && bars.length === 0) {
-    return (
-      <div className="wall-tile rounded-2xl p-4 flex items-center justify-center" style={{ height: 200 }}>
-        <span className="text-sm text-[var(--cream-muted)]">Loading monthly costs…</span>
-      </div>
-    );
-  }
-
-  if (err && bars.length === 0) {
-    return (
-      <div className="wall-tile rounded-2xl p-4 flex items-center justify-center" style={{ height: 200 }}>
-        <span className="text-sm text-[var(--cream-muted)]">Monthly stats unavailable — {err}</span>
-      </div>
-    );
-  }
-
+  });
   const currentBar = bars.find((b) => b.isCurrent);
 
   return (
@@ -1359,12 +1392,28 @@ function MonthlyCostChart() {
             exact rate per hour · off $0.17 / mid $0.35 / peak $0.52 / sell $0.04
           </div>
           {currentBar && (
-            <div className="text-sm font-bold tabular-nums" style={{ color: "#c99a4a" }}>
-              ${currentBar.cost.toFixed(0)} this month
+            <div
+              className="text-sm font-bold tabular-nums"
+              style={{
+                color: currentBar.partial
+                  ? "#fbbf24"
+                  : currentBar.cost < 0
+                    ? "#4ade80"
+                    : "#c99a4a",
+              }}
+            >
+              {currentBar.partial ? "~" : ""}
+              {describeNetCost(currentBar.cost, 0)} this month
+              {currentBar.partial ? " · partial" : ""}
             </div>
           )}
         </div>
       </div>
+      {costs.warning && (
+        <div className="mb-2 text-[10px] text-amber-300">
+          Partial data — {costs.warning}
+        </div>
+      )}
       <ResponsiveContainer width="100%" height={180}>
         <BarChart data={bars} margin={{ top: 18, right: 4, left: 32, bottom: 0 }}>
           <XAxis
@@ -1375,7 +1424,9 @@ function MonthlyCostChart() {
           />
           <YAxis
             tickFormatter={(v: number) =>
-              v >= 1000 ? `$${(v / 1000).toFixed(1)}k` : `$${v.toFixed(0)}`
+              Math.abs(v) >= 1000
+                ? `${v < 0 ? "−" : ""}$${(Math.abs(v) / 1000).toFixed(1)}k`
+                : `${v < 0 ? "−" : ""}$${Math.abs(v).toFixed(0)}`
             }
             tick={{ fontSize: 10, fill: "var(--cream-muted)" }}
             tickLine={false}
@@ -1383,7 +1434,7 @@ function MonthlyCostChart() {
             width={36}
           />
           <Tooltip
-            formatter={(v: unknown) => [`$${(v as number).toFixed(2)}`, "Est. Cost"]}
+            formatter={(v: unknown) => [describeNetCost(v as number), "Grid"]}
             contentStyle={{
               background: "rgba(20,12,4,0.92)",
               border: "1px solid rgba(201,153,74,0.3)",
@@ -1395,26 +1446,45 @@ function MonthlyCostChart() {
             {bars.map((b) => (
               <Cell
                 key={b.key}
-                fill={b.isCurrent ? "#c99a4a" : "rgba(201,153,74,0.38)"}
+                fill={
+                  b.isCurrent
+                    ? b.partial
+                      ? "#fbbf24"
+                      : "#c99a4a"
+                    : b.partial
+                      ? "rgba(251,191,36,0.22)"
+                      : "rgba(201,153,74,0.38)"
+                }
               />
             ))}
             <LabelList
               dataKey="cost"
               position="top"
-              formatter={(v: number) => (v >= 1 ? `$${v.toFixed(0)}` : "")}
+              formatter={(v: number) =>
+                Math.abs(v) >= 1
+                  ? `${v < 0 ? "−" : ""}$${Math.abs(v).toFixed(0)}`
+                  : ""
+              }
               style={{ fontSize: 10, fill: "var(--cream-muted)" }}
             />
           </Bar>
         </BarChart>
       </ResponsiveContainer>
       <div className="text-[10px] text-[var(--cream-muted)] mt-1">
-        Bright bar = current month (still accumulating)
+        {currentBar
+          ? `Before today: ${describeNetCost(summary.beforeTodayCost)} · Today: ${describeNetCost(summary.todayCost)} · ${
+              currentBar.partial
+                ? "partial hourly data"
+                : "reconciled from the same hourly records"
+            }`
+          : "Bright bar = current month (still accumulating)"}
       </div>
     </div>
   );
 }
 
 function EnergyDashboard({ states }: { states: HAState[] }) {
+  const gridCosts = useGridCostStatistics();
   const get = (id: string) => states.find((s) => s.entity_id === id);
   const num = (id: string) => {
     const s = get(id);
@@ -1544,8 +1614,8 @@ function EnergyDashboard({ states }: { states: HAState[] }) {
         ))}
       </div>
       <NetGridChart />
-      <DollarFlowChart />
-      <MonthlyCostChart />
+      <DollarFlowChart costs={gridCosts} />
+      <MonthlyCostChart costs={gridCosts} />
     </motion.div>
   );
 }

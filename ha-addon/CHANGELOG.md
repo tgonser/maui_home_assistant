@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.65
+
+- **Fixed: impossible daily/monthly grid-cost totals** — “Today” previously
+  estimated cost from a rolling 24 hours of instantaneous grid power while the
+  monthly chart used Home Assistant's hourly imported/exported energy
+  statistics. Both charts now use the same hourly energy records, Hawaii
+  calendar boundaries, and rate schedule. The monthly footer reconciles
+  before-today cost/credit with today's cost, and missing or delayed statistics
+  are identified as partial data instead of producing a confident bad total.
+
 ## 1.0.64
 
 - **Fixed: misleading matrix footnote in Vacation mode** — The cooling matrix
