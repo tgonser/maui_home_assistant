@@ -209,24 +209,60 @@ export async function haWsBatch(
   if (!url || !token) {
     return { ok: false, results: [], error: "Not connected to Home Assistant" };
   }
+  const endpoint = `${getApiBase()}/api/ha/ws-batch`;
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), 70_000);
   try {
-    const res = await fetch(`${getApiBase()}/api/ha/ws-batch`, {
+    const res = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url, token, commands }),
+      signal: controller.signal,
     });
-    const json = await res.json();
+    const text = await res.text();
+    let json: {
+      ok?: boolean;
+      results?: HAWsResult[];
+      error?: string;
+      detail?: string;
+    };
+    try {
+      json = JSON.parse(text) as typeof json;
+    } catch {
+      return {
+        ok: false,
+        results: [],
+        error: `HA WebSocket proxy returned HTTP ${res.status} with a non-JSON response`,
+      };
+    }
+    if (!res.ok) {
+      return {
+        ok: false,
+        results: json.results ?? [],
+        error: `HA WebSocket proxy HTTP ${res.status}: ${
+          json.error ?? "request failed"
+        }${json.detail ? ` (${json.detail})` : ""}`,
+      };
+    }
     return {
       ok: !!json.ok,
-      results: (json.results as HAWsResult[]) ?? [],
-      error: json.error ? `${json.error}: ${json.detail ?? ""}` : undefined,
+      results: json.results ?? [],
+      error: json.error
+        ? `${json.error}${json.detail ? ` (${json.detail})` : ""}`
+        : undefined,
     };
   } catch (err) {
     return {
       ok: false,
       results: [],
-      error: err instanceof Error ? err.message : "Network error",
+      error: controller.signal.aborted
+        ? "HA WebSocket proxy timed out after 70 seconds"
+        : `HA WebSocket proxy request failed before a response${
+            err instanceof Error ? ` (${err.name}: ${err.message})` : ""
+          }`,
     };
+  } finally {
+    window.clearTimeout(timeoutId);
   }
 }
 

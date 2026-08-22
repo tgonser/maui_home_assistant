@@ -150,25 +150,49 @@ router.post("/ha/ws-batch", async (req, res) => {
 
   try {
     const ws = new WebSocket(wsUrl);
-    const overall = AbortSignal.timeout(60_000);
-    overall.addEventListener("abort", () => {
-      try {
-        ws.close();
-      } catch {
-        // ignore
-      }
-    });
 
     let nextId = 1;
     let authed = false;
     const pending = new Map<number, (r: Result) => void>();
 
     await new Promise<void>((resolve, reject) => {
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeoutId);
+        resolve();
+      };
+      const fail = (err: Error) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeoutId);
+        reject(err);
+      };
+      const timeoutId = setTimeout(() => {
+        fail(new Error("HA WebSocket command timed out after 60 seconds"));
+        try {
+          ws.close();
+        } catch {
+          // ignore
+        }
+      }, 60_000);
+
       ws.addEventListener("error", (e) => {
-        reject(new Error(`WS error: ${(e as ErrorEvent).message ?? "unknown"}`));
+        fail(new Error(`WS error: ${(e as ErrorEvent).message ?? "unknown"}`));
       });
       ws.addEventListener("close", () => {
-        if (!authed) reject(new Error("WS closed before auth"));
+        if (!authed) {
+          fail(new Error("WS closed before auth"));
+        } else if (pending.size > 0) {
+          fail(
+            new Error(
+              `HA WebSocket closed with ${pending.size} command${
+                pending.size === 1 ? "" : "s"
+              } still pending`,
+            ),
+          );
+        }
       });
       ws.addEventListener("message", async (ev) => {
         let msg: Record<string, unknown>;
@@ -182,7 +206,7 @@ router.post("/ha/ws-batch", async (req, res) => {
           return;
         }
         if (msg.type === "auth_invalid") {
-          reject(new Error("HA rejected token"));
+          fail(new Error("HA rejected token"));
           return;
         }
         if (msg.type === "auth_ok") {
@@ -198,12 +222,12 @@ router.post("/ha/ws-batch", async (req, res) => {
               results.push(result);
             }
           } catch (err) {
-            reject(err);
+            fail(err instanceof Error ? err : new Error("WS command failed"));
             return;
           } finally {
             ws.close();
           }
-          resolve();
+          finish();
           return;
         }
         if (msg.type === "result" && typeof msg.id === "number") {

@@ -20,6 +20,9 @@ export const GRID_STAT_IDS = [
   ...GRID_EXPORT_STAT_IDS,
 ] as const;
 
+export const GRID_HISTORY_LOOKBACK_MONTHS = 6;
+export const GRID_LIVE_STALE_AFTER_MS = 10 * 60_000;
+
 export type GridStatisticPoint = {
   start: string | number;
   end: string | number;
@@ -27,6 +30,22 @@ export type GridStatisticPoint = {
 };
 
 export type GridStatistics = Record<string, GridStatisticPoint[]>;
+
+export type GridStatisticsResult =
+  | { ok: true; data: GridStatistics }
+  | { ok: false; error: string };
+
+export type GridStatisticsSnapshot = {
+  data: GridStatistics | null;
+  lastAttemptMs: number | null;
+  lastSuccessMs: number | null;
+  error: string | null;
+};
+
+export type GridStatisticsWindow = {
+  startMs: number;
+  endMs: number;
+};
 
 export type DailyCostPoint = {
   t: number;
@@ -108,14 +127,174 @@ function hstHourStartMs(ms: number) {
   );
 }
 
-function hstMonthStartMs(monthKey: string) {
+export function hstMonthStartMs(monthKey: string) {
   const [year, month] = monthKey.split("-").map(Number);
   return Date.UTC(year, month - 1, 1) + HST_OFFSET_MS;
 }
 
-function nextHstMonthStartMs(monthKey: string) {
+export function nextHstMonthStartMs(monthKey: string) {
   const [year, month] = monthKey.split("-").map(Number);
   return Date.UTC(year, month, 1) + HST_OFFSET_MS;
+}
+
+export function hstCurrentMonthStartMs(ms: number) {
+  return hstMonthStartMs(hstMonthKey(ms));
+}
+
+function shiftHstCalendarMonths(ms: number, months: number) {
+  const d = hstDate(ms);
+  const targetMonthStart = Date.UTC(
+    d.getUTCFullYear(),
+    d.getUTCMonth() + months,
+    1,
+  );
+  const targetMonth = new Date(targetMonthStart);
+  const lastDay = new Date(
+    Date.UTC(
+      targetMonth.getUTCFullYear(),
+      targetMonth.getUTCMonth() + 1,
+      0,
+    ),
+  ).getUTCDate();
+  return (
+    Date.UTC(
+      targetMonth.getUTCFullYear(),
+      targetMonth.getUTCMonth(),
+      Math.min(d.getUTCDate(), lastDay),
+      d.getUTCHours(),
+      d.getUTCMinutes(),
+      d.getUTCSeconds(),
+      d.getUTCMilliseconds(),
+    ) + HST_OFFSET_MS
+  );
+}
+
+/**
+ * Returns month-bounded history requests ending at the current Hawaii month.
+ * The current month is intentionally excluded because it has its own small,
+ * frequently refreshed request.
+ */
+export function buildGridHistoryWindows(
+  nowMs: number,
+  lookbackMonths = GRID_HISTORY_LOOKBACK_MONTHS,
+): GridStatisticsWindow[] {
+  const historyEndMs = hstCurrentMonthStartMs(nowMs);
+  let cursor = shiftHstCalendarMonths(historyEndMs, -lookbackMonths);
+  const windows: GridStatisticsWindow[] = [];
+
+  while (cursor < historyEndMs) {
+    const endMs = Math.min(
+      nextHstMonthStartMs(hstMonthKey(cursor)),
+      historyEndMs,
+    );
+    if (endMs <= cursor) break;
+    windows.push({ startMs: cursor, endMs });
+    cursor = endMs;
+  }
+  return windows;
+}
+
+/**
+ * Merges recorder responses without double-counting exact copies that can
+ * occur at chunk boundaries. Conflicting records remain visible so the cost
+ * validator can flag the overlap instead of silently choosing one.
+ */
+export function mergeGridStatistics(
+  ...sources: Array<GridStatistics | null | undefined>
+): GridStatistics {
+  const merged: GridStatistics = {};
+  const seenById = new Map<string, Set<string>>();
+
+  for (const source of sources) {
+    if (!source) continue;
+    for (const [id, points] of Object.entries(source)) {
+      const target = (merged[id] ??= []);
+      const seen = seenById.get(id) ?? new Set<string>();
+      seenById.set(id, seen);
+      for (const point of points ?? []) {
+        const startMs = timestamp(point.start);
+        const endMs = timestamp(point.end);
+        const key = `${startMs ?? String(point.start)}:${
+          endMs ?? String(point.end)
+        }:${String(point.change)}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        target.push(point);
+      }
+    }
+  }
+
+  for (const points of Object.values(merged)) {
+    points.sort((a, b) => {
+      const aStart = timestamp(a.start) ?? Number.POSITIVE_INFINITY;
+      const bStart = timestamp(b.start) ?? Number.POSITIVE_INFINITY;
+      return aStart - bStart;
+    });
+  }
+  return merged;
+}
+
+export function gridStatisticsBefore(
+  statistics: GridStatistics,
+  endExclusiveMs: number,
+): GridStatistics {
+  return Object.fromEntries(
+    Object.entries(statistics).map(([id, points]) => [
+      id,
+      points.filter((point) => {
+        const startMs = timestamp(point.start);
+        return startMs !== null && startMs < endExclusiveMs;
+      }),
+    ]),
+  );
+}
+
+export function createGridStatisticsSnapshot(): GridStatisticsSnapshot {
+  return {
+    data: null,
+    lastAttemptMs: null,
+    lastSuccessMs: null,
+    error: null,
+  };
+}
+
+/**
+ * Retains the last successful recorder payload when a refresh fails. Callers
+ * can keep rendering that snapshot only when they also surface error/age as a
+ * stale partial state.
+ */
+export function applyGridStatisticsRefresh(
+  previous: GridStatisticsSnapshot,
+  result: GridStatisticsResult,
+  attemptedAtMs: number,
+  merge = false,
+): GridStatisticsSnapshot {
+  if (!result.ok) {
+    return {
+      ...previous,
+      lastAttemptMs: attemptedAtMs,
+      error: result.error,
+    };
+  }
+  return {
+    data:
+      merge && previous.data
+        ? mergeGridStatistics(previous.data, result.data)
+        : result.data,
+    lastAttemptMs: attemptedAtMs,
+    lastSuccessMs: attemptedAtMs,
+    error: null,
+  };
+}
+
+export function isGridStatisticsSnapshotStale(
+  snapshot: GridStatisticsSnapshot,
+  nowMs: number,
+  staleAfterMs = GRID_LIVE_STALE_AFTER_MS,
+) {
+  if (snapshot.error !== null || snapshot.lastSuccessMs === null) return true;
+  if (nowMs - snapshot.lastSuccessMs > staleAfterMs) return true;
+  return hstDayKey(nowMs) !== hstDayKey(snapshot.lastSuccessMs);
 }
 
 /**

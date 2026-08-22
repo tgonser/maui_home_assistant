@@ -2,9 +2,16 @@ import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from
 import { motion, AnimatePresence } from "framer-motion";
 import { useHAStore, haStates, haTest, haCameraImage, haCallService, haHistory, haStatistics, haAutoConnectIfAddon, type HAState } from "@/lib/ha";
 import {
+  applyGridStatisticsRefresh,
+  buildGridHistoryWindows,
   calculateGridCosts,
+  createGridStatisticsSnapshot,
   GRID_RATES,
   GRID_STAT_IDS,
+  gridStatisticsBefore,
+  hstCurrentMonthStartMs,
+  isGridStatisticsSnapshotStale,
+  mergeGridStatistics,
   type GridCostSummary,
 } from "@/lib/gridCost";
 import {
@@ -1114,69 +1121,184 @@ type GridCostLoadState = {
   loading: boolean;
   error: string | null;
   warning: string | null;
+  historyWarning: string | null;
+  historyLoading: boolean;
+  lastLiveSuccessMs: number | null;
 };
 
+const GRID_LIVE_REFRESH_MS = 5 * 60_000;
+const GRID_LIVE_RETRY_MS = 15 * 60_000;
+const GRID_HISTORY_RETRY_MS = 30 * 60_000;
+
+function formatRefreshAge(successMs: number | null, asOfMs: number) {
+  if (successMs === null) return "no successful refresh yet";
+  const minutes = Math.max(0, Math.floor((asOfMs - successMs) / 60_000));
+  if (minutes < 1) return "less than a minute ago";
+  if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+  const hours = Math.floor(minutes / 60);
+  return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+}
+
 function useGridCostStatistics(): GridCostLoadState {
-  const [result, setResult] = useState<GridCostLoadState>({
-    summary: null,
-    loading: true,
-    error: null,
-    warning: null,
-  });
+  const [live, setLive] = useState(createGridStatisticsSnapshot);
+  const [history, setHistory] = useState(createGridStatisticsSnapshot);
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [clockMs, setClockMs] = useState(Date.now);
+
+  useEffect(() => {
+    const id = window.setInterval(() => setClockMs(Date.now()), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
-    const load = async () => {
-      const now = new Date();
-      const start = new Date(now.getTime() - 2 * 365 * 24 * 3600_000);
+    let liveTimer: number | undefined;
+    let historyTimer: number | undefined;
+
+    const refreshLive = async () => {
+      const attemptedAtMs = Date.now();
+      const currentMonthStartMs = hstCurrentMonthStartMs(attemptedAtMs);
       const response = await haStatistics(
         [...GRID_STAT_IDS],
         "hour",
-        start,
-        now,
+        new Date(currentMonthStartMs),
+        new Date(attemptedAtMs),
       );
       if (cancelled) return;
-      if (!response.ok) {
-        setResult((previous) =>
-          previous.summary
+      setLive((previous) => {
+        const nextResponse =
+          response.ok && previous.data
             ? {
-                ...previous,
-                loading: false,
-                warning: `Hourly statistics refresh failed: ${response.error}`,
+                ok: true as const,
+                data: mergeGridStatistics(
+                  gridStatisticsBefore(
+                    previous.data,
+                    currentMonthStartMs,
+                  ),
+                  response.data,
+                ),
               }
-            : {
-                summary: null,
-                loading: false,
-                error: response.error,
-                warning: null,
-              },
+            : response;
+        return applyGridStatisticsRefresh(
+          previous,
+          nextResponse,
+          attemptedAtMs,
         );
-        return;
-      }
-
-      const summary = calculateGridCosts(response.data, now.getTime());
-      const warnings = [...summary.dataIssues];
-      if (summary.latestBucketEndMs === null) {
-        warnings.push("No hourly grid-energy statistics were returned");
-      }
-
-      setResult({
-        summary,
-        loading: false,
-        error: null,
-        warning: warnings.length > 0 ? warnings.join(" · ") : null,
       });
+      liveTimer = window.setTimeout(
+        refreshLive,
+        response.ok ? GRID_LIVE_REFRESH_MS : GRID_LIVE_RETRY_MS,
+      );
     };
 
-    void load();
-    const id = window.setInterval(load, 5 * 60_000);
+    const refreshHistory = async () => {
+      setHistoryLoading(true);
+      let failed = false;
+      for (const window of buildGridHistoryWindows(Date.now())) {
+        const attemptedAtMs = Date.now();
+        const response = await haStatistics(
+          [...GRID_STAT_IDS],
+          "hour",
+          new Date(window.startMs),
+          new Date(window.endMs),
+        );
+        if (cancelled) return;
+        setHistory((previous) =>
+          applyGridStatisticsRefresh(
+            previous,
+            response,
+            attemptedAtMs,
+            true,
+          ),
+        );
+        if (!response.ok) {
+          failed = true;
+          break;
+        }
+      }
+      if (cancelled) return;
+      setHistoryLoading(false);
+      if (failed) {
+        historyTimer = window.setTimeout(
+          refreshHistory,
+          GRID_HISTORY_RETRY_MS,
+        );
+      }
+    };
+
+    void (async () => {
+      await refreshLive();
+      if (!cancelled) await refreshHistory();
+    })();
+
     return () => {
       cancelled = true;
-      window.clearInterval(id);
+      if (liveTimer !== undefined) window.clearTimeout(liveTimer);
+      if (historyTimer !== undefined) window.clearTimeout(historyTimer);
     };
   }, []);
 
-  return result;
+  return useMemo(() => {
+    if (!live.data) {
+      return {
+        summary: null,
+        loading: live.lastAttemptMs === null,
+        error: live.error,
+        warning: null,
+        historyWarning: history.error,
+        historyLoading,
+        lastLiveSuccessMs: live.lastSuccessMs,
+      };
+    }
+
+    const nowMs = clockMs;
+    const combined = mergeGridStatistics(history.data, live.data);
+    const calculated = calculateGridCosts(combined, nowMs);
+    const liveIsStale = isGridStatisticsSnapshotStale(live, nowMs);
+    const summary: GridCostSummary = liveIsStale
+      ? {
+          ...calculated,
+          isTodayComplete: false,
+          isCurrentMonthComplete: false,
+          monthlyCosts: calculated.monthlyCosts.map((month) =>
+            month.key === calculated.currentMonthKey
+              ? { ...month, partial: true }
+              : month,
+          ),
+        }
+      : calculated;
+    const liveWarnings = [...summary.dataIssues];
+    if (summary.latestBucketEndMs === null) {
+      liveWarnings.push("No hourly grid-energy statistics were returned");
+    }
+    if (live.error) {
+      liveWarnings.unshift(
+        `Live hourly refresh failed at the HA proxy: ${live.error}; last successful refresh ${formatRefreshAge(
+          live.lastSuccessMs,
+          nowMs,
+        )}`,
+      );
+    } else if (liveIsStale) {
+      liveWarnings.unshift(
+        `Live hourly snapshot is stale; last successful refresh ${formatRefreshAge(
+          live.lastSuccessMs,
+          nowMs,
+        )}`,
+      );
+    }
+
+    return {
+      summary,
+      loading: false,
+      error: null,
+      warning: liveWarnings.length > 0 ? liveWarnings.join(" · ") : null,
+      historyWarning: history.error
+        ? `Earlier-month history is incomplete: ${history.error}`
+        : null,
+      historyLoading,
+      lastLiveSuccessMs: live.lastSuccessMs,
+    };
+  }, [clockMs, history, historyLoading, live]);
 }
 
 const hstTimeFormatter = new Intl.DateTimeFormat("en-US", {
@@ -1384,6 +1506,9 @@ function MonthlyCostChart({
     };
   });
   const currentBar = bars.find((b) => b.isCurrent);
+  const monthlyWarning = [costs.warning, costs.historyWarning]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <div className="wall-tile rounded-2xl p-4">
@@ -1411,9 +1536,14 @@ function MonthlyCostChart({
           )}
         </div>
       </div>
-      {costs.warning && (
+      {monthlyWarning && (
         <div className="mb-2 text-[10px] text-amber-300">
-          Partial data — {costs.warning}
+          Partial data — {monthlyWarning}
+        </div>
+      )}
+      {costs.historyLoading && (
+        <div className="mb-2 text-[10px] text-[var(--cream-muted)]">
+          Loading earlier months in small background chunks…
         </div>
       )}
       <ResponsiveContainer width="100%" height={180}>

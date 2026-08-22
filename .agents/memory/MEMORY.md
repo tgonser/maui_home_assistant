@@ -10,3 +10,4 @@
 - [HA UI automation paste](ha-ui-automation-paste.md) — copy-paste automation YAML must omit `id:` or the UI editor refuses to save ("Only automations in automations.yaml are editable")
 - [HA camera motion-row naming](ha-camera-motion-sibling-naming.md) — motion→camera name lookup must honor the camera's kiosk alias AND skip UniFi secondary stream entities (high/low-res channel), or rows show raw "G6 … High resolution" names
 - [Tempest/WeatherFlow multi-site HA outage](tempest-weatherflow-ha-outage.md) — simultaneous "unavailable" across the 3 HA properties = HA-side library/version bug or shared cloud token, never local network; HA 2026.3.x crashes in Tempest's own dew point calc and recurs after restart
+- [HA kiosk recorder statistics](ha-kiosk-recorder-statistics.md) — poll only the live Hawaii month; chunk history once, dedupe boundaries, and expire snapshots by wall time/day rollover

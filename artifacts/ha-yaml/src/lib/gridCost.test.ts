@@ -1,11 +1,18 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  applyGridStatisticsRefresh,
+  buildGridHistoryWindows,
   calculateGridCosts,
+  createGridStatisticsSnapshot,
   GRID_EXPORT_STAT_IDS,
   GRID_IMPORT_STAT_IDS,
+  GRID_LIVE_STALE_AFTER_MS,
   GRID_RATES,
+  gridStatisticsBefore,
+  mergeGridStatistics,
   hstRate,
+  isGridStatisticsSnapshotStale,
   type GridStatistics,
 } from "./gridCost.ts";
 
@@ -207,4 +214,142 @@ test("rejects overlapping different-start intervals and marks totals partial", (
   assert.equal(result.invalidPointCount, 1);
   assert.equal(result.isTodayComplete, false);
   assert.equal(result.isCurrentMonthComplete, false);
+});
+
+test("builds six months of bounded history without including the live month", () => {
+  const now = new Date("2026-08-22T22:30:00.000Z").getTime();
+  const windows = buildGridHistoryWindows(now);
+
+  assert.equal(windows.length, 6);
+  assert.equal(
+    new Date(windows[0].startMs).toISOString(),
+    "2026-02-01T10:00:00.000Z",
+  );
+  assert.equal(
+    new Date(windows.at(-1)?.endMs ?? 0).toISOString(),
+    "2026-08-01T10:00:00.000Z",
+  );
+  for (let i = 1; i < windows.length; i += 1) {
+    assert.equal(windows[i - 1].endMs, windows[i].startMs);
+  }
+  assert.ok(windows.every((window) => window.endMs <= now));
+});
+
+test("builds the six-month history correctly across a year boundary", () => {
+  const now = new Date("2026-02-15T20:00:00.000Z").getTime();
+  const windows = buildGridHistoryWindows(now);
+
+  assert.equal(
+    new Date(windows[0].startMs).toISOString(),
+    "2025-08-01T10:00:00.000Z",
+  );
+  assert.equal(
+    new Date(windows.at(-1)?.endMs ?? 0).toISOString(),
+    "2026-02-01T10:00:00.000Z",
+  );
+});
+
+test("merges chunk boundaries without double-counting exact records", () => {
+  const duplicate = hour("2026-08-19T20:00:00.000Z", 2);
+  const first: GridStatistics = {
+    [GRID_IMPORT_STAT_IDS[0]]: [duplicate],
+  };
+  const second: GridStatistics = {
+    [GRID_IMPORT_STAT_IDS[0]]: [
+      { ...duplicate },
+      hour("2026-08-19T21:00:00.000Z", 3),
+    ],
+  };
+
+  const merged = mergeGridStatistics(first, second);
+
+  assert.equal(merged[GRID_IMPORT_STAT_IDS[0]].length, 2);
+  const result = calculateGridCosts(
+    merged,
+    new Date("2026-08-19T23:00:00.000Z").getTime(),
+  );
+  assert.equal(result.todayCost, 5 * GRID_RATES.offPeak);
+});
+
+test("retains the last successful snapshot after a failed refresh", () => {
+  const payload: GridStatistics = {
+    [GRID_IMPORT_STAT_IDS[0]]: [
+      hour("2026-08-19T20:00:00.000Z", 2),
+    ],
+  };
+  const successAt = new Date("2026-08-19T22:00:00.000Z").getTime();
+  const failedAt = successAt + 5 * 60_000;
+  const successful = applyGridStatisticsRefresh(
+    createGridStatisticsSnapshot(),
+    { ok: true, data: payload },
+    successAt,
+  );
+  const stale = applyGridStatisticsRefresh(
+    successful,
+    { ok: false, error: "HA WebSocket proxy timed out" },
+    failedAt,
+  );
+
+  assert.strictEqual(stale.data, successful.data);
+  assert.equal(stale.lastSuccessMs, successAt);
+  assert.equal(stale.lastAttemptMs, failedAt);
+  assert.equal(stale.error, "HA WebSocket proxy timed out");
+});
+
+test("replaces the live month while retaining the completed prior month", () => {
+  const july = hour("2026-07-31T20:00:00.000Z", 1);
+  const staleAugust = hour("2026-08-01T20:00:00.000Z", 99);
+  const freshAugust = hour("2026-08-01T20:00:00.000Z", 2);
+  const previous: GridStatistics = {
+    [GRID_IMPORT_STAT_IDS[0]]: [july, staleAugust],
+  };
+  const augustStart = new Date("2026-08-01T10:00:00.000Z").getTime();
+  const replaced = mergeGridStatistics(
+    gridStatisticsBefore(previous, augustStart),
+    { [GRID_IMPORT_STAT_IDS[0]]: [freshAugust] },
+  );
+
+  assert.deepEqual(replaced[GRID_IMPORT_STAT_IDS[0]], [
+    july,
+    freshAugust,
+  ]);
+});
+
+test("expires a live snapshot after the refresh SLA or Hawaii midnight", () => {
+  const successAt = new Date("2026-08-20T08:00:00.000Z").getTime();
+  const snapshot = applyGridStatisticsRefresh(
+    createGridStatisticsSnapshot(),
+    { ok: true, data: completeStats() },
+    successAt,
+  );
+
+  assert.equal(
+    isGridStatisticsSnapshotStale(
+      snapshot,
+      successAt + GRID_LIVE_STALE_AFTER_MS,
+    ),
+    false,
+  );
+  assert.equal(
+    isGridStatisticsSnapshotStale(
+      snapshot,
+      successAt + GRID_LIVE_STALE_AFTER_MS + 1,
+    ),
+    true,
+  );
+
+  const beforeMidnightHst = new Date("2026-09-01T09:59:00.000Z").getTime();
+  const afterMidnightHst = new Date("2026-09-01T10:01:00.000Z").getTime();
+  const rolloverSnapshot = applyGridStatisticsRefresh(
+    createGridStatisticsSnapshot(),
+    { ok: true, data: completeStats() },
+    beforeMidnightHst,
+  );
+  assert.equal(
+    isGridStatisticsSnapshotStale(
+      rolloverSnapshot,
+      afterMidnightHst,
+    ),
+    true,
+  );
 });

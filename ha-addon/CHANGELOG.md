@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.66
+
+- **Fixed: energy-cost refresh overloaded Home Assistant** — The kiosk no
+  longer requests two years of hourly data for four grid sensors every five
+  minutes. Hawaii today/current month now use a small live request, while the
+  system's six months of available history load once in month-sized background
+  chunks. Failed live refreshes retain the last snapshot only as an explicitly
+  partial value with its age, retries back off, and proxy/timeout failures now
+  identify the failing layer instead of only saying “Load failed.”
+
 ## 1.0.65
 
 - **Fixed: impossible daily/monthly grid-cost totals** — “Today” previously
