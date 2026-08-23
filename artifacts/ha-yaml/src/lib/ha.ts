@@ -304,6 +304,108 @@ export async function haCallService(
   });
 }
 
+export type StormPrepSecurityState = {
+  pinConfigured: boolean;
+  secureTransport: boolean;
+  unlocked: boolean;
+  expiresAt: string | null;
+};
+
+export async function haStormPrepSecurity(): Promise<
+  | { ok: true; data: StormPrepSecurityState }
+  | { ok: false; error: string }
+> {
+  try {
+    const response = await fetch(
+      `${getApiBase()}/api/ha/storm-prep/security`,
+      {
+        credentials: "same-origin",
+        cache: "no-store",
+      },
+    );
+    const data = (await response.json()) as
+      | StormPrepSecurityState
+      | { error?: string };
+    if (!response.ok) {
+      return {
+        ok: false,
+        error:
+          "error" in data && data.error
+            ? data.error
+            : "Could not check storm-prep security",
+      };
+    }
+    const state = data as StormPrepSecurityState;
+    return {
+      ok: true,
+      data: {
+        ...state,
+        secureTransport:
+          state.secureTransport === true &&
+          (typeof window === "undefined" || window.isSecureContext),
+        unlocked:
+          state.unlocked === true &&
+          state.secureTransport === true &&
+          (typeof window === "undefined" || window.isSecureContext),
+      },
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : "Security check failed",
+    };
+  }
+}
+
+export async function haUnlockStormPrep(
+  pin: string,
+): Promise<
+  | { ok: true; data: StormPrepSecurityState }
+  | { ok: false; error: string }
+> {
+  try {
+    const response = await fetch(
+      `${getApiBase()}/api/ha/storm-prep/unlock`,
+      {
+        method: "POST",
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin }),
+      },
+    );
+    const result = (await response.json()) as {
+      ok?: boolean;
+      unlocked?: boolean;
+      secureTransport?: boolean;
+      expiresAt?: string | null;
+      error?: string;
+    };
+    if (!response.ok || !result.ok) {
+      return {
+        ok: false,
+        error: result.error ?? "Homeowner PIN unlock failed",
+      };
+    }
+    return {
+      ok: true,
+      data: {
+        pinConfigured: true,
+        secureTransport:
+          result.secureTransport === true &&
+          (typeof window === "undefined" || window.isSecureContext),
+        unlocked: result.unlocked === true,
+        expiresAt: result.expiresAt ?? null,
+      },
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : "PIN unlock failed",
+    };
+  }
+}
+
 export type HAStatisticPoint = {
   statistic_id: string;
   start: string;

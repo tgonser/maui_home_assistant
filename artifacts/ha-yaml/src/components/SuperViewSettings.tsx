@@ -4,6 +4,7 @@ import { persist } from "zustand/middleware";
 import { X, Search, Check } from "lucide-react";
 import type { HAState } from "@/lib/ha";
 import { CoolingMatrix } from "./CoolingMatrix";
+import { StormPrepSettings } from "./StormPrepSettings";
 
 export type SuperViewSlot =
   | "weather"
@@ -253,11 +254,13 @@ function EntityPicker({
 // Shared settings content: the cooling matrix editor plus the Super View
 // entity pickers. Rendered both in the "Pick entities" popover on the front
 // page and as the top-level Settings tab.
-export function SettingsPanelBody({ states }: { states: HAState[] }) {
+export function SettingsPanelBody({ states, onChanged }: { states: HAState[], onChanged?: () => void }) {
   const { overrides, setOverride, reset } = useSuperViewOverrides();
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 pb-10">
       <CoolingMatrix states={states} />
+      <div className="border-t border-stone-800" />
+      <StormPrepSettings states={states} onChanged={() => onChanged?.()} />
       <div className="border-t border-stone-800" />
       <div className="text-xs uppercase tracking-wider text-stone-300">
         Super View entities
@@ -291,10 +294,12 @@ export function SuperViewSettings({
   open,
   onClose,
   states,
+  onChanged,
 }: {
   open: boolean;
   onClose: () => void;
   states: HAState[];
+  onChanged?: () => void;
 }) {
   if (!open) return null;
   return (
@@ -325,7 +330,7 @@ export function SuperViewSettings({
           </button>
         </div>
         <div className="p-6 space-y-5">
-          <SettingsPanelBody states={states} />
+          <SettingsPanelBody states={states} onChanged={onChanged} />
           <div className="flex justify-end">
             <button
               onClick={onClose}

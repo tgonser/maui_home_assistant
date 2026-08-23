@@ -2780,10 +2780,10 @@ export function Wall() {
           <AnimatePresence mode="popLayout">
             {active === "settings" ? (
               <div key="settings" className="max-w-2xl">
-                <SettingsPanelBody states={states} />
+                <SettingsPanelBody states={states} onChanged={refresh} />
               </div>
             ) : active === "overview" ? (
-              <SuperView key="super" states={states} onOpen={setOpenEntity} />
+              <SuperView key="super" states={states} onOpen={setOpenEntity} onChanged={refresh} />
             ) : active === "rooms" ? (
               <RoomsView key="rooms" states={states} refresh={refresh} />
             ) : active === "covers" ? (

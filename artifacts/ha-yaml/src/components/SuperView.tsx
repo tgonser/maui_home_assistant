@@ -47,6 +47,7 @@ import {
   useSuperViewOverrides,
   type SuperViewSlot,
 } from "./SuperViewSettings";
+import { StormPrepTile } from "./StormPrepTile";
 import { useEntityAliases } from "@/lib/entityAliases";
 import {
   friendlyName as friendlyName_,
@@ -1244,9 +1245,11 @@ function AtriumTvRemote({ states }: { states: HAState[] }) {
 export function SuperView({
   states,
   onOpen,
+  onChanged,
 }: {
   states: HAState[];
   onOpen?: (s: HAState) => void;
+  onChanged?: () => void;
 }) {
   const stats = useMemo(
     () => ({
@@ -1269,6 +1272,7 @@ export function SuperView({
         </button>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 auto-rows-[160px] gap-4">
+        <StormPrepTile states={states} onChanged={onChanged} />
         <HouseStatusTile states={states} />
         <WeatherTile states={states} />
         <LightsCount states={states} />
@@ -1284,6 +1288,7 @@ export function SuperView({
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
         states={states}
+        onChanged={onChanged}
       />
     </div>
   );

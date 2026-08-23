@@ -1,0 +1,1244 @@
+# =============================================================================
+# Maui Battery Storm Prep — approval-first severe weather preparation
+# =============================================================================
+# Install this as a Home Assistant package. It NEVER changes a battery setting
+# from weather alone. Forecast/alert risk only creates an approval request.
+# A selected writable control is validated again at approval time, its previous
+# value is saved, and it is restored when prep ends or expires.
+#
+# The Wall Kiosk discovers these helpers automatically and provides the setup,
+# approve/decline, manual request, active-state, and end controls.
+# =============================================================================
+
+input_text:
+  maui_storm_prep_weather_entity:
+    name: Storm Prep — weather entity
+    max: 255
+    icon: mdi:weather-cloudy-alert
+  maui_storm_prep_alert_entity:
+    name: Storm Prep — official alert entity (optional)
+    max: 255
+    icon: mdi:alert
+  maui_storm_prep_notify_service:
+    name: Storm Prep — mobile notify service (optional)
+    max: 255
+    icon: mdi:cellphone-message
+  maui_storm_prep_control_entity:
+    name: Storm Prep — approved battery control
+    max: 255
+    icon: mdi:battery-cog
+  maui_storm_prep_verified_control:
+    name: Storm Prep — homeowner-verified battery control
+    max: 255
+    icon: mdi:shield-check
+  maui_storm_prep_control_value:
+    name: Storm Prep — target value
+    max: 255
+    icon: mdi:target
+  maui_storm_prep_requested_control:
+    name: Storm Prep — requested battery control snapshot
+    max: 255
+    icon: mdi:shield-lock
+  maui_storm_prep_requested_value:
+    name: Storm Prep — requested target snapshot
+    max: 255
+    icon: mdi:shield-lock
+  maui_storm_prep_requested_domain:
+    name: Storm Prep — requested domain snapshot
+    max: 255
+    icon: mdi:shield-lock
+  maui_storm_prep_previous_entity:
+    name: Storm Prep — previous control entity
+    max: 255
+    icon: mdi:backup-restore
+  maui_storm_prep_previous_value:
+    name: Storm Prep — previous control value
+    max: 255
+    icon: mdi:backup-restore
+  maui_storm_prep_reason:
+    name: Storm Prep — risk reason
+    max: 255
+    icon: mdi:weather-hurricane
+  maui_storm_prep_forecast_window:
+    name: Storm Prep — forecast window
+    max: 255
+    icon: mdi:calendar-range
+  maui_storm_prep_trigger_source:
+    name: Storm Prep — trigger source
+    max: 255
+    icon: mdi:source-branch
+  maui_storm_prep_last_result:
+    name: Storm Prep — last result
+    max: 255
+    icon: mdi:history
+  maui_storm_prep_approval_token:
+    name: Storm Prep — approval token
+    max: 255
+    icon: mdi:key-clock
+
+input_number:
+  maui_storm_prep_rain_threshold:
+    name: Storm Prep — 3-day rain threshold
+    min: 0.5
+    max: 8
+    step: 0.1
+    unit_of_measurement: "in"
+    mode: box
+    icon: mdi:weather-pouring
+  maui_storm_prep_low_sun_days:
+    name: Storm Prep — low-sun days required
+    min: 2
+    max: 3
+    step: 1
+    mode: slider
+    icon: mdi:weather-cloudy
+  maui_storm_prep_duration_hours:
+    name: Storm Prep — active duration
+    min: 24
+    max: 120
+    step: 6
+    unit_of_measurement: "h"
+    mode: box
+    icon: mdi:timer-sand
+  maui_storm_prep_requested_duration_hours:
+    name: Storm Prep — requested duration snapshot
+    min: 24
+    max: 120
+    step: 6
+    unit_of_measurement: "h"
+    mode: box
+    icon: mdi:shield-lock
+
+input_boolean:
+  maui_storm_prep_risk_detected:
+    name: Maui Storm Prep Risk Detected
+    icon: mdi:weather-hurricane
+  maui_storm_prep_pending:
+    name: Maui Storm Prep Approval Pending
+    icon: mdi:account-clock
+  maui_storm_prep_active:
+    name: Maui Storm Prep Active
+    icon: mdi:battery-charging-high
+  maui_storm_prep_declined:
+    name: Maui Storm Prep Declined For Current Risk
+    icon: mdi:shield-off-outline
+  maui_storm_prep_recovery_required:
+    name: Maui Storm Prep Recovery Required
+    icon: mdi:backup-restore
+  maui_storm_prep_restore_failed:
+    name: Maui Storm Prep Restore Failed
+    icon: mdi:alert-circle
+
+input_datetime:
+  maui_storm_prep_approval_expires_at:
+    name: Maui Storm Prep Approval Expires At
+    has_date: true
+    has_time: true
+    icon: mdi:timer-alert
+  maui_storm_prep_review_at:
+    name: Maui Storm Prep Review At
+    has_date: true
+    has_time: true
+    icon: mdi:calendar-clock
+
+timer:
+  maui_storm_prep_active:
+    name: Maui Storm Prep Active Window
+    duration: "48:00:00"
+    restore: true
+
+template:
+  - binary_sensor:
+      - name: Maui Storm Prep Risk
+        unique_id: maui_storm_prep_risk
+        device_class: safety
+        icon: mdi:weather-hurricane
+        state: "{{ is_state('input_boolean.maui_storm_prep_risk_detected', 'on') }}"
+        attributes:
+          reason: "{{ states('input_text.maui_storm_prep_reason') }}"
+          forecast_window: "{{ states('input_text.maui_storm_prep_forecast_window') }}"
+          trigger_source: "{{ states('input_text.maui_storm_prep_trigger_source') }}"
+
+  - sensor:
+      - name: Maui Storm Prep Status
+        unique_id: maui_storm_prep_status
+        icon: mdi:battery-heart-variant
+        state: >-
+          {% if is_state('input_boolean.maui_storm_prep_restore_failed', 'on') %}
+            restore_failed
+          {% elif is_state('input_boolean.maui_storm_prep_recovery_required', 'on')
+                and not is_state('input_boolean.maui_storm_prep_active', 'on') %}
+            recovery_required
+          {% elif is_state('input_boolean.maui_storm_prep_active', 'on') %}
+            active
+          {% elif is_state('input_boolean.maui_storm_prep_pending', 'on') %}
+            approval_required
+          {% elif states('input_text.maui_storm_prep_control_entity') | trim == '' %}
+            not_configured
+          {% elif 'failed' in states('input_text.maui_storm_prep_last_result') | lower %}
+            action_failed
+          {% elif is_state('input_boolean.maui_storm_prep_risk_detected', 'on') %}
+            risk_detected
+          {% else %}
+            idle
+          {% endif %}
+        attributes:
+          reason: "{{ states('input_text.maui_storm_prep_reason') }}"
+          forecast_window: "{{ states('input_text.maui_storm_prep_forecast_window') }}"
+          trigger_source: "{{ states('input_text.maui_storm_prep_trigger_source') }}"
+          control_entity: >-
+            {% if is_state('input_boolean.maui_storm_prep_pending', 'on') %}
+              {{ states('input_text.maui_storm_prep_requested_control') }}
+            {% else %}
+              {{ states('input_text.maui_storm_prep_control_entity') }}
+            {% endif %}
+          target_value: >-
+            {% if is_state('input_boolean.maui_storm_prep_pending', 'on') %}
+              {{ states('input_text.maui_storm_prep_requested_value') }}
+            {% else %}
+              {{ states('input_text.maui_storm_prep_control_value') }}
+            {% endif %}
+          duration_hours: >-
+            {% if is_state('input_boolean.maui_storm_prep_pending', 'on')
+                  or is_state('input_boolean.maui_storm_prep_active', 'on')
+                  or is_state('input_boolean.maui_storm_prep_recovery_required', 'on') %}
+              {{ states('input_number.maui_storm_prep_requested_duration_hours') }}
+            {% else %}
+              {{ states('input_number.maui_storm_prep_duration_hours') }}
+            {% endif %}
+          last_result: "{{ states('input_text.maui_storm_prep_last_result') }}"
+          review_at: "{{ states('input_datetime.maui_storm_prep_review_at') }}"
+          approval_expires_at: "{{ states('input_datetime.maui_storm_prep_approval_expires_at') }}"
+          approval_token: "{{ states('input_text.maui_storm_prep_approval_token') }}"
+          approval_valid: >-
+            {{ is_state('input_boolean.maui_storm_prep_pending', 'on')
+               and states('input_text.maui_storm_prep_approval_token') | trim != ''
+               and as_timestamp(states('input_datetime.maui_storm_prep_approval_expires_at'), 0)
+                   > as_timestamp(now()) }}
+          recovery_required: "{{ is_state('input_boolean.maui_storm_prep_recovery_required', 'on') }}"
+          restore_failed: "{{ is_state('input_boolean.maui_storm_prep_restore_failed', 'on') }}"
+          config_valid: >-
+            {% set entity = states('input_text.maui_storm_prep_control_entity') | trim %}
+            {% set verified = states('input_text.maui_storm_prep_verified_control') | trim %}
+            {% set target = states('input_text.maui_storm_prep_control_value') | trim %}
+            {% set domain = entity.split('.')[0] if '.' in entity else '' %}
+            {% set friendly = state_attr(entity, 'friendly_name') | default('', true) | lower %}
+            {% set words = (entity | lower) ~ ' ' ~ friendly %}
+            {% set identity = 'powerwall' in words or 'battery' in words
+                 or 'backup' in words or '4680' in words or 'gonser' in words
+                 or 'enphase' in words or 'solaredge' in words
+                 or 'span' in words or 'storage' in words
+                 or 'energy gateway' in words or 'energy_gateway' in words %}
+            {% set available = entity != '' and states(entity) not in
+                 ['unknown', 'unavailable', 'none', ''] %}
+            {% if domain == 'number' %}
+              {% set value = target | float(None) %}
+              {% set minimum = state_attr(entity, 'min') | float(0) %}
+              {% set maximum = state_attr(entity, 'max') | float(100) %}
+              {{ entity == verified and available and identity
+                 and ('reserve' in words or 'backup' in words)
+                 and state_attr(entity, 'unit_of_measurement') == '%'
+                 and value is not none and minimum <= value <= maximum }}
+            {% elif domain == 'select' %}
+              {% set options = state_attr(entity, 'options') or [] %}
+              {{ entity == verified and available and identity and target in options
+                 and ('mode' in words or 'operation' in words
+                      or 'reserve' in words or 'backup' in words) }}
+            {% elif domain == 'switch' %}
+              {% set storm_watch = 'storm_watch' in words or 'storm watch' in words %}
+              {% set grid_charge = 'grid_charg' in words or 'grid charg' in words %}
+              {{ entity == verified and available and identity
+                 and (storm_watch or grid_charge)
+                 and target | lower in ['', 'on'] }}
+            {% else %}
+              false
+            {% endif %}
+          proposed_action: >-
+            {% set pending = is_state('input_boolean.maui_storm_prep_pending', 'on') %}
+            {% set entity = states('input_text.maui_storm_prep_requested_control') | trim
+                 if pending else states('input_text.maui_storm_prep_control_entity') | trim %}
+            {% set target = states('input_text.maui_storm_prep_requested_value') | trim
+                 if pending else states('input_text.maui_storm_prep_control_value') | trim %}
+            {% set name = state_attr(entity, 'friendly_name') | default(entity, true) %}
+            {% set domain = entity.split('.')[0] if '.' in entity else '' %}
+            {% if domain == 'number' %}
+              Raise {{ name }} to {{ target }}%
+            {% elif domain == 'select' %}
+              Set {{ name }} to “{{ target }}”
+            {% elif domain == 'switch' %}
+              Enable {{ name }}
+            {% else %}
+              No verified battery action configured
+            {% endif %}
+
+script:
+  maui_storm_prep_request:
+    alias: Maui Storm Prep — Request Approval
+    description: Creates an approval request without changing any battery control.
+    mode: single
+    fields:
+      reason:
+        description: Why preparation is being recommended.
+      forecast_window:
+        description: Forecast period associated with the risk.
+      trigger_source:
+        description: Official alert, forecast, or manual.
+    sequence:
+      - variables:
+          request_reason: >-
+            {{ reason | default(states('input_text.maui_storm_prep_reason'), true)
+               | default('Storm preparation requested', true) }}
+          request_window: >-
+            {{ forecast_window
+               | default(states('input_text.maui_storm_prep_forecast_window'), true)
+               | default('Review current conditions', true) }}
+          request_source: "{{ trigger_source | default('forecast', true) }}"
+          configured: "{{ state_attr('sensor.maui_storm_prep_status', 'config_valid') | bool(false) }}"
+          requested_control: "{{ states('input_text.maui_storm_prep_control_entity') | trim }}"
+          requested_value: "{{ states('input_text.maui_storm_prep_control_value') | trim }}"
+          requested_domain: >-
+            {% set entity = states('input_text.maui_storm_prep_control_entity') | trim %}
+            {{ entity.split('.')[0] if '.' in entity else '' }}
+          requested_duration_hours: "{{ states('input_number.maui_storm_prep_duration_hours') | int(48) }}"
+          request_token: "{{ context.id }}"
+          approval_hours: 12
+      - if:
+          - condition: template
+            value_template: "{{ configured | bool }}"
+          - condition: state
+            entity_id: input_boolean.maui_storm_prep_active
+            state: "off"
+          - condition: state
+            entity_id: input_boolean.maui_storm_prep_recovery_required
+            state: "off"
+          - condition: state
+            entity_id: input_boolean.maui_storm_prep_pending
+            state: "off"
+        then:
+          - action: input_text.set_value
+            target:
+              entity_id: input_text.maui_storm_prep_requested_control
+            data:
+              value: "{{ requested_control }}"
+          - action: input_text.set_value
+            target:
+              entity_id: input_text.maui_storm_prep_requested_value
+            data:
+              value: "{{ requested_value }}"
+          - action: input_text.set_value
+            target:
+              entity_id: input_text.maui_storm_prep_requested_domain
+            data:
+              value: "{{ requested_domain }}"
+          - action: input_number.set_value
+            target:
+              entity_id: input_number.maui_storm_prep_requested_duration_hours
+            data:
+              value: "{{ requested_duration_hours }}"
+          - action: input_text.set_value
+            target:
+              entity_id: input_text.maui_storm_prep_reason
+            data:
+              value: "{{ request_reason }}"
+          - action: input_text.set_value
+            target:
+              entity_id: input_text.maui_storm_prep_forecast_window
+            data:
+              value: "{{ request_window }}"
+          - action: input_text.set_value
+            target:
+              entity_id: input_text.maui_storm_prep_trigger_source
+            data:
+              value: "{{ request_source }}"
+          - action: input_text.set_value
+            target:
+              entity_id: input_text.maui_storm_prep_last_result
+            data:
+              value: >-
+                Approval requested for {{ requested_duration_hours }} hours —
+                no battery setting changed
+          - action: input_text.set_value
+            target:
+              entity_id: input_text.maui_storm_prep_approval_token
+            data:
+              value: "{{ request_token }}"
+          - action: input_datetime.set_datetime
+            target:
+              entity_id: input_datetime.maui_storm_prep_approval_expires_at
+            data:
+              timestamp: "{{ (as_timestamp(now()) + approval_hours * 3600) | int }}"
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.maui_storm_prep_pending
+          - variables:
+              proposed: "{{ state_attr('sensor.maui_storm_prep_status', 'proposed_action') }}"
+              notify_service: "{{ states('input_text.maui_storm_prep_notify_service') | trim }}"
+          - action: persistent_notification.create
+            data:
+              notification_id: maui_storm_prep_approval
+              title: "Maui storm preparation needs approval"
+              message: >-
+                {{ request_reason }}. Forecast window: {{ request_window }}.
+                Proposed action: {{ proposed }}. Nothing has changed yet.
+                Approve or decline within 12 hours from the Wall Kiosk.
+          - if:
+              - condition: template
+                value_template: "{{ notify_service.startswith('notify.') }}"
+            then:
+              - action: "{{ notify_service }}"
+                continue_on_error: true
+                data:
+                  title: "Maui storm preparation?"
+                  message: >-
+                    {{ request_reason }}. Proposed: {{ proposed }}.
+                    No battery setting changes until you approve.
+                  data:
+                    actions:
+                      - action: "MAUI_STORM_PREP_APPROVE_{{ request_token }}"
+                        title: Approve storm prep
+                      - action: "MAUI_STORM_PREP_DECLINE_{{ request_token }}"
+                        title: Decline
+        else:
+          - action: input_text.set_value
+            target:
+              entity_id: input_text.maui_storm_prep_last_result
+            data:
+              value: >-
+                {% if is_state('input_boolean.maui_storm_prep_active', 'on')
+                      or is_state('input_boolean.maui_storm_prep_recovery_required', 'on') %}
+                  Storm prep is active or awaiting safe restoration
+                {% else %}
+                  Risk detected, but no verified battery control is configured
+                {% endif %}
+
+  maui_storm_prep_manual_request:
+    alias: Maui Storm Prep — Manual Request
+    description: Starts the approval flow manually; it does not change the battery.
+    mode: single
+    sequence:
+      - action: script.maui_storm_prep_request
+        data:
+          reason: "Homeowner manually requested storm preparation"
+          forecast_window: "Manual review of current and upcoming conditions"
+          trigger_source: manual
+
+  maui_storm_prep_approve:
+    alias: Maui Storm Prep — Approve And Apply
+    description: Applies only the selected, re-validated battery control after approval.
+    mode: single
+    fields:
+      approval_token:
+        description: Token attached to the current kiosk/mobile approval request.
+    sequence:
+      - condition: state
+        entity_id: input_boolean.maui_storm_prep_pending
+        state: "on"
+      - variables:
+          provided_token: "{{ approval_token | default('', true) }}"
+          current_token: "{{ states('input_text.maui_storm_prep_approval_token') | trim }}"
+          control: "{{ states('input_text.maui_storm_prep_requested_control') | trim }}"
+          target_value: "{{ states('input_text.maui_storm_prep_requested_value') | trim }}"
+          requested_domain: "{{ states('input_text.maui_storm_prep_requested_domain') | trim }}"
+          current_control: "{{ states('input_text.maui_storm_prep_control_entity') | trim }}"
+          verified_control: "{{ states('input_text.maui_storm_prep_verified_control') | trim }}"
+          current_target: "{{ states('input_text.maui_storm_prep_control_value') | trim }}"
+          control_domain: "{{ control.split('.')[0] if '.' in control else '' }}"
+          previous_value: "{{ states(control) }}"
+          duration_hours: "{{ states('input_number.maui_storm_prep_requested_duration_hours') | int(48) }}"
+          current_duration_hours: "{{ states('input_number.maui_storm_prep_duration_hours') | int(48) }}"
+      - variables:
+          token_valid: >-
+            {{ provided_token != '' and provided_token == current_token
+               and as_timestamp(states('input_datetime.maui_storm_prep_approval_expires_at'), 0)
+                   > as_timestamp(now())
+               and duration_hours == current_duration_hours }}
+          configured: >-
+            {% set friendly = state_attr(control, 'friendly_name') | default('', true) | lower %}
+            {% set words = (control | lower) ~ ' ' ~ friendly %}
+            {% set identity = 'powerwall' in words or 'battery' in words
+                 or 'backup' in words or '4680' in words or 'gonser' in words
+                 or 'enphase' in words or 'solaredge' in words
+                 or 'span' in words or 'storage' in words
+                 or 'energy gateway' in words or 'energy_gateway' in words %}
+            {% set available = control != '' and states(control) not in
+                 ['unknown', 'unavailable', 'none', ''] %}
+            {% if control_domain == 'number' %}
+              {% set value = target_value | float(None) %}
+              {% set minimum = state_attr(control, 'min') | float(0) %}
+              {% set maximum = state_attr(control, 'max') | float(100) %}
+              {{ control == current_control and control == verified_control
+                 and target_value == current_target and control_domain == requested_domain
+                 and available and identity
+                 and ('reserve' in words or 'backup' in words)
+                 and state_attr(control, 'unit_of_measurement') == '%'
+                 and value is not none and minimum <= value <= maximum }}
+            {% elif control_domain == 'select' %}
+              {% set options = state_attr(control, 'options') or [] %}
+              {{ control == current_control and control == verified_control
+                 and target_value == current_target and control_domain == requested_domain
+                 and available and identity
+                 and target_value in options
+                 and ('mode' in words or 'operation' in words
+                      or 'reserve' in words or 'backup' in words) }}
+            {% elif control_domain == 'switch' %}
+              {% set storm_watch = 'storm_watch' in words or 'storm watch' in words %}
+              {% set grid_charge = 'grid_charg' in words or 'grid charg' in words %}
+              {{ control == current_control and control == verified_control
+                 and target_value == current_target and control_domain == requested_domain
+                 and available and identity
+                 and (storm_watch or grid_charge)
+                 and target_value | lower in ['', 'on'] }}
+            {% else %}
+              false
+            {% endif %}
+      - if:
+          - condition: template
+            value_template: "{{ token_valid | bool }}"
+        then:
+          - if:
+              - condition: template
+                value_template: "{{ configured | bool }}"
+            then:
+              # Persist a complete recovery record BEFORE the consequential write.
+              - action: input_text.set_value
+                target:
+                  entity_id: input_text.maui_storm_prep_previous_entity
+                data:
+                  value: "{{ control }}"
+              - action: input_text.set_value
+                target:
+                  entity_id: input_text.maui_storm_prep_previous_value
+                data:
+                  value: "{{ previous_value }}"
+              - action: input_datetime.set_datetime
+                target:
+                  entity_id: input_datetime.maui_storm_prep_review_at
+                data:
+                  timestamp: "{{ (as_timestamp(now()) + duration_hours * 3600) | int }}"
+              - action: input_boolean.turn_off
+                target:
+                  entity_id: input_boolean.maui_storm_prep_restore_failed
+              - action: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.maui_storm_prep_recovery_required
+              - action: input_boolean.turn_off
+                target:
+                  entity_id:
+                    - input_boolean.maui_storm_prep_pending
+                    - input_boolean.maui_storm_prep_declined
+              - action: input_text.set_value
+                target:
+                  entity_id: input_text.maui_storm_prep_approval_token
+                data:
+                  value: ""
+              - action: persistent_notification.dismiss
+                data:
+                  notification_id: maui_storm_prep_approval
+              - choose:
+                  - conditions:
+                      - condition: template
+                        value_template: "{{ control_domain == 'number' }}"
+                    sequence:
+                      - action: number.set_value
+                        continue_on_error: true
+                        target:
+                          entity_id: "{{ control }}"
+                        data:
+                          value: "{{ target_value | float }}"
+                  - conditions:
+                      - condition: template
+                        value_template: "{{ control_domain == 'select' }}"
+                    sequence:
+                      - action: select.select_option
+                        continue_on_error: true
+                        target:
+                          entity_id: "{{ control }}"
+                        data:
+                          option: "{{ target_value }}"
+                  - conditions:
+                      - condition: template
+                        value_template: "{{ control_domain == 'switch' }}"
+                    sequence:
+                      - action: switch.turn_on
+                        continue_on_error: true
+                        target:
+                          entity_id: "{{ control }}"
+              - delay: "00:00:05"
+              - variables:
+                  applied: >-
+                    {% if control_domain == 'number' %}
+                      {{ (states(control) | float(-999) - target_value | float(999)) | abs < 0.11 }}
+                    {% elif control_domain == 'select' %}
+                      {{ is_state(control, target_value) }}
+                    {% elif control_domain == 'switch' %}
+                      {{ is_state(control, 'on') }}
+                    {% else %}
+                      false
+                    {% endif %}
+              - if:
+                  - condition: template
+                    value_template: "{{ applied | bool }}"
+                then:
+                  - action: input_boolean.turn_on
+                    target:
+                      entity_id: input_boolean.maui_storm_prep_active
+                  - action: timer.start
+                    target:
+                      entity_id: timer.maui_storm_prep_active
+                    data:
+                      duration: "{{ duration_hours * 3600 }}"
+                  - action: input_text.set_value
+                    target:
+                      entity_id: input_text.maui_storm_prep_last_result
+                    data:
+                      value: >-
+                        Applied {{ state_attr(control, 'friendly_name') | default(control, true) }}
+                        and verified it at {{ now().strftime('%Y-%m-%d %H:%M') }} HST
+                  - action: persistent_notification.create
+                    data:
+                      notification_id: maui_storm_prep_active
+                      title: "Maui storm preparation active"
+                      message: >-
+                        {{ state_attr('sensor.maui_storm_prep_status', 'proposed_action') }}
+                        was approved and verified. It will be reviewed/restored by
+                        {{ states('input_datetime.maui_storm_prep_review_at') }}, or
+                        you can end it from the Wall Kiosk.
+                else:
+                  - action: input_text.set_value
+                    target:
+                      entity_id: input_text.maui_storm_prep_last_result
+                    data:
+                      value: >-
+                        Approved action could not be verified; restoring the saved
+                        value for {{ control }}
+                  - action: script.maui_storm_prep_end
+                    data:
+                      reason: "Approved action could not be verified"
+            else:
+              - action: input_boolean.turn_off
+                target:
+                  entity_id: input_boolean.maui_storm_prep_pending
+              - action: input_text.set_value
+                target:
+                  entity_id: input_text.maui_storm_prep_approval_token
+                data:
+                  value: ""
+              - action: input_text.set_value
+                target:
+                  entity_id: input_text.maui_storm_prep_last_result
+                data:
+                  value: "Approval rejected: the reviewed control, target, or duration is no longer valid"
+              - action: persistent_notification.create
+                data:
+                  notification_id: maui_storm_prep_failed
+                  title: "Storm preparation was not applied"
+                  message: >-
+                    The selected control, target, duration, or availability changed
+                    after the request. No battery write was attempted.
+        else:
+          - action: input_text.set_value
+            target:
+              entity_id: input_text.maui_storm_prep_last_result
+            data:
+              value: "Ignored an expired or stale storm-prep approval"
+
+  maui_storm_prep_decline:
+    alias: Maui Storm Prep — Decline
+    description: Declines the current request without changing the battery.
+    mode: single
+    fields:
+      approval_token:
+        description: Token attached to the current kiosk/mobile approval request.
+    sequence:
+      - condition: state
+        entity_id: input_boolean.maui_storm_prep_pending
+        state: "on"
+      - variables:
+          provided_token: "{{ approval_token | default('', true) }}"
+          current_token: "{{ states('input_text.maui_storm_prep_approval_token') | trim }}"
+      - condition: template
+        value_template: >-
+          {{ provided_token != '' and provided_token == current_token
+             and as_timestamp(states('input_datetime.maui_storm_prep_approval_expires_at'), 0)
+                 > as_timestamp(now()) }}
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.maui_storm_prep_pending
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.maui_storm_prep_approval_token
+        data:
+          value: ""
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.maui_storm_prep_declined
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.maui_storm_prep_last_result
+        data:
+          value: "Storm preparation declined — no battery setting changed"
+      - action: persistent_notification.dismiss
+        data:
+          notification_id: maui_storm_prep_approval
+
+  maui_storm_prep_end:
+    alias: Maui Storm Prep — End And Restore
+    description: Restores the saved pre-storm value and ends active preparation.
+    mode: single
+    fields:
+      reason:
+        description: Why restoration was requested.
+    sequence:
+      - condition: template
+        value_template: >-
+          {{ is_state('input_boolean.maui_storm_prep_active', 'on')
+             or is_state('input_boolean.maui_storm_prep_recovery_required', 'on') }}
+      - variables:
+          end_reason: "{{ reason | default('Storm prep ended', true) }}"
+          control: "{{ states('input_text.maui_storm_prep_previous_entity') | trim }}"
+          previous_value: "{{ states('input_text.maui_storm_prep_previous_value') | trim }}"
+          control_domain: "{{ control.split('.')[0] if '.' in control else '' }}"
+          restorable: >-
+            {{ control != '' and previous_value != ''
+               and states(control) not in ['unknown', 'unavailable', 'none', ''] }}
+      - if:
+          - condition: template
+            value_template: "{{ restorable | bool }}"
+        then:
+          # Mark restoration in progress before writing. If Home Assistant
+          # restarts mid-restore, reconciliation sees recovery without active
+          # protection and safely retries the saved value.
+          - action: input_boolean.turn_off
+            target:
+              entity_id:
+                - input_boolean.maui_storm_prep_active
+                - input_boolean.maui_storm_prep_restore_failed
+          - action: timer.cancel
+            continue_on_error: true
+            target:
+              entity_id: timer.maui_storm_prep_active
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ control_domain == 'number' }}"
+                sequence:
+                  - action: number.set_value
+                    continue_on_error: true
+                    target:
+                      entity_id: "{{ control }}"
+                    data:
+                      value: "{{ previous_value | float }}"
+              - conditions:
+                  - condition: template
+                    value_template: "{{ control_domain == 'select' }}"
+                sequence:
+                  - action: select.select_option
+                    continue_on_error: true
+                    target:
+                      entity_id: "{{ control }}"
+                    data:
+                      option: "{{ previous_value }}"
+              - conditions:
+                  - condition: template
+                    value_template: "{{ control_domain == 'switch' and previous_value == 'on' }}"
+                sequence:
+                  - action: switch.turn_on
+                    continue_on_error: true
+                    target:
+                      entity_id: "{{ control }}"
+              - conditions:
+                  - condition: template
+                    value_template: "{{ control_domain == 'switch' and previous_value == 'off' }}"
+                sequence:
+                  - action: switch.turn_off
+                    continue_on_error: true
+                    target:
+                      entity_id: "{{ control }}"
+          - delay: "00:00:05"
+          - variables:
+              restored: >-
+                {% if control_domain == 'number' %}
+                  {{ (states(control) | float(-999) - previous_value | float(999)) | abs < 0.11 }}
+                {% else %}
+                  {{ is_state(control, previous_value) }}
+                {% endif %}
+          - if:
+              - condition: template
+                value_template: "{{ restored }}"
+            then:
+              - action: input_boolean.turn_off
+                target:
+                  entity_id:
+                    - input_boolean.maui_storm_prep_active
+                    - input_boolean.maui_storm_prep_recovery_required
+                    - input_boolean.maui_storm_prep_restore_failed
+              - action: input_text.set_value
+                target:
+                  entity_id: input_text.maui_storm_prep_last_result
+                data:
+                  value: >-
+                    {{ end_reason }}; restored {{ control }} to
+                    {{ previous_value }} at {{ now().strftime('%Y-%m-%d %H:%M') }} HST
+              - action: persistent_notification.dismiss
+                data:
+                  notification_id: maui_storm_prep_active
+            else:
+              - action: input_boolean.turn_on
+                target:
+                  entity_id:
+                    - input_boolean.maui_storm_prep_active
+                    - input_boolean.maui_storm_prep_restore_failed
+              - action: input_text.set_value
+                target:
+                  entity_id: input_text.maui_storm_prep_last_result
+                data:
+                  value: >-
+                    Failed to restore {{ control }} to {{ previous_value }};
+                    recovery remains required for manual review
+              - action: persistent_notification.create
+                data:
+                  notification_id: maui_storm_prep_restore_failed
+                  title: "Storm prep restore failed"
+                  message: >-
+                    {{ control }} did not return to {{ previous_value }}.
+                    Recovery remains required. Retry from the Wall Kiosk
+                    or restore the control manually.
+        else:
+          - action: input_boolean.turn_on
+            target:
+              entity_id:
+                - input_boolean.maui_storm_prep_active
+                - input_boolean.maui_storm_prep_restore_failed
+          - action: input_text.set_value
+            target:
+              entity_id: input_text.maui_storm_prep_last_result
+            data:
+              value: "Failed to restore storm prep: saved control is unavailable"
+          - action: persistent_notification.create
+            data:
+              notification_id: maui_storm_prep_restore_failed
+              title: "Storm prep restore needs attention"
+              message: >-
+                The saved battery control or previous value is unavailable.
+                Recovery remains required until it can be restored safely.
+
+automation:
+  - id: maui_storm_prep_invalidate_changed_request
+    alias: Maui Storm Prep — Invalidate Changed Approval
+    description: >
+      Cancels a pending approval if its selected control, verified control,
+      target, or duration is edited after the homeowner reviewed the request.
+    mode: restart
+    triggers:
+      - trigger: state
+        entity_id:
+          - input_text.maui_storm_prep_control_entity
+          - input_text.maui_storm_prep_verified_control
+          - input_text.maui_storm_prep_control_value
+          - input_number.maui_storm_prep_duration_hours
+    conditions:
+      - condition: state
+        entity_id: input_boolean.maui_storm_prep_pending
+        state: "on"
+    actions:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.maui_storm_prep_pending
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.maui_storm_prep_approval_token
+        data:
+          value: ""
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.maui_storm_prep_last_result
+        data:
+          value: "Approval invalidated because the reviewed control, target, or duration changed"
+      - action: persistent_notification.dismiss
+        data:
+          notification_id: maui_storm_prep_approval
+
+  - id: maui_storm_prep_evaluate
+    alias: Maui Storm Prep — Evaluate Risk
+    description: >
+      Evaluates an optional official alert plus a three-day daily forecast.
+      Risk creates an approval request only; it never changes the battery.
+    mode: restart
+    triggers:
+      - trigger: homeassistant
+        event: start
+        id: startup
+      - trigger: time_pattern
+        hours: "/6"
+        id: scheduled
+      - trigger: template
+        value_template: >-
+          {% set entity = states('input_text.maui_storm_prep_alert_entity') | trim %}
+          {{ entity != '' and states(entity) not in
+             ['off', 'clear', 'idle', 'unknown', 'unavailable', 'none', '', '0'] }}
+        id: official_alert
+      - trigger: state
+        entity_id:
+          - input_text.maui_storm_prep_weather_entity
+          - input_text.maui_storm_prep_alert_entity
+          - input_number.maui_storm_prep_rain_threshold
+          - input_number.maui_storm_prep_low_sun_days
+        id: settings
+    actions:
+      - if:
+          - condition: trigger
+            id: startup
+        then:
+          - delay: "00:02:00"
+      - variables:
+          configured_weather: "{{ states('input_text.maui_storm_prep_weather_entity') | trim }}"
+          weather_entity: >-
+            {% if configured_weather != '' %}
+              {{ configured_weather }}
+            {% else %}
+              {{ states.weather | map(attribute='entity_id') | list | first | default('', true) }}
+            {% endif %}
+          alert_entity: "{{ states('input_text.maui_storm_prep_alert_entity') | trim }}"
+          rain_threshold: "{{ states('input_number.maui_storm_prep_rain_threshold') | float(0.5) }}"
+          low_sun_days_required: "{{ states('input_number.maui_storm_prep_low_sun_days') | int(2) }}"
+      - if:
+          - condition: template
+            value_template: "{{ weather_entity != '' and states(weather_entity) not in ['unknown', 'unavailable'] }}"
+        then:
+          - action: weather.get_forecasts
+            continue_on_error: true
+            target:
+              entity_id: "{{ weather_entity }}"
+            data:
+              type: daily
+            response_variable: weather_forecast_response
+      - variables:
+          forecast_items: >-
+            {% set response = weather_forecast_response | default({}, true) %}
+            {{ response.get(weather_entity, {}).get('forecast', []) if weather_entity != '' else [] }}
+          forecast_ok: >-
+            {% set response = weather_forecast_response | default({}, true) %}
+            {{ response is mapping and weather_entity in response
+               and response.get(weather_entity, {}).get('forecast', []) | length > 0 }}
+          precipitation_unit: >-
+            {{ state_attr(weather_entity, 'precipitation_unit')
+               | default('', true) | lower | trim }}
+          alert_available: >-
+            {{ alert_entity == '' or states(alert_entity) not in
+               ['unknown', 'unavailable', 'none', ''] }}
+          official_alert: >-
+            {% set raw = states(alert_entity) | lower if alert_entity != '' else '' %}
+            {% set name = state_attr(alert_entity, 'friendly_name')
+                 | default('', true) | lower %}
+            {% set severity = state_attr(alert_entity, 'severity')
+                 | default('', true) | string | lower %}
+            {% set event = state_attr(alert_entity, 'event')
+                 | default('', true) | string | lower %}
+            {% set headline = state_attr(alert_entity, 'headline')
+                 | default('', true) | string | lower %}
+            {% set details = raw ~ ' ' ~ name ~ ' ' ~ severity ~ ' ' ~ event ~ ' ' ~ headline %}
+            {% set severe_terms = ['hurricane', 'tropical storm', 'warning',
+                 'watch', 'severe', 'extreme', 'emergency'] %}
+            {% set ns = namespace(matches=false) %}
+            {% for term in severe_terms %}
+              {% if term in details %}{% set ns.matches = true %}{% endif %}
+            {% endfor %}
+            {% set expires = state_attr(alert_entity, 'expires')
+                 or state_attr(alert_entity, 'end') %}
+            {% set current = expires is none or as_timestamp(expires, 0) > as_timestamp(now()) %}
+            {{ alert_entity != '' and raw not in ['off', 'clear', 'idle', 'unknown',
+               'unavailable', 'none', '', '0'] and ns.matches and current }}
+      - variables:
+          rain_total: >-
+            {% set ns = namespace(total=0) %}
+            {% for item in (forecast_items | list)[:3] %}
+              {% set ns.total = ns.total + (item.get('precipitation', 0) | float(0)) %}
+            {% endfor %}
+            {% if precipitation_unit in ['mm', 'millimeter', 'millimeters'] %}
+              {{ (ns.total / 25.4) | round(2) }}
+            {% elif precipitation_unit in ['in', 'inch', 'inches', '"'] %}
+              {{ ns.total | round(2) }}
+            {% else %}
+              0
+            {% endif %}
+          precipitation_unit_known: >-
+            {{ precipitation_unit in
+               ['mm', 'millimeter', 'millimeters', 'in', 'inch', 'inches', '"'] }}
+          low_sun_days: >-
+            {% set low_conditions = ['cloudy', 'fog', 'hail', 'lightning',
+                 'lightning-rainy', 'pouring', 'rainy', 'snowy-rainy'] %}
+            {% set ns = namespace(count=0) %}
+            {% for item in (forecast_items | list)[:3] %}
+              {% set condition = item.get('condition', '') | lower %}
+              {% set probability = item.get('precipitation_probability', 0) | float(0) %}
+              {% if condition in low_conditions or probability >= 70 %}
+                {% set ns.count = ns.count + 1 %}
+              {% endif %}
+            {% endfor %}
+            {{ ns.count }}
+          forecast_window: >-
+            {% set items = (forecast_items | list)[:3] %}
+            {% if forecast_ok | bool and items | length > 0 %}
+              {% set start = as_timestamp(items[0].get('datetime')) %}
+              {% set finish = as_timestamp(items[-1].get('datetime')) %}
+              {{ start | timestamp_custom('%a %b %-d', true) }} –
+              {{ finish | timestamp_custom('%a %b %-d', true) }}
+            {% else %}
+              Forecast unavailable
+            {% endif %}
+      - variables:
+          forecast_risk: >-
+            {{ forecast_ok | bool and precipitation_unit_known | bool
+               and (low_sun_days | int >= low_sun_days_required | int
+                    or rain_total | float >= rain_threshold | float) }}
+          risk_detected: "{{ official_alert | bool or forecast_risk | bool }}"
+          evaluation_ok: >-
+            {{ official_alert | bool
+               or (forecast_ok | bool and precipitation_unit_known | bool
+                   and alert_available | bool) }}
+          risk_reason: >-
+            {% set ns = namespace(parts=[]) %}
+            {% if official_alert | bool %}
+              {% set ns.parts = ns.parts + ['Official severe-weather alert is active'] %}
+            {% endif %}
+            {% if low_sun_days | int >= low_sun_days_required | int %}
+              {% set ns.parts = ns.parts + [
+                (low_sun_days | int | string) ~ ' of the next 3 days have low-sun conditions'
+              ] %}
+            {% endif %}
+            {% if rain_total | float >= rain_threshold | float %}
+              {% set ns.parts = ns.parts + [
+                (rain_total | float | round(1) | string) ~ ' in forecast rain exceeds the '
+                ~ (rain_threshold | float | round(1) | string) ~ ' in threshold'
+              ] %}
+            {% endif %}
+            {{ ns.parts | join('; ') if ns.parts | length > 0
+               else 'No official alert or multi-day low-sun/rain risk detected' }}
+          risk_source: >-
+            {% if official_alert | bool and forecast_risk | bool %}official alert + forecast
+            {% elif official_alert | bool %}official alert
+            {% else %}forecast{% endif %}
+      - if:
+          - condition: template
+            value_template: "{{ risk_detected | bool }}"
+        then:
+          - action: input_text.set_value
+            target:
+              entity_id: input_text.maui_storm_prep_reason
+            data:
+              value: "{{ risk_reason }}"
+          - action: input_text.set_value
+            target:
+              entity_id: input_text.maui_storm_prep_forecast_window
+            data:
+              value: "{{ forecast_window }}"
+          - action: input_text.set_value
+            target:
+              entity_id: input_text.maui_storm_prep_trigger_source
+            data:
+              value: "{{ risk_source }}"
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.maui_storm_prep_risk_detected
+          - if:
+              - condition: state
+                entity_id: input_boolean.maui_storm_prep_pending
+                state: "off"
+              - condition: state
+                entity_id: input_boolean.maui_storm_prep_active
+                state: "off"
+              - condition: state
+                entity_id: input_boolean.maui_storm_prep_declined
+                state: "off"
+            then:
+              - action: script.maui_storm_prep_request
+                data:
+                  reason: "{{ risk_reason }}"
+                  forecast_window: "{{ forecast_window }}"
+                  trigger_source: "{{ risk_source }}"
+        else:
+          - if:
+              - condition: template
+                value_template: "{{ evaluation_ok | bool }}"
+            then:
+              - action: input_text.set_value
+                target:
+                  entity_id: input_text.maui_storm_prep_reason
+                data:
+                  value: "{{ risk_reason }}"
+              - action: input_text.set_value
+                target:
+                  entity_id: input_text.maui_storm_prep_forecast_window
+                data:
+                  value: "{{ forecast_window }}"
+              - action: input_text.set_value
+                target:
+                  entity_id: input_text.maui_storm_prep_trigger_source
+                data:
+                  value: "{{ risk_source }}"
+              - action: input_boolean.turn_off
+                target:
+                  entity_id:
+                    - input_boolean.maui_storm_prep_risk_detected
+                    - input_boolean.maui_storm_prep_declined
+              - if:
+                  - condition: state
+                    entity_id: input_boolean.maui_storm_prep_pending
+                    state: "on"
+                then:
+                  - action: input_boolean.turn_off
+                    target:
+                      entity_id: input_boolean.maui_storm_prep_pending
+                  - action: input_text.set_value
+                    target:
+                      entity_id: input_text.maui_storm_prep_approval_token
+                    data:
+                      value: ""
+                  - action: persistent_notification.dismiss
+                    data:
+                      notification_id: maui_storm_prep_approval
+              - action: input_text.set_value
+                target:
+                  entity_id: input_text.maui_storm_prep_last_result
+                data:
+                  value: "Risk check complete — no preparation requested"
+            else:
+              # A missing/failed forecast is unknown, not an all-clear. Preserve
+              # any existing risk, decline, and pending approval state.
+              - action: input_text.set_value
+                target:
+                  entity_id: input_text.maui_storm_prep_last_result
+                data:
+                  value: >-
+                    Risk evaluation unavailable — preserving the previous state
+                    (forecast response, precipitation unit, or alert source missing)
+
+  - id: maui_storm_prep_notification_action
+    alias: Maui Storm Prep — Notification Approval
+    description: Handles explicit approve/decline actions from the HA mobile notification.
+    mode: queued
+    triggers:
+      - trigger: event
+        event_type: mobile_app_notification_action
+    conditions:
+      - condition: template
+        value_template: >-
+          {% set action = trigger.event.data.action | default('', true) | string %}
+          {{ action.startswith('MAUI_STORM_PREP_APPROVE_')
+             or action.startswith('MAUI_STORM_PREP_DECLINE_') }}
+    actions:
+      - variables:
+          notification_action: "{{ trigger.event.data.action | string }}"
+          notification_token: >-
+            {{ (trigger.event.data.action | string)
+               | replace('MAUI_STORM_PREP_APPROVE_', '')
+               | replace('MAUI_STORM_PREP_DECLINE_', '') }}
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ notification_action.startswith('MAUI_STORM_PREP_APPROVE_') }}"
+            sequence:
+              - action: script.maui_storm_prep_approve
+                data:
+                  approval_token: "{{ notification_token }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ notification_action.startswith('MAUI_STORM_PREP_DECLINE_') }}"
+            sequence:
+              - action: script.maui_storm_prep_decline
+                data:
+                  approval_token: "{{ notification_token }}"
+
+  - id: maui_storm_prep_expire
+    alias: Maui Storm Prep — Restore At Expiry
+    description: Restores the prior battery control value when the approved window ends.
+    mode: single
+    triggers:
+      - trigger: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.maui_storm_prep_active
+    actions:
+      - action: script.maui_storm_prep_end
+        data:
+          reason: "Approved storm-prep window expired"
+
+  - id: maui_storm_prep_reconcile
+    alias: Maui Storm Prep — Reconcile Approval And Recovery
+    description: >
+      Expires stale approvals and restores/re-arms a durable battery recovery
+      transaction after Home Assistant restarts or misses a timer event.
+    mode: single
+    triggers:
+      - trigger: homeassistant
+        event: start
+        id: startup
+      - trigger: time_pattern
+        minutes: "/15"
+        id: scheduled
+    actions:
+      - if:
+          - condition: trigger
+            id: startup
+        then:
+          - delay: "00:02:00"
+      - variables:
+          now_ts: "{{ as_timestamp(now()) }}"
+          approval_deadline: >-
+            {{ as_timestamp(states('input_datetime.maui_storm_prep_approval_expires_at'), 0) }}
+          review_deadline: >-
+            {{ as_timestamp(states('input_datetime.maui_storm_prep_review_at'), 0) }}
+      - if:
+          - condition: state
+            entity_id: input_boolean.maui_storm_prep_pending
+            state: "on"
+          - condition: template
+            value_template: "{{ approval_deadline | float(0) <= now_ts | float }}"
+        then:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.maui_storm_prep_pending
+          - action: input_text.set_value
+            target:
+              entity_id: input_text.maui_storm_prep_approval_token
+            data:
+              value: ""
+          - action: input_text.set_value
+            target:
+              entity_id: input_text.maui_storm_prep_last_result
+            data:
+              value: "Storm-prep approval expired — no battery setting changed"
+          - action: persistent_notification.dismiss
+            data:
+              notification_id: maui_storm_prep_approval
+      - if:
+          - condition: state
+            entity_id: input_boolean.maui_storm_prep_recovery_required
+            state: "on"
+        then:
+          - if:
+              - condition: state
+                entity_id: input_boolean.maui_storm_prep_active
+                state: "on"
+              - condition: template
+                value_template: "{{ review_deadline | float(0) > now_ts | float }}"
+            then:
+              - if:
+                  - condition: template
+                    value_template: "{{ not is_state('timer.maui_storm_prep_active', 'active') }}"
+                then:
+                  - action: timer.start
+                    target:
+                      entity_id: timer.maui_storm_prep_active
+                    data:
+                      duration: >-
+                        {{ [review_deadline | int - now_ts | int, 1] | max }}
+            else:
+              - action: script.maui_storm_prep_end
+                data:
+                  reason: >-
+                    {% if is_state('input_boolean.maui_storm_prep_active', 'on') %}
+                      Storm prep was overdue after restart/reconciliation
+                    {% else %}
+                      Interrupted storm-prep apply required safe recovery
+                    {% endif %}

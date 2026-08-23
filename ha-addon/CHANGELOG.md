@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.0.67
+
+- **Added: approval-first storm battery preparation** — The kiosk now surfaces
+  official severe-weather and three-day low-sun/rain risk, but never changes a
+  battery setting by itself. A homeowner must select and verify one exact
+  battery control, then approve each time-limited request before Home Assistant
+  applies it. The package reads the result back, preserves the original value,
+  restores it at expiry or on demand, and reconciles interrupted recovery after
+  a restart. Approval controls on the direct LAN kiosk require the homeowner PIN
+  configured in the add-on options and unlock for ten minutes at a time. The PIN
+  and privileged actions are accepted only over HTTPS/secure Home Assistant
+  ingress; the plain-HTTP direct LAN page remains available for general controls
+  but cannot unlock or perform storm preparation.
+  Requires installing `ha-config/maui_storm_prep_package.yaml` in Home Assistant
+  packages and restarting Home Assistant.
+
 ## 1.0.66
 
 - **Fixed: energy-cost refresh overloaded Home Assistant** — The kiosk no
