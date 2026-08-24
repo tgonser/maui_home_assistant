@@ -30,7 +30,8 @@
 #      sensor.maui_dew_point_setpoint_floor (never above 84°F) so surfaces
 #      never fall below the outdoor dew point (condensation).
 #   5. INFILTRATION HOLD: +2°F buffer while infiltration is active.
-#   6. DEHUMIDIFY PRIORITY: fan slowed when indoor dew point is high.
+#   6. FAN MODE: never changed automatically; each thermostat keeps its own
+#      schedule or manual fan setting.
 #
 # Battery no longer affects targets (purely solar-driven by design).
 #
@@ -108,22 +109,31 @@ actions:
                     temperature: '{{ dew_floor | int }}'
                   continue_on_error: true
           default:
-            - condition: template
-              value_template: |-
-                {{ state_attr(repeat.item, 'hvac_mode') != 'cool'
-                   or (state_attr(repeat.item, 'temperature') | int) != (master_target | int) }}
-            - action: climate.set_hvac_mode
-              target:
-                entity_id: '{{ repeat.item }}'
-              data:
-                hvac_mode: cool
-              continue_on_error: true
-            - action: climate.set_temperature
-              target:
-                entity_id: '{{ repeat.item }}'
-              data:
-                temperature: '{{ master_target | int }}'
-              continue_on_error: true
+            # Climate HVAC mode is the entity state, not an hvac_mode attribute.
+            # Check mode and setpoint independently so an unchanged thermostat
+            # receives no cloud write at all.
+            - if:
+                - condition: template
+                  value_template: "{{ states(repeat.item) != 'cool' }}"
+              then:
+                - action: climate.set_hvac_mode
+                  target:
+                    entity_id: '{{ repeat.item }}'
+                  data:
+                    hvac_mode: cool
+                  continue_on_error: true
+            - if:
+                - condition: template
+                  value_template: >-
+                    {{ (state_attr(repeat.item, 'temperature') | int)
+                       != (master_target | int) }}
+              then:
+                - action: climate.set_temperature
+                  target:
+                    entity_id: '{{ repeat.item }}'
+                  data:
+                    temperature: '{{ master_target | int }}'
+                  continue_on_error: true
   # ---- Sitting group ----
   - repeat:
       for_each:
@@ -147,22 +157,28 @@ actions:
                     temperature: '{{ dew_floor | int }}'
                   continue_on_error: true
           default:
-            - condition: template
-              value_template: |-
-                {{ state_attr(repeat.item, 'hvac_mode') != 'cool'
-                   or (state_attr(repeat.item, 'temperature') | int) != (sitting_target | int) }}
-            - action: climate.set_hvac_mode
-              target:
-                entity_id: '{{ repeat.item }}'
-              data:
-                hvac_mode: cool
-              continue_on_error: true
-            - action: climate.set_temperature
-              target:
-                entity_id: '{{ repeat.item }}'
-              data:
-                temperature: '{{ sitting_target | int }}'
-              continue_on_error: true
+            - if:
+                - condition: template
+                  value_template: "{{ states(repeat.item) != 'cool' }}"
+              then:
+                - action: climate.set_hvac_mode
+                  target:
+                    entity_id: '{{ repeat.item }}'
+                  data:
+                    hvac_mode: cool
+                  continue_on_error: true
+            - if:
+                - condition: template
+                  value_template: >-
+                    {{ (state_attr(repeat.item, 'temperature') | int)
+                       != (sitting_target | int) }}
+              then:
+                - action: climate.set_temperature
+                  target:
+                    entity_id: '{{ repeat.item }}'
+                  data:
+                    temperature: '{{ sitting_target | int }}'
+                  continue_on_error: true
   # ---- Rest group (Boardroom / Beach Room / Upper Mauka) ----
   - repeat:
       for_each:
@@ -188,22 +204,28 @@ actions:
                     temperature: '{{ dew_floor | int }}'
                   continue_on_error: true
           default:
-            - condition: template
-              value_template: |-
-                {{ state_attr(repeat.item, 'hvac_mode') != 'cool'
-                   or (state_attr(repeat.item, 'temperature') | int) != (rest_target | int) }}
-            - action: climate.set_hvac_mode
-              target:
-                entity_id: '{{ repeat.item }}'
-              data:
-                hvac_mode: cool
-              continue_on_error: true
-            - action: climate.set_temperature
-              target:
-                entity_id: '{{ repeat.item }}'
-              data:
-                temperature: '{{ rest_target | int }}'
-              continue_on_error: true
+            - if:
+                - condition: template
+                  value_template: "{{ states(repeat.item) != 'cool' }}"
+              then:
+                - action: climate.set_hvac_mode
+                  target:
+                    entity_id: '{{ repeat.item }}'
+                  data:
+                    hvac_mode: cool
+                  continue_on_error: true
+            - if:
+                - condition: template
+                  value_template: >-
+                    {{ (state_attr(repeat.item, 'temperature') | int)
+                       != (rest_target | int) }}
+              then:
+                - action: climate.set_temperature
+                  target:
+                    entity_id: '{{ repeat.item }}'
+                  data:
+                    temperature: '{{ rest_target | int }}'
+                  continue_on_error: true
   # ---- OPEN-AIR ROOMS (Atrium / Bar / Kitchen) ----
   #      Occupied modes (Owners Home / Visitors): doors are usually open, so
   #      these rooms are never given targets, and from 5pm to 9pm they are
@@ -223,22 +245,28 @@ actions:
             - climate.maui_bar
             - climate.kitchen
           sequence:
-            - condition: template
-              value_template: |-
-                {{ state_attr(repeat.item, 'hvac_mode') != 'cool'
-                   or (state_attr(repeat.item, 'temperature') | int) != (rest_target | int) }}
-            - action: climate.set_hvac_mode
-              target:
-                entity_id: '{{ repeat.item }}'
-              data:
-                hvac_mode: cool
-              continue_on_error: true
-            - action: climate.set_temperature
-              target:
-                entity_id: '{{ repeat.item }}'
-              data:
-                temperature: '{{ rest_target | int }}'
-              continue_on_error: true
+            - if:
+                - condition: template
+                  value_template: "{{ states(repeat.item) != 'cool' }}"
+              then:
+                - action: climate.set_hvac_mode
+                  target:
+                    entity_id: '{{ repeat.item }}'
+                  data:
+                    hvac_mode: cool
+                  continue_on_error: true
+            - if:
+                - condition: template
+                  value_template: >-
+                    {{ (state_attr(repeat.item, 'temperature') | int)
+                       != (rest_target | int) }}
+              then:
+                - action: climate.set_temperature
+                  target:
+                    entity_id: '{{ repeat.item }}'
+                  data:
+                    temperature: '{{ rest_target | int }}'
+                  continue_on_error: true
   - if:
       - condition: template
         value_template: "{{ peak and mode_key != 'vacation' }}"
@@ -256,44 +284,6 @@ actions:
               target:
                 entity_id: '{{ repeat.item }}'
               continue_on_error: true
-  # ---- DEHUMIDIFY PRIORITY: indoor dew point high -> slow the fan so the coil
-  #      runs longer and removes more latent heat (moisture). No-ops on
-  #      equipment that has no low fan setting (continue_on_error). ----
-  - if:
-      - condition: numeric_state
-        entity_id: sensor.maui_indoor_dew_point
-        above: input_number.maui_indoor_dewpoint_target
-    then:
-      - repeat:
-          for_each:
-            - climate.boardroom
-            - climate.sitting
-            - climate.master_bed_2
-            - climate.atrium
-            - climate.bar
-            - climate.beach_room
-            - climate.kitchen
-            - climate.maui_bar
-            - climate.upper_mauka
-          sequence:
-            - choose:
-                - conditions:
-                    - condition: template
-                      value_template: >-
-                        {{ is_state(repeat.item, 'cool')
-                           and (state_attr(repeat.item, 'fan_modes') or [])
-                               | map('lower') | select('in', ['low','min','quiet'])
-                               | list | length > 0 }}
-                  sequence:
-                    - action: climate.set_fan_mode
-                      target:
-                        entity_id: '{{ repeat.item }}'
-                      data:
-                        fan_mode: >-
-                          {{ (state_attr(repeat.item, 'fan_modes')
-                              | select('in', ['low','Low','LOW','min','Min','quiet','Quiet'])
-                              | list | first) }}
-                      continue_on_error: true
 variables:
   # House mode -> matrix key.
   # NOTE: mode_key and tier are concatenated into entity IDs, so they must
