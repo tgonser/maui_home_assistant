@@ -12,6 +12,17 @@ test("stormPrep", async (t) => {
       { entity_id: "switch.tesla_ev_charging", state: "off", attributes: {} },
       // Allowed Tesla Powerwall
       { entity_id: "number.tesla_powerwall_backup_reserve", state: "20", attributes: {} },
+      // Allowed Maui 4680 systems, whose friendly names omit "battery"
+      {
+        entity_id: "number.4680_system_2_backup_reserve",
+        state: "10",
+        attributes: { friendly_name: "Backup reserve", unit_of_measurement: "%" },
+      },
+      {
+        entity_id: "number.gonser_4680_system_1_backup_reserve",
+        state: "10",
+        attributes: { friendly_name: "Backup reserve", unit_of_measurement: "%" },
+      },
       // Excluded due to device battery
       { entity_id: "sensor.ipad_battery_level", state: "100", attributes: {} },
       // Excluded domains
@@ -20,11 +31,13 @@ test("stormPrep", async (t) => {
     ] as any as HAState[];
 
     const candidates = getCandidateBatteryControls(states);
-    assert.equal(candidates.length, 4);
+    assert.equal(candidates.length, 6);
     assert.ok(candidates.find(c => c.entity_id === "switch.powerwall_storm_watch"));
     assert.ok(candidates.find(c => c.entity_id === "select.powerwall_operation_mode"));
     assert.ok(candidates.find(c => c.entity_id === "number.enphase_backup_reserve"));
     assert.ok(candidates.find(c => c.entity_id === "number.tesla_powerwall_backup_reserve"));
+    assert.ok(candidates.find(c => c.entity_id === "number.4680_system_2_backup_reserve"));
+    assert.ok(candidates.find(c => c.entity_id === "number.gonser_4680_system_1_backup_reserve"));
   });
 
   await t.test("getStormPrepStatus parses correctly with new tokens", () => {

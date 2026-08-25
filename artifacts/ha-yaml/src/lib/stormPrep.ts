@@ -104,7 +104,7 @@ export function getCandidateBatteryControls(states: HAState[]): HAState[] {
       return false;
     }
 
-    const isBattery = /(battery|powerwall|enphase|solaredge|span|storage)/i.test(name) || /(battery|powerwall|enphase|solaredge|span|storage)/i.test(id);
+    const isBattery = /(battery|powerwall|enphase|solaredge|span|storage|4680|gonser)/i.test(name) || /(battery|powerwall|enphase|solaredge|span|storage|4680|gonser)/i.test(id);
     if (!isBattery) return false;
 
     if (domain === "number" && /(reserve|backup)/i.test(id + name)) return true;

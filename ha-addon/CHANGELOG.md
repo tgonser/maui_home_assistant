@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.68
+
+- **Fixed: Maui 4680 battery reserve controls were missing from Storm Prep** —
+  The Storm Prep control picker now recognizes the home's writable `4680` and
+  `gonser` backup-reserve entities. The package's server-side approval checks
+  already enforced the same exact-entity, percent-range, and verification
+  requirements.
+
 ## 1.0.67
 
 - **Added: approval-first storm battery preparation** — The kiosk now surfaces
