@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.69
+
+- **Fixed: homeowner PIN unlock was hidden during initial Storm Prep setup** —
+  The configuration-invalid state now shows the secure PIN gate, allowing the
+  homeowner to unlock controls before saving the first verified battery target.
+
 ## 1.0.68
 
 - **Fixed: Maui 4680 battery reserve controls were missing from Storm Prep** —

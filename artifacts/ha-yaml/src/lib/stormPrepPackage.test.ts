@@ -9,6 +9,18 @@ const source = readFileSync(
   "utf8",
 );
 const packageConfig = yaml.load(source) as Record<string, any>;
+const tileSource = readFileSync(
+  resolve(process.cwd(), "src/components/StormPrepTile.tsx"),
+  "utf8",
+);
+
+test("initial setup exposes the homeowner unlock gate", () => {
+  const setupMessage =
+    "Battery control entity is missing or invalid. Unlock homeowner controls";
+  const setupIndex = tileSource.indexOf(setupMessage);
+  assert.ok(setupIndex >= 0);
+  assert.match(tileSource.slice(setupIndex, setupIndex + 500), /\{securityGate\}/);
+});
 
 test("approval applies only the immutable reviewed control snapshot", () => {
   const request = JSON.stringify(

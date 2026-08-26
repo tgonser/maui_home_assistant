@@ -27,6 +27,18 @@ Same bug bites the WebSocket URL → must be `ws://supervisor/core/api/websocket
 HA detects add-on updates by the **`version:` field in config.yaml**, not the image digest.
 Bump `version` on EVERY change or HA won't offer/pull the new GHCR image.
 
+On this Maui Home Assistant installation, **Check for updates is not sufficient** after a new
+Wall Kiosk version is published. The reliable release sequence requires two full Home
+Assistant reboots: one before installing so the new version appears, and another after
+installation so Home Assistant actually loads it.
+
+**Why:** The local Supervisor/add-on repository metadata remains stale across manual refreshes
+but is repopulated during a full Home Assistant reboot.
+
+**How to apply:** Wait for the GitHub build to succeed, reboot Home Assistant fully, reopen the
+Add-on Store and install the newly versioned Wall Kiosk release, then reboot Home Assistant
+fully a second time before testing the new add-on.
+
 ## Other ingress notes
 - `ingress_entry: /` (a leading-slash value like `/wall` produced `//wall` double-slash).
 - Server injects `window.__HA_INGRESS_BASE__` (from `X-Ingress-Path` header) and

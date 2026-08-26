@@ -327,8 +327,11 @@ export function StormPrepTile({
             </button>
           </div>
         ) : !status.configValid ? (
-          <div className="text-sm text-stone-400 p-3 bg-black/20 rounded-lg border border-red-500/20">
-            Battery control entity is missing or invalid. Configure and verify one exact control in Settings.
+          <div className="space-y-4">
+            <div className="text-sm text-stone-400 p-3 bg-black/20 rounded-lg border border-red-500/20">
+              Battery control entity is missing or invalid. Unlock homeowner controls, then configure and verify one exact control in Settings.
+            </div>
+            {securityGate}
           </div>
         ) : (
           <div className="space-y-4">
