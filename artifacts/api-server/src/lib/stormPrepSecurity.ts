@@ -26,6 +26,15 @@ const BROAD_TARGET_KEYS = ["device_id", "area_id", "floor_id", "label_id"];
 
 let ephemeralSecret: string | undefined;
 
+function apiPathname(path: unknown): string {
+  if (typeof path !== "string") return "";
+  // Proxy callers send relative HA API paths. Strip query/hash before security
+  // classification so `/api/services/script/turn_on?x=1` cannot bypass an
+  // exact-path or anchored-regex check.
+  const delimiter = path.search(/[?#]/);
+  return delimiter < 0 ? path : path.slice(0, delimiter);
+}
+
 export function isProtectedStormPrepTransport(input: {
   encrypted?: boolean;
   remoteAddress?: string;
@@ -229,8 +238,8 @@ export function potentialStormPrepControlEntityIds(
   path: unknown,
   body: unknown,
 ): string[] {
-  if (typeof path !== "string") return [];
-  const match = path.match(/^\/api\/services\/([^/]+)\/([^/?]+)$/);
+  const normalizedPath = apiPathname(path);
+  const match = normalizedPath.match(/^\/api\/services\/([^/]+)\/([^/]+)$/);
   if (!match) return [];
   const [, domain, service] = match;
   const potentialWrite =
@@ -245,8 +254,9 @@ export function isSensitiveStormPrepCall(
   path: unknown,
   body: unknown,
 ): boolean {
-  if (typeof path !== "string") return false;
-  if (path === "/api/events/mobile_app_notification_action") {
+  const normalizedPath = apiPathname(path);
+  if (!normalizedPath) return false;
+  if (normalizedPath === "/api/events/mobile_app_notification_action") {
     const record =
       body && typeof body === "object"
         ? (body as Record<string, unknown>)
@@ -260,12 +270,12 @@ export function isSensitiveStormPrepCall(
       nested.action.startsWith("MAUI_STORM_PREP_")
     );
   }
-  const stateMutation = path.match(/^\/api\/states\/([^/?]+)$/);
+  const stateMutation = normalizedPath.match(/^\/api\/states\/([^/]+)$/);
   if (stateMutation?.[1] && STORM_PREP_NAMESPACE.test(stateMutation[1])) {
     return true;
   }
 
-  const match = path.match(/^\/api\/services\/([^/]+)\/([^/?]+)$/);
+  const match = normalizedPath.match(/^\/api\/services\/([^/]+)\/([^/]+)$/);
   if (!match) return false;
   const [, domain, service] = match;
 

@@ -24,6 +24,10 @@ const PROTECTED_CONTROL_HELPERS = [
   "input_text.maui_storm_prep_verified_control",
   "input_text.maui_storm_prep_requested_control",
   "input_text.maui_storm_prep_previous_entity",
+  "input_text.maui_storm_prep_control_entity_2",
+  "input_text.maui_storm_prep_verified_control_2",
+  "input_text.maui_storm_prep_requested_control_2",
+  "input_text.maui_storm_prep_previous_entity_2",
 ] as const;
 const protectedControlCache = new Map<
   string,

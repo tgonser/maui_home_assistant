@@ -11,6 +11,7 @@ export type StormPrepStatus = {
   forecastWindow: string;
   proposedAction: string;
   controlEntityId: string;
+  controlEntityId2: string;
   configValid: boolean;
   lastResult: string;
   reviewAt: string;
@@ -27,6 +28,9 @@ export type StormPrepSettings = {
   controlEntity: string;
   verifiedControl: string;
   controlValue: string;
+  controlEntity2: string;
+  verifiedControl2: string;
+  controlValue2: string;
   rainThreshold: number;
   lowSunDays: number;
   durationHours: number;
@@ -34,6 +38,25 @@ export type StormPrepSettings = {
 
 const EXCLUDE_REGEX = /\b(ev|vehicle|car|charger|charging_cable|phone|tablet|ipad|watch|laptop|sensor|voltage|current|temperature|health|wear|degraded|wall_connector)\b/i;
 const EXCLUDE_SUBSTRING = /ev_charging|car_charging/i;
+const DUAL_HELPERS = [
+  "input_text.maui_storm_prep_control_entity_2",
+  "input_text.maui_storm_prep_verified_control_2",
+  "input_text.maui_storm_prep_control_value_2",
+  "input_text.maui_storm_prep_requested_control_2",
+  "input_text.maui_storm_prep_requested_value_2",
+  "input_text.maui_storm_prep_requested_domain_2",
+  "input_text.maui_storm_prep_previous_entity_2",
+  "input_text.maui_storm_prep_previous_value_2",
+] as const;
+
+export function hasCompleteStormPrepDualHelperSet(states: HAState[]): boolean {
+  const ids = new Set(states.map((state) => state.entity_id));
+  return DUAL_HELPERS.every((entityId) => ids.has(entityId));
+}
+
+export function stormPrepActionsAvailable(states: HAState[]): boolean {
+  return hasCompleteStormPrepDualHelperSet(states);
+}
 
 export function getStormPrepStatus(states: HAState[]): StormPrepStatus {
   const riskEntity = states.find((s) => s.entity_id === "binary_sensor.maui_storm_prep_risk");
@@ -58,6 +81,7 @@ export function getStormPrepStatus(states: HAState[]): StormPrepStatus {
     forecastWindow: getAttr("forecast_window"),
     proposedAction: getAttr("proposed_action"),
     controlEntityId: getAttr("control_entity"),
+    controlEntityId2: getAttr("control_entity_2"),
     configValid: statusEntity?.attributes.config_valid === true || String(statusEntity?.attributes.config_valid) === "true",
     lastResult: getAttr("last_result"),
     reviewAt: getAttr("review_at"),
@@ -84,6 +108,9 @@ export function getStormPrepSettings(states: HAState[]): StormPrepSettings {
     controlEntity: getStr("input_text.maui_storm_prep_control_entity"),
     verifiedControl: getStr("input_text.maui_storm_prep_verified_control"),
     controlValue: getStr("input_text.maui_storm_prep_control_value"),
+    controlEntity2: getStr("input_text.maui_storm_prep_control_entity_2"),
+    verifiedControl2: getStr("input_text.maui_storm_prep_verified_control_2"),
+    controlValue2: getStr("input_text.maui_storm_prep_control_value_2"),
     rainThreshold: getNum("input_number.maui_storm_prep_rain_threshold"),
     lowSunDays: getNum("input_number.maui_storm_prep_low_sun_days"),
     durationHours: getNum("input_number.maui_storm_prep_duration_hours"),

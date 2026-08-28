@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.0.70
+
+- **Added: one approval prepares both Maui battery banks** — Settings now binds
+  two distinct exact controls and targets into one short-lived immutable review.
+  Home Assistant durably saves both prior values before writing, verifies both
+  results, and restores both after partial failure, expiry, or restart recovery.
+  Weather remains recommendation-only. The full review and control surface now
+  lives in Settings; Overview only shows a compact urgent indicator.
+- **Fixed: stale failures no longer override healthy monitoring** — A prior
+  failed result does not keep the idle, valid system titled “Action Failed.”
+  Requires updating the separately installed
+  `ha-config/maui_storm_prep_package.yaml`.
+
 ## 1.0.69
 
 - **Fixed: homeowner PIN unlock was hidden during initial Storm Prep setup** —

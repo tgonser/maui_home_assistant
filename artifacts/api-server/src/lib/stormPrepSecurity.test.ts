@@ -1,5 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import {
   createStormPrepSession,
   isProtectedStormPrepTransport,
@@ -195,6 +197,34 @@ test("recognizes direct REST and WebSocket battery-control bypasses", () => {
   );
 });
 
+test("query strings cannot bypass REST service or control classification", () => {
+  const body = { entity_id: "number.powerwall_backup_reserve", value: 100 };
+  assert.equal(
+    isSensitiveStormPrepCall("/api/services/script/turn_on?attempt=1", {
+      entity_id: "script.maui_storm_prep_approve",
+    }),
+    true,
+  );
+  assert.equal(
+    isSensitiveStormPrepCall("/api/services/number/set_value?attempt=1", body),
+    true,
+  );
+  assert.deepEqual(
+    potentialStormPrepControlEntityIds(
+      "/api/services/number/set_value?attempt=1#ignored",
+      body,
+    ),
+    ["number.powerwall_backup_reserve"],
+  );
+  assert.equal(
+    isSensitiveStormPrepCall(
+      "/api/events/mobile_app_notification_action?attempt=1",
+      { action: "MAUI_STORM_PREP_APPROVE_request-token" },
+    ),
+    true,
+  );
+});
+
 test("accepts only intact, unexpired signed sessions", () => {
   const now = 1_700_000_000_000;
   const session = createStormPrepSession(now);
@@ -239,4 +269,18 @@ test("accepts privileged actions only over protected transport", () => {
     }),
     false,
   );
+});
+
+test("proxy protects both current and legacy transaction helper sets", () => {
+  const route = readFileSync(resolve(process.cwd(), "src/routes/ha.ts"), "utf8");
+  for (const helper of [
+    "maui_storm_prep_control_entity",
+    "maui_storm_prep_previous_entity",
+    "maui_storm_prep_control_entity_2",
+    "maui_storm_prep_verified_control_2",
+    "maui_storm_prep_requested_control_2",
+    "maui_storm_prep_previous_entity_2",
+  ]) {
+    assert.match(route, new RegExp(helper));
+  }
 });

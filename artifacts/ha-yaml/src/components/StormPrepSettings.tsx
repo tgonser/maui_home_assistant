@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { haCallService, type HAState } from "@/lib/ha";
-import { validateControlTarget, getStormPrepSettings, getCandidateBatteryControls, getStormPrepStatus } from "@/lib/stormPrep";
+import { validateControlTarget, getStormPrepSettings, getCandidateBatteryControls, getStormPrepStatus, hasCompleteStormPrepDualHelperSet } from "@/lib/stormPrep";
 import { Check, Save, ShieldCheck, AlertTriangle } from "lucide-react";
+import { StormPrepTile } from "./StormPrepTile";
 
 export function StormPrepSettings({
   states,
@@ -52,6 +53,10 @@ export function StormPrepSettings({
         settings.controlEntity !== form.controlEntity ||
         settings.controlValue !== form.controlValue ||
         settings.verifiedControl !== form.controlEntity;
+      const control2Changed =
+        settings.controlEntity2 !== form.controlEntity2 ||
+        settings.controlValue2 !== form.controlValue2 ||
+        settings.verifiedControl2 !== form.controlEntity2;
 
       addText("input_text.maui_storm_prep_weather_entity", settings.weatherEntity, form.weatherEntity);
       addText("input_text.maui_storm_prep_alert_entity", settings.alertEntity, form.alertEntity);
@@ -78,13 +83,33 @@ export function StormPrepSettings({
           type: "text",
         });
       }
+      if (control2Changed && settings.verifiedControl2) {
+        calls.push({
+          id: "input_text.maui_storm_prep_verified_control_2",
+          val: "",
+          type: "text",
+        });
+      }
+      addText("input_text.maui_storm_prep_control_entity_2", settings.controlEntity2, form.controlEntity2);
+      addText("input_text.maui_storm_prep_control_value_2", settings.controlValue2, form.controlValue2);
+      if (control2Changed) {
+        calls.push({
+          id: "input_text.maui_storm_prep_verified_control_2",
+          val: form.controlEntity2,
+          type: "text",
+        });
+      }
 
       for (const call of calls) {
         const domain = call.type === "text" ? "input_text" : "input_number";
         const res = await haCallService(domain, "set_value", { entity_id: call.id, value: call.val });
         if (!res.ok) throw new Error(`Save failed for ${call.id}: ${res.error}`);
       }
-      setForm((current) => ({ ...current, verifiedControl: current.controlEntity }));
+      setForm((current) => ({
+        ...current,
+        verifiedControl: current.controlEntity,
+        verifiedControl2: current.controlEntity2,
+      }));
       await onChanged();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Storm-prep settings could not be saved");
@@ -94,13 +119,20 @@ export function StormPrepSettings({
   };
 
   const selectedCandidate = candidates.find(c => c.entity_id === form.controlEntity);
+  const selectedCandidate2 = candidates.find(c => c.entity_id === form.controlEntity2);
   const isCandidateValid = !!selectedCandidate;
+  const isCandidate2Valid = !!selectedCandidate2;
   const validation = validateControlTarget(selectedCandidate, form.controlValue);
+  const validation2 = validateControlTarget(selectedCandidate2, form.controlValue2);
+  const controlsDistinct =
+    Boolean(form.controlEntity && form.controlEntity2) &&
+    form.controlEntity !== form.controlEntity2;
 
   const isLocked = status.pending || status.active || status.recoveryRequired;
 
   // Render setup required if entities missing
-  const hasEntities = states.some(s => s.entity_id.startsWith("input_text.maui_storm_prep_weather_entity"));
+  const hasEntities = states.some(s => s.entity_id === "input_text.maui_storm_prep_weather_entity");
+  const hasDualControlPackage = hasCompleteStormPrepDualHelperSet(states);
   if (!hasEntities) {
     return (
       <div className="space-y-4">
@@ -115,8 +147,24 @@ export function StormPrepSettings({
     );
   }
 
+  if (!hasDualControlPackage) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 text-stone-300 border-b border-stone-800 pb-2">
+          <ShieldCheck className="w-4 h-4 text-amber-500" />
+          <h3 className="text-sm font-medium uppercase tracking-wider">Storm Prep</h3>
+        </div>
+        <div className="p-4 rounded-lg bg-amber-950/50 border border-amber-900/50 text-sm text-amber-100 flex items-start gap-2">
+          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+          <span>Storm Prep controls are unavailable until the separately installed Home Assistant package is updated for the required dual-battery transaction.</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
+      <StormPrepTile states={states} onChanged={onChanged} />
       <div className="flex items-center justify-between border-b border-stone-800 pb-2">
         <div className="flex items-center gap-2 text-stone-300">
           <ShieldCheck className="w-4 h-4 text-amber-500" />
@@ -125,7 +173,7 @@ export function StormPrepSettings({
         {hasChanges && (
           <button
             onClick={handleSave}
-            disabled={saving || !validation.valid || isLocked}
+            disabled={saving || !validation.valid || !validation2.valid || !controlsDistinct || !hasDualControlPackage || isLocked}
             className="flex items-center gap-1.5 px-3 py-1 rounded bg-amber-700 hover:bg-amber-600 text-amber-50 text-xs font-medium disabled:opacity-50 transition-colors"
           >
             <Save className="w-3.5 h-3.5" />
@@ -148,10 +196,10 @@ export function StormPrepSettings({
         </div>
       )}
 
-      <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${isLocked ? 'opacity-50 pointer-events-none' : ''}`}>
+      <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${isLocked || !hasDualControlPackage ? 'opacity-50 pointer-events-none' : ''}`}>
         <div className="space-y-3">
           <div>
-            <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Battery Control Entity</label>
+            <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Battery 1 Control Entity</label>
             <select 
               value={form.controlEntity}
               onChange={e => updateForm({ controlEntity: e.target.value })}
@@ -176,7 +224,7 @@ export function StormPrepSettings({
           </div>
           
           <div>
-            <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Desired Value</label>
+            <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Battery 1 Target</label>
             <input 
               value={form.controlValue}
               onChange={e => updateForm({ controlValue: e.target.value })}
@@ -188,6 +236,42 @@ export function StormPrepSettings({
                <div className="mt-1 text-[11px] text-red-400 flex items-center gap-1">
                  <AlertTriangle className="w-3 h-3" /> {validation.reason}
                </div>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Battery 2 Control Entity</label>
+            <select
+              value={form.controlEntity2}
+              onChange={e => updateForm({ controlEntity2: e.target.value })}
+              disabled={isLocked || !hasDualControlPackage}
+              className="w-full bg-stone-900/60 border border-stone-700 rounded-lg px-3 py-2 text-sm text-stone-100 outline-none focus:border-amber-700 appearance-none"
+            >
+              <option value="">Select an entity...</option>
+              {form.controlEntity2 && !isCandidate2Valid && (
+                <option value={form.controlEntity2}>{form.controlEntity2} (Invalid)</option>
+              )}
+              {candidates.map(c => (
+                <option key={c.entity_id} value={c.entity_id}>
+                  {(c.attributes.friendly_name as string) || c.entity_id}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Battery 2 Target</label>
+            <input
+              value={form.controlValue2}
+              onChange={e => updateForm({ controlValue2: e.target.value })}
+              disabled={isLocked || !hasDualControlPackage}
+              className={`w-full bg-stone-900/60 border ${!validation2.valid && form.controlValue2 ? 'border-red-500' : 'border-stone-700'} rounded-lg px-3 py-2 text-sm text-stone-100 outline-none focus:border-amber-700`}
+            />
+            {(!validation2.valid || !controlsDistinct) && form.controlValue2 && (
+              <div className="mt-1 text-[11px] text-red-400 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                {!controlsDistinct ? "Choose two different exact controls" : validation2.reason}
+              </div>
             )}
           </div>
 

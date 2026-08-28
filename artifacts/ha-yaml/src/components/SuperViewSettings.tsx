@@ -254,14 +254,26 @@ function EntityPicker({
 // Shared settings content: the cooling matrix editor plus the Super View
 // entity pickers. Rendered both in the "Pick entities" popover on the front
 // page and as the top-level Settings tab.
-export function SettingsPanelBody({ states, onChanged }: { states: HAState[], onChanged?: () => void }) {
+export function SettingsPanelBody({
+  states,
+  onChanged,
+  includeStormPrep = true,
+}: {
+  states: HAState[];
+  onChanged?: () => void;
+  includeStormPrep?: boolean;
+}) {
   const { overrides, setOverride, reset } = useSuperViewOverrides();
   return (
     <div className="space-y-5 pb-10">
       <CoolingMatrix states={states} />
       <div className="border-t border-stone-800" />
-      <StormPrepSettings states={states} onChanged={() => onChanged?.()} />
-      <div className="border-t border-stone-800" />
+      {includeStormPrep && (
+        <>
+          <StormPrepSettings states={states} onChanged={() => onChanged?.()} />
+          <div className="border-t border-stone-800" />
+        </>
+      )}
       <div className="text-xs uppercase tracking-wider text-stone-300">
         Super View entities
       </div>
@@ -330,7 +342,7 @@ export function SuperViewSettings({
           </button>
         </div>
         <div className="p-6 space-y-5">
-          <SettingsPanelBody states={states} onChanged={onChanged} />
+          <SettingsPanelBody states={states} onChanged={onChanged} includeStormPrep={false} />
           <div className="flex justify-end">
             <button
               onClick={onClose}

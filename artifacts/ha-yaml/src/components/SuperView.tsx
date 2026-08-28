@@ -47,7 +47,7 @@ import {
   useSuperViewOverrides,
   type SuperViewSlot,
 } from "./SuperViewSettings";
-import { StormPrepTile } from "./StormPrepTile";
+import { StormPrepUrgentIndicator } from "./StormPrepTile";
 import { useEntityAliases } from "@/lib/entityAliases";
 import {
   friendlyName as friendlyName_,
@@ -1271,8 +1271,8 @@ export function SuperView({
           Pick entities
         </button>
       </div>
+      <StormPrepUrgentIndicator states={states} />
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 auto-rows-[160px] gap-4">
-        <StormPrepTile states={states} onChanged={onChanged} />
         <HouseStatusTile states={states} />
         <WeatherTile states={states} />
         <LightsCount states={states} />

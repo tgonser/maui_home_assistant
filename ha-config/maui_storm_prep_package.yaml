@@ -35,6 +35,18 @@ input_text:
     name: Storm Prep — target value
     max: 255
     icon: mdi:target
+  maui_storm_prep_control_entity_2:
+    name: Storm Prep — second approved battery control
+    max: 255
+    icon: mdi:battery-cog
+  maui_storm_prep_verified_control_2:
+    name: Storm Prep — second homeowner-verified battery control
+    max: 255
+    icon: mdi:shield-check
+  maui_storm_prep_control_value_2:
+    name: Storm Prep — second target value
+    max: 255
+    icon: mdi:target
   maui_storm_prep_requested_control:
     name: Storm Prep — requested battery control snapshot
     max: 255
@@ -47,12 +59,32 @@ input_text:
     name: Storm Prep — requested domain snapshot
     max: 255
     icon: mdi:shield-lock
+  maui_storm_prep_requested_control_2:
+    name: Storm Prep — second requested battery control snapshot
+    max: 255
+    icon: mdi:shield-lock
+  maui_storm_prep_requested_value_2:
+    name: Storm Prep — second requested target snapshot
+    max: 255
+    icon: mdi:shield-lock
+  maui_storm_prep_requested_domain_2:
+    name: Storm Prep — second requested domain snapshot
+    max: 255
+    icon: mdi:shield-lock
   maui_storm_prep_previous_entity:
     name: Storm Prep — previous control entity
     max: 255
     icon: mdi:backup-restore
   maui_storm_prep_previous_value:
     name: Storm Prep — previous control value
+    max: 255
+    icon: mdi:backup-restore
+  maui_storm_prep_previous_entity_2:
+    name: Storm Prep — second previous control entity
+    max: 255
+    icon: mdi:backup-restore
+  maui_storm_prep_previous_value_2:
+    name: Storm Prep — second previous control value
     max: 255
     icon: mdi:backup-restore
   maui_storm_prep_reason:
@@ -175,8 +207,6 @@ template:
             approval_required
           {% elif states('input_text.maui_storm_prep_control_entity') | trim == '' %}
             not_configured
-          {% elif 'failed' in states('input_text.maui_storm_prep_last_result') | lower %}
-            action_failed
           {% elif is_state('input_boolean.maui_storm_prep_risk_detected', 'on') %}
             risk_detected
           {% else %}
@@ -192,11 +222,23 @@ template:
             {% else %}
               {{ states('input_text.maui_storm_prep_control_entity') }}
             {% endif %}
+          control_entity_2: >-
+            {% if is_state('input_boolean.maui_storm_prep_pending', 'on') %}
+              {{ states('input_text.maui_storm_prep_requested_control_2') }}
+            {% else %}
+              {{ states('input_text.maui_storm_prep_control_entity_2') }}
+            {% endif %}
           target_value: >-
             {% if is_state('input_boolean.maui_storm_prep_pending', 'on') %}
               {{ states('input_text.maui_storm_prep_requested_value') }}
             {% else %}
               {{ states('input_text.maui_storm_prep_control_value') }}
+            {% endif %}
+          target_value_2: >-
+            {% if is_state('input_boolean.maui_storm_prep_pending', 'on') %}
+              {{ states('input_text.maui_storm_prep_requested_value_2') }}
+            {% else %}
+              {{ states('input_text.maui_storm_prep_control_value_2') }}
             {% endif %}
           duration_hours: >-
             {% if is_state('input_boolean.maui_storm_prep_pending', 'on')
@@ -218,41 +260,45 @@ template:
           recovery_required: "{{ is_state('input_boolean.maui_storm_prep_recovery_required', 'on') }}"
           restore_failed: "{{ is_state('input_boolean.maui_storm_prep_restore_failed', 'on') }}"
           config_valid: >-
-            {% set entity = states('input_text.maui_storm_prep_control_entity') | trim %}
-            {% set verified = states('input_text.maui_storm_prep_verified_control') | trim %}
-            {% set target = states('input_text.maui_storm_prep_control_value') | trim %}
-            {% set domain = entity.split('.')[0] if '.' in entity else '' %}
-            {% set friendly = state_attr(entity, 'friendly_name') | default('', true) | lower %}
-            {% set words = (entity | lower) ~ ' ' ~ friendly %}
-            {% set identity = 'powerwall' in words or 'battery' in words
-                 or 'backup' in words or '4680' in words or 'gonser' in words
-                 or 'enphase' in words or 'solaredge' in words
-                 or 'span' in words or 'storage' in words
-                 or 'energy gateway' in words or 'energy_gateway' in words %}
-            {% set available = entity != '' and states(entity) not in
-                 ['unknown', 'unavailable', 'none', ''] %}
-            {% if domain == 'number' %}
-              {% set value = target | float(None) %}
-              {% set minimum = state_attr(entity, 'min') | float(0) %}
-              {% set maximum = state_attr(entity, 'max') | float(100) %}
-              {{ entity == verified and available and identity
-                 and ('reserve' in words or 'backup' in words)
-                 and state_attr(entity, 'unit_of_measurement') == '%'
-                 and value is not none and minimum <= value <= maximum }}
-            {% elif domain == 'select' %}
-              {% set options = state_attr(entity, 'options') or [] %}
-              {{ entity == verified and available and identity and target in options
-                 and ('mode' in words or 'operation' in words
-                      or 'reserve' in words or 'backup' in words) }}
-            {% elif domain == 'switch' %}
-              {% set storm_watch = 'storm_watch' in words or 'storm watch' in words %}
-              {% set grid_charge = 'grid_charg' in words or 'grid charg' in words %}
-              {{ entity == verified and available and identity
-                 and (storm_watch or grid_charge)
-                 and target | lower in ['', 'on'] }}
-            {% else %}
-              false
-            {% endif %}
+            {% set ns = namespace(valid=true, first='') %}
+            {% for suffix in ['', '_2'] %}
+              {% set entity = states('input_text.maui_storm_prep_control_entity' ~ suffix) | trim %}
+              {% set verified = states('input_text.maui_storm_prep_verified_control' ~ suffix) | trim %}
+              {% set target = states('input_text.maui_storm_prep_control_value' ~ suffix) | trim %}
+              {% set domain = entity.split('.')[0] if '.' in entity else '' %}
+              {% set words = (entity | lower) ~ ' ' ~
+                   (state_attr(entity, 'friendly_name') | default('', true) | lower) %}
+              {% set identity = 'powerwall' in words or 'battery' in words or 'backup' in words
+                   or '4680' in words or 'gonser' in words or 'enphase' in words
+                   or 'solaredge' in words or 'span' in words or 'storage' in words
+                   or 'energy gateway' in words or 'energy_gateway' in words %}
+              {% set available = entity != '' and states(entity) not in
+                   ['unknown', 'unavailable', 'none', ''] %}
+              {% set valid = entity == verified and available and identity %}
+              {% if domain == 'number' %}
+                {% set value = target | float(None) %}
+                {% set valid = valid and ('reserve' in words or 'backup' in words)
+                     and state_attr(entity, 'unit_of_measurement') == '%'
+                     and value is not none
+                     and state_attr(entity, 'min') | float(0) <= value
+                     and value <= state_attr(entity, 'max') | float(100) %}
+              {% elif domain == 'select' %}
+                {% set valid = valid and target in (state_attr(entity, 'options') or [])
+                     and ('mode' in words or 'operation' in words
+                          or 'reserve' in words or 'backup' in words) %}
+              {% elif domain == 'switch' %}
+                {% set valid = valid and ('storm_watch' in words or 'storm watch' in words
+                     or 'grid_charg' in words or 'grid charg' in words)
+                     and target | lower in ['', 'on'] %}
+              {% else %}
+                {% set valid = false %}
+              {% endif %}
+              {% if suffix == '' %}{% set ns.first = entity %}{% endif %}
+              {% if not valid or (suffix == '_2' and entity == ns.first) %}
+                {% set ns.valid = false %}
+              {% endif %}
+            {% endfor %}
+            {{ ns.valid }}
           proposed_action: >-
             {% set pending = is_state('input_boolean.maui_storm_prep_pending', 'on') %}
             {% set entity = states('input_text.maui_storm_prep_requested_control') | trim
@@ -261,15 +307,12 @@ template:
                  if pending else states('input_text.maui_storm_prep_control_value') | trim %}
             {% set name = state_attr(entity, 'friendly_name') | default(entity, true) %}
             {% set domain = entity.split('.')[0] if '.' in entity else '' %}
-            {% if domain == 'number' %}
-              Raise {{ name }} to {{ target }}%
-            {% elif domain == 'select' %}
-              Set {{ name }} to “{{ target }}”
-            {% elif domain == 'switch' %}
-              Enable {{ name }}
-            {% else %}
-              No verified battery action configured
-            {% endif %}
+            {% set entity2 = states('input_text.maui_storm_prep_requested_control_2') | trim
+                 if pending else states('input_text.maui_storm_prep_control_entity_2') | trim %}
+            {% set target2 = states('input_text.maui_storm_prep_requested_value_2') | trim
+                 if pending else states('input_text.maui_storm_prep_control_value_2') | trim %}
+            {% set name2 = state_attr(entity2, 'friendly_name') | default(entity2, true) %}
+            Set {{ name }} to {{ target }} and {{ name2 }} to {{ target2 }}
 
 script:
   maui_storm_prep_request:
@@ -298,6 +341,11 @@ script:
           requested_value: "{{ states('input_text.maui_storm_prep_control_value') | trim }}"
           requested_domain: >-
             {% set entity = states('input_text.maui_storm_prep_control_entity') | trim %}
+            {{ entity.split('.')[0] if '.' in entity else '' }}
+          requested_control_2: "{{ states('input_text.maui_storm_prep_control_entity_2') | trim }}"
+          requested_value_2: "{{ states('input_text.maui_storm_prep_control_value_2') | trim }}"
+          requested_domain_2: >-
+            {% set entity = states('input_text.maui_storm_prep_control_entity_2') | trim %}
             {{ entity.split('.')[0] if '.' in entity else '' }}
           requested_duration_hours: "{{ states('input_number.maui_storm_prep_duration_hours') | int(48) }}"
           request_token: "{{ context.id }}"
@@ -330,6 +378,21 @@ script:
               entity_id: input_text.maui_storm_prep_requested_domain
             data:
               value: "{{ requested_domain }}"
+          - action: input_text.set_value
+            target:
+              entity_id: input_text.maui_storm_prep_requested_control_2
+            data:
+              value: "{{ requested_control_2 }}"
+          - action: input_text.set_value
+            target:
+              entity_id: input_text.maui_storm_prep_requested_value_2
+            data:
+              value: "{{ requested_value_2 }}"
+          - action: input_text.set_value
+            target:
+              entity_id: input_text.maui_storm_prep_requested_domain_2
+            data:
+              value: "{{ requested_domain_2 }}"
           - action: input_number.set_value
             target:
               entity_id: input_number.maui_storm_prep_requested_duration_hours
@@ -442,6 +505,14 @@ script:
           current_control: "{{ states('input_text.maui_storm_prep_control_entity') | trim }}"
           verified_control: "{{ states('input_text.maui_storm_prep_verified_control') | trim }}"
           current_target: "{{ states('input_text.maui_storm_prep_control_value') | trim }}"
+          control_2: "{{ states('input_text.maui_storm_prep_requested_control_2') | trim }}"
+          target_value_2: "{{ states('input_text.maui_storm_prep_requested_value_2') | trim }}"
+          requested_domain_2: "{{ states('input_text.maui_storm_prep_requested_domain_2') | trim }}"
+          current_control_2: "{{ states('input_text.maui_storm_prep_control_entity_2') | trim }}"
+          verified_control_2: "{{ states('input_text.maui_storm_prep_verified_control_2') | trim }}"
+          current_target_2: "{{ states('input_text.maui_storm_prep_control_value_2') | trim }}"
+          control_domain_2: "{{ control_2.split('.')[0] if '.' in control_2 else '' }}"
+          previous_value_2: "{{ states(control_2) }}"
           control_domain: "{{ control.split('.')[0] if '.' in control else '' }}"
           previous_value: "{{ states(control) }}"
           duration_hours: "{{ states('input_number.maui_storm_prep_requested_duration_hours') | int(48) }}"
@@ -491,13 +562,50 @@ script:
             {% else %}
               false
             {% endif %}
+          configured_2: >-
+            {% set friendly = state_attr(control_2, 'friendly_name') | default('', true) | lower %}
+            {% set words = (control_2 | lower) ~ ' ' ~ friendly %}
+            {% set identity = 'powerwall' in words or 'battery' in words
+                 or 'backup' in words or '4680' in words or 'gonser' in words
+                 or 'enphase' in words or 'solaredge' in words
+                 or 'span' in words or 'storage' in words
+                 or 'energy gateway' in words or 'energy_gateway' in words %}
+            {% set available = control_2 != '' and states(control_2) not in
+                 ['unknown', 'unavailable', 'none', ''] %}
+            {% if control_domain_2 == 'number' %}
+              {% set value = target_value_2 | float(None) %}
+              {{ control_2 != control and control_2 == current_control_2
+                 and control_2 == verified_control_2 and target_value_2 == current_target_2
+                 and control_domain_2 == requested_domain_2 and available and identity
+                 and ('reserve' in words or 'backup' in words)
+                 and state_attr(control_2, 'unit_of_measurement') == '%'
+                 and value is not none
+                 and state_attr(control_2, 'min') | float(0) <= value
+                 and value <= state_attr(control_2, 'max') | float(100) }}
+            {% elif control_domain_2 == 'select' %}
+              {{ control_2 != control and control_2 == current_control_2
+                 and control_2 == verified_control_2 and target_value_2 == current_target_2
+                 and control_domain_2 == requested_domain_2 and available and identity
+                 and target_value_2 in (state_attr(control_2, 'options') or [])
+                 and ('mode' in words or 'operation' in words
+                      or 'reserve' in words or 'backup' in words) }}
+            {% elif control_domain_2 == 'switch' %}
+              {{ control_2 != control and control_2 == current_control_2
+                 and control_2 == verified_control_2 and target_value_2 == current_target_2
+                 and control_domain_2 == requested_domain_2 and available and identity
+                 and ('storm_watch' in words or 'storm watch' in words
+                      or 'grid_charg' in words or 'grid charg' in words)
+                 and target_value_2 | lower in ['', 'on'] }}
+            {% else %}
+              false
+            {% endif %}
       - if:
           - condition: template
             value_template: "{{ token_valid | bool }}"
         then:
           - if:
               - condition: template
-                value_template: "{{ configured | bool }}"
+                value_template: "{{ configured | bool and configured_2 | bool }}"
             then:
               # Persist a complete recovery record BEFORE the consequential write.
               - action: input_text.set_value
@@ -510,6 +618,16 @@ script:
                   entity_id: input_text.maui_storm_prep_previous_value
                 data:
                   value: "{{ previous_value }}"
+              - action: input_text.set_value
+                target:
+                  entity_id: input_text.maui_storm_prep_previous_entity_2
+                data:
+                  value: "{{ control_2 }}"
+              - action: input_text.set_value
+                target:
+                  entity_id: input_text.maui_storm_prep_previous_value_2
+                data:
+                  value: "{{ previous_value_2 }}"
               - action: input_datetime.set_datetime
                 target:
                   entity_id: input_datetime.maui_storm_prep_review_at
@@ -563,6 +681,35 @@ script:
                         continue_on_error: true
                         target:
                           entity_id: "{{ control }}"
+              - choose:
+                  - conditions:
+                      - condition: template
+                        value_template: "{{ control_domain_2 == 'number' }}"
+                    sequence:
+                      - action: number.set_value
+                        continue_on_error: true
+                        target:
+                          entity_id: "{{ control_2 }}"
+                        data:
+                          value: "{{ target_value_2 | float }}"
+                  - conditions:
+                      - condition: template
+                        value_template: "{{ control_domain_2 == 'select' }}"
+                    sequence:
+                      - action: select.select_option
+                        continue_on_error: true
+                        target:
+                          entity_id: "{{ control_2 }}"
+                        data:
+                          option: "{{ target_value_2 }}"
+                  - conditions:
+                      - condition: template
+                        value_template: "{{ control_domain_2 == 'switch' }}"
+                    sequence:
+                      - action: switch.turn_on
+                        continue_on_error: true
+                        target:
+                          entity_id: "{{ control_2 }}"
               - delay: "00:00:05"
               - variables:
                   applied: >-
@@ -575,9 +722,19 @@ script:
                     {% else %}
                       false
                     {% endif %}
+                  applied_2: >-
+                    {% if control_domain_2 == 'number' %}
+                      {{ (states(control_2) | float(-999) - target_value_2 | float(999)) | abs < 0.11 }}
+                    {% elif control_domain_2 == 'select' %}
+                      {{ is_state(control_2, target_value_2) }}
+                    {% elif control_domain_2 == 'switch' %}
+                      {{ is_state(control_2, 'on') }}
+                    {% else %}
+                      false
+                    {% endif %}
               - if:
                   - condition: template
-                    value_template: "{{ applied | bool }}"
+                    value_template: "{{ applied | bool and applied_2 | bool }}"
                 then:
                   - action: input_boolean.turn_on
                     target:
@@ -592,8 +749,8 @@ script:
                       entity_id: input_text.maui_storm_prep_last_result
                     data:
                       value: >-
-                        Applied {{ state_attr(control, 'friendly_name') | default(control, true) }}
-                        and verified it at {{ now().strftime('%Y-%m-%d %H:%M') }} HST
+                        Applied and verified both reviewed battery controls at
+                        {{ now().strftime('%Y-%m-%d %H:%M') }} HST
                   - action: persistent_notification.create
                     data:
                       notification_id: maui_storm_prep_active
@@ -701,9 +858,15 @@ script:
           restorable: >-
             {{ control != '' and previous_value != ''
                and states(control) not in ['unknown', 'unavailable', 'none', ''] }}
+          control_2: "{{ states('input_text.maui_storm_prep_previous_entity_2') | trim }}"
+          previous_value_2: "{{ states('input_text.maui_storm_prep_previous_value_2') | trim }}"
+          control_domain_2: "{{ control_2.split('.')[0] if '.' in control_2 else '' }}"
+          restorable_2: >-
+            {{ control_2 != '' and previous_value_2 != ''
+               and states(control_2) not in ['unknown', 'unavailable', 'none', ''] }}
       - if:
           - condition: template
-            value_template: "{{ restorable | bool }}"
+            value_template: "{{ restorable | bool or restorable_2 | bool }}"
         then:
           # Mark restoration in progress before writing. If Home Assistant
           # restarts mid-restore, reconciliation sees recovery without active
@@ -720,7 +883,7 @@ script:
           - choose:
               - conditions:
                   - condition: template
-                    value_template: "{{ control_domain == 'number' }}"
+                    value_template: "{{ restorable | bool and control_domain == 'number' }}"
                 sequence:
                   - action: number.set_value
                     continue_on_error: true
@@ -730,7 +893,7 @@ script:
                       value: "{{ previous_value | float }}"
               - conditions:
                   - condition: template
-                    value_template: "{{ control_domain == 'select' }}"
+                    value_template: "{{ restorable | bool and control_domain == 'select' }}"
                 sequence:
                   - action: select.select_option
                     continue_on_error: true
@@ -740,7 +903,7 @@ script:
                       option: "{{ previous_value }}"
               - conditions:
                   - condition: template
-                    value_template: "{{ control_domain == 'switch' and previous_value == 'on' }}"
+                    value_template: "{{ restorable | bool and control_domain == 'switch' and previous_value == 'on' }}"
                 sequence:
                   - action: switch.turn_on
                     continue_on_error: true
@@ -748,12 +911,49 @@ script:
                       entity_id: "{{ control }}"
               - conditions:
                   - condition: template
-                    value_template: "{{ control_domain == 'switch' and previous_value == 'off' }}"
+                    value_template: "{{ restorable | bool and control_domain == 'switch' and previous_value == 'off' }}"
                 sequence:
                   - action: switch.turn_off
                     continue_on_error: true
                     target:
                       entity_id: "{{ control }}"
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ restorable_2 | bool and control_domain_2 == 'number' }}"
+                sequence:
+                  - action: number.set_value
+                    continue_on_error: true
+                    target:
+                      entity_id: "{{ control_2 }}"
+                    data:
+                      value: "{{ previous_value_2 | float }}"
+              - conditions:
+                  - condition: template
+                    value_template: "{{ restorable_2 | bool and control_domain_2 == 'select' }}"
+                sequence:
+                  - action: select.select_option
+                    continue_on_error: true
+                    target:
+                      entity_id: "{{ control_2 }}"
+                    data:
+                      option: "{{ previous_value_2 }}"
+              - conditions:
+                  - condition: template
+                    value_template: "{{ restorable_2 | bool and control_domain_2 == 'switch' and previous_value_2 == 'on' }}"
+                sequence:
+                  - action: switch.turn_on
+                    continue_on_error: true
+                    target:
+                      entity_id: "{{ control_2 }}"
+              - conditions:
+                  - condition: template
+                    value_template: "{{ restorable_2 | bool and control_domain_2 == 'switch' and previous_value_2 == 'off' }}"
+                sequence:
+                  - action: switch.turn_off
+                    continue_on_error: true
+                    target:
+                      entity_id: "{{ control_2 }}"
           - delay: "00:00:05"
           - variables:
               restored: >-
@@ -762,9 +962,17 @@ script:
                 {% else %}
                   {{ is_state(control, previous_value) }}
                 {% endif %}
+              restored_2: >-
+                {% if not restorable_2 %}
+                  false
+                {% elif control_domain_2 == 'number' %}
+                  {{ (states(control_2) | float(-999) - previous_value_2 | float(999)) | abs < 0.11 }}
+                {% else %}
+                  {{ is_state(control_2, previous_value_2) }}
+                {% endif %}
           - if:
               - condition: template
-                value_template: "{{ restored }}"
+                value_template: "{{ restored and restored_2 }}"
             then:
               - action: input_boolean.turn_off
                 target:
@@ -777,8 +985,8 @@ script:
                   entity_id: input_text.maui_storm_prep_last_result
                 data:
                   value: >-
-                    {{ end_reason }}; restored {{ control }} to
-                    {{ previous_value }} at {{ now().strftime('%Y-%m-%d %H:%M') }} HST
+                    {{ end_reason }}; restored and verified both battery controls
+                    at {{ now().strftime('%Y-%m-%d %H:%M') }} HST
               - action: persistent_notification.dismiss
                 data:
                   notification_id: maui_storm_prep_active
@@ -793,14 +1001,14 @@ script:
                   entity_id: input_text.maui_storm_prep_last_result
                 data:
                   value: >-
-                    Failed to restore {{ control }} to {{ previous_value }};
+                    Failed to restore and verify both saved battery values;
                     recovery remains required for manual review
               - action: persistent_notification.create
                 data:
                   notification_id: maui_storm_prep_restore_failed
                   title: "Storm prep restore failed"
                   message: >-
-                    {{ control }} did not return to {{ previous_value }}.
+                    One or both controls did not return to their saved values.
                     Recovery remains required. Retry from the Wall Kiosk
                     or restore the control manually.
         else:
@@ -819,7 +1027,7 @@ script:
               notification_id: maui_storm_prep_restore_failed
               title: "Storm prep restore needs attention"
               message: >-
-                The saved battery control or previous value is unavailable.
+                Both saved battery controls or previous values are unavailable.
                 Recovery remains required until it can be restored safely.
 
 automation:
@@ -835,6 +1043,9 @@ automation:
           - input_text.maui_storm_prep_control_entity
           - input_text.maui_storm_prep_verified_control
           - input_text.maui_storm_prep_control_value
+          - input_text.maui_storm_prep_control_entity_2
+          - input_text.maui_storm_prep_verified_control_2
+          - input_text.maui_storm_prep_control_value_2
           - input_number.maui_storm_prep_duration_hours
     conditions:
       - condition: state

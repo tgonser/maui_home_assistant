@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { getCandidateBatteryControls, getStormPrepStatus, getStormPrepSettings, validateControlTarget, type HAState } from "./stormPrep.ts";
+import { getCandidateBatteryControls, getStormPrepStatus, getStormPrepSettings, hasCompleteStormPrepDualHelperSet, stormPrepActionsAvailable, validateControlTarget, type HAState } from "./stormPrep.ts";
 
 test("stormPrep", async (t) => {
   await t.test("getCandidateBatteryControls filters correctly", () => {
@@ -99,5 +99,43 @@ test("stormPrep", async (t) => {
       attributes: { min: 0, max: 100, unit_of_measurement: "W" },
     } as any as HAState;
     assert.equal(validateControlTarget(wattsEntity, "50").valid, false);
+  });
+
+  await t.test("getStormPrepSettings reads both exact control pairs", () => {
+    const states = [
+      { entity_id: "input_text.maui_storm_prep_control_entity", state: "number.bank_1_backup_reserve", attributes: {} },
+      { entity_id: "input_text.maui_storm_prep_control_value", state: "80", attributes: {} },
+      { entity_id: "input_text.maui_storm_prep_control_entity_2", state: "number.bank_2_backup_reserve", attributes: {} },
+      { entity_id: "input_text.maui_storm_prep_verified_control_2", state: "number.bank_2_backup_reserve", attributes: {} },
+      { entity_id: "input_text.maui_storm_prep_control_value_2", state: "90", attributes: {} },
+    ] as HAState[];
+    const settings = getStormPrepSettings(states);
+    assert.equal(settings.controlEntity2, "number.bank_2_backup_reserve");
+    assert.equal(settings.verifiedControl2, "number.bank_2_backup_reserve");
+    assert.equal(settings.controlValue2, "90");
+  });
+
+  await t.test("legacy one-bank states cannot expose storm-prep actions", () => {
+    const legacy = [
+      { entity_id: "input_text.maui_storm_prep_weather_entity", state: "weather.home", attributes: {} },
+      { entity_id: "input_text.maui_storm_prep_control_entity", state: "number.bank_1_backup_reserve", attributes: {} },
+    ] as HAState[];
+    assert.equal(hasCompleteStormPrepDualHelperSet(legacy), false);
+    assert.equal(stormPrepActionsAvailable(legacy), false);
+  });
+
+  await t.test("complete dual helper set enables the reviewed action surface", () => {
+    const helpers = [
+      "input_text.maui_storm_prep_control_entity_2",
+      "input_text.maui_storm_prep_verified_control_2",
+      "input_text.maui_storm_prep_control_value_2",
+      "input_text.maui_storm_prep_requested_control_2",
+      "input_text.maui_storm_prep_requested_value_2",
+      "input_text.maui_storm_prep_requested_domain_2",
+      "input_text.maui_storm_prep_previous_entity_2",
+      "input_text.maui_storm_prep_previous_value_2",
+    ].map((entity_id) => ({ entity_id, state: "", attributes: {} })) as HAState[];
+    assert.equal(hasCompleteStormPrepDualHelperSet(helpers), true);
+    assert.equal(stormPrepActionsAvailable(helpers), true);
   });
 });

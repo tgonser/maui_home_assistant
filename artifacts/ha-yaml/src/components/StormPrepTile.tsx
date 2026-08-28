@@ -8,7 +8,7 @@ import {
   type HAState,
   type StormPrepSecurityState,
 } from "@/lib/ha";
-import { getStormPrepStatus } from "@/lib/stormPrep";
+import { getStormPrepStatus, stormPrepActionsAvailable } from "@/lib/stormPrep";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -38,6 +38,7 @@ export function StormPrepTile({
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const hasEntities = states.some(s => s.entity_id.startsWith("input_text.maui_storm_prep_weather_entity"));
+  const dualHelpersAvailable = stormPrepActionsAvailable(states);
   const [pin, setPin] = useState("");
   const [securityLoading, setSecurityLoading] = useState(true);
   const [security, setSecurity] = useState<StormPrepSecurityState>({
@@ -90,6 +91,21 @@ export function StormPrepTile({
     );
   }
 
+  if (!dualHelpersAvailable) {
+    return (
+      <motion.div
+        layout
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="wall-tile col-span-2 row-span-1 p-6 flex flex-col justify-center items-center text-center gap-2"
+      >
+        <AlertTriangle className="w-6 h-6 text-amber-500" />
+        <div className="text-sm font-medium uppercase tracking-wider text-amber-200">Storm Prep Update Required</div>
+        <div className="text-xs text-stone-400">Install the dual-battery Storm Prep package update before controls can be used.</div>
+      </motion.div>
+    );
+  }
+
   const handleAction = async (action: string, script: string, vars?: Record<string, unknown>) => {
     setLoading(action);
     setError(null);
@@ -124,7 +140,6 @@ export function StormPrepTile({
     setLoading(null);
   };
 
-  const hasFailure = /failed|rejected|unavailable/i.test(status.lastResult);
   const tokenValid = Boolean(status.approvalToken && status.approvalValid);
   const recoveryUrgent =
     status.recoveryRequired && (!status.active || status.recoveryFailed);
@@ -193,10 +208,6 @@ export function StormPrepTile({
     stateColor = "text-rose-400";
     StateIcon = AlertTriangle;
     bgClass = "wall-tile border-rose-500/50 bg-rose-950/20";
-  } else if (hasFailure) {
-    stateTitle = "Action Failed";
-    stateColor = "text-red-400";
-    StateIcon = AlertTriangle;
   }
 
   return (
@@ -328,18 +339,13 @@ export function StormPrepTile({
           </div>
         ) : !status.configValid ? (
           <div className="space-y-4">
-            <div className="text-sm text-stone-400 p-3 bg-black/20 rounded-lg border border-red-500/20">
-              Battery control entity is missing or invalid. Unlock homeowner controls, then configure and verify one exact control in Settings.
+             <div className="text-sm text-stone-400 p-3 bg-black/20 rounded-lg border border-red-500/20">
+               Both battery control pairs are missing or invalid. Unlock homeowner controls, then configure and verify two exact controls in Settings.
             </div>
             {securityGate}
           </div>
         ) : (
           <div className="space-y-4">
-             {hasFailure && (
-               <div className="p-2 text-xs text-red-400 bg-red-950/30 rounded border border-red-900/30">
-                 Last operation failed. Check logs or verify entity state.
-               </div>
-             )}
              {error && <div className="text-xs text-red-400 p-2 bg-red-950/20 rounded">{error}</div>}
               {securityGate}
              <div className="flex justify-between items-center text-xs text-stone-500">
@@ -357,5 +363,30 @@ export function StormPrepTile({
         )}
       </div>
     </motion.div>
+  );
+}
+
+export function StormPrepUrgentIndicator({
+  states,
+}: {
+  states: HAState[];
+}) {
+  const status = getStormPrepStatus(states);
+  if (!status.pending && !status.recoveryRequired) return null;
+  const recovery = status.recoveryRequired;
+  return (
+    <div
+      className={`w-full rounded-lg border px-3 py-2 text-left text-xs flex items-center justify-between ${
+        recovery
+          ? "border-red-500/50 bg-red-950/30 text-red-200"
+          : "border-rose-500/40 bg-rose-950/25 text-rose-200"
+      }`}
+    >
+      <span className="flex items-center gap-2">
+        <AlertTriangle className="w-4 h-4" />
+        {recovery ? "Storm Prep recovery required" : "Storm Prep approval pending"}
+      </span>
+      <span className="uppercase tracking-wider">Review in Settings</span>
+    </div>
   );
 }
