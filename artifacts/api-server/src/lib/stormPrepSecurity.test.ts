@@ -9,9 +9,22 @@ import {
   isSensitiveStormPrepWsCommand,
   potentialStormPrepControlEntityIds,
   potentialStormPrepWsControlEntityIds,
+  PROTECTED_STORM_PREP_CONTROL_HELPERS,
   stormPrepSessionExpiry,
   stormPrepSessionCookie,
 } from "./stormPrepSecurity.ts";
+
+test("discovers configured, requested, and previous controls for both banks", () => {
+  assert.deepEqual(
+    PROTECTED_STORM_PREP_CONTROL_HELPERS.filter((id) => id.endsWith("_2")),
+    [
+      "input_text.maui_storm_prep_control_entity_2",
+      "input_text.maui_storm_prep_verified_control_2",
+      "input_text.maui_storm_prep_requested_control_2",
+      "input_text.maui_storm_prep_previous_entity_2",
+    ],
+  );
+});
 
 test("recognizes protected storm-prep script calls", () => {
   assert.equal(
@@ -169,6 +182,21 @@ test("recognizes direct REST and WebSocket battery-control bypasses", () => {
     }),
     true,
   );
+  for (const entity_id of [
+    "input_text.maui_storm_prep_control_entity_2",
+    "input_text.maui_storm_prep_verified_control_2",
+    "input_text.maui_storm_prep_requested_control_2",
+    "input_text.maui_storm_prep_previous_entity_2",
+  ]) {
+    assert.equal(
+      isSensitiveStormPrepCall("/api/services/input_text/set_value", {
+        entity_id,
+        value: "number.second_bank_backup_reserve",
+      }),
+      true,
+      `${entity_id} must require homeowner authorization`,
+    );
+  }
   assert.equal(
     isSensitiveStormPrepCall("/api/services/input_number/set_value", {
       entity_id: "input_number.maui_storm_prep_duration_hours",
@@ -271,16 +299,17 @@ test("accepts privileged actions only over protected transport", () => {
   );
 });
 
-test("proxy protects both current and legacy transaction helper sets", () => {
+test("proxy uses the shared protected transaction helper set", () => {
   const route = readFileSync(resolve(process.cwd(), "src/routes/ha.ts"), "utf8");
-  for (const helper of [
-    "maui_storm_prep_control_entity",
-    "maui_storm_prep_previous_entity",
-    "maui_storm_prep_control_entity_2",
-    "maui_storm_prep_verified_control_2",
-    "maui_storm_prep_requested_control_2",
-    "maui_storm_prep_previous_entity_2",
-  ]) {
-    assert.match(route, new RegExp(helper));
-  }
+  assert.match(route, /PROTECTED_STORM_PREP_CONTROL_HELPERS\.map/);
+  assert.ok(
+    PROTECTED_STORM_PREP_CONTROL_HELPERS.includes(
+      "input_text.maui_storm_prep_control_entity",
+    ),
+  );
+  assert.ok(
+    PROTECTED_STORM_PREP_CONTROL_HELPERS.includes(
+      "input_text.maui_storm_prep_previous_entity",
+    ),
+  );
 });

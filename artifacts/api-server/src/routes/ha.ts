@@ -7,6 +7,7 @@ import {
   isStormPrepPinConfigured,
   potentialStormPrepControlEntityIds,
   potentialStormPrepWsControlEntityIds,
+  PROTECTED_STORM_PREP_CONTROL_HELPERS,
   stormPrepSessionCookie,
   stormPrepSessionExpiry,
   verifyStormPrepPin,
@@ -19,16 +20,6 @@ const failedPinAttempts = new Map<
 >();
 const MAX_PIN_ATTEMPTS = 5;
 const PIN_BLOCK_MS = 5 * 60 * 1000;
-const PROTECTED_CONTROL_HELPERS = [
-  "input_text.maui_storm_prep_control_entity",
-  "input_text.maui_storm_prep_verified_control",
-  "input_text.maui_storm_prep_requested_control",
-  "input_text.maui_storm_prep_previous_entity",
-  "input_text.maui_storm_prep_control_entity_2",
-  "input_text.maui_storm_prep_verified_control_2",
-  "input_text.maui_storm_prep_requested_control_2",
-  "input_text.maui_storm_prep_previous_entity_2",
-] as const;
 const protectedControlCache = new Map<
   string,
   { expiresAt: number; entityIds: Set<string> }
@@ -93,7 +84,7 @@ async function loadProtectedStormPrepControls(
   }
   try {
     const responses = await Promise.all(
-      PROTECTED_CONTROL_HELPERS.map((entityId) =>
+      PROTECTED_STORM_PREP_CONTROL_HELPERS.map((entityId) =>
         fetch(`${baseUrl}/api/states/${entityId}`, {
           headers: {
             Authorization: `Bearer ${token}`,

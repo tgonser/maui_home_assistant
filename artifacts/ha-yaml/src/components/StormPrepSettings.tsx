@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import { haCallService, type HAState } from "@/lib/ha";
-import { validateControlTarget, getStormPrepSettings, getCandidateBatteryControls, getStormPrepStatus, hasCompleteStormPrepDualHelperSet } from "@/lib/stormPrep";
+import {
+  validateControlTarget,
+  getStormPrepSettings,
+  getCandidateBatteryControls,
+  getStormPrepStatus,
+  hasCompleteStormPrepDualHelperSet,
+} from "@/lib/stormPrep";
 import { Check, Save, ShieldCheck, AlertTriangle } from "lucide-react";
 import { StormPrepTile } from "./StormPrepTile";
 
@@ -65,21 +71,12 @@ export function StormPrepSettings({
       addNum("input_number.maui_storm_prep_low_sun_days", settings.lowSunDays, form.lowSunDays);
       addNum("input_number.maui_storm_prep_duration_hours", settings.durationHours, form.durationHours);
 
-      // Invalidate the verified pair first, then commit the selected entity and
-      // target, and only re-verify as the final write.
+      // Invalidate changed verified pairs before writing either bank. If any
+      // later HA call fails, a partially saved pair cannot remain verified.
       if (controlChanged && settings.verifiedControl) {
         calls.push({
           id: "input_text.maui_storm_prep_verified_control",
           val: "",
-          type: "text",
-        });
-      }
-      addText("input_text.maui_storm_prep_control_entity", settings.controlEntity, form.controlEntity);
-      addText("input_text.maui_storm_prep_control_value", settings.controlValue, form.controlValue);
-      if (controlChanged) {
-        calls.push({
-          id: "input_text.maui_storm_prep_verified_control",
-          val: form.controlEntity,
           type: "text",
         });
       }
@@ -90,8 +87,17 @@ export function StormPrepSettings({
           type: "text",
         });
       }
+      addText("input_text.maui_storm_prep_control_entity", settings.controlEntity, form.controlEntity);
+      addText("input_text.maui_storm_prep_control_value", settings.controlValue, form.controlValue);
       addText("input_text.maui_storm_prep_control_entity_2", settings.controlEntity2, form.controlEntity2);
       addText("input_text.maui_storm_prep_control_value_2", settings.controlValue2, form.controlValue2);
+      if (controlChanged) {
+        calls.push({
+          id: "input_text.maui_storm_prep_verified_control",
+          val: form.controlEntity,
+          type: "text",
+        });
+      }
       if (control2Changed) {
         calls.push({
           id: "input_text.maui_storm_prep_verified_control_2",
@@ -119,19 +125,21 @@ export function StormPrepSettings({
   };
 
   const selectedCandidate = candidates.find(c => c.entity_id === form.controlEntity);
-  const selectedCandidate2 = candidates.find(c => c.entity_id === form.controlEntity2);
   const isCandidateValid = !!selectedCandidate;
-  const isCandidate2Valid = !!selectedCandidate2;
   const validation = validateControlTarget(selectedCandidate, form.controlValue);
-  const validation2 = validateControlTarget(selectedCandidate2, form.controlValue2);
+  const selectedCandidate2 = candidates.find(c => c.entity_id === form.controlEntity2);
+  const isCandidate2Valid = !!selectedCandidate2;
+  const validation2 = form.controlEntity2 || form.controlValue2
+    ? validateControlTarget(selectedCandidate2, form.controlValue2)
+    : { valid: true };
   const controlsDistinct =
-    Boolean(form.controlEntity && form.controlEntity2) &&
-    form.controlEntity !== form.controlEntity2;
+    !form.controlEntity2 || form.controlEntity !== form.controlEntity2;
+  const controlsValid = validation.valid && validation2.valid && controlsDistinct;
 
   const isLocked = status.pending || status.active || status.recoveryRequired;
 
   // Render setup required if entities missing
-  const hasEntities = states.some(s => s.entity_id === "input_text.maui_storm_prep_weather_entity");
+  const hasEntities = states.some(s => s.entity_id.startsWith("input_text.maui_storm_prep_weather_entity"));
   const hasDualControlPackage = hasCompleteStormPrepDualHelperSet(states);
   if (!hasEntities) {
     return (
@@ -173,7 +181,7 @@ export function StormPrepSettings({
         {hasChanges && (
           <button
             onClick={handleSave}
-            disabled={saving || !validation.valid || !validation2.valid || !controlsDistinct || !hasDualControlPackage || isLocked}
+            disabled={saving || !controlsValid || isLocked}
             className="flex items-center gap-1.5 px-3 py-1 rounded bg-amber-700 hover:bg-amber-600 text-amber-50 text-xs font-medium disabled:opacity-50 transition-colors"
           >
             <Save className="w-3.5 h-3.5" />
@@ -196,10 +204,10 @@ export function StormPrepSettings({
         </div>
       )}
 
-      <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${isLocked || !hasDualControlPackage ? 'opacity-50 pointer-events-none' : ''}`}>
+      <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${isLocked ? 'opacity-50 pointer-events-none' : ''}`}>
         <div className="space-y-3">
           <div>
-            <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Battery 1 Control Entity</label>
+            <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Battery Bank 1 Control</label>
             <select 
               value={form.controlEntity}
               onChange={e => updateForm({ controlEntity: e.target.value })}
@@ -224,7 +232,7 @@ export function StormPrepSettings({
           </div>
           
           <div>
-            <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Battery 1 Target</label>
+            <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Bank 1 Target</label>
             <input 
               value={form.controlValue}
               onChange={e => updateForm({ controlValue: e.target.value })}
@@ -239,38 +247,59 @@ export function StormPrepSettings({
             )}
           </div>
 
-          <div>
-            <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Battery 2 Control Entity</label>
-            <select
-              value={form.controlEntity2}
-              onChange={e => updateForm({ controlEntity2: e.target.value })}
-              disabled={isLocked || !hasDualControlPackage}
-              className="w-full bg-stone-900/60 border border-stone-700 rounded-lg px-3 py-2 text-sm text-stone-100 outline-none focus:border-amber-700 appearance-none"
-            >
-              <option value="">Select an entity...</option>
-              {form.controlEntity2 && !isCandidate2Valid && (
-                <option value={form.controlEntity2}>{form.controlEntity2} (Invalid)</option>
+          <div className="border-t border-stone-800 pt-3 space-y-3">
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Battery Bank 2 Control (Optional)</label>
+              <select
+                value={form.controlEntity2}
+                onChange={e => updateForm({
+                  controlEntity2: e.target.value,
+                  ...(e.target.value ? {} : { controlValue2: "" }),
+                })}
+                disabled={isLocked}
+                className={`w-full bg-stone-900/60 border ${!controlsDistinct ? "border-red-500" : "border-stone-700"} rounded-lg px-3 py-2 text-sm text-stone-100 outline-none focus:border-amber-700 appearance-none`}
+              >
+                <option value="">No second bank (legacy setup)</option>
+                {form.controlEntity2 && !isCandidate2Valid && (
+                  <option value={form.controlEntity2}>{form.controlEntity2} (Invalid)</option>
+                )}
+                {candidates.map(c => (
+                  <option key={c.entity_id} value={c.entity_id}>
+                    {(c.attributes.friendly_name as string) || c.entity_id}
+                  </option>
+                ))}
+              </select>
+              {!controlsDistinct && (
+                <div className="mt-1 text-[11px] text-red-400 flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" /> Select a different control for each battery bank.
+                </div>
               )}
-              {candidates.map(c => (
-                <option key={c.entity_id} value={c.entity_id}>
-                  {(c.attributes.friendly_name as string) || c.entity_id}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Battery 2 Target</label>
-            <input
-              value={form.controlValue2}
-              onChange={e => updateForm({ controlValue2: e.target.value })}
-              disabled={isLocked || !hasDualControlPackage}
-              className={`w-full bg-stone-900/60 border ${!validation2.valid && form.controlValue2 ? 'border-red-500' : 'border-stone-700'} rounded-lg px-3 py-2 text-sm text-stone-100 outline-none focus:border-amber-700`}
-            />
-            {(!validation2.valid || !controlsDistinct) && form.controlValue2 && (
-              <div className="mt-1 text-[11px] text-red-400 flex items-center gap-1">
-                <AlertTriangle className="w-3 h-3" />
-                {!controlsDistinct ? "Choose two different exact controls" : validation2.reason}
+              {form.controlEntity2 && !isCandidate2Valid && (
+                <div className="mt-1 text-[11px] text-red-400 flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" /> Entity not found or not a valid battery control.
+                </div>
+              )}
+            </div>
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-stone-400 mb-1">Bank 2 Target</label>
+              <input
+                value={form.controlValue2}
+                onChange={e => updateForm({ controlValue2: e.target.value })}
+                disabled={isLocked || !form.controlEntity2}
+                placeholder={form.controlEntity2 ? "e.g. 100 or on" : "Select a second bank first"}
+                className={`w-full bg-stone-900/60 border ${!validation2.valid && form.controlValue2 ? "border-red-500" : "border-stone-700"} rounded-lg px-3 py-2 text-sm text-stone-100 outline-none focus:border-amber-700 disabled:opacity-50`}
+              />
+              {!validation2.valid && (form.controlEntity2 || form.controlValue2) && (
+                <div className="mt-1 text-[11px] text-red-400 flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" /> {validation2.reason}
+                </div>
+              )}
+            </div>
+            {selectedCandidate2 && (
+              <div className="p-3 bg-stone-900/40 rounded-lg border border-stone-800 text-sm text-stone-200">
+                <div className="text-xs text-stone-400 mb-1">Bank 2 Current Value</div>
+                <span className="font-mono text-xs text-stone-500">{selectedCandidate2.entity_id}</span><br/>
+                Current: <span className="font-medium text-amber-100">{selectedCandidate2.state}</span>
               </div>
             )}
           </div>

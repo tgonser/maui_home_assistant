@@ -24,6 +24,16 @@ const LIGHTING_SWITCH_ENTITY =
   /(?:^|[._-])(light|lights|lamp|lamps|sconce|sconces|niche|chandelier|pendant|pendants|downlight|downlights|spotlight|spotlights|cove|lantern|lanterns|vanity)(?:$|[._-])/i;
 const BROAD_TARGET_KEYS = ["device_id", "area_id", "floor_id", "label_id"];
 
+export const PROTECTED_STORM_PREP_CONTROL_HELPERS = [
+  "input_text.maui_storm_prep_control_entity",
+  "input_text.maui_storm_prep_verified_control",
+  "input_text.maui_storm_prep_requested_control",
+  "input_text.maui_storm_prep_previous_entity",
+  "input_text.maui_storm_prep_control_entity_2",
+  "input_text.maui_storm_prep_verified_control_2",
+  "input_text.maui_storm_prep_requested_control_2",
+  "input_text.maui_storm_prep_previous_entity_2",
+] as const;
 let ephemeralSecret: string | undefined;
 
 function apiPathname(path: unknown): string {

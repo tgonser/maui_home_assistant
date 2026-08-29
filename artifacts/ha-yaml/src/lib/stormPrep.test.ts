@@ -51,6 +51,11 @@ test("stormPrep", async (t) => {
           forecast_window: "Next 24h",
           proposed_action: "Set Reserve 100%",
           control_entity: "number.powerwall_reserve",
+           control_entity_2: "select.enphase_mode",
+           target_value: "100",
+           target_value_2: "Backup",
+           current_value: "20",
+           current_value_2: "Self Consumption",
           config_valid: true,
           last_result: "Failure",
           review_at: "2023-10-01T12:00:00Z",
@@ -74,6 +79,32 @@ test("stormPrep", async (t) => {
     assert.equal(status.approvalToken, "xyz123");
     assert.equal(status.approvalExpiresAt, "2023-10-01T10:00:00Z");
     assert.equal(status.approvalValid, true);
+    assert.equal(status.controlEntityId2, "select.enphase_mode");
+    assert.equal(status.targetValue, "100");
+    assert.equal(status.targetValue2, "Backup");
+    assert.equal(status.currentValue, "20");
+    assert.equal(status.currentValue2, "Self Consumption");
+  });
+
+  await t.test("getStormPrepSettings reads both battery banks", () => {
+    const values = {
+      "input_text.maui_storm_prep_control_entity": "number.bank_1_backup_reserve",
+      "input_text.maui_storm_prep_verified_control": "number.bank_1_backup_reserve",
+      "input_text.maui_storm_prep_control_value": "100",
+      "input_text.maui_storm_prep_control_entity_2": "select.bank_2_operation_mode",
+      "input_text.maui_storm_prep_verified_control_2": "select.bank_2_operation_mode",
+      "input_text.maui_storm_prep_control_value_2": "Backup",
+    };
+    const states = Object.entries(values).map(([entity_id, state]) => ({
+      entity_id,
+      state,
+      attributes: {},
+    })) as HAState[];
+    const settings = getStormPrepSettings(states);
+    assert.equal(settings.controlEntity, "number.bank_1_backup_reserve");
+    assert.equal(settings.controlEntity2, "select.bank_2_operation_mode");
+    assert.equal(settings.verifiedControl2, "select.bank_2_operation_mode");
+    assert.equal(settings.controlValue2, "Backup");
   });
 
   await t.test("validateControlTarget works", () => {

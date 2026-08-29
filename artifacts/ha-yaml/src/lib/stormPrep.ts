@@ -12,6 +12,10 @@ export type StormPrepStatus = {
   proposedAction: string;
   controlEntityId: string;
   controlEntityId2: string;
+  targetValue: string;
+  targetValue2: string;
+  currentValue: string;
+  currentValue2: string;
   configValid: boolean;
   lastResult: string;
   reviewAt: string;
@@ -67,8 +71,10 @@ export function getStormPrepStatus(states: HAState[]): StormPrepStatus {
   const pending = pendingEntity?.state === "on";
   const active = activeEntity?.state === "on";
 
-  const getAttr = (key: string): string =>
-    statusEntity?.attributes[key] ? String(statusEntity.attributes[key]) : "";
+  const getAttr = (key: string): string => {
+    const value = statusEntity?.attributes[key];
+    return value === undefined || value === null ? "" : String(value);
+  };
 
   return {
     active,
@@ -82,6 +88,10 @@ export function getStormPrepStatus(states: HAState[]): StormPrepStatus {
     proposedAction: getAttr("proposed_action"),
     controlEntityId: getAttr("control_entity"),
     controlEntityId2: getAttr("control_entity_2"),
+    targetValue: getAttr("target_value"),
+    targetValue2: getAttr("target_value_2"),
+    currentValue: getAttr("current_value"),
+    currentValue2: getAttr("current_value_2"),
     configValid: statusEntity?.attributes.config_valid === true || String(statusEntity?.attributes.config_valid) === "true",
     lastResult: getAttr("last_result"),
     reviewAt: getAttr("review_at"),

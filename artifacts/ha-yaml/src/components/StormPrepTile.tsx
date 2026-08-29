@@ -145,6 +145,14 @@ export function StormPrepTile({
     status.recoveryRequired && (!status.active || status.recoveryFailed);
   const homeownerUnlocked =
     security.secureTransport && security.pinConfigured && security.unlocked;
+  const bank1Current =
+    status.currentValue ||
+    states.find((state) => state.entity_id === status.controlEntityId)?.state ||
+    "Unavailable";
+  const bank2Current =
+    status.currentValue2 ||
+    states.find((state) => state.entity_id === status.controlEntityId2)?.state ||
+    "Unavailable";
 
   const securityGate = homeownerUnlocked ? null : (
     <div className="rounded-lg border border-amber-700/40 bg-amber-950/25 p-2.5">
@@ -271,8 +279,24 @@ export function StormPrepTile({
                 <div className="text-rose-200">{status.reason}</div>
                 <div className="text-stone-400 text-xs">Window</div>
                 <div className="text-stone-200">{status.forecastWindow}</div>
-                <div className="text-stone-400 text-xs">Proposed</div>
-                <div className="text-amber-200 font-medium">{status.proposedAction}</div>
+                <div className="text-stone-400 text-xs">Bank 1</div>
+                <div className="text-stone-200">
+                  <div className="font-mono text-[10px] text-stone-500">{status.controlEntityId}</div>
+                  <span>{bank1Current}</span>
+                  <span className="px-1.5 text-stone-500">→</span>
+                  <span className="font-medium text-amber-200">{status.targetValue}</span>
+                </div>
+                {status.controlEntityId2 && (
+                  <>
+                    <div className="text-stone-400 text-xs">Bank 2</div>
+                    <div className="text-stone-200">
+                      <div className="font-mono text-[10px] text-stone-500">{status.controlEntityId2}</div>
+                      <span>{bank2Current}</span>
+                      <span className="px-1.5 text-stone-500">→</span>
+                      <span className="font-medium text-amber-200">{status.targetValue2}</span>
+                    </div>
+                  </>
+                )}
                 {status.approvalExpiresAt && (
                   <>
                     <div className="text-stone-400 text-xs">Expires</div>
@@ -340,7 +364,7 @@ export function StormPrepTile({
         ) : !status.configValid ? (
           <div className="space-y-4">
              <div className="text-sm text-stone-400 p-3 bg-black/20 rounded-lg border border-red-500/20">
-               Both battery control pairs are missing or invalid. Unlock homeowner controls, then configure and verify two exact controls in Settings.
+               Battery control configuration is missing or invalid. Unlock homeowner controls, then configure and verify the required controls in Settings.
             </div>
             {securityGate}
           </div>
