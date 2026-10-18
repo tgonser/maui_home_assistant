@@ -32,8 +32,9 @@ Wall Kiosk version is published. The reliable release sequence requires two full
 Assistant reboots: one before installing so the new version appears, and another after
 installation so Home Assistant actually loads it.
 
-**Why:** The local Supervisor/add-on repository metadata remains stale across manual refreshes
-but is repopulated during a full Home Assistant reboot.
+**Why:** The user repeatedly reports that new versions become visible only after restarting
+HA, including confirmation on 2026-10-18. The underlying cause has not been verified;
+do not present metadata caching as a diagnosed cause.
 
 **How to apply:** Wait for the GitHub build to succeed, reboot Home Assistant fully, reopen the
 Add-on Store and install the newly versioned Wall Kiosk release, then reboot Home Assistant
