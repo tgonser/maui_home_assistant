@@ -454,3 +454,23 @@
 .wall-aside-scroll::-webkit-scrollbar {
   display: none;
 }
+
+/* Keep alarm controls usable on narrow phones without changing tablet layout. */
+@media (max-width: 639px) {
+  .wall-alarm-layout { flex-direction: column; }
+  .wall-alarm-layout .wall-aside {
+    width: 100%; flex-direction: row; padding: 8px; gap: 8px;
+    height: 84px; min-height: 84px;
+  }
+  .wall-alarm-layout .wall-aside > button { width: 48px; height: 60px; margin: 0; }
+  .wall-alarm-layout .wall-aside-scroll {
+    flex-direction: row; overflow-x: auto; overflow-y: hidden; height: 68px;
+  }
+  .wall-alarm-layout .wall-aside-scroll .wall-nav-btn { width: 72px; height: 60px; }
+  .wall-alarm-layout .wall-main { min-width: 0; min-height: 0; width: 100%; }
+  .wall-alarm-layout .wall-header {
+    padding: 16px; flex-wrap: wrap; gap: 12px; position: relative;
+  }
+  .wall-alarm-layout .wall-main > div { padding: 16px; }
+  .wall-alarm-layout input { min-width: 0; }
+}

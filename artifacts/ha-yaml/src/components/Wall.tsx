@@ -55,6 +55,8 @@ import {
 import { ComposedChart, AreaChart, Area, Line, ReferenceArea, ResponsiveContainer, XAxis, YAxis, ReferenceLine, Tooltip, BarChart, Bar, Cell, LabelList } from "recharts";
 import "./wall-theme.css";
 import { SuperView } from "./SuperView";
+import { AlarmPanel } from "./AlarmPanel";
+import { discoverAlarmSystems, alarmOwnedIds } from "@/lib/alarm";
 import { WallControls } from "./WallControls";
 import { RoomsView } from "./RoomsView";
 import { GroupedByRoomView } from "./GroupedByRoomView";
@@ -506,7 +508,7 @@ const CATEGORIES: Category[] = [
   },
   {
     key: "security",
-    label: "Security",
+    label: "Alarm",
     icon: ShieldCheck,
     match: (s) =>
       domainOf(s.entity_id) === "alarm_control_panel" ||
@@ -2070,16 +2072,29 @@ function SensorsView({
 
 function SecurityView({
   entities,
+  allStates,
+  connected,
+  lastOkMs,
+  connection,
+  onRefresh,
   onOpen,
 }: {
   entities: HAState[];
+  allStates: HAState[];
+  connected: boolean;
+  lastOkMs: number | null;
+  connection: string;
+  onRefresh: () => Promise<void>;
   onOpen: (s: HAState) => void;
 }) {
-  const panels = entities.filter(
-    (e) => domainOf(e.entity_id) === "alarm_control_panel",
+  // Alarm partitions, zones and companions live in AlarmPanel; keep only the
+  // unrelated door/window/motion/smoke sensors here so nothing is duplicated.
+  const owned = useMemo(
+    () => alarmOwnedIds(discoverAlarmSystems(allStates)),
+    [allStates],
   );
   const sensors = entities.filter(
-    (e) => domainOf(e.entity_id) === "binary_sensor",
+    (e) => domainOf(e.entity_id) === "binary_sensor" && !owned.has(e.entity_id),
   );
 
   const sensorLabel = (s: HAState): { label: string; on: boolean } => {
@@ -2106,64 +2121,14 @@ function SecurityView({
       exit={{ opacity: 0 }}
       className="space-y-8"
     >
-      {panels.length > 0 && (
-        <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {panels.map((p) => {
-            const armed = p.state.startsWith("armed");
-            const triggered = p.state === "triggered";
-            const PanelIcon = triggered ? AlertTriangle : ShieldCheck;
-            const stateLabel = p.state.replace(/_/g, " ");
-            return (
-              <button
-                key={p.entity_id}
-                type="button"
-                onClick={() => onOpen(p)}
-                aria-label={`Open ${friendly(p)}`}
-                className={`text-left rounded-2xl p-6 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cream)]/60 ${
-                  triggered
-                    ? "bg-red-500/20 border border-red-500/60"
-                    : armed
-                      ? "bg-[rgba(232,193,120,0.10)] border border-[rgba(232,193,120,0.35)]"
-                      : "bg-[rgba(0,0,0,0.25)] border border-[rgba(232,193,120,0.15)] hover:border-[rgba(232,193,120,0.30)]"
-                }`}
-              >
-                <div className="flex items-center gap-4">
-                  <div
-                    className={`p-4 rounded-2xl ${
-                      triggered
-                        ? "bg-red-500/30 text-red-100"
-                        : armed
-                          ? "bg-[rgba(201,153,74,0.20)] text-[var(--brass-bright)]"
-                          : "bg-[rgba(201,153,74,0.10)] text-[var(--brass)]"
-                    }`}
-                  >
-                    <PanelIcon className="w-10 h-10" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-xs uppercase tracking-[0.18em] text-[var(--cream-muted)]">
-                      Alarm System
-                    </div>
-                    <div className="text-xl font-medium text-[var(--cream)] truncate">
-                      {friendly(p)}
-                    </div>
-                    <div
-                      className={`text-2xl font-semibold capitalize tabular-nums mt-1 ${
-                        triggered
-                          ? "text-red-200"
-                          : armed
-                            ? "text-[var(--brass-bright)]"
-                            : "text-[var(--cream-muted)]"
-                      }`}
-                    >
-                      {stateLabel}
-                    </div>
-                  </div>
-                </div>
-              </button>
-            );
-          })}
-        </section>
-      )}
+      <AlarmPanel
+        key={connection}
+        states={allStates}
+        connected={connected}
+        lastOkMs={lastOkMs}
+        connection={connection}
+        onRefresh={onRefresh}
+      />
 
       {(() => {
         const groups: { title: string; classes: string[] }[] = [
@@ -2226,12 +2191,7 @@ function SecurityView({
         });
       })()}
 
-      {panels.length === 0 && sensors.length === 0 && (
-        <div className="text-center py-20 text-[var(--cream-muted)]">
-          <ShieldCheck className="w-12 h-12 mx-auto mb-4 opacity-30" />
-          <p className="text-base">No security devices to show.</p>
-        </div>
-      )}
+
     </motion.div>
   );
 }
@@ -2350,6 +2310,7 @@ export function Wall() {
   const [immersive, setImmersive] = useState(false);
   const [confirmAllOff, setConfirmAllOff] = useState(false);
   const [openEntity, setOpenEntity] = useState<HAState | null>(null);
+  const [lastOkMs, setLastOkMs] = useState<number | null>(null);
   const entityAliases = useEntityAliases((s) => s.aliases);
   const loadEntityAliases = useEntityAliases((s) => s.load);
   const roomAliases = useRoomAliases((s) => s.aliases);
@@ -2405,7 +2366,10 @@ export function Wall() {
       <button
         type="button"
         key={s.entity_id}
-        onClick={() => setOpenEntity(s)}
+        onClick={() => {
+          if (s.entity_id.startsWith("alarm_control_panel.")) setActive("security");
+          else setOpenEntity(s);
+        }}
         aria-label={`Open ${(aliased.attributes.friendly_name as string) ?? s.entity_id}`}
         className="text-left rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cream)]/60"
       >
@@ -2424,6 +2388,7 @@ export function Wall() {
       if (cancelled) return;
       if (r.ok) {
         setStates(r.data);
+        setLastOkMs(Date.now());
         setError(null);
         setStatus("connected");
         // Fetch config (location name, timezone) on first successful load.
@@ -2490,7 +2455,10 @@ export function Wall() {
 
   const refresh = async () => {
     const r = await haStates();
-    if (r.ok) setStates(r.data);
+    if (r.ok) {
+      setStates(r.data);
+      setLastOkMs(Date.now());
+    }
   };
 
   // Every real lighting load in the house: light.* entities (minus camera
@@ -2678,7 +2646,7 @@ export function Wall() {
   }
 
   return (
-    <div className="wall-root h-screen w-full flex overflow-hidden">
+    <div className={`wall-root h-screen w-full flex overflow-hidden ${active === "security" ? "wall-alarm-layout" : ""}`}>
       <MonsteraLeaf />
       <aside className="wall-aside w-32 shrink-0 flex flex-col items-center py-6 gap-2">
         <button
@@ -2792,7 +2760,10 @@ export function Wall() {
                 <SettingsPanelBody states={states} onChanged={refresh} />
               </div>
             ) : active === "overview" ? (
-              <SuperView key="super" states={states} onOpen={setOpenEntity} onChanged={refresh} />
+              <SuperView key="super" states={states} onOpen={(s) => {
+                if (s.entity_id.startsWith("alarm_control_panel.")) setActive("security");
+                else setOpenEntity(s);
+              }} onChanged={refresh} />
             ) : active === "rooms" ? (
               <RoomsView key="rooms" states={states} refresh={refresh} />
             ) : active === "covers" ? (
@@ -2862,6 +2833,11 @@ export function Wall() {
               <SecurityView
                 key="security"
                 entities={filtered}
+                allStates={states}
+                connected={status === "connected"}
+                lastOkMs={lastOkMs}
+                connection={url}
+                onRefresh={refresh}
                 onOpen={setOpenEntity}
               />
             ) : active === "sensors" ? (

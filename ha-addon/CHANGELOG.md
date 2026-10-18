@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.0.74
+
+- Added a dedicated Alarm section for EyezOn/Envisalink: partition status,
+  keypad text, numbered zones, open/fault/bypass/tamper/battery indications,
+  and supported arm/disarm controls.
+- Alarm actions require secure HA ingress/HTTPS, an alarm-system code, an
+  exact panel target, and confirmation. Codes are not retained; the UI waits
+  for reported panel state rather than treating an HTTP response as proof.
+- Issue acknowledgment is local to the wall. It does not clear panel trouble,
+  silence a siren, bypass a zone, or dismiss monitoring-company alerts.
+- No Home Assistant YAML package update is required for the Alarm panel.
+
 ## 1.0.73
 
 - HA Survey counts live automations, scripts and scenes independently of readable

@@ -1,4 +1,5 @@
 import { Router, type IRouter, type Request } from "express";
+import { AlarmAttemptLimiter, alarmServiceAccessError, isAlarmServicePath, isAlarmWsCommand } from "../lib/alarmSecurity";
 import {
   createStormPrepSession,
   isSensitiveStormPrepCall,
@@ -20,6 +21,7 @@ const failedPinAttempts = new Map<
 >();
 const MAX_PIN_ATTEMPTS = 5;
 const PIN_BLOCK_MS = 5 * 60 * 1000;
+const alarmAttempts = new AlarmAttemptLimiter();
 const protectedControlCache = new Map<
   string,
   { expiresAt: number; entityIds: Set<string> }
@@ -221,6 +223,18 @@ function resolveHaCredentials(clientUrl: unknown, clientToken: unknown) {
 router.post("/ha/call", async (req, res) => {
   const { url: clientUrl, token: clientToken, path, method, body, binary } = req.body ?? {};
 
+  const alarmCall = isAlarmServicePath(path);
+  const alarmError = alarmServiceAccessError(
+    path, typeof method === "string" ? method.toUpperCase() : "GET",
+    body, hasProtectedStormPrepTransport(req),
+  );
+  if (alarmError) return res.status(alarmError.status).json({ ok: false, ...alarmError });
+  if (alarmCall && !alarmAttempts.allow(`${req.ip ?? req.socket.remoteAddress}:${body.entity_id}`)) {
+    return res.status(429).json({
+      ok: false, error: "Too many alarm commands. Wait one minute and check the panel before trying again.",
+    });
+  }
+
   if (isSensitiveStormPrepCall(path, body)) {
     const accessError = stormPrepAccessError(
       req.headers.cookie,
@@ -308,6 +322,17 @@ router.post("/ha/call", async (req, res) => {
       signal: AbortSignal.timeout(45_000),
     });
 
+    // HA may include submitted service data in errors. Never echo alarm codes.
+    if (alarmCall) {
+      await upstream.arrayBuffer();
+      return res.status(upstream.status).json({
+        ok: upstream.ok,
+        status: upstream.status,
+        data: [],
+        ...(!upstream.ok ? { error: "Home Assistant rejected the alarm command. Check the alarm code and panel status." } : {}),
+      });
+    }
+
     if (binary) {
       const buf = Buffer.from(await upstream.arrayBuffer());
       const contentType =
@@ -363,6 +388,12 @@ router.post("/ha/ws-batch", async (req, res) => {
 
   if (!Array.isArray(commands) || commands.length === 0) {
     return res.status(400).json({ error: "Missing 'commands'" });
+  }
+  if (commands.some(isAlarmWsCommand)) {
+    return res.status(403).json({
+      ok: false, results: [],
+      error: "Use the Alarm panel's protected REST controls for alarm actions.",
+    });
   }
   if (commands.some((command) => isSensitiveStormPrepWsCommand(command))) {
     const accessError = stormPrepAccessError(
