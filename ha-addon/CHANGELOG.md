@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.0.71
+
+- **Fixed: solar period totals showed lifetime production** — Main Envoy's
+  native daily and seven-day sensors were both reporting its lifetime value.
+  The Energy page now derives each period independently from that same Envoy's
+  validated hourly lifetime-energy records. Today uses Hawaii midnight; seven
+  days means today plus the preceding six Hawaii calendar days. Both show the
+  completed-hour cutoff. Missing history, counter resets, invalid units and
+  stale data are explicit rather than displayed as trustworthy totals.
+- Solar history requests are limited to seven days plus one baseline hour,
+  cached for five minutes, and refreshed at Hawaii day rollover. Grid costs,
+  grid flow, battery displays and Solar Live are unchanged.
+
 ## 1.0.70
 
 - **Added: one approval prepares both Maui battery banks** — Settings now binds

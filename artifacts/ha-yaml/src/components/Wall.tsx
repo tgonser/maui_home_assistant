@@ -21,6 +21,7 @@ import {
 } from "@/lib/mediaState";
 import { useEntityAliases } from "@/lib/entityAliases";
 import { useRoomAliases } from "@/lib/roomAliases";
+import { useSolarPeriods } from "@/lib/useSolarPeriods";
 import { useRegistry, isLightingSwitch } from "@/lib/rooms";
 import { friendlyName, motionSensorLabel, displayNameWithRoom } from "@/lib/display";
 import {
@@ -911,6 +912,8 @@ type EnergyRow = {
   label: string;
   value: string;
   pct?: number;
+  detail?: string;
+  warning?: boolean;
 };
 
 function useEntityHistory(entityId: string) {
@@ -969,7 +972,7 @@ function EnergySystemCard({
       <div className="text-xs uppercase tracking-[0.18em] text-[var(--cream-muted)]">
         {name}
       </div>
-      {rows.map(({ icon: Icon, label, value, pct }) => (
+      {rows.map(({ icon: Icon, label, value, pct, detail, warning }) => (
         <div key={label} className="flex flex-col gap-1">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 text-[var(--cream-muted)]">
@@ -980,6 +983,11 @@ function EnergySystemCard({
               {value}
             </span>
           </div>
+          {detail && (
+            <div className={`text-[10px] leading-snug ${warning ? "text-amber-400" : "text-[var(--cream-muted)]"}`}>
+              {detail}
+            </div>
+          )}
           {pct !== undefined && !isNaN(pct) && (
             <div className="wall-progress h-1.5">
               <div style={{ width: `${Math.max(0, Math.min(100, pct))}%` }} />
@@ -1617,6 +1625,7 @@ function MonthlyCostChart({
 
 function EnergyDashboard({ states }: { states: HAState[] }) {
   const gridCosts = useGridCostStatistics();
+  const solar = useSolarPeriods(states);
   const get = (id: string) => states.find((s) => s.entity_id === id);
   const num = (id: string) => {
     const s = get(id);
@@ -1724,8 +1733,8 @@ function EnergyDashboard({ states }: { states: HAState[] }) {
           { icon: Zap,            label: "Sys 2 Imported Today", value: fmt("sensor.4680_system_2_grid_imported") },
           { icon: Zap,            label: "Net Today",            value: fmtKwh(netToday) },
           { icon: Sun,            label: "Solar Live",           value: fmt("sensor.envoy_202445013483_current_power_production") },
-          { icon: Sun,            label: "Solar Today",          value: fmt("sensor.envoy_202445013483_energy_production_today") },
-          { icon: Sun,            label: "Solar 7-Day",          value: fmt("sensor.envoy_202445013483_energy_production_last_seven_days") },
+          { icon: Sun,            label: "Solar Today",          ...solar.today },
+          { icon: Sun,            label: "Solar 7-Day",          ...solar.sevenDay },
           { icon: BatteryCharging,label: "Battery Avg",          value: fmtN(avgPct, "%"), pct: avgPct },
         ];
       })(),

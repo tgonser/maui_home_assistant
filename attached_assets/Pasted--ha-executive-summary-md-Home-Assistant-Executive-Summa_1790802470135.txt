@@ -1,0 +1,1842 @@
+===== ha_executive_summary.md =====
+
+# Home Assistant Executive Summary
+_Generated 2026-09-30T21:07:31.814Z_
+
+**Instance:** Makena  
+**Version:** 2026.7.2  
+**Time zone:** Pacific/Honolulu
+
+## Totals
+- Areas: **44**
+- Floors: **2**
+- Devices: **440**
+- Entities (registry): **4205**
+- Live states: **2300**
+- Integrations (config entries): **67**
+- Automations: **0**
+- Scripts: **0**
+- Scenes: **0**
+- Dashboards: **5**
+
+## Major systems present
+- Media players: 34
+- Lights: 129
+- Climate: 18
+- Cameras: 11
+- Sensors: 543
+
+## Top integrations by entity count
+- `unifi` — 1093
+- `enphase_envoy` — 949
+- `unifiprotect` — 732
+- `lutron_caseta` — 556
+- `weatherflow_cloud` — 105
+- `teslemetry` — 80
+- `input_number` — 79
+- `totalconnect` — 72
+- `honeywell` — 71
+- `sleepiq` — 64
+- `mobile_app` — 62
+- `hassio` — 56
+- `zha` — 44
+- `bluesound` — 39
+- `envisalink_new` — 36
+
+## Strongest dashboard opportunities
+- Multi-room audio scenes (34 media players)
+- Lighting scene library (129 lights)
+- Per-zone climate page (18 thermostats)
+- Security wall (11 cameras)
+- Energy summary (81 energy-related sensors)
+
+## Biggest cleanup issues
+- Entities without area assignment: **3045**
+- Disabled entities: **1909**
+- Hidden entities: **9**
+- Currently unavailable / unknown: **718**
+
+===== ha_area_map.md =====
+
+# Area Map
+
+Total areas: 44
+
+## Back yard
+Devices: 0 · Entities: 0
+
+
+## BBQ outdoor kitchen
+Devices: 3 · Entities: 24
+
+### Devices
+- **BBQ Lanai** — Bluesound POWERNODE
+- **Floor 1 Exterior BBQ Downlight** — Lutron Electronics Co., Inc None (Dimmed)
+- **USL-Motion_BBQ** — Ubiquiti USL Motion
+
+### Entities by domain
+- **light** (2): `light.bbq_light_path`, `light.floor_1_exterior_bbq_downlights_mstr_lanai_downlights`
+- **switch** (6): `switch.usl_motion_status_light_3`, `switch.usl_motion_motion_detection_3`, `switch.usl_motion_temperature_sensor_3`, `switch.usl_motion_humidity_sensor_3`, `switch.usl_motion_light_sensor_3`, `switch.usl_motion_alarm_sound_detection_3`
+- **media_player** (1): `media_player.bbq_lanai`
+- **binary_sensor** (5): `binary_sensor.usl_motion_moisture_3`, `binary_sensor.usl_motion_battery_3`, `binary_sensor.usl_motion_motion_3`, `binary_sensor.usl_motion_tamper_3`, `binary_sensor.usl_motion_contact_3`
+- **sensor** (5): `sensor.usl_motion_battery_3`, `sensor.usl_motion_illuminance_3`, `sensor.usl_motion_humidity_3`, `sensor.usl_motion_temperature_3`, `sensor.usl_motion_alarm_sound_detected_3`
+- **select** (2): `select.usl_motion_mount_type_3`, `select.usl_motion_paired_camera_3`
+- **number** (1): `number.usl_motion_motion_sensitivity_3`
+- **button** (1): `button.usl_motion_clear_tamper_3`
+- **device_tracker** (1): `device_tracker.bbqfrontpowernode_f096`
+
+## Bedroom
+Devices: 0 · Entities: 0
+
+
+## Floor 1 Bar
+Devices: 18 · Entities: 58
+
+### Devices
+- **audiocast** —  JBL BAR 1300
+- **Bar** — Bluesound POWERNODE
+- **Floor 1 Bar Keypad Device 1 Keypad** — Lutron Electronics Co., Inc HQWD-W6BRL (SeeTouchKeypad)
+- **Floor 1 Bar Downlights** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Bar Bar Artwork** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Bar Bar Hall Downlights 1** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Bar Linear Lighting** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Bar Pendants** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Bar Bar Hall Downlights 2** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Bar Linear Lighting 2** — Lutron Electronics Co., Inc None (Dimmed)
+- **65" OLED** — Unknown manufacturer S90FD
+- **JBL BAR 1300_A78F** — HARMAN International Industries, Incorporated JBL Bar 1300 
+- **JBL BAR 1300_A78F** — Harman International Industries Inc JBL BAR 1300
+- **USL-Motion_Bar** — Ubiquiti USL Motion
+- **Floor 1 Bar Bar Cove** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Bar Shade Group 1** — Lutron Electronics Co., Inc None (Shade)
+- **BAR DOOR** — ? 
+- **BAR WINDOW** — ? 
+
+### Entities by domain
+- **light** (9): `light.pub_path`, `light.floor_1_bar_downlights`, `light.floor_1_bar_bar_artwork`, `light.floor_1_bar_bar_hall_downlights_1`, `light.floor_1_bar_linear_lighting`, `light.floor_1_bar_pendants`, `light.floor_1_bar_bar_hall_downlights_2`, `light.floor_1_bar_linear_lighting_2`, _+1 more_
+- **switch** (12): `switch.floor_1_bar_keypad_device_1_keypad_bar_led`, `switch.floor_1_bar_keypad_device_1_keypad_downlights_led`, `switch.floor_1_bar_keypad_device_1_keypad_accents_led`, `switch.floor_1_bar_keypad_device_1_keypad_pendant_led`, `switch.floor_1_bar_keypad_device_1_keypad_bbq_ext_led`, `switch.floor_1_bar_keypad_device_1_keypad_powder_led`, `switch.usl_motion_status_light`, `switch.usl_motion_motion_detection`, _+4 more_
+- **media_player** (3): `media_player.jbl_bar_1300_a78f`, `media_player.great_room_tv_bsr`, `media_player.65_oled_2`
+- **cover** (1): `cover.floor_1_bar_shade_group_1`
+- **binary_sensor** (12): `binary_sensor.bar_door`, `binary_sensor.bar_door_battery`, `binary_sensor.bar_door_tamper`, `binary_sensor.bar_window`, `binary_sensor.bar_window_battery`, `binary_sensor.bar_window_tamper`, `binary_sensor.usl_motion_moisture`, `binary_sensor.usl_motion_battery`, _+4 more_
+- **sensor** (5): `sensor.usl_motion_battery`, `sensor.usl_motion_illuminance`, `sensor.usl_motion_humidity`, `sensor.usl_motion_temperature`, `sensor.usl_motion_alarm_sound_detected`
+- **select** (2): `select.usl_motion_mount_type`, `select.usl_motion_paired_camera`
+- **number** (1): `number.usl_motion_motion_sensitivity`
+- **automation** (1): `automation.pub_night_path`
+- **button** (11): `button.bar_door_bypass`, `button.bar_window_bypass`, `button.floor_1_bar_keypad_device_1_keypad_bar`, `button.floor_1_bar_keypad_device_1_keypad_downlights`, `button.floor_1_bar_keypad_device_1_keypad_accents`, `button.floor_1_bar_keypad_device_1_keypad_pendant`, `button.floor_1_bar_keypad_device_1_keypad_bbq_ext`, `button.floor_1_bar_keypad_device_1_keypad_powder`, _+3 more_
+- **device_tracker** (1): `device_tracker.great_room_tv_bsr_bar`
+
+## Floor 1 Bedroom 2 Suite Bed 2
+Devices: 10 · Entities: 27
+
+### Devices
+- **Floor 1 Bedroom 2 Suite Bed 2 Keypad Device 1 Keypad** — Lutron Electronics Co., Inc HQWD-W6BRL (SeeTouchKeypad)
+- **Floor 1 Bedroom 2 Suite Bed 2 Bed Downlights** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Elevator Hall Elevator Downlight** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Bedroom 2 Suite Bed 2 Closet Downlight** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Bedroom 2 Suite Bed 2 Closet Linear** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Bedroom 2 Suite Bed 2 Cove** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Bedroom 2 Suite Bed 2 Bath Ext Tub Downlight** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Bedroom 2 Suite Bed 2 Hall Downlights** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Bedroom 2 Suite Bed 2 Shade Group 1** — Lutron Electronics Co., Inc None (Shade)
+- **DOOR BEDROOM 2** — ? 
+
+### Entities by domain
+- **light** (7): `light.floor_1_bedroom_2_suite_bed_2_bed_downlights`, `light.floor_1_bedroom_2_suite_bed_2_hall_downlight1`, `light.floor_1_bedroom_2_suite_bed_2_closet_downlight`, `light.floor_1_bedroom_2_suite_bed_2_closet_linear`, `light.floor_1_bedroom_2_suite_bed_2_cove`, `light.floor_1_bedroom_2_suite_bed_2_bed_linear2`, `light.floor_1_bedroom_2_suite_bed_2_hall_downlights`
+- **switch** (6): `switch.floor_1_bedroom_2_suite_bed_2_keypad_device_1_keypad_bed_2_led`, `switch.floor_1_bedroom_2_suite_bed_2_keypad_device_1_keypad_down_led`, `switch.floor_1_bedroom_2_suite_bed_2_keypad_device_1_keypad_linear_led`, `switch.floor_1_bedroom_2_suite_bed_2_keypad_device_1_keypad_sconce_led`, `switch.floor_1_bedroom_2_suite_bed_2_keypad_device_1_keypad_hall_led`, `switch.floor_1_bedroom_2_suite_bed_2_keypad_device_1_keypad_bath_led`
+- **cover** (1): `cover.floor_1_bedroom_2_suite_bed_2_shade_group_1`
+- **binary_sensor** (4): `binary_sensor.door_bedroom_2`, `binary_sensor.door_bedroom_2_battery`, `binary_sensor.door_bedroom_2_tamper`, `binary_sensor.floor_1_bedroom_2_suite_bed_2_floor_1_bedroom_2_suite_bed_2_shade_group_1_battery`
+- **button** (9): `button.door_bedroom_2_bypass`, `button.floor_1_bedroom_2_suite_bed_2_keypad_device_1_keypad_bed_2`, `button.floor_1_bedroom_2_suite_bed_2_keypad_device_1_keypad_down`, `button.floor_1_bedroom_2_suite_bed_2_keypad_device_1_keypad_linear`, `button.floor_1_bedroom_2_suite_bed_2_keypad_device_1_keypad_sconce`, `button.floor_1_bedroom_2_suite_bed_2_keypad_device_1_keypad_hall`, `button.floor_1_bedroom_2_suite_bed_2_keypad_device_1_keypad_bath`, `button.floor_1_bedroom_2_suite_bed_2_keypad_device_1_keypad_button_18`, _+1 more_
+
+## Floor 1 Bedroom 2 Suite Bed 2 Bath
+Devices: 14 · Entities: 39
+
+### Devices
+- **Floor 1 Bedroom 2 Suite Bed 2 Bath Hall Pico Device 1 Pico** — Lutron Electronics Co., Inc PJ2-3BRL-XXX-L01 (Pico3ButtonRaiseLower)
+- **Floor 1 Bedroom 2 Suite Bed 2 Bath Closet Pico Device 1 Pico** — Lutron Electronics Co., Inc PJ2-3BRL-XXX-L01 (Pico3ButtonRaiseLower)
+- **Floor 1 Bedroom 2 Suite Bed 2 Bath Bath Pico Device 1 Pico** — Lutron Electronics Co., Inc PJ2-3BRL-XXX-L01 (Pico3ButtonRaiseLower)
+- **Floor 1 Bedroom 2 Suite Bed 2 Bath Water Closet Device 2 Pico** — Lutron Electronics Co., Inc PJ2-3BRL-XXX-S02 (Pico3ButtonRaiseLower)
+- **Floor 1 Bedroom 2 Suite Bed 2 Bath Outdoor Bath Device 1 Pico** — Lutron Electronics Co., Inc PJ2-3BRL-XXX-L01 (Pico3ButtonRaiseLower)
+- **Floor 1 Bedroom 2 Suite Bed 2 Bath Toe Kick** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Bedroom 2 Suite Bed 2 Bath Downlights + WC** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Bedroom 2 Suite Bed 2 Bath Vanity** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Bedroom 3 Suite Bed 3 Bath Toe Kick** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Bedroom 2 Suite Bed 2 Bath Bathtub Downlights** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Bedroom 2 Suite Bed 2 Bath Shade Group 1** — Lutron Electronics Co., Inc None (Shade)
+- **Floor 1 Bedroom 2 Suite Bed 2 Bath Exhaust Fan** — Lutron Electronics Co., Inc None (Switched)
+- **MOTION BATHROOM 2** — ? 
+- **Beach Guest Bed** — Bluesound POWERNODE
+
+### Entities by domain
+- **light** (5): `light.floor_1_exterior_bed_2_ext_sconces`, `light.floor_1_bedroom_2_suite_bed_2_bath_downlights_wc`, `light.floor_1_bedroom_2_suite_bed_2_bath_vanity`, `light.floor_1_bedroom_2_suite_bed_2_bath_linear_lighting`, `light.floor_1_bedroom_2_suite_bed_2_bath_bathtub_downlights`
+- **switch** (1): `switch.floor_1_bedroom_2_suite_bed_2_bath_exhaust_fan`
+- **media_player** (1): `media_player.beach_guest_bed`
+- **cover** (1): `cover.floor_1_bedroom_2_suite_bed_2_bath_shade_group_1`
+- **binary_sensor** (4): `binary_sensor.motion_bathroom_2`, `binary_sensor.motion_bathroom_2_battery`, `binary_sensor.motion_bathroom_2_tamper`, `binary_sensor.floor_1_bedroom_2_suite_bed_2_bath_floor_1_bedroom_2_suite_bed_2_bath_shade_group_1_battery`
+- **button** (26): `button.motion_bathroom_2_bypass`, `button.floor_1_bedroom_2_suite_bed_2_bath_hall_pico_device_1_pico_on`, `button.floor_1_bedroom_2_suite_bed_2_bath_hall_pico_device_1_pico_favorite`, `button.floor_1_bedroom_2_suite_bed_2_bath_hall_pico_device_1_pico_off`, `button.floor_1_bedroom_2_suite_bed_2_bath_hall_pico_device_1_pico_raise`, `button.floor_1_bedroom_2_suite_bed_2_bath_hall_pico_device_1_pico_lower`, `button.floor_1_bedroom_2_suite_bed_2_bath_closet_pico_device_1_pico_on`, `button.floor_1_bedroom_2_suite_bed_2_bath_closet_pico_device_1_pico_favorite`, _+18 more_
+- **device_tracker** (1): `device_tracker.unifi_default_90_56_82_81_48_d2`
+
+## Floor 1 Bedroom 3 Suite Bed 3
+Devices: 10 · Entities: 30
+
+### Devices
+- **Floor 1 Bedroom 3 Suite Bed 3 Keypad Device 1 Keypad** — Lutron Electronics Co., Inc HQWD-W6BRL (SeeTouchKeypad)
+- **Floor 1 Bedroom 3 Suite Bed 3 Bed Downlights** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Bedroom 3 Suite Bed 3 SPARE** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Bedroom 3 Suite Bed 3 Closet Door** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Bedroom 3 Suite Bed 3 Entry Downlight** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Bedroom 3 Suite Bed 3 Closet Linear** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Bedroom 3 Suite Bed 3 Cove** — Lutron Electronics Co., Inc None (Dimmed)
+- **Beach TV** — TCL Smart TV Pro
+- **BEDROOM 3 DOOR** — ? 
+- **BEDROOM 3 OVERHEAD** — ? 
+
+### Entities by domain
+- **light** (6): `light.floor_1_bedroom_3_suite_bed_3_bed_downlights`, `light.floor_1_bedroom_3_suite_bed_3_closet_linear2`, `light.floor_1_bedroom_3_suite_bed_3_closet_door`, `light.floor_1_bedroom_3_suite_bed_3_entry_downlight`, `light.floor_1_bedroom_3_suite_bed_3_closet_linear`, `light.floor_1_bedroom_3_suite_bed_3_cove`
+- **switch** (6): `switch.floor_1_bedroom_3_suite_bed_3_keypad_device_1_keypad_bed_3_led`, `switch.floor_1_bedroom_3_suite_bed_3_keypad_device_1_keypad_down_led`, `switch.floor_1_bedroom_3_suite_bed_3_keypad_device_1_keypad_linear_led`, `switch.floor_1_bedroom_3_suite_bed_3_keypad_device_1_keypad_sconces_led`, `switch.floor_1_bedroom_3_suite_bed_3_keypad_device_1_keypad_closet_led`, `switch.floor_1_bedroom_3_suite_bed_3_keypad_device_1_keypad_bath_led`
+- **media_player** (1): `media_player.beach_tv`
+- **binary_sensor** (6): `binary_sensor.bedroom_3_door`, `binary_sensor.bedroom_3_door_battery`, `binary_sensor.bedroom_3_door_tamper`, `binary_sensor.bedroom_3_overhead`, `binary_sensor.bedroom_3_overhead_battery`, `binary_sensor.bedroom_3_overhead_tamper`
+- **button** (10): `button.bedroom_3_door_bypass`, `button.bedroom_3_overhead_bypass`, `button.floor_1_bedroom_3_suite_bed_3_keypad_device_1_keypad_bed_3`, `button.floor_1_bedroom_3_suite_bed_3_keypad_device_1_keypad_down`, `button.floor_1_bedroom_3_suite_bed_3_keypad_device_1_keypad_linear`, `button.floor_1_bedroom_3_suite_bed_3_keypad_device_1_keypad_sconces`, `button.floor_1_bedroom_3_suite_bed_3_keypad_device_1_keypad_closet`, `button.floor_1_bedroom_3_suite_bed_3_keypad_device_1_keypad_bath`, _+2 more_
+- **remote** (1): `remote.beach_tv`
+
+## Floor 1 Bedroom 3 Suite Bed 3 Bath
+Devices: 6 · Entities: 13
+
+### Devices
+- **Floor 1 Bedroom 3 Suite Bed 3 Bath Pico Device 1 Pico** — Lutron Electronics Co., Inc PJ2-3BRL-XXX-L01 (Pico3ButtonRaiseLower)
+- **Floor 1 Bedroom 3 Suite Bed 3 Bath Downlights** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Bedroom 3 Suite Bed 3 Bath Vanity Sconces** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Bedroom 2 Suite Bed 2 Bath WC LINEAR** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Bedroom 3 Suite Bed 3 Bath Exhaust Fan** — Lutron Electronics Co., Inc None (Switched)
+- **MOTION BATHROOM 3** — ? 
+
+### Entities by domain
+- **light** (3): `light.floor_1_bedroom_3_suite_bed_3_bath_downlights`, `light.floor_1_bedroom_3_suite_bed_3_bath_vanity_sconces`, `light.floor_1_bedroom_3_suite_bed_3_bath_vanity_linear`
+- **switch** (1): `switch.floor_1_bedroom_3_suite_bed_3_bath_exhaust_fan`
+- **binary_sensor** (3): `binary_sensor.motion_bathroom_3`, `binary_sensor.motion_bathroom_3_battery`, `binary_sensor.motion_bathroom_3_tamper`
+- **button** (6): `button.motion_bathroom_3_bypass`, `button.floor_1_bedroom_3_suite_bed_3_bath_pico_device_1_pico_on`, `button.floor_1_bedroom_3_suite_bed_3_bath_pico_device_1_pico_favorite`, `button.floor_1_bedroom_3_suite_bed_3_bath_pico_device_1_pico_off`, `button.floor_1_bedroom_3_suite_bed_3_bath_pico_device_1_pico_raise`, `button.floor_1_bedroom_3_suite_bed_3_bath_pico_device_1_pico_lower`
+
+## Floor 1 Elevator Hall
+Devices: 2 · Entities: 15
+
+### Devices
+- **Floor 1 Elevator Hall Control Station 001 Device 1 Keypad** — Lutron Electronics Co., Inc HQWD-W6BRL (SeeTouchKeypad)
+- **Floor 1 Elevator Hall Elevator Hall Downlights** — Lutron Electronics Co., Inc None (Dimmed)
+
+### Entities by domain
+- **light** (1): `light.floor_1_elevator_hall_elevator_hall_downlights`
+- **switch** (6): `switch.floor_1_elevator_hall_control_station_001_device_1_keypad_hall_led`, `switch.floor_1_elevator_hall_control_station_001_device_1_keypad_hall_dim_led`, `switch.floor_1_elevator_hall_control_station_001_device_1_keypad_great_room_led`, `switch.floor_1_elevator_hall_control_station_001_device_1_keypad_gr_dim_led`, `switch.floor_1_elevator_hall_control_station_001_device_1_keypad_button_5_led`, `switch.floor_1_elevator_hall_control_station_001_device_1_keypad_button_6_led`
+- **button** (8): `button.floor_1_elevator_hall_control_station_001_device_1_keypad_hall`, `button.floor_1_elevator_hall_control_station_001_device_1_keypad_hall_dim`, `button.floor_1_elevator_hall_control_station_001_device_1_keypad_great_room`, `button.floor_1_elevator_hall_control_station_001_device_1_keypad_gr_dim`, `button.floor_1_elevator_hall_control_station_001_device_1_keypad_button_5`, `button.floor_1_elevator_hall_control_station_001_device_1_keypad_button_6`, `button.floor_1_elevator_hall_control_station_001_device_1_keypad_button_18`, `button.floor_1_elevator_hall_control_station_001_device_1_keypad_button_19`
+
+## Floor 1 Entry
+Devices: 5 · Entities: 8
+
+### Devices
+- **Floor 1 Entry Downlights** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Entry Chandelier** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Entry Artwork** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Entry Gable Lights** — Lutron Electronics Co., Inc None (Dimmed)
+- **FRONT DOOR** — ? 
+
+### Entities by domain
+- **light** (4): `light.floor_1_entry_downlights`, `light.floor_1_entry_chandelier`, `light.floor_1_entry_artwork`, `light.floor_1_entry_gable_lights`
+- **binary_sensor** (3): `binary_sensor.front_door`, `binary_sensor.front_door_battery`, `binary_sensor.front_door_tamper`
+- **button** (1): `button.front_door_bypass`
+
+## Floor 1 Equipment/Utility
+Devices: 14 · Entities: 102
+
+### Devices
+- **Equipment/Utility Processor 001** — Lutron Electronics Co., Inc HQP7-2 (HWQSProcessor)
+- **Floor 1 Equipment/Utility Control Station 002 Device 1 Pico** — Lutron Electronics Co., Inc PJ2-3BRL-XXX-L01 (Pico3ButtonRaiseLower)
+- **Floor 1 Equipment/Utility Control Station 002 Device 2 Pico** — Lutron Electronics Co., Inc PJ2-3BRL-XXX-S02 (Pico3ButtonRaiseLower)
+- **Floor 1 Equipment/Utility Homeowner Keypads Device 1 Keypad** — Lutron Electronics Co., Inc Homeowner Keypad (HomeownerKeypad)
+- **Floor 1 Equipment/Utility Homeowner Keypads Device 2 Keypad** — Lutron Electronics Co., Inc Homeowner Keypad (HomeownerKeypad)
+- **Floor 1 Equipment/Utility Homeowner Keypads Device 3 Keypad** — Lutron Electronics Co., Inc Homeowner Keypad (HomeownerKeypad)
+- **Floor 1 Equipment/Utility Homeowner Keypads Device 4 Keypad** — Lutron Electronics Co., Inc Homeowner Keypad (HomeownerKeypad)
+- **Floor 1 Equipment/Utility Downlights** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Equipment/Utility SPARE** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Equipment/Utility Exhaust Fan** — Lutron Electronics Co., Inc None (Switched)
+- **UP sense - Equipment closet** — Ubiquiti UP Sense
+- **Floor 1 Equipment/Utility Window** — Lutron Electronics Co., Inc None (Shade)
+- **LTEM-XV** — ? 
+- **Floor 1 Exterior Maui Island Lts** — Lutron Electronics Co., Inc None (Dimmed)
+
+### Entities by domain
+- **light** (3): `light.floor_1_equipment_utility_downlights`, `light.floor_1_equipment_utility_linear_light`, `light.floor_1_equipment_utility_floor_1_equipment_utility_maui_island_lts`
+- **switch** (35): `switch.floor_1_equipment_utility_homeowner_keypads_device_1_keypad_dog_am_led`, `switch.floor_1_equipment_utility_homeowner_keypads_device_1_keypad_entertain_led`, `switch.floor_1_equipment_utility_homeowner_keypads_device_1_keypad_button_3_led`, `switch.floor_1_equipment_utility_homeowner_keypads_device_1_keypad_button_4_led`, `switch.floor_1_equipment_utility_homeowner_keypads_device_1_keypad_button_5_led`, `switch.floor_1_equipment_utility_homeowner_keypads_device_1_keypad_button_6_led`, `switch.floor_1_equipment_utility_homeowner_keypads_device_1_keypad_button_7_led`, `switch.floor_1_equipment_utility_homeowner_keypads_device_2_keypad_button_1_led`, _+27 more_
+- **cover** (1): `cover.floor_1_equipment_utility_window`
+- **alarm_control_panel** (1): `alarm_control_panel.ltem_xv`
+- **binary_sensor** (12): `binary_sensor.ltem_xv_battery`, `binary_sensor.ltem_xv_tamper`, `binary_sensor.ltem_xv_power`, `binary_sensor.ltem_xv_smoke`, `binary_sensor.ltem_xv_carbon_monoxide`, `binary_sensor.ltem_xv_police_emergency`, `binary_sensor.pool_double_sliders_moisture`, `binary_sensor.pool_double_sliders_battery`, _+4 more_
+- **sensor** (5): `sensor.pool_double_sliders_battery`, `sensor.pool_double_sliders_illuminance`, `sensor.pool_double_sliders_humidity`, `sensor.pool_double_sliders_temperature`, `sensor.pool_double_sliders_alarm_sound_detected`
+- **select** (2): `select.pool_double_sliders_mount_type`, `select.pool_double_sliders_paired_camera`
+- **number** (1): `number.pool_double_sliders_motion_sensitivity`
+- **automation** (1): `automation.udm_pro_temperature_warning`
+- **button** (41): `button.ltem_xv_clear_bypass`, `button.ltem_xv_bypass_all`, `button.floor_1_equipment_utility_control_station_002_device_1_pico_on`, `button.floor_1_equipment_utility_control_station_002_device_1_pico_favorite`, `button.floor_1_equipment_utility_control_station_002_device_1_pico_off`, `button.floor_1_equipment_utility_control_station_002_device_1_pico_raise`, `button.floor_1_equipment_utility_control_station_002_device_1_pico_lower`, `button.floor_1_equipment_utility_control_station_002_device_2_pico_on`, _+33 more_
+
+## Floor 1 Exterior
+Devices: 3 · Entities: 3
+
+### Devices
+- **Floor 1 Exterior SPARE NICHE LED CONSTANT HOT** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Exterior Color Niche Right** — Lutron Electronics Co., Inc None (Switched)
+- **Floor 1 Exterior Color Niche Left** — Lutron Electronics Co., Inc None (Switched)
+
+### Entities by domain
+- **light** (1): `light.floor_1_exterior_bed_3_ext_sconces`
+- **switch** (2): `switch.floor_1_exterior_color_niche_right`, `switch.floor_1_exterior_zone_12`
+
+## Floor 1 Great Room Atrium
+Devices: 7 · Entities: 24
+
+### Devices
+- **Great Room** — Bluesound NODE ICON
+- **Floor 1 Great Room Atrium Keypad Device 1 Keypad** — Lutron Electronics Co., Inc HQWD-W6BRL (SeeTouchKeypad)
+- **Floor 1 Great Room Atrium Downlights** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Great Room Atrium Linear Lighting** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Great Room Atrium Chandelier** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Great Room Atrium TV Palm Lights** — Lutron Electronics Co., Inc None (Dimmed)
+- **LIVING ROOM DOOR** — ? 
+
+### Entities by domain
+- **light** (4): `light.floor_1_great_room_atrium_downlights`, `light.floor_1_great_room_atrium_linear_lighting`, `light.floor_1_great_room_atrium_chandelier`, `light.floor_1_great_room_atrium_tv_palm_lights`
+- **switch** (6): `switch.floor_1_great_room_atrium_keypad_device_1_keypad_great_rm_led`, `switch.floor_1_great_room_atrium_keypad_device_1_keypad_gr_down_led`, `switch.floor_1_great_room_atrium_keypad_device_1_keypad_linear_led`, `switch.floor_1_great_room_atrium_keypad_device_1_keypad_chand_led`, `switch.floor_1_great_room_atrium_keypad_device_1_keypad_lanai_led`, `switch.floor_1_great_room_atrium_keypad_device_1_keypad_home_off_led`
+- **media_player** (1): `media_player.great_room`
+- **binary_sensor** (3): `binary_sensor.living_room_door`, `binary_sensor.living_room_door_battery`, `binary_sensor.living_room_door_tamper`
+- **button** (9): `button.living_room_door_bypass`, `button.floor_1_great_room_atrium_keypad_device_1_keypad_great_rm`, `button.floor_1_great_room_atrium_keypad_device_1_keypad_gr_down`, `button.floor_1_great_room_atrium_keypad_device_1_keypad_linear`, `button.floor_1_great_room_atrium_keypad_device_1_keypad_chand`, `button.floor_1_great_room_atrium_keypad_device_1_keypad_lanai`, `button.floor_1_great_room_atrium_keypad_device_1_keypad_home_off`, `button.floor_1_great_room_atrium_keypad_device_1_keypad_button_18`, _+1 more_
+- **device_tracker** (1): `device_tracker.greatroom`
+
+## Floor 1 Great Room Kitchen
+Devices: 9 · Entities: 25
+
+### Devices
+- **Floor 1 Great Room Kitchen Keypad Device 1 Keypad** — Lutron Electronics Co., Inc HQWD-W6BRL (SeeTouchKeypad)
+- **Floor 1 Great Room Kitchen Downlights** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Great Room Kitchen Island Pendants** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Great Room Kitchen Toe Kick** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Great Room Kitchen Upper Coutertop** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Great Room Kitchen Backsplash** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Great Room Kitchen Lower Countertop** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Great Room Kitchen Counter Sides** — Lutron Electronics Co., Inc None (Dimmed)
+- **KITCHEN DOOR** — ? 
+
+### Entities by domain
+- **light** (7): `light.floor_1_great_room_kitchen_downlights`, `light.floor_1_great_room_kitchen_island_pendants`, `light.floor_1_great_room_kitchen_toe_kick`, `light.floor_1_great_room_kitchen_lower_countertop`, `light.floor_1_great_room_kitchen_upper_countertop`, `light.floor_1_great_room_kitchen_backsplash`, `light.floor_1_great_room_kitchen_counter_sides`
+- **switch** (6): `switch.floor_1_great_room_kitchen_keypad_device_1_keypad_kitchen_led`, `switch.floor_1_great_room_kitchen_keypad_device_1_keypad_kitchen_led_2`, `switch.floor_1_great_room_kitchen_keypad_device_1_keypad_kitchen_led_3`, `switch.floor_1_great_room_kitchen_keypad_device_1_keypad_kitchen_led_4`, `switch.floor_1_great_room_kitchen_keypad_device_1_keypad_pantry_led`, `switch.floor_1_great_room_kitchen_keypad_device_1_keypad_button_6_led`
+- **binary_sensor** (3): `binary_sensor.kitchen_door`, `binary_sensor.kitchen_door_battery`, `binary_sensor.kitchen_door_tamper`
+- **button** (9): `button.kitchen_door_bypass`, `button.floor_1_great_room_kitchen_keypad_device_1_keypad_kitchen`, `button.floor_1_great_room_kitchen_keypad_device_1_keypad_kitchen_2`, `button.floor_1_great_room_kitchen_keypad_device_1_keypad_kitchen_3`, `button.floor_1_great_room_kitchen_keypad_device_1_keypad_kitchen_4`, `button.floor_1_great_room_kitchen_keypad_device_1_keypad_pantry`, `button.floor_1_great_room_kitchen_keypad_device_1_keypad_button_6`, `button.floor_1_great_room_kitchen_keypad_device_1_keypad_button_18`, _+1 more_
+
+## Floor 1 Great room lanai
+Devices: 3 · Entities: 4
+
+### Devices
+- **Great Room Lanai** — Bluesound POWERNODE
+- **Floor 1 Exterior Great Room Lanai Cove** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Exterior Great Rm Lanai Downlights** — Lutron Electronics Co., Inc None (Dimmed)
+
+### Entities by domain
+- **light** (2): `light.floor_1_exterior_great_room_lanai_cove`, `light.floor_1_exterior_great_rm_lanai_downlights`
+- **media_player** (1): `media_player.great_room_lanai`
+- **device_tracker** (1): `device_tracker.bbqbackpowernode_edfe`
+
+## Floor 1 LP2 Unknown Loads
+Devices: 9 · Entities: 9
+
+### Devices
+- **Floor 1 LP2 Unknown Loads SPARE** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 LP2 Unknown Loads SPARE 1** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 LP2 Unknown Loads SPARE 2** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 LP2 Unknown Loads SPARE 3** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 LP2 Unknown Loads SPARE 4** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 LP2 Unknown Loads SPARE 5** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 LP2 Unknown Loads SPARE 6** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 LP2 Unknown Loads SPARE 7** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Master Suite Master Bath Exhaust Fan** — Lutron Electronics Co., Inc None (Switched)
+
+### Entities by domain
+- **light** (8): `light.floor_1_lp2_unknown_loads_2_1_1`, `light.floor_1_lp2_unknown_loads_2_1_2`, `light.floor_1_lp2_unknown_loads_2_1_3`, `light.floor_1_lp2_unknown_loads_2_1_4`, `light.floor_1_lp2_unknown_loads_2_2_2`, `light.floor_1_lp2_unknown_loads_2_2_3`, `light.floor_1_lp2_unknown_loads_2_2_4`, `light.floor_1_lp2_unknown_loads_2_4_4`
+- **switch** (1): `switch.floor_1_lp2_unknown_loads_2_sw_4_fan`
+
+## Floor 1 Mudroom
+Devices: 4 · Entities: 17
+
+### Devices
+- **Floor 1 Mudroom Keypad Device 1 Keypad** — Lutron Electronics Co., Inc HQWD-W6BRL (SeeTouchKeypad)
+- **Floor 1 Mudroom Downlights** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Mudroom Linear Lighting** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Mudroom Exhaust Fan** — Lutron Electronics Co., Inc None (Switched)
+
+### Entities by domain
+- **light** (2): `light.floor_1_mudroom_downlights`, `light.floor_1_mudroom_linear_lighting`
+- **switch** (7): `switch.floor_1_mudroom_keypad_device_1_keypad_mud_led`, `switch.floor_1_mudroom_keypad_device_1_keypad_mud_led_2`, `switch.floor_1_mudroom_keypad_device_1_keypad_mud_led_3`, `switch.floor_1_mudroom_keypad_device_1_keypad_button_4_led`, `switch.floor_1_mudroom_keypad_device_1_keypad_button_5_led`, `switch.floor_1_mudroom_keypad_device_1_keypad_button_6_led`, `switch.floor_1_mudroom_exhaust_fan`
+- **button** (8): `button.floor_1_mudroom_keypad_device_1_keypad_mud`, `button.floor_1_mudroom_keypad_device_1_keypad_mud_2`, `button.floor_1_mudroom_keypad_device_1_keypad_mud_3`, `button.floor_1_mudroom_keypad_device_1_keypad_button_4`, `button.floor_1_mudroom_keypad_device_1_keypad_button_5`, `button.floor_1_mudroom_keypad_device_1_keypad_button_6`, `button.floor_1_mudroom_keypad_device_1_keypad_button_18`, `button.floor_1_mudroom_keypad_device_1_keypad_button_19`
+
+## Floor 1 Pantry
+Devices: 3 · Entities: 7
+
+### Devices
+- **Floor 1 Pantry Pico Device 1 Pico** — Lutron Electronics Co., Inc PJ2-3BRL-XXX-L01 (Pico3ButtonRaiseLower)
+- **Floor 1 Pantry Downlights** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Pantry Toe Kick** — Lutron Electronics Co., Inc None (Dimmed)
+
+### Entities by domain
+- **light** (2): `light.floor_1_pantry_downlights`, `light.floor_1_pantry_toe_kick`
+- **button** (5): `button.floor_1_pantry_pico_device_1_pico_on`, `button.floor_1_pantry_pico_device_1_pico_favorite`, `button.floor_1_pantry_pico_device_1_pico_off`, `button.floor_1_pantry_pico_device_1_pico_raise`, `button.floor_1_pantry_pico_device_1_pico_lower`
+
+## Floor 1 Powder Room
+Devices: 7 · Entities: 14
+
+### Devices
+- **Floor 1 Powder Room Pico 001 Device 1 Pico** — Lutron Electronics Co., Inc PJ2-3BRL-XXX-L01 (Pico3ButtonRaiseLower)
+- **Floor 1 Powder Room Downlights** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Powder Room Linear Lighting** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Powder Room Vanity** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Powder Room Toe Kick** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 1 Powder Room Exhaust Fan** — Lutron Electronics Co., Inc None (Switched)
+- **BAR BATHROOM DOOR** — ? 
+
+### Entities by domain
+- **light** (4): `light.floor_1_powder_room_downlights`, `light.floor_1_powder_room_linear_lighting`, `light.floor_1_powder_room_vanity`, `light.floor_1_powder_room_toe_kick`
+- **switch** (1): `switch.floor_1_powder_room_exhaust_fan`
+- **binary_sensor** (3): `binary_sensor.bar_bathroom_door`, `binary_sensor.bar_bathroom_door_battery`, `binary_sensor.bar_bathroom_door_tamper`
+- **button** (6): `button.bar_bathroom_door_bypass`, `button.floor_1_powder_room_pico_001_device_1_pico_on`, `button.floor_1_powder_room_pico_001_device_1_pico_favorite`, `button.floor_1_powder_room_pico_001_device_1_pico_off`, `button.floor_1_powder_room_pico_001_device_1_pico_raise`, `button.floor_1_powder_room_pico_001_device_1_pico_lower`
+
+## Floor 1 Stairs
+Devices: 1 · Entities: 14
+
+### Devices
+- **Floor 1 Stairs Control Station 001 Device 1 Keypad** — Lutron Electronics Co., Inc HQWD-W6BRL (SeeTouchKeypad)
+
+### Entities by domain
+- **switch** (6): `switch.floor_1_stairs_control_station_001_device_1_keypad_stairs_led`, `switch.floor_1_stairs_control_station_001_device_1_keypad_downlights_led`, `switch.floor_1_stairs_control_station_001_device_1_keypad_art_led`, `switch.floor_1_stairs_control_station_001_device_1_keypad_pendants_led`, `switch.floor_1_stairs_control_station_001_device_1_keypad_entry_led`, `switch.floor_1_stairs_control_station_001_device_1_keypad_film_led`
+- **button** (8): `button.floor_1_stairs_control_station_001_device_1_keypad_stairs`, `button.floor_1_stairs_control_station_001_device_1_keypad_downlights`, `button.floor_1_stairs_control_station_001_device_1_keypad_art`, `button.floor_1_stairs_control_station_001_device_1_keypad_pendants`, `button.floor_1_stairs_control_station_001_device_1_keypad_entry`, `button.floor_1_stairs_control_station_001_device_1_keypad_film`, `button.floor_1_stairs_control_station_001_device_1_keypad_button_18`, `button.floor_1_stairs_control_station_001_device_1_keypad_button_19`
+
+## Floor 2 Bedroom 4 Suite Bed 4
+Devices: 11 · Entities: 38
+
+### Devices
+- **Floor 2 Bedroom 4 Suite Bed 4 Keypad Device 1 Keypad** — Lutron Electronics Co., Inc HQWD-W6BRL (SeeTouchKeypad)
+- **Floor 2 Bedroom 4 Suite Bed 4 Hall1 Device 1 Pico** — Lutron Electronics Co., Inc PJ2-3BRL-XXX-L01 (Pico3ButtonRaiseLower)
+- **Floor 2 Bedroom 4 Suite Bed 4 Outdoor Shower Device 1 Pico** — Lutron Electronics Co., Inc PJ2-3BRL-XXX-L01 (Pico3ButtonRaiseLower)
+- **Floor 2 Bedroom 4 Suite Bed 4 Closet Device 1 Pico** — Lutron Electronics Co., Inc PJ2-3BRL-XXX-L01 (Pico3ButtonRaiseLower)
+- **Floor 2 Bedroom 4 Suite Bed 4 Bed Downlights** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Bedroom 4 Suite Bed 4 Closet Linear** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Bedroom 4 Suite Bed 4 Hall Downlights** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Bedroom 4 Suite Bed 4 Bed Linear Lighting** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Bedroom 4 Suite Bed 4 Closet Downlight** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Bedroom 4 Suite Bed 4 Shade Group 1** — Lutron Electronics Co., Inc None (Shade)
+- **Molokini Guest Bed** — Bluesound POWERNODE
+
+### Entities by domain
+- **light** (5): `light.floor_2_bedroom_4_suite_bed_4_bed_downlights`, `light.floor_2_bedroom_4_suite_bed_4_closet_linear`, `light.floor_2_bedroom_4_suite_bed_4_hall_downlights`, `light.floor_2_bedroom_4_suite_bed_4_bed_linear_lighting`, `light.floor_2_bedroom_4_suite_bed_4_closet_downlight`
+- **switch** (6): `switch.floor_2_bedroom_4_suite_bed_4_keypad_device_1_keypad_bed_4_led`, `switch.floor_2_bedroom_4_suite_bed_4_keypad_device_1_keypad_down_led`, `switch.floor_2_bedroom_4_suite_bed_4_keypad_device_1_keypad_linear_led`, `switch.floor_2_bedroom_4_suite_bed_4_keypad_device_1_keypad_hall_led`, `switch.floor_2_bedroom_4_suite_bed_4_keypad_device_1_keypad_closet_led`, `switch.floor_2_bedroom_4_suite_bed_4_keypad_device_1_keypad_bath_led`
+- **media_player** (1): `media_player.molokini_guest_bed`
+- **cover** (1): `cover.floor_2_bedroom_4_suite_bed_4_shade_group_1`
+- **binary_sensor** (1): `binary_sensor.floor_2_bedroom_4_suite_bed_4_floor_2_bedroom_4_suite_bed_4_shade_group_1_battery`
+- **button** (23): `button.floor_2_bedroom_4_suite_bed_4_keypad_device_1_keypad_bed_4`, `button.floor_2_bedroom_4_suite_bed_4_keypad_device_1_keypad_down`, `button.floor_2_bedroom_4_suite_bed_4_keypad_device_1_keypad_linear`, `button.floor_2_bedroom_4_suite_bed_4_keypad_device_1_keypad_hall`, `button.floor_2_bedroom_4_suite_bed_4_keypad_device_1_keypad_closet`, `button.floor_2_bedroom_4_suite_bed_4_keypad_device_1_keypad_bath`, `button.floor_2_bedroom_4_suite_bed_4_keypad_device_1_keypad_button_18`, `button.floor_2_bedroom_4_suite_bed_4_keypad_device_1_keypad_button_19`, _+15 more_
+- **device_tracker** (1): `device_tracker.powernode_7f48`
+
+## Floor 2 Bedroom 4 Suite Bed 4 Bath
+Devices: 7 · Entities: 16
+
+### Devices
+- **Floor 2 Bedroom 4 Suite Bed 4 Bath Bath Device 1 Pico** — Lutron Electronics Co., Inc PJ2-3BRL-XXX-L01 (Pico3ButtonRaiseLower)
+- **Floor 2 Bedroom 4 Suite Bed 4 Bath Water Closet Device 2 Pico** — Lutron Electronics Co., Inc PJ2-3BRL-XXX-S02 (Pico3ButtonRaiseLower)
+- **Floor 2 Bedroom 4 Suite Bed 4 Bath Downlights** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Bedroom 4 Suite Bed 4 Bath Vanity Sconces** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Bedroom 4 Suite Bed 4 Bath Toe Kicks** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Bedroom 4 Suite Bed 4 Bath Shade Group 1** — Lutron Electronics Co., Inc None (Shade)
+- **Floor 2 Bedroom 4 Suite Bed 4 Bath Room Exhaust Fan** — Lutron Electronics Co., Inc None (Switched)
+
+### Entities by domain
+- **light** (3): `light.floor_2_bedroom_4_suite_bed_4_bath_downlights`, `light.floor_2_bedroom_4_suite_bed_4_bath_vanity_sconces`, `light.floor_2_bedroom_4_suite_bed_4_bath_toe_kicks`
+- **switch** (1): `switch.floor_2_bedroom_4_suite_bed_4_bath_room_exhaust_fan`
+- **cover** (1): `cover.floor_2_bedroom_4_suite_bed_4_bath_shade_group_1`
+- **binary_sensor** (1): `binary_sensor.floor_2_bedroom_4_suite_bed_4_bath_floor_2_bedroom_4_suite_bed_4_bath_shade_group_1_battery`
+- **button** (10): `button.floor_2_bedroom_4_suite_bed_4_bath_bath_device_1_pico_on`, `button.floor_2_bedroom_4_suite_bed_4_bath_bath_device_1_pico_favorite`, `button.floor_2_bedroom_4_suite_bed_4_bath_bath_device_1_pico_off`, `button.floor_2_bedroom_4_suite_bed_4_bath_bath_device_1_pico_raise`, `button.floor_2_bedroom_4_suite_bed_4_bath_bath_device_1_pico_lower`, `button.floor_2_bedroom_4_suite_bed_4_bath_water_closet_device_2_pico_on`, `button.floor_2_bedroom_4_suite_bed_4_bath_water_closet_device_2_pico_favorite`, `button.floor_2_bedroom_4_suite_bed_4_bath_water_closet_device_2_pico_off`, _+2 more_
+
+## Floor 2 Bedroom 5 Suite Bed 5
+Devices: 7 · Entities: 22
+
+### Devices
+- **Floor 2 Bedroom 5 Suite Bed 5 Keypad Device 1 Keypad** — Lutron Electronics Co., Inc HQWD-W6BRL (SeeTouchKeypad)
+- **Floor 2 Bedroom 5 Suite Bed 5 Bed Downlights** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Bedroom 5 Suite Bed 5 Closet Light** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Bedroom 5 Suite Bed 5 Closet Linear** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Bedroom 5 Suite Bed 5 Bed Linear Lighting** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Bedroom 5 Suite Bed 5 Shade Group 1** — Lutron Electronics Co., Inc None (Shade)
+- **Floor 2 Bedroom 5 Suite Bed 5 Shade Group 2** — Lutron Electronics Co., Inc None (Shade)
+
+### Entities by domain
+- **light** (4): `light.floor_2_bedroom_5_suite_bed_5_bed_downlights`, `light.floor_2_bedroom_5_suite_bed_5_closet_light`, `light.floor_2_bedroom_5_suite_bed_5_closet_linear`, `light.floor_2_bedroom_5_suite_bed_5_bed_linear_lighting`
+- **switch** (6): `switch.floor_2_bedroom_5_suite_bed_5_keypad_device_1_keypad_bed_4_led`, `switch.floor_2_bedroom_5_suite_bed_5_keypad_device_1_keypad_down_led`, `switch.floor_2_bedroom_5_suite_bed_5_keypad_device_1_keypad_linear_led`, `switch.floor_2_bedroom_5_suite_bed_5_keypad_device_1_keypad_lanai_led`, `switch.floor_2_bedroom_5_suite_bed_5_keypad_device_1_keypad_closet_led`, `switch.floor_2_bedroom_5_suite_bed_5_keypad_device_1_keypad_bath_led`
+- **cover** (2): `cover.floor_2_bedroom_5_suite_bed_5_shade_group_1`, `cover.floor_2_bedroom_5_suite_bed_5_shade_group_2`
+- **binary_sensor** (2): `binary_sensor.floor_2_bedroom_5_suite_bed_5_floor_2_bedroom_5_suite_bed_5_shade_group_1_battery`, `binary_sensor.floor_2_bedroom_5_suite_bed_5_floor_2_bedroom_5_suite_bed_5_shade_group_2_battery`
+- **button** (8): `button.floor_2_bedroom_5_suite_bed_5_keypad_device_1_keypad_bed_4`, `button.floor_2_bedroom_5_suite_bed_5_keypad_device_1_keypad_down`, `button.floor_2_bedroom_5_suite_bed_5_keypad_device_1_keypad_linear`, `button.floor_2_bedroom_5_suite_bed_5_keypad_device_1_keypad_lanai`, `button.floor_2_bedroom_5_suite_bed_5_keypad_device_1_keypad_closet`, `button.floor_2_bedroom_5_suite_bed_5_keypad_device_1_keypad_bath`, `button.floor_2_bedroom_5_suite_bed_5_keypad_device_1_keypad_button_18`, `button.floor_2_bedroom_5_suite_bed_5_keypad_device_1_keypad_button_19`
+
+## Floor 2 Bedroom 5 Suite Bed 5 Bath
+Devices: 5 · Entities: 9
+
+### Devices
+- **Floor 2 Bedroom 5 Suite Bed 5 Bath Pico Device 1 Pico** — Lutron Electronics Co., Inc PJ2-3BRL-XXX-L01 (Pico3ButtonRaiseLower)
+- **Floor 2 Bedroom 5 Suite Bed 5 Bath Downlights** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Bedroom 5 Suite Bed 5 Bath Vanity** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Bedroom 5 Suite Bed 5 Bath Toe Kick** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Bedroom 5 Suite Bed 5 Bath Exhaust Fan** — Lutron Electronics Co., Inc None (Switched)
+
+### Entities by domain
+- **light** (3): `light.floor_2_bedroom_5_suite_bed_5_bath_downlights`, `light.floor_2_bedroom_5_suite_bed_5_bath_vanity`, `light.floor_2_bedroom_5_suite_bed_5_bath_toe_kick`
+- **switch** (1): `switch.floor_2_bedroom_5_suite_bed_5_bath_exhaust_fan`
+- **button** (5): `button.floor_2_bedroom_5_suite_bed_5_bath_pico_device_1_pico_on`, `button.floor_2_bedroom_5_suite_bed_5_bath_pico_device_1_pico_favorite`, `button.floor_2_bedroom_5_suite_bed_5_bath_pico_device_1_pico_off`, `button.floor_2_bedroom_5_suite_bed_5_bath_pico_device_1_pico_raise`, `button.floor_2_bedroom_5_suite_bed_5_bath_pico_device_1_pico_lower`
+
+## Floor 2 Elevator Hall
+Devices: 1 · Entities: 14
+
+### Devices
+- **Floor 2 Elevator Hall Keypad 001 Device 1 Keypad** — Lutron Electronics Co., Inc HQWD-W6BRL (SeeTouchKeypad)
+
+### Entities by domain
+- **switch** (6): `switch.floor_2_elevator_hall_keypad_001_device_1_keypad_hall_led`, `switch.floor_2_elevator_hall_keypad_001_device_1_keypad_dim_hall_led`, `switch.floor_2_elevator_hall_keypad_001_device_1_keypad_cat_walk_led`, `switch.floor_2_elevator_hall_keypad_001_device_1_keypad_cat_w_dim_led`, `switch.floor_2_elevator_hall_keypad_001_device_1_keypad_upper_film_led`, `switch.floor_2_elevator_hall_keypad_001_device_1_keypad_lower_film_led`
+- **button** (8): `button.floor_2_elevator_hall_keypad_001_device_1_keypad_hall`, `button.floor_2_elevator_hall_keypad_001_device_1_keypad_dim_hall`, `button.floor_2_elevator_hall_keypad_001_device_1_keypad_cat_walk`, `button.floor_2_elevator_hall_keypad_001_device_1_keypad_cat_w_dim`, `button.floor_2_elevator_hall_keypad_001_device_1_keypad_upper_film`, `button.floor_2_elevator_hall_keypad_001_device_1_keypad_lower_film`, `button.floor_2_elevator_hall_keypad_001_device_1_keypad_button_18`, `button.floor_2_elevator_hall_keypad_001_device_1_keypad_button_19`
+
+## Floor 2 Exterior
+Devices: 5 · Entities: 5
+
+### Devices
+- **Floor 2 Exterior Master Bed Lanai Sconces** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Exterior Bed 4 Lanai Sconces** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Exterior Bed 5 Lanai Sconces** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Exterior Sitting Lanai Sconces** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Exterior Master Bath Lanai Sconces** — Lutron Electronics Co., Inc None (Dimmed)
+
+### Entities by domain
+- **light** (5): `light.floor_2_exterior_master_bed_lanai_sconces`, `light.floor_2_exterior_bed_4_lanai_sconces`, `light.floor_2_exterior_bed_5_lanai_sconces`, `light.floor_2_exterior_sitting_lanai_sconces_mstr_bath_sconces`, `light.floor_2_exterior_master_bath_lanai_sconces`
+
+## Floor 2 master lanai
+Devices: 4 · Entities: 6
+
+### Devices
+- **Floor 2 Exterior Master Bed Lanai Linear** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Exterior Master Lanai Downlights** — Lutron Electronics Co., Inc None (Dimmed)
+- **Master Lanai** — Bluesound POWERNODE
+- **Master Bath Lanai** — Bluesound POWERNODE
+
+### Entities by domain
+- **light** (2): `light.floor_2_exterior_master_bed_lanai_linear`, `light.floor_1_lp2_unknown_loads_2_6_2`
+- **media_player** (2): `media_player.master_lanai`, `media_player.master_bath_lanai`
+- **device_tracker** (2): `device_tracker.powernode_922c`, `device_tracker.unifi_default_90_56_82_81_46_c4`
+
+## Floor 2 Master Suite Closets
+Devices: 6 · Entities: 14
+
+### Devices
+- **Floor 2 Master Suite Closets Left Closet Device 1 Pico** — Lutron Electronics Co., Inc PJ2-3BRL-XXX-L01 (Pico3ButtonRaiseLower)
+- **Floor 2 Master Suite Closets Right Closet Device 1 Pico** — Lutron Electronics Co., Inc PJ2-3BRL-XXX-L01 (Pico3ButtonRaiseLower)
+- **Floor 2 Master Suite Closets Right Closet Downlights** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Master Suite Closets Left Closet Linears** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Master Suite Closets Left Closet Downlights** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Master Suite Closets Right Closet Linears** — Lutron Electronics Co., Inc None (Dimmed)
+
+### Entities by domain
+- **light** (4): `light.floor_2_master_suite_closets_right_closet_downlights`, `light.floor_2_master_suite_closets_left_closet_linears`, `light.floor_2_master_suite_closets_left_closet_downlights`, `light.floor_2_master_suite_closets_right_closet_linears`
+- **button** (10): `button.floor_2_master_suite_closets_left_closet_device_1_pico_on`, `button.floor_2_master_suite_closets_left_closet_device_1_pico_favorite`, `button.floor_2_master_suite_closets_left_closet_device_1_pico_off`, `button.floor_2_master_suite_closets_left_closet_device_1_pico_raise`, `button.floor_2_master_suite_closets_left_closet_device_1_pico_lower`, `button.floor_2_master_suite_closets_right_closet_device_1_pico_on`, `button.floor_2_master_suite_closets_right_closet_device_1_pico_favorite`, `button.floor_2_master_suite_closets_right_closet_device_1_pico_off`, _+2 more_
+
+## Floor 2 Master Suite Master Bath
+Devices: 11 · Entities: 34
+
+### Devices
+- **Floor 2 Master Suite Master Bath Keypad Device 1 Keypad** — Lutron Electronics Co., Inc HQWD-W6BRL (SeeTouchKeypad)
+- **Floor 2 Master Suite Master Bath Bath Device 1 Pico** — Lutron Electronics Co., Inc PJ2-3BRL-XXX-L01 (Pico3ButtonRaiseLower)
+- **Floor 2 Master Suite Master Bath Shower Device 1 Pico** — Lutron Electronics Co., Inc PJ2-3BRL-XXX-L01 (Pico3ButtonRaiseLower)
+- **Floor 2 Master Suite Master Bath Downlights + WC** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Master Suite Master Bath Linear Lighting(Shower+WC)** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Master Suite Master Bath Master Bath Vanity** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Master Suite Master Bath Shower Downlight** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Master Suite Master Bath SPARE** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Master Suite Master Bath SPARE 1** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Master Suite Master Bath Shade Group 1** — Lutron Electronics Co., Inc None (Shade)
+- **Master Bath** — Bluesound POWERNODE
+
+### Entities by domain
+- **light** (6): `light.floor_2_master_suite_master_bath_downlights_wc`, `light.floor_2_master_suite_master_bath_linear_lighting_shower_wc`, `light.floor_2_master_suite_master_bath_master_bath_vanity`, `light.floor_2_master_suite_master_bath_shower_downlight`, `light.floor_2_master_suite_master_bath_downlights_2`, `light.floor_2_master_suite_master_bath_water_closet_downlight`
+- **switch** (6): `switch.floor_2_master_suite_master_bath_keypad_device_1_keypad_bath_led`, `switch.floor_2_master_suite_master_bath_keypad_device_1_keypad_downs_led`, `switch.floor_2_master_suite_master_bath_keypad_device_1_keypad_ext_sconce_led`, `switch.floor_2_master_suite_master_bath_keypad_device_1_keypad_linear_led`, `switch.floor_2_master_suite_master_bath_keypad_device_1_keypad_vanity_led`, `switch.floor_2_master_suite_master_bath_keypad_device_1_keypad_closet_led`
+- **media_player** (1): `media_player.master_bath`
+- **cover** (1): `cover.floor_2_master_suite_master_bath_shade_group_1`
+- **binary_sensor** (1): `binary_sensor.floor_2_master_suite_master_bath_floor_2_master_suite_master_bath_shade_group_1_battery`
+- **button** (18): `button.floor_2_master_suite_master_bath_keypad_device_1_keypad_bath`, `button.floor_2_master_suite_master_bath_keypad_device_1_keypad_downs`, `button.floor_2_master_suite_master_bath_keypad_device_1_keypad_ext_sconce`, `button.floor_2_master_suite_master_bath_keypad_device_1_keypad_linear`, `button.floor_2_master_suite_master_bath_keypad_device_1_keypad_vanity`, `button.floor_2_master_suite_master_bath_keypad_device_1_keypad_closet`, `button.floor_2_master_suite_master_bath_keypad_device_1_keypad_button_18`, `button.floor_2_master_suite_master_bath_keypad_device_1_keypad_button_19`, _+10 more_
+- **device_tracker** (1): `device_tracker.unifi_default_90_56_82_81_43_9a`
+
+## Floor 2 Master Suite Master Bed
+Devices: 12 · Entities: 94
+
+### Devices
+- **Master Bed** — Bluesound POWERNODE
+- **Floor 2 Master Suite Master Bed Control Station 001 Device 1 Pico** — Lutron Electronics Co., Inc PJ2-3BRL-XXX-L01 (Pico3ButtonRaiseLower)
+- **Floor 2 Master Suite Master Bed Control Station 001 Device 2 Pico** — Lutron Electronics Co., Inc PJ2-3BRL-XXX-L01 (Pico3ButtonRaiseLower)
+- **Floor 2 Master Suite Master Bed Control Station 001 Device 3 Pico** — Lutron Electronics Co., Inc PJ2-3BRL-XXX-L01 (Pico3ButtonRaiseLower)
+- **Floor 2 Master Suite Master Bed Downlights** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Master Suite Master Bed Artwork** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Master Suite Master Bed SPARE 2** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Master Suite Master Bed Linear Lighting** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Master Suite Master Bed Shade Group 1** — Lutron Electronics Co., Inc None (Shade)
+- **master bed tv** — HVCL SmartTV 4K FFM
+- **Makena** — SleepNumber Unknown
+- **Floor 2 Master Suite Master Bed Tabletop Keypad Device 1 Keypad** — Lutron Electronics Co., Inc HQR-T15RL (SeeTouchTabletopKeypad)
+
+### Entities by domain
+- **light** (5): `light.floor_2_master_suite_master_bed_downlights`, `light.floor_2_master_suite_master_bed_artwork`, `light.floor_2_master_suite_master_bed_sconces`, `light.floor_2_master_suite_master_bed_linear_lighting`, `light.makena_sleepnumber_makena_light_1`
+- **switch** (18): `switch.makena_sleepnumber_makena_pause_mode`, `switch.floor_2_master_suite_master_bed_tabletop_keypad_device_1_keypad_open_led`, `switch.floor_2_master_suite_master_bed_tabletop_keypad_device_1_keypad_75_led`, `switch.floor_2_master_suite_master_bed_tabletop_keypad_device_1_keypad_50_led`, `switch.floor_2_master_suite_master_bed_tabletop_keypad_device_1_keypad_25_led`, `switch.floor_2_master_suite_master_bed_tabletop_keypad_device_1_keypad_close_led`, `switch.floor_2_master_suite_master_bed_tabletop_keypad_device_1_keypad_mstr_bed_led`, `switch.floor_2_master_suite_master_bed_tabletop_keypad_device_1_keypad_downlights_led`, _+10 more_
+- **media_player** (2): `media_player.master_bed`, `media_player.master_bed_tv_2`
+- **cover** (1): `cover.floor_2_master_suite_master_bed_shade_group_1`
+- **binary_sensor** (3): `binary_sensor.makena_sleepnumber_makena_tom_is_in_bed`, `binary_sensor.makena_sleepnumber_makena_ellen_is_in_bed`, `binary_sensor.floor_2_master_suite_master_bed_floor_2_master_suite_master_bed_shade_group_1_battery`
+- **sensor** (14): `sensor.makena_sleepnumber_makena_tom_pressure`, `sensor.makena_sleepnumber_makena_tom_sleepnumber`, `sensor.makena_sleepnumber_makena_ellen_pressure`, `sensor.makena_sleepnumber_makena_ellen_sleepnumber`, `sensor.makena_sleepnumber_makena_tom_sleep_score`, `sensor.makena_sleepnumber_makena_tom_sleep_duration`, `sensor.makena_sleepnumber_makena_tom_heart_rate_average`, `sensor.makena_sleepnumber_makena_tom_respiratory_rate_average`, _+6 more_
+- **select** (4): `select.makena_sleepnumber_makena_foundation_preset_left`, `select.makena_sleepnumber_makena_foundation_preset_right`, `select.makena_sleepnumber_makena_tom_core_climate`, `select.makena_sleepnumber_makena_ellen_core_climate`
+- **number** (8): `number.makena_sleepnumber_makena_tom_firmness`, `number.makena_sleepnumber_makena_ellen_firmness`, `number.makena_sleepnumber_makena_right_head_position`, `number.makena_sleepnumber_makena_right_foot_position`, `number.makena_sleepnumber_makena_left_head_position`, `number.makena_sleepnumber_makena_left_foot_position`, `number.makena_sleepnumber_makena_tom_core_climate_timer`, `number.makena_sleepnumber_makena_ellen_core_climate_timer`
+- **button** (36): `button.floor_2_master_suite_master_bed_control_station_001_device_1_pico_on`, `button.floor_2_master_suite_master_bed_control_station_001_device_1_pico_favorite`, `button.floor_2_master_suite_master_bed_control_station_001_device_1_pico_off`, `button.floor_2_master_suite_master_bed_control_station_001_device_1_pico_raise`, `button.floor_2_master_suite_master_bed_control_station_001_device_1_pico_lower`, `button.floor_2_master_suite_master_bed_control_station_001_device_2_pico_on`, `button.floor_2_master_suite_master_bed_control_station_001_device_2_pico_favorite`, `button.floor_2_master_suite_master_bed_control_station_001_device_2_pico_off`, _+28 more_
+- **device_tracker** (2): `device_tracker.masterbedpowernode_f20a`, `device_tracker.unifi_default_80_16_09_09_84_23`
+- **remote** (1): `remote.master_bed_tv`
+
+## Floor 2 Master Suite Sitting Room
+Devices: 9 · Entities: 51
+
+### Devices
+- **Master Sitting Room** — Bluesound POWERNODE
+- **Floor 2 Master Suite Sitting Room Keypad 002 Device 1 Keypad** — Lutron Electronics Co., Inc HQWD-W6BRL (SeeTouchKeypad)
+- **Floor 2 Master Suite Sitting Room Sitting Lanai Device 1 Pico** — Lutron Electronics Co., Inc PJ2-3BRL-XXX-L01 (Pico3ButtonRaiseLower)
+- **Floor 2 Master Suite Sitting Room Closet Hall Device 1 Pico** — Lutron Electronics Co., Inc PJ2-3BRL-XXX-L01 (Pico3ButtonRaiseLower)
+- **Floor 2 Master Suite Sitting Room Downlights/Wall Wash** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Master Suite Sitting Room Bath Hall Downlights** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Master Suite Sitting Room Linear Lighting** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Master Suite Sitting Room Art Cans** — Lutron Electronics Co., Inc None (Dimmed)
+- **USL-Motion_Sitting** — Ubiquiti USL Motion
+
+### Entities by domain
+- **light** (4): `light.floor_2_master_suite_sitting_room_downlights_wall_wash`, `light.floor_2_master_suite_sitting_room_bath_hall_downlights`, `light.floor_2_master_suite_sitting_room_linear_lighting`, `light.floor_2_master_suite_sitting_room_art_cans`
+- **switch** (12): `switch.floor_2_master_suite_sitting_room_keypad_002_device_1_keypad_sitting_led`, `switch.floor_2_master_suite_sitting_room_keypad_002_device_1_keypad_mstr_bed_led`, `switch.floor_2_master_suite_sitting_room_keypad_002_device_1_keypad_down_led`, `switch.floor_2_master_suite_sitting_room_keypad_002_device_1_keypad_linear_led`, `switch.floor_2_master_suite_sitting_room_keypad_002_device_1_keypad_path_dwn_led`, `switch.floor_2_master_suite_sitting_room_keypad_002_device_1_keypad_lanai_led`, `switch.usl_motion_status_light_2`, `switch.usl_motion_motion_detection_2`, _+4 more_
+- **media_player** (1): `media_player.master_sitting_room`
+- **binary_sensor** (5): `binary_sensor.usl_motion_moisture_2`, `binary_sensor.usl_motion_battery_2`, `binary_sensor.usl_motion_tamper_2`, `binary_sensor.usl_motion_contact_2`, `binary_sensor.usl_motion_sitting`
+- **sensor** (5): `sensor.usl_motion_battery_2`, `sensor.usl_motion_illuminance_2`, `sensor.usl_motion_humidity_2`, `sensor.usl_motion_temperature_2`, `sensor.usl_motion_alarm_sound_detected_2`
+- **select** (2): `select.usl_motion_mount_type_2`, `select.usl_motion_paired_camera_2`
+- **number** (1): `number.usl_motion_motion_sensitivity_2`
+- **automation** (1): `automation.sitting_room_late_night`
+- **button** (19): `button.floor_2_master_suite_sitting_room_keypad_002_device_1_keypad_sitting`, `button.floor_2_master_suite_sitting_room_keypad_002_device_1_keypad_mstr_bed`, `button.floor_2_master_suite_sitting_room_keypad_002_device_1_keypad_down`, `button.floor_2_master_suite_sitting_room_keypad_002_device_1_keypad_linear`, `button.floor_2_master_suite_sitting_room_keypad_002_device_1_keypad_path_dwn`, `button.floor_2_master_suite_sitting_room_keypad_002_device_1_keypad_lanai`, `button.floor_2_master_suite_sitting_room_keypad_002_device_1_keypad_button_18`, `button.floor_2_master_suite_sitting_room_keypad_002_device_1_keypad_button_19`, _+11 more_
+- **device_tracker** (1): `device_tracker.powernode_2836`
+
+## Floor 2 Stairs
+Devices: 6 · Entities: 41
+
+### Devices
+- **Floor 2 Stairs Keypad Device 1 Keypad** — Lutron Electronics Co., Inc HQWD-W6BRL (SeeTouchKeypad)
+- **Floor 2 Stairs Downlights** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Stairs Art Light** — Lutron Electronics Co., Inc None (Dimmed)
+- **Floor 2 Stairs Pendants** — Lutron Electronics Co., Inc None (Dimmed)
+- **UP sense - stairs** — Ubiquiti UP Sense
+- **SMOKE DETECTOR** — ? 
+
+### Entities by domain
+- **light** (3): `light.floor_2_stairs_downlights`, `light.floor_2_stairs_art_light`, `light.floor_2_stairs_pendants`
+- **switch** (12): `switch.floor_2_stairs_keypad_device_1_keypad_stairs_led`, `switch.floor_2_stairs_keypad_device_1_keypad_down_led`, `switch.floor_2_stairs_keypad_device_1_keypad_art_led`, `switch.floor_2_stairs_keypad_device_1_keypad_pendants_led`, `switch.floor_2_stairs_keypad_device_1_keypad_hall_led`, `switch.floor_2_stairs_keypad_device_1_keypad_upper_film_led`, `switch.living_room_motion_status_light`, `switch.living_room_motion_detections_motion`, _+4 more_
+- **binary_sensor** (8): `binary_sensor.smoke_detector`, `binary_sensor.smoke_detector_battery`, `binary_sensor.smoke_detector_tamper`, `binary_sensor.living_room_motion_moisture`, `binary_sensor.living_room_motion_battery`, `binary_sensor.living_room_motion_tamper`, `binary_sensor.living_room_motion_contact`, `binary_sensor.up_stair_motion_motion`
+- **sensor** (5): `sensor.living_room_motion_battery`, `sensor.living_room_motion_illuminance`, `sensor.living_room_motion_humidity`, `sensor.living_room_motion_temperature`, `sensor.living_room_motion_alarm_sound_detected`
+- **select** (2): `select.living_room_motion_mount_type`, `select.living_room_motion_paired_camera`
+- **number** (1): `number.living_room_motion_motion_sensitivity`
+- **automation** (1): `automation.stairs_on_at_night_from_motion`
+- **button** (9): `button.floor_2_stairs_keypad_device_1_keypad_stairs`, `button.floor_2_stairs_keypad_device_1_keypad_down`, `button.floor_2_stairs_keypad_device_1_keypad_art`, `button.floor_2_stairs_keypad_device_1_keypad_pendants`, `button.floor_2_stairs_keypad_device_1_keypad_hall`, `button.floor_2_stairs_keypad_device_1_keypad_upper_film`, `button.floor_2_stairs_keypad_device_1_keypad_button_18`, `button.floor_2_stairs_keypad_device_1_keypad_button_19`, _+1 more_
+
+## Floor 2 Upstairs Hall
+Devices: 1 · Entities: 1
+
+### Devices
+- **Floor 2 Upstairs Hall Downlights** — Lutron Electronics Co., Inc None (Dimmed)
+
+### Entities by domain
+- **light** (1): `light.floor_2_upstairs_hall_downlights`
+
+## Garage
+Devices: 3 · Entities: 54
+
+### Devices
+- **garage-door** — Espressif esp32-c3-devkitm-1
+- **4680 System 2** — Tesla Powerwall 3
+- **Gonser 4680 system 1** — Tesla Powerwall 3
+
+### Entities by domain
+- **switch** (6): `switch.garage_door_garage_relay_raw`, `switch.garage_door_garage_door_button`, `switch.4680_system_2_allow_charging_from_grid`, `switch.gonser_4680_system_1_allow_charging_from_grid`, `switch.4680_system_2_storm_watch`, `switch.gonser_4680_system_1_storm_watch`
+- **cover** (1): `cover.garage_door_garage_door`
+- **binary_sensor** (9): `binary_sensor.garage_door_garage_door_closed`, `binary_sensor.garage_door_garage_door_open`, `binary_sensor.garage_door_gladiator_car_beacon`, `binary_sensor.4680_system_2_grid_status`, `binary_sensor.4680_system_2_storm_watch_active`, `binary_sensor.gonser_4680_system_1_grid_status`, `binary_sensor.gonser_4680_system_1_storm_watch_active`, `binary_sensor.4680_system_2_grid_services_enabled`, _+1 more_
+- **sensor** (28): `sensor.4680_system_2_solar_power`, `sensor.4680_system_2_percentage_charged`, `sensor.4680_system_2_battery_power`, `sensor.4680_system_2_load_power`, `sensor.4680_system_2_grid_power`, `sensor.4680_system_2_island_status`, `sensor.gonser_4680_system_1_solar_power`, `sensor.gonser_4680_system_1_percentage_charged`, _+20 more_
+- **select** (4): `select.4680_system_2_operation_mode`, `select.gonser_4680_system_1_operation_mode`, `select.4680_system_2_allow_export`, `select.gonser_4680_system_1_allow_export`
+- **number** (2): `number.4680_system_2_backup_reserve`, `number.gonser_4680_system_1_backup_reserve`
+- **calendar** (4): `calendar.4680_system_2_buy_tariff`, `calendar.gonser_4680_system_1_buy_tariff`, `calendar.4680_system_2_sell_tariff`, `calendar.gonser_4680_system_1_sell_tariff`
+
+## Gladiator
+Devices: 1 · Entities: 0
+
+### Devices
+- **Gladiator** — Espressif esp32-c3-devkitm-1
+
+
+## House
+Devices: 2 · Entities: 37
+
+### Devices
+- **Home Assistant Connect ZBT-1** — Nabu Casa Home Assistant Connect ZBT-1
+- **Makena Alarm** — eyezon Envisalink 4MAX: HONEYWELL
+
+### Entities by domain
+- **switch** (1): `switch.makena_alarm_panel_chime`
+- **alarm_control_panel** (1): `alarm_control_panel.makena_alarm_partition_1`
+- **binary_sensor** (30): `binary_sensor.makena_alarm_zone_1`, `binary_sensor.makena_alarm_zone_2`, `binary_sensor.makena_alarm_zone_3`, `binary_sensor.makena_alarm_zone_4`, `binary_sensor.makena_alarm_zone_5`, `binary_sensor.makena_alarm_zone_6`, `binary_sensor.makena_alarm_zone_7`, `binary_sensor.makena_alarm_zone_8`, _+22 more_
+- **sensor** (1): `sensor.makena_alarm_partition_1_keypad`
+- **scene** (1): `scene.entertain_evening`
+- **button** (3): `button.makena_alarm_panic_a`, `button.makena_alarm_panic_b`, `button.makena_alarm_panic_c`
+
+## Kitchen
+Devices: 1 · Entities: 4
+
+### Devices
+- **MOTION KITCHEN** — ? 
+
+### Entities by domain
+- **binary_sensor** (3): `binary_sensor.motion_kitchen`, `binary_sensor.motion_kitchen_battery`, `binary_sensor.motion_kitchen_tamper`
+- **button** (1): `button.motion_kitchen_bypass`
+
+## Living Room
+Devices: 2 · Entities: 6
+
+### Devices
+- **LG webOS TV 2BC9** — LG Electronics OLED77CXAUA
+- **Fire TV 192.168.1.131** — Amazon AFTCIBFBD1 (Fire TV)
+
+### Entities by domain
+- **switch** (1): `switch.lg_webos_tv_2bc9_mute`
+- **media_player** (2): `media_player.lg_webos_tv_2bc9`, `media_player.fire_tv_192_168_1_131`
+- **button** (1): `button.lg_webos_tv_2bc9_identify`
+- **device_tracker** (1): `device_tracker.unifi_default_e4_8a_93_1e_2f_8f`
+- **remote** (1): `remote.fire_tv_192_168_1_131`
+
+## LR
+Devices: 1 · Entities: 2
+
+### Devices
+- **LR Apple TV** — Apple Apple TV 4
+
+### Entities by domain
+- **media_player** (1): `media_player.lr_apple_tv`
+- **remote** (1): `remote.lr_apple_tv`
+
+## Pool
+Devices: 0 · Entities: 0
+
+
+## Sitting Room
+Devices: 1 · Entities: 3
+
+### Devices
+- **65" The Frame** — Samsung Electronics QN65LS03FADXZA
+
+### Entities by domain
+- **media_player** (1): `media_player.65_the_frame_2`
+- **device_tracker** (1): `device_tracker.samsung_2`
+- **remote** (1): `remote.65_the_frame`
+
+## Sitting Room Lanai
+Devices: 1 · Entities: 1
+
+### Devices
+- **Floor 2 Exterior Sitting Lanai Downlights** — Lutron Electronics Co., Inc None (Dimmed)
+
+### Entities by domain
+- **light** (1): `light.floor_2_exterior_sitting_lanai_downlights`
+
+## South Yard
+Devices: 2 · Entities: 93
+
+### Devices
+- **South G6 Turret** — Ubiquiti G6 Turret
+- **South Pool G6 PTZ** — Ubiquiti G6 PTZ
+
+### Entities by domain
+- **switch** (42): `switch.south_g6_turret_status_light`, `switch.south_g6_turret_overlay_show_name`, `switch.south_g6_turret_overlay_show_date`, `switch.south_g6_turret_overlay_show_logo`, `switch.south_g6_turret_overlay_show_nerd_mode`, `switch.south_g6_turret_motion`, `switch.south_g6_turret_person_detection`, `switch.south_g6_turret_vehicle_detection`, _+34 more_
+- **media_player** (1): `media_player.south_pool_g6_ptz_speaker`
+- **camera** (2): `camera.south_g6_turret_high_resolution_channel`, `camera.south_pool_g6_ptz_high_resolution_channel`
+- **binary_sensor** (28): `binary_sensor.south_g6_turret_is_dark`, `binary_sensor.south_pool_g6_ptz_is_dark`, `binary_sensor.south_g6_turret_motion`, `binary_sensor.south_g6_turret_person_detected`, `binary_sensor.south_g6_turret_vehicle_detected`, `binary_sensor.south_g6_turret_animal_detected`, `binary_sensor.south_g6_turret_smoke_alarm_detected`, `binary_sensor.south_g6_turret_co_alarm_detected`, _+20 more_
+- **sensor** (4): `sensor.south_g6_turret_storage_used`, `sensor.south_g6_turret_disk_write_rate`, `sensor.south_pool_g6_ptz_storage_used`, `sensor.south_pool_g6_ptz_disk_write_rate`
+- **select** (7): `select.south_g6_turret_recording_mode`, `select.south_g6_turret_infrared_mode`, `select.south_g6_turret_hdr_mode`, `select.south_pool_g6_ptz_recording_mode`, `select.south_pool_g6_ptz_infrared_mode`, `select.south_pool_g6_ptz_hdr_mode`, `select.south_pool_g6_ptz_ptz_patrol`
+- **number** (5): `number.south_g6_turret_microphone_level`, `number.south_g6_turret_infrared_custom_lux_trigger`, `number.south_pool_g6_ptz_microphone_level`, `number.south_pool_g6_ptz_infrared_custom_lux_trigger`, `number.south_pool_g6_ptz_system_sounds_volume`
+- **device_tracker** (2): `device_tracker.south_g6_turret`, `device_tracker.south_pool_g6_ptz`
+- **event** (2): `event.south_g6_turret_vehicle`, `event.south_pool_g6_ptz_vehicle`
+
+## TV Bar
+Devices: 1 · Entities: 4
+
+### Devices
+- **65" OLED** — Samsung QN65S90FDFXZA
+
+### Entities by domain
+- **media_player** (2): `media_player.65_oled`, `media_player.65_oled_3`
+- **device_tracker** (1): `device_tracker.samsung`
+- **remote** (1): `remote.65_oled`
+
+## Unassigned (no area)
+Total: 1318
+
+- sensor: 471
+- switch: 198
+- binary_sensor: 118
+- button: 110
+- device_tracker: 92
+- input_number: 79
+- update: 32
+- select: 32
+- number: 31
+- automation: 25
+- climate: 18
+- input_text: 16
+- light: 13
+- script: 13
+- media_player: 12
+- input_boolean: 10
+- camera: 9
+- event: 8
+- timer: 7
+- zone: 6
+- weather: 4
+- tts: 2
+- input_select: 2
+- input_datetime: 2
+- notify: 2
+- conversation: 1
+- stt: 1
+- person: 1
+- sun: 1
+- todo: 1
+- alarm_control_panel: 1
+
+===== ha_audio_inventory.md =====
+
+# Audio / Media Inventory
+
+Total media players: **34**
+
+## By integration
+- **bluesound** — 13
+- **unifiprotect** — 6
+- **cast** — 5
+- **dlna_dmr** — 3
+- **samsungtv** — 2
+- **androidtv_remote** — 2
+- **apple_tv** — 1
+- **homekit_controller** — 1
+- **androidtv** — 1
+
+## All media players
+| entity_id | friendly_name | area | integration | state | source | volume |
+| --- | --- | --- | --- | --- | --- | --- |
+| `media_player.65_oled` | 65" OLED | TV Bar | dlna_dmr | unavailable |  | — |
+| `media_player.65_the_frame` | 65" The Frame | _unassigned_ | dlna_dmr | unavailable |  | — |
+| `media_player.jbl_bar_1300_a78f_2` | audiocast JBL BAR 1300_A78F | _unassigned_ | dlna_dmr | idle |  | 48% |
+| `media_player.65_oled_3` | 65" OLED | TV Bar | samsungtv | off |  | — |
+| `media_player.jbl_bar_1300_a78f` | JBL BAR 1300_A78F | Floor 1 Bar | cast | off |  | — |
+| `media_player.65_the_frame_2` | 65" The Frame | Sitting Room | samsungtv | off |  | — |
+| `media_player.lr_apple_tv` | LR Apple TV | LR | apple_tv | off |  | — |
+| `media_player.great_room` | Great Room | Floor 1 Great Room Atrium | bluesound | idle |  | 39% |
+| `media_player.great_room_lanai` | Great Room Lanai | Floor 1 Great room lanai | bluesound | idle |  | 44% |
+| `media_player.master_bed` | Master Bed | Floor 2 Master Suite Master Bed | bluesound | idle |  | 6% |
+| `media_player.bbq_lanai` | BBQ Lanai | BBQ outdoor kitchen | bluesound | idle |  | 16% |
+| `media_player.great_room_tv_bsr` | Bar | Floor 1 Bar | bluesound | idle |  | 100% |
+| `media_player.master_bath` | Master Bath | Floor 2 Master Suite Master Bath | bluesound | idle |  | 11% |
+| `media_player.master_lanai` | Master Lanai | Floor 2 master lanai | bluesound | idle |  | 17% |
+| `media_player.master_sitting_room` | Master Sitting Room | Floor 2 Master Suite Sitting Room | bluesound | idle |  | 23% |
+| `media_player.molokini_guest_bed` | Molokini Guest Bed | Floor 2 Bedroom 4 Suite Bed 4 | bluesound | idle |  | 26% |
+| `media_player.beach_guest_bed` | Beach Guest Bed | Floor 1 Bedroom 2 Suite Bed 2 Bath | bluesound | paused | Spotify | 32% |
+| `media_player.back_yard` | Back Yard | _unassigned_ | bluesound | idle |  | 50% |
+| `media_player.master_bath_lanai` | Master Bath Lanai | Floor 2 master lanai | bluesound | idle |  | 21% |
+| `media_player.lg_webos_tv_2bc9` | LG webOS TV 2BC9 | Living Room | homekit_controller | unavailable |  | — |
+| `media_player.south_pool_g6_ptz_speaker` | South Pool G6 PTZ Speaker | South Yard | unifiprotect | idle |  | 100% |
+| `media_player.entry_g6_ptz_speaker` | Entry G6 PTZ Speaker | _unassigned_ | unifiprotect | idle |  | 100% |
+| `media_player.g6_instant_speaker` | G6 Instant Speaker | _unassigned_ | unifiprotect | idle |  | 100% |
+| `media_player.bbq_g6_ptz_speaker` | BBQ G6 PTZ Speaker | _unassigned_ | unifiprotect | idle |  | 100% |
+| `media_player.mud_room_door_hub_entry_speaker` | Mud room door hub - Entry Speaker | _unassigned_ | unifiprotect | idle |  | 100% |
+| `media_player.master_lanai_g6_ptz_speaker` | Master Lanai G6 PTZ Speaker | _unassigned_ | unifiprotect | idle |  | 100% |
+| `media_player.65_oled_2` | 65" OLED | Floor 1 Bar | cast | unavailable |  | — |
+| `media_player.master_bed_tv` | master bed tv | _unassigned_ | cast | unavailable |  | — |
+| `media_player.molokini_room_tv` | Molokini Room TV | _unassigned_ | cast | unavailable |  | — |
+| `media_player.65_the_frame_3` | 65" The Frame | _unassigned_ | cast | unavailable |  | — |
+| `media_player.fire_tv_192_168_1_131` | Atrium TV | Living Room | androidtv | unavailable |  | — |
+| `media_player.master_bed_tv_2` | master bed tv | Floor 2 Master Suite Master Bed | androidtv_remote | unavailable |  | — |
+| `media_player.beach_tv` | Beach TV | Floor 1 Bedroom 3 Suite Bed 3 | androidtv_remote | unavailable |  | — |
+| `media_player.front_yard` | Front Yard | _unassigned_ | bluesound | idle |  | 50% |
+
+## Bluesound / BluOS (13)
+### `media_player.great_room`
+- friendly_name: Great Room
+- area: Floor 1 Great Room Atrium
+- state: idle
+- source_list: Analog Input, Bluetooth, HDMI ARC, Optical Input, USB C
+- supported_features: 720445
+### `media_player.great_room_lanai`
+- friendly_name: Great Room Lanai
+- area: Floor 1 Great room lanai
+- state: idle
+- source_list: Bluetooth, HDMI ARC, Spotify
+- supported_features: 720445
+### `media_player.master_bed`
+- friendly_name: Master Bed
+- area: Floor 2 Master Suite Master Bed
+- state: idle
+- source_list: Bluetooth, HDMI ARC, Spotify
+- supported_features: 720445
+### `media_player.bbq_lanai`
+- friendly_name: BBQ Lanai
+- area: BBQ outdoor kitchen
+- state: idle
+- source_list: Bluetooth, HDMI ARC, Spotify
+- supported_features: 720445
+### `media_player.great_room_tv_bsr`
+- friendly_name: Bar
+- area: Floor 1 Bar
+- state: idle
+- source_list: Bluetooth, HDMI ARC
+- supported_features: 720445
+### `media_player.master_bath`
+- friendly_name: Master Bath
+- area: Floor 2 Master Suite Master Bath
+- state: idle
+- source_list: Bluetooth, HDMI ARC, Spotify
+- supported_features: 720445
+### `media_player.master_lanai`
+- friendly_name: Master Lanai
+- area: Floor 2 master lanai
+- state: idle
+- source_list: Bluetooth, HDMI ARC
+- supported_features: 720445
+### `media_player.master_sitting_room`
+- friendly_name: Master Sitting Room
+- area: Floor 2 Master Suite Sitting Room
+- state: idle
+- source_list: Morning bedroom, Bluetooth, HDMI ARC, Spotify
+- supported_features: 720445
+### `media_player.molokini_guest_bed`
+- friendly_name: Molokini Guest Bed
+- area: Floor 2 Bedroom 4 Suite Bed 4
+- state: idle
+- source_list: Bluetooth, HDMI ARC
+- supported_features: 720445
+### `media_player.beach_guest_bed`
+- friendly_name: Beach Guest Bed
+- area: Floor 1 Bedroom 2 Suite Bed 2 Bath
+- state: paused
+- source_list: Bluetooth, HDMI ARC, Spotify
+- supported_features: 720447
+### `media_player.back_yard`
+- friendly_name: Back Yard
+- area: _unassigned_
+- state: idle
+- source_list: Analog Input 1, Bluetooth, HDMI ARC, Optical Input 1, USB C
+- supported_features: 720445
+### `media_player.master_bath_lanai`
+- friendly_name: Master Bath Lanai
+- area: Floor 2 master lanai
+- state: idle
+- source_list: Bluetooth, HDMI ARC, Spotify
+- supported_features: 720445
+### `media_player.front_yard`
+- friendly_name: Front Yard
+- area: _unassigned_
+- state: idle
+- source_list: Analog Input 1, Bluetooth, HDMI ARC, Optical Input 1, USB C
+- supported_features: 720445
+
+## TVs / streamers (8)
+### `media_player.lr_apple_tv`
+- friendly_name: LR Apple TV
+- area: LR
+- state: off
+- supported_features: 448439
+### `media_player.great_room_tv_bsr`
+- friendly_name: Bar
+- area: Floor 1 Bar
+- state: idle
+- source_list: Bluetooth, HDMI ARC
+- supported_features: 720445
+### `media_player.lg_webos_tv_2bc9`
+- friendly_name: LG webOS TV 2BC9
+- area: Living Room
+- state: unavailable
+- source_list: AirPlay, Live TV, HDMI 1, Sonos, Apple, AV, HDMI 4, LOGICAL HDMI 1, LOGICAL HDMI 2, LOGICAL HDMI 3, LOGICAL HDMI 4, LOGICAL HDMI 5, LOGICAL HDMI 6, LOGICAL HDMI 7, LOGICAL HDMI 8, LOGICAL HDMI 9, LOGICAL HDMI 10, LOGICAL HDMI 11
+- supported_features: 18817
+### `media_player.master_bed_tv`
+- friendly_name: master bed tv
+- area: _unassigned_
+- state: unavailable
+- supported_features: 152461
+### `media_player.molokini_room_tv`
+- friendly_name: Molokini Room TV
+- area: _unassigned_
+- state: unavailable
+- supported_features: 152461
+### `media_player.fire_tv_192_168_1_131`
+- friendly_name: Atrium TV
+- area: Living Room
+- state: unavailable
+- supported_features: 22961
+### `media_player.master_bed_tv_2`
+- friendly_name: master bed tv
+- area: Floor 2 Master Suite Master Bed
+- state: unavailable
+- supported_features: 153529
+### `media_player.beach_tv`
+- friendly_name: Beach TV
+- area: Floor 1 Bedroom 3 Suite Bed 3
+- state: unavailable
+- supported_features: 153529
+
+## Audio scene candidates
+### Audio zones (rooms with media players)
+- **TV Bar** — `media_player.65_oled`, `media_player.65_oled_3`
+- **_unassigned_** — `media_player.65_the_frame`, `media_player.jbl_bar_1300_a78f_2`, `media_player.back_yard`, `media_player.entry_g6_ptz_speaker`, `media_player.g6_instant_speaker`, `media_player.bbq_g6_ptz_speaker`, `media_player.mud_room_door_hub_entry_speaker`, `media_player.master_lanai_g6_ptz_speaker`, `media_player.master_bed_tv`, `media_player.molokini_room_tv`, `media_player.65_the_frame_3`, `media_player.front_yard`
+- **Floor 1 Bar** — `media_player.jbl_bar_1300_a78f`, `media_player.great_room_tv_bsr`, `media_player.65_oled_2`
+- **Sitting Room** — `media_player.65_the_frame_2`
+- **LR** — `media_player.lr_apple_tv`
+- **Floor 1 Great Room Atrium** — `media_player.great_room`
+- **Floor 1 Great room lanai** — `media_player.great_room_lanai`
+- **Floor 2 Master Suite Master Bed** — `media_player.master_bed`, `media_player.master_bed_tv_2`
+- **BBQ outdoor kitchen** — `media_player.bbq_lanai`
+- **Floor 2 Master Suite Master Bath** — `media_player.master_bath`
+- **Floor 2 master lanai** — `media_player.master_lanai`, `media_player.master_bath_lanai`
+- **Floor 2 Master Suite Sitting Room** — `media_player.master_sitting_room`
+- **Floor 2 Bedroom 4 Suite Bed 4** — `media_player.molokini_guest_bed`
+- **Floor 1 Bedroom 2 Suite Bed 2 Bath** — `media_player.beach_guest_bed`
+- **Living Room** — `media_player.lg_webos_tv_2bc9`, `media_player.fire_tv_192_168_1_131`
+- **South Yard** — `media_player.south_pool_g6_ptz_speaker`
+- **Floor 1 Bedroom 3 Suite Bed 3** — `media_player.beach_tv`
+
+===== ha_energy_inventory.md =====
+
+# Energy Inventory
+
+## Solar production (18)
+| entity_id | friendly_name | state | unit | area |
+| --- | --- | --- | --- | --- |
+| `sensor.solar_15min_avg` | Solar 15min Avg | 13.51 | kW | — |
+| `sensor.maui_solar_smoothed` | Maui Solar Smoothed | 13.3 | kW | — |
+| `sensor.total_solar` | Total Solar | 15.36 | kW | — |
+| `sensor.maui_solar_tier` | Maui Solar Tier | Good |  | — |
+| `sensor.mercer_island_solar_radiation` | Mercer Island Solar radiation | 510 | W/m² | — |
+| `sensor.sun_valley_solar_radiation` | Sun Valley Solar radiation | 69 | W/m² | — |
+| `sensor.makena_4_solar_radiation` | Makena 4 Solar radiation | 707 | W/m² | — |
+| `sensor.4680_system_2_solar_power` | 4680 System 2 Solar power | 6.763994140625 | kW | Garage |
+| `sensor.gonser_4680_system_1_solar_power` | Gonser 4680 system 1 Solar power | 8.5959189453125 | kW | Garage |
+| `sensor.4680_system_2_solar_generated` | 4680 System 2 Solar generated | 15.694 | kWh | Garage |
+| `sensor.gonser_4680_system_1_solar_generated` | Gonser 4680 system 1 Solar generated | 22.902 | kWh | Garage |
+| `sensor.envoy_202445013483_current_power_production` | Main Envoy Current power production | 18.945 | kW | — |
+| `sensor.envoy_202445013483_energy_production_today` | Main Envoy Energy production today | 25948.87 | kWh | — |
+| `sensor.envoy_202445013483_energy_production_last_seven_days` | Main Envoy Energy production last seven days | 25948.87 | kWh | — |
+| `sensor.envoy_202445013483_lifetime_energy_production` | Main Envoy Lifetime energy production | 25.94887 | MWh | — |
+| `sensor.envoy_202445013483_production_ct_energy_delivered` | Main Envoy Production CT energy delivered | 25.948866 | MWh | — |
+| `sensor.envoy_202445013483_production_ct_energy_received` | Main Envoy Production CT energy received | 0.007685 | MWh | — |
+| `sensor.envoy_202445013483_production_ct_power` | Main Envoy Production CT power | 18.931 | kW | — |
+
+## Battery / Powerwall (19)
+| entity_id | friendly_name | state | unit | area |
+| --- | --- | --- | --- | --- |
+| `sensor.temp_battery_state` | Tom_iPhone17 Temp Battery State | Not Charging |  | — |
+| `sensor.temp_battery_level` | Tom_iPhone17 Temp Battery Level | 90 | % | — |
+| `sensor.tom_iphone17_temp_watch_battery_state` | Tom_iPhone17 Temp Watch Battery State | Not Charging |  | — |
+| `sensor.tom_iphone17_temp_watch_battery_level` | Tom_iPhone17 Temp Watch Battery Level | 25 | % | — |
+| `sensor.toms_ipad_battery_level` | Toms iPad Battery Level | 100 | % | — |
+| `sensor.toms_ipad_battery_state` | Toms iPad Battery State | Not Charging |  | — |
+| `sensor.total_battery_power` | Total Battery Power | -7.16 | kW | — |
+| `sensor.battery_percent` | Battery Percent | 40.6 | % | — |
+| `sensor.4680_system_2_battery_power` | 4680 System 2 Battery power | -2.231 | kW | Garage |
+| `sensor.gonser_4680_system_1_battery_power` | Gonser 4680 system 1 Battery power | -4.924 | kW | Garage |
+| `sensor.4680_system_2_battery_charged` | 4680 System 2 Battery charged | 1.469 | kWh | Garage |
+| `sensor.4680_system_2_battery_discharged` | 4680 System 2 Battery discharged | 0.479 | kWh | Garage |
+| `sensor.gonser_4680_system_1_battery_charged` | Gonser 4680 system 1 Battery charged | 9.369 | kWh | Garage |
+| `sensor.gonser_4680_system_1_battery_discharged` | Gonser 4680 system 1 Battery discharged | 10.221 | kWh | Garage |
+| `sensor.living_room_motion_battery` | UP sense - stairs Battery | 98 | % | Floor 2 Stairs |
+| `sensor.pool_double_sliders_battery` | UP sense - Equipment closet Battery | 99 | % | Floor 1 Equipment/Utility |
+| `sensor.usl_motion_battery` | USL-Motion_Bar Battery | 93 | % | Floor 1 Bar |
+| `sensor.usl_motion_battery_2` | USL-Motion_Sitting Battery | 93 | % | Floor 2 Master Suite Sitting Room |
+| `sensor.usl_motion_battery_3` | USL-Motion_BBQ Battery | 92 | % | BBQ outdoor kitchen |
+
+## Grid import/export (7)
+| entity_id | friendly_name | state | unit | area |
+| --- | --- | --- | --- | --- |
+| `sensor.4680_system_2_grid_power` | 4680 System 2 Grid power | 0.0 | kW | Garage |
+| `sensor.gonser_4680_system_1_grid_power` | Gonser 4680 system 1 Grid power | 0.0 | kW | Garage |
+| `sensor.4680_system_2_grid_imported` | 4680 System 2 Grid imported | 10.931 | kWh | Garage |
+| `sensor.4680_system_2_grid_exported` | 4680 System 2 Grid exported | 0.002 | kWh | Garage |
+| `sensor.gonser_4680_system_1_grid_imported` | Gonser 4680 system 1 Grid imported | 0.0695 | kWh | Garage |
+| `sensor.gonser_4680_system_1_grid_exported` | Gonser 4680 system 1 Grid exported | 0.0525 | kWh | Garage |
+| `sensor.gonzonet` | GonzoNet Clients | 0 |  | — |
+
+## Home / load consumption (7)
+| entity_id | friendly_name | state | unit | area |
+| --- | --- | --- | --- | --- |
+| `sensor.total_home_load` | Total Home Load | 8.2 | kW | — |
+| `sensor.4680_system_2_load_power` | 4680 System 2 Load power | 4.532994140625 | kW | Garage |
+| `sensor.gonser_4680_system_1_load_power` | Gonser 4680 system 1 Load power | 3.6719189453125 | kW | Garage |
+| `sensor.4680_system_2_home_usage` | 4680 System 2 Home usage | 25.633 | kWh | Garage |
+| `sensor.gonser_4680_system_1_home_usage` | Gonser 4680 system 1 Home usage | 23.771 | kWh | Garage |
+| `sensor.usp_pdu_pro_ac_power_consumption` | USP PDU Pro AC power consumption | 256.530 | W | — |
+| `sensor.usp_pdu_pro_ac_power_consumption_2` | USP PDU Pro AC power consumption | 94.766 | W | — |
+
+## Daily energy totals (kWh sensors) (14)
+| entity_id | friendly_name | state | unit | area |
+| --- | --- | --- | --- | --- |
+| `sensor.4680_system_2_grid_imported` | 4680 System 2 Grid imported | 10.931 | kWh | Garage |
+| `sensor.4680_system_2_home_usage` | 4680 System 2 Home usage | 25.633 | kWh | Garage |
+| `sensor.4680_system_2_battery_charged` | 4680 System 2 Battery charged | 1.469 | kWh | Garage |
+| `sensor.4680_system_2_battery_discharged` | 4680 System 2 Battery discharged | 0.479 | kWh | Garage |
+| `sensor.4680_system_2_solar_generated` | 4680 System 2 Solar generated | 15.694 | kWh | Garage |
+| `sensor.4680_system_2_grid_exported` | 4680 System 2 Grid exported | 0.002 | kWh | Garage |
+| `sensor.gonser_4680_system_1_grid_imported` | Gonser 4680 system 1 Grid imported | 0.0695 | kWh | Garage |
+| `sensor.gonser_4680_system_1_home_usage` | Gonser 4680 system 1 Home usage | 23.771 | kWh | Garage |
+| `sensor.gonser_4680_system_1_battery_charged` | Gonser 4680 system 1 Battery charged | 9.369 | kWh | Garage |
+| `sensor.gonser_4680_system_1_battery_discharged` | Gonser 4680 system 1 Battery discharged | 10.221 | kWh | Garage |
+| `sensor.gonser_4680_system_1_solar_generated` | Gonser 4680 system 1 Solar generated | 22.902 | kWh | Garage |
+| `sensor.gonser_4680_system_1_grid_exported` | Gonser 4680 system 1 Grid exported | 0.0525 | kWh | Garage |
+| `sensor.envoy_202445013483_energy_production_today` | Main Envoy Energy production today | 25948.87 | kWh | — |
+| `sensor.envoy_202445013483_energy_production_last_seven_days` | Main Envoy Energy production last seven days | 25948.87 | kWh | — |
+
+## Suggested "Energy at a glance" entities
+- **using now**: `sensor.total_home_load`
+- **creating now**: `sensor.solar_15min_avg`
+- **battery now**: `sensor.temp_battery_level`
+- **grid used today**: `sensor.4680_system_2_grid_imported`
+
+===== ha_existing_yaml.md =====
+
+# Existing YAML / JSON Reference
+
+## Automations (0)
+_(none)_
+
+## Scripts (0)
+_(none)_
+
+## Scenes (0)
+_(none)_
+
+## Dashboards
+- **Map** — `map` (mode: storage)
+- **Garage Controls** — `garage-controls` (mode: storage)
+- **Night Automations** — `night-automations` (mode: storage)
+- **Overview** — `lovelace` (mode: storage)
+- **TV** — `dashboard-tv` (mode: storage)
+
+===== ha_package.md =====
+
+# PACKAGE FOR YAML DESIGN
+
+## Areas
+- Back yard (`back_yard`)
+- BBQ outdoor kitchen (`bbq_outdoor_kitchen`)
+- Bedroom (`bedroom`)
+- Floor 1 Bar (`floor_1_bar`)
+- Floor 1 Bedroom 2 Suite Bed 2 (`floor_1_bedroom_2_suite_bed_2`)
+- Floor 1 Bedroom 2 Suite Bed 2 Bath (`floor_1_bedroom_2_suite_bed_2_bath`)
+- Floor 1 Bedroom 3 Suite Bed 3 (`floor_1_bedroom_3_suite_bed_3`)
+- Floor 1 Bedroom 3 Suite Bed 3 Bath (`floor_1_bedroom_3_suite_bed_3_bath`)
+- Floor 1 Elevator Hall (`floor_1_elevator_hall`)
+- Floor 1 Entry (`floor_1_entry`)
+- Floor 1 Equipment/Utility (`floor_1_equipment_utility`)
+- Floor 1 Exterior (`floor_1_exterior`)
+- Floor 1 Great Room Atrium (`floor_1_great_room_atrium`)
+- Floor 1 Great Room Kitchen (`floor_1_great_room_kitchen`)
+- Floor 1 Great room lanai (`floor_1_great_room_lanai`)
+- Floor 1 LP2 Unknown Loads (`floor_1_lp2_unknown_loads`)
+- Floor 1 Mudroom (`floor_1_mudroom`)
+- Floor 1 Pantry (`floor_1_pantry`)
+- Floor 1 Powder Room (`floor_1_powder_room`)
+- Floor 1 Stairs (`floor_1_stairs`)
+- Floor 2 Bedroom 4 Suite Bed 4 (`floor_2_bedroom_4_suite_bed_4`)
+- Floor 2 Bedroom 4 Suite Bed 4 Bath (`floor_2_bedroom_4_suite_bed_4_bath`)
+- Floor 2 Bedroom 5 Suite Bed 5 (`floor_2_bedroom_5_suite_bed_5`)
+- Floor 2 Bedroom 5 Suite Bed 5 Bath (`floor_2_bedroom_5_suite_bed_5_bath`)
+- Floor 2 Elevator Hall (`floor_2_elevator_hall`)
+- Floor 2 Exterior (`floor_2_exterior`)
+- Floor 2 master lanai (`floor_2_master_lanai`)
+- Floor 2 Master Suite Closets (`floor_2_master_suite_closets`)
+- Floor 2 Master Suite Master Bath (`floor_2_master_suite_master_bath`)
+- Floor 2 Master Suite Master Bed (`floor_2_master_suite_master_bed`)
+- Floor 2 Master Suite Sitting Room (`floor_2_master_suite_sitting_room`)
+- Floor 2 Stairs (`floor_2_stairs`)
+- Floor 2 Upstairs Hall (`floor_2_upstairs_hall`)
+- Garage (`garage`)
+- Gladiator (`gladiator`)
+- House (`house`)
+- Kitchen (`kitchen`)
+- Living Room (`living_room`)
+- LR (`lr`)
+- Pool (`pool`)
+- Sitting Room (`sitting_room`)
+- Sitting Room Lanai (`sitting_room_lanai`)
+- South Yard (`south_yard`)
+- TV Bar (`tv_bar`)
+
+## Existing scripts
+
+## Existing scenes
+
+## Existing automations
+
+## Lights
+  - `light.stair_helper_lights` — Helper Stair Lights (—)
+  - `light.sitting_lights` — Helper Sitting Path (—)
+  - `light.bbq_light_path` — Helper BBQ Path (BBQ outdoor kitchen)
+  - `light.pub_path` — Helper Pub Path (Floor 1 Bar)
+  - `light.bellevue_sleepnumber_bellevue_light_1` — Bellevue SleepNumber Bellevue Light 1 (—)
+  - `light.master_bath_u6_pro_led` — Master Bath U6 Pro LED (—)
+  - `light.upper_guest_closet_u6_pro_led` — Upper Guest Closet U6 Pro LED (—)
+  - `light.master_lanai_u7_outdoor_led` — Master Lanai U7 Outdoor LED (—)
+  - `light.sitting_room_u7_outdoor_led` — Sitting Room U7 Outdoor LED (—)
+  - `light.garage_uap_ac_m_pro_led` — Garage UAP-AC-M-Pro LED (—)
+  - `light.garage_usw_lite_8_poe_led` — Garage USW-Lite-8-PoE LED (—)
+  - `light.pantry_u6_pro_led` — Pantry U6 Pro LED (—)
+  - `light.mud_room_u6_pro_led` — Mud Room U6 Pro LED (—)
+  - `light.lower_guest_closet_u6_pro_led` — Lower Guest Closet U6 Pro LED (—)
+  - `light.garage_uap_ac_lite_led` — Garage UAP-AC-Lite LED (—)
+  - `light.floor_1_equipment_utility_downlights` — Floor 1 Equipment/Utility Downlights (Floor 1 Equipment/Utility)
+  - `light.floor_1_equipment_utility_linear_light` — Floor 1 Equipment/Utility SPARE (Floor 1 Equipment/Utility)
+  - `light.floor_1_entry_downlights` — Floor 1 Entry Downlights (Floor 1 Entry)
+  - `light.floor_1_entry_chandelier` — Floor 1 Entry Chandelier (Floor 1 Entry)
+  - `light.floor_1_entry_artwork` — Floor 1 Entry Artwork (Floor 1 Entry)
+  - `light.floor_1_entry_gable_lights` — Floor 1 Entry Gable Lights (Floor 1 Entry)
+  - `light.floor_1_great_room_kitchen_downlights` — Floor 1 Great Room Kitchen Downlights (Floor 1 Great Room Kitchen)
+  - `light.floor_1_great_room_kitchen_island_pendants` — Floor 1 Great Room Kitchen Island Pendants (Floor 1 Great Room Kitchen)
+  - `light.floor_1_great_room_kitchen_toe_kick` — Floor 1 Great Room Kitchen Toe Kick (Floor 1 Great Room Kitchen)
+  - `light.floor_1_great_room_kitchen_lower_countertop` — Floor 1 Great Room Kitchen Upper Coutertop (Floor 1 Great Room Kitchen)
+  - `light.floor_1_great_room_kitchen_upper_countertop` — Floor 1 Great Room Kitchen Backsplash (Floor 1 Great Room Kitchen)
+  - `light.floor_1_great_room_kitchen_backsplash` — Floor 1 Great Room Kitchen Lower Countertop (Floor 1 Great Room Kitchen)
+  - `light.floor_1_mudroom_downlights` — Floor 1 Mudroom Downlights (Floor 1 Mudroom)
+  - `light.floor_1_mudroom_linear_lighting` — Floor 1 Mudroom Linear Lighting (Floor 1 Mudroom)
+  - `light.floor_1_powder_room_downlights` — Floor 1 Powder Room Downlights (Floor 1 Powder Room)
+  - `light.floor_1_powder_room_linear_lighting` — Floor 1 Powder Room Linear Lighting (Floor 1 Powder Room)
+  - `light.floor_1_powder_room_vanity` — Floor 1 Powder Room Vanity (Floor 1 Powder Room)
+  - `light.floor_1_powder_room_toe_kick` — Floor 1 Powder Room Toe Kick (Floor 1 Powder Room)
+  - `light.floor_1_exterior_great_room_lanai_cove` — Floor 1 Exterior Great Room Lanai Cove (Floor 1 Great room lanai)
+  - `light.floor_1_exterior_great_rm_lanai_downlights` — Floor 1 Exterior Great Rm Lanai Downlights (Floor 1 Great room lanai)
+  - `light.floor_1_exterior_bed_2_ext_sconces` — Floor 1 Bedroom 2 Suite Bed 2 Bath Toe Kick (Floor 1 Bedroom 2 Suite Bed 2 Bath)
+  - `light.floor_1_exterior_bed_3_ext_sconces` — Floor 1 Exterior SPARE NICHE LED CONSTANT HOT (Floor 1 Exterior)
+  - `light.floor_1_exterior_bbq_downlights_mstr_lanai_downlights` — Floor 1 Exterior BBQ Downlight (BBQ outdoor kitchen)
+  - `light.floor_1_bedroom_2_suite_bed_2_bath_downlights_wc` — Floor 1 Bedroom 2 Suite Bed 2 Bath Downlights + WC (Floor 1 Bedroom 2 Suite Bed 2 Bath)
+  - `light.floor_1_bedroom_2_suite_bed_2_bath_vanity` — Floor 1 Bedroom 2 Suite Bed 2 Bath Vanity (Floor 1 Bedroom 2 Suite Bed 2 Bath)
+  - `light.floor_1_bedroom_2_suite_bed_2_bath_linear_lighting` — Floor 1 Bedroom 3 Suite Bed 3 Bath Toe Kick (Floor 1 Bedroom 2 Suite Bed 2 Bath)
+  - `light.floor_1_bedroom_2_suite_bed_2_bath_bathtub_downlights` — Floor 1 Bedroom 2 Suite Bed 2 Bath Bathtub Downlights (Floor 1 Bedroom 2 Suite Bed 2 Bath)
+  - `light.floor_1_bedroom_3_suite_bed_3_bath_downlights` — Floor 1 Bedroom 3 Suite Bed 3 Bath Downlights (Floor 1 Bedroom 3 Suite Bed 3 Bath)
+  - `light.floor_1_bedroom_3_suite_bed_3_bath_vanity_sconces` — Floor 1 Bedroom 3 Suite Bed 3 Bath Vanity Sconces (Floor 1 Bedroom 3 Suite Bed 3 Bath)
+  - `light.floor_1_bedroom_3_suite_bed_3_bath_vanity_linear` — Floor 1 Bedroom 2 Suite Bed 2 Bath WC LINEAR (Floor 1 Bedroom 3 Suite Bed 3 Bath)
+  - `light.floor_2_master_suite_master_bath_downlights_wc` — Floor 2 Master Suite Master Bath Downlights + WC (Floor 2 Master Suite Master Bath)
+  - `light.floor_2_master_suite_master_bath_linear_lighting_shower_wc` — Floor 2 Master Suite Master Bath Linear Lighting(Shower+WC) (Floor 2 Master Suite Master Bath)
+  - `light.floor_2_master_suite_master_bath_master_bath_vanity` — Floor 2 Master Suite Master Bath Master Bath Vanity (Floor 2 Master Suite Master Bath)
+  - `light.floor_2_master_suite_master_bath_shower_downlight` — Floor 2 Master Suite Master Bath Shower Downlight (Floor 2 Master Suite Master Bath)
+  - `light.floor_2_master_suite_master_bath_downlights_2` — Floor 2 Master Suite Master Bath SPARE (Floor 2 Master Suite Master Bath)
+  - `light.floor_2_master_suite_master_bath_water_closet_downlight` — Floor 2 Master Suite Master Bath SPARE 1 (Floor 2 Master Suite Master Bath)
+  - `light.floor_1_elevator_hall_elevator_hall_downlights` — Floor 1 Elevator Hall Elevator Hall Downlights (Floor 1 Elevator Hall)
+  - `light.floor_2_stairs_downlights` — Floor 2 Stairs Downlights (Floor 2 Stairs)
+  - `light.floor_2_stairs_art_light` — Floor 2 Stairs Art Light (Floor 2 Stairs)
+  - `light.floor_2_stairs_pendants` — Floor 2 Stairs Pendants (Floor 2 Stairs)
+  - `light.floor_2_bedroom_4_suite_bed_4_bath_downlights` — Floor 2 Bedroom 4 Suite Bed 4 Bath Downlights (Floor 2 Bedroom 4 Suite Bed 4 Bath)
+  - `light.floor_2_bedroom_4_suite_bed_4_bath_vanity_sconces` — Floor 2 Bedroom 4 Suite Bed 4 Bath Vanity Sconces (Floor 2 Bedroom 4 Suite Bed 4 Bath)
+  - `light.floor_2_bedroom_4_suite_bed_4_bath_toe_kicks` — Floor 2 Bedroom 4 Suite Bed 4 Bath Toe Kicks (Floor 2 Bedroom 4 Suite Bed 4 Bath)
+  - `light.floor_2_bedroom_5_suite_bed_5_bath_downlights` — Floor 2 Bedroom 5 Suite Bed 5 Bath Downlights (Floor 2 Bedroom 5 Suite Bed 5 Bath)
+  - `light.floor_2_bedroom_5_suite_bed_5_bath_vanity` — Floor 2 Bedroom 5 Suite Bed 5 Bath Vanity (Floor 2 Bedroom 5 Suite Bed 5 Bath)
+  - `light.floor_2_bedroom_5_suite_bed_5_bath_toe_kick` — Floor 2 Bedroom 5 Suite Bed 5 Bath Toe Kick (Floor 2 Bedroom 5 Suite Bed 5 Bath)
+  - `light.floor_1_bar_downlights` — Floor 1 Bar Downlights (Floor 1 Bar)
+  - `light.floor_1_bar_bar_artwork` — Floor 1 Bar Bar Artwork (Floor 1 Bar)
+  - `light.floor_1_bar_bar_hall_downlights_1` — Floor 1 Bar Bar Hall Downlights 1 (Floor 1 Bar)
+  - `light.floor_1_bar_linear_lighting` — Floor 1 Bar Linear Lighting (Floor 1 Bar)
+  - `light.floor_1_bar_pendants` — Floor 1 Bar Pendants (Floor 1 Bar)
+  - `light.floor_1_bar_bar_hall_downlights_2` — Floor 1 Bar Bar Hall Downlights 2 (Floor 1 Bar)
+  - `light.floor_1_bar_linear_lighting_2` — Floor 1 Bar Linear Lighting 2 (Floor 1 Bar)
+  - `light.floor_2_master_suite_master_bed_downlights` — Floor 2 Master Suite Master Bed Downlights (Floor 2 Master Suite Master Bed)
+  - `light.floor_2_master_suite_master_bed_artwork` — Floor 2 Master Suite Master Bed Artwork (Floor 2 Master Suite Master Bed)
+  - `light.floor_2_master_suite_master_bed_sconces` — Floor 2 Master Suite Master Bed SPARE 2 (Floor 2 Master Suite Master Bed)
+  - `light.floor_2_master_suite_master_bed_linear_lighting` — Floor 2 Master Suite Master Bed Linear Lighting (Floor 2 Master Suite Master Bed)
+  - `light.floor_1_bedroom_2_suite_bed_2_bed_downlights` — Floor 1 Bedroom 2 Suite Bed 2 Bed Downlights (Floor 1 Bedroom 2 Suite Bed 2)
+  - `light.floor_1_bedroom_2_suite_bed_2_hall_downlight1` — Floor 2 Elevator Hall Elevator Downlight (Floor 1 Bedroom 2 Suite Bed 2)
+  - `light.floor_1_bedroom_2_suite_bed_2_closet_downlight` — Floor 1 Bedroom 2 Suite Bed 2 Closet Downlight (Floor 1 Bedroom 2 Suite Bed 2)
+  - `light.floor_1_bedroom_2_suite_bed_2_closet_linear` — Floor 1 Bedroom 2 Suite Bed 2 Closet Linear (Floor 1 Bedroom 2 Suite Bed 2)
+  - `light.floor_1_bedroom_2_suite_bed_2_cove` — Floor 1 Bedroom 2 Suite Bed 2 Cove (Floor 1 Bedroom 2 Suite Bed 2)
+  - `light.floor_1_bedroom_2_suite_bed_2_bed_linear2` — Floor 1 Bedroom 2 Suite Bed 2 Bath Ext Tub Downlight (Floor 1 Bedroom 2 Suite Bed 2)
+  - `light.floor_1_bedroom_2_suite_bed_2_hall_downlights` — Floor 1 Bedroom 2 Suite Bed 2 Hall Downlights (Floor 1 Bedroom 2 Suite Bed 2)
+  - `light.floor_1_bedroom_3_suite_bed_3_bed_downlights` — Floor 1 Bedroom 3 Suite Bed 3 Bed Downlights (Floor 1 Bedroom 3 Suite Bed 3)
+  - `light.floor_1_bedroom_3_suite_bed_3_closet_linear2` — Floor 1 Bedroom 3 Suite Bed 3 SPARE (Floor 1 Bedroom 3 Suite Bed 3)
+  - `light.floor_1_bedroom_3_suite_bed_3_closet_door` — Floor 1 Bedroom 3 Suite Bed 3 Closet Door (Floor 1 Bedroom 3 Suite Bed 3)
+  - `light.floor_1_bedroom_3_suite_bed_3_entry_downlight` — Floor 1 Bedroom 3 Suite Bed 3 Entry Downlight (Floor 1 Bedroom 3 Suite Bed 3)
+  - `light.floor_1_bedroom_3_suite_bed_3_closet_linear` — Floor 1 Bedroom 3 Suite Bed 3 Closet Linear (Floor 1 Bedroom 3 Suite Bed 3)
+  - `light.floor_1_bedroom_3_suite_bed_3_cove` — Floor 1 Bedroom 3 Suite Bed 3 Cove (Floor 1 Bedroom 3 Suite Bed 3)
+  - `light.floor_2_bedroom_4_suite_bed_4_bed_downlights` — Floor 2 Bedroom 4 Suite Bed 4 Bed Downlights (Floor 2 Bedroom 4 Suite Bed 4)
+  - `light.floor_2_bedroom_4_suite_bed_4_closet_linear` — Floor 2 Bedroom 4 Suite Bed 4 Closet Linear (Floor 2 Bedroom 4 Suite Bed 4)
+  - `light.floor_2_bedroom_4_suite_bed_4_hall_downlights` — Floor 2 Bedroom 4 Suite Bed 4 Hall Downlights (Floor 2 Bedroom 4 Suite Bed 4)
+  - `light.floor_2_bedroom_4_suite_bed_4_bed_linear_lighting` — Floor 2 Bedroom 4 Suite Bed 4 Bed Linear Lighting (Floor 2 Bedroom 4 Suite Bed 4)
+  - `light.floor_2_bedroom_4_suite_bed_4_closet_downlight` — Floor 2 Bedroom 4 Suite Bed 4 Closet Downlight (Floor 2 Bedroom 4 Suite Bed 4)
+  - `light.floor_2_bedroom_5_suite_bed_5_bed_downlights` — Floor 2 Bedroom 5 Suite Bed 5 Bed Downlights (Floor 2 Bedroom 5 Suite Bed 5)
+  - `light.floor_2_bedroom_5_suite_bed_5_closet_light` — Floor 2 Bedroom 5 Suite Bed 5 Closet Light (Floor 2 Bedroom 5 Suite Bed 5)
+  - `light.floor_2_bedroom_5_suite_bed_5_closet_linear` — Floor 2 Bedroom 5 Suite Bed 5 Closet Linear (Floor 2 Bedroom 5 Suite Bed 5)
+  - `light.floor_2_bedroom_5_suite_bed_5_bed_linear_lighting` — Floor 2 Bedroom 5 Suite Bed 5 Bed Linear Lighting (Floor 2 Bedroom 5 Suite Bed 5)
+  - `light.floor_2_exterior_master_bed_lanai_sconces` — Floor 2 Exterior Master Bed Lanai Sconces (Floor 2 Exterior)
+  - `light.floor_2_exterior_bed_4_lanai_sconces` — Floor 2 Exterior Bed 4 Lanai Sconces (Floor 2 Exterior)
+  - `light.floor_2_exterior_bed_5_lanai_sconces` — Floor 2 Exterior Bed 5 Lanai Sconces (Floor 2 Exterior)
+  - `light.floor_2_exterior_sitting_lanai_downlights` — Floor 2 Exterior Sitting Lanai Downlights (Sitting Room Lanai)
+  - `light.floor_2_exterior_sitting_lanai_sconces_mstr_bath_sconces` — Floor 2 Exterior Sitting Lanai Sconces (Floor 2 Exterior)
+  - `light.floor_2_exterior_master_bath_lanai_sconces` — Floor 2 Exterior Master Bath Lanai Sconces (Floor 2 Exterior)
+  - `light.floor_2_exterior_master_bed_lanai_linear` — Floor 2 Exterior Master Bed Lanai Linear (Floor 2 master lanai)
+  - `light.floor_1_pantry_downlights` — Floor 1 Pantry Downlights (Floor 1 Pantry)
+  - `light.floor_1_pantry_toe_kick` — Floor 1 Pantry Toe Kick (Floor 1 Pantry)
+  - `light.floor_1_great_room_atrium_downlights` — Floor 1 Great Room Atrium Downlights (Floor 1 Great Room Atrium)
+  - `light.floor_1_great_room_atrium_linear_lighting` — Floor 1 Great Room Atrium Linear Lighting (Floor 1 Great Room Atrium)
+  - `light.floor_1_great_room_atrium_chandelier` — Floor 1 Great Room Atrium Chandelier (Floor 1 Great Room Atrium)
+  - `light.floor_2_upstairs_hall_downlights` — Floor 2 Upstairs Hall Downlights (Floor 2 Upstairs Hall)
+  - `light.floor_2_master_suite_sitting_room_downlights_wall_wash` — Floor 2 Master Suite Sitting Room Downlights/Wall Wash (Floor 2 Master Suite Sitting Room)
+  - `light.floor_2_master_suite_sitting_room_bath_hall_downlights` — Floor 2 Master Suite Sitting Room Bath Hall Downlights (Floor 2 Master Suite Sitting Room)
+  - `light.floor_2_master_suite_sitting_room_linear_lighting` — Floor 2 Master Suite Sitting Room Linear Lighting (Floor 2 Master Suite Sitting Room)
+  - `light.floor_2_master_suite_sitting_room_art_cans` — Floor 2 Master Suite Sitting Room Art Cans (Floor 2 Master Suite Sitting Room)
+  - `light.floor_2_master_suite_closets_right_closet_downlights` — Floor 2 Master Suite Closets Right Closet Downlights (Floor 2 Master Suite Closets)
+  - `light.floor_2_master_suite_closets_left_closet_linears` — Floor 2 Master Suite Closets Left Closet Linears (Floor 2 Master Suite Closets)
+  - `light.floor_2_master_suite_closets_left_closet_downlights` — Floor 2 Master Suite Closets Left Closet Downlights (Floor 2 Master Suite Closets)
+  - `light.floor_2_master_suite_closets_right_closet_linears` — Floor 2 Master Suite Closets Right Closet Linears (Floor 2 Master Suite Closets)
+  - `light.floor_1_lp2_unknown_loads_2_1_1` — Floor 1 LP2 Unknown Loads SPARE (Floor 1 LP2 Unknown Loads)
+  - `light.floor_1_lp2_unknown_loads_2_1_2` — Floor 1 LP2 Unknown Loads SPARE 1 (Floor 1 LP2 Unknown Loads)
+  - `light.floor_1_lp2_unknown_loads_2_1_3` — Floor 1 LP2 Unknown Loads SPARE 2 (Floor 1 LP2 Unknown Loads)
+  - `light.floor_1_lp2_unknown_loads_2_1_4` — Floor 1 LP2 Unknown Loads SPARE 3 (Floor 1 LP2 Unknown Loads)
+  - `light.floor_1_lp2_unknown_loads_2_2_2` — Floor 1 LP2 Unknown Loads SPARE 4 (Floor 1 LP2 Unknown Loads)
+  - `light.floor_1_lp2_unknown_loads_2_2_3` — Floor 1 LP2 Unknown Loads SPARE 5 (Floor 1 LP2 Unknown Loads)
+  - `light.floor_1_lp2_unknown_loads_2_2_4` — Floor 1 LP2 Unknown Loads SPARE 6 (Floor 1 LP2 Unknown Loads)
+  - `light.floor_1_lp2_unknown_loads_2_4_4` — Floor 1 LP2 Unknown Loads SPARE 7 (Floor 1 LP2 Unknown Loads)
+  - `light.floor_1_lp2_unknown_loads_2_6_2` — Floor 2 Exterior Master Lanai Downlights (Floor 2 master lanai)
+  - `light.floor_1_great_room_atrium_tv_palm_lights` — Floor 1 Great Room Atrium TV Palm Lights (Floor 1 Great Room Atrium)
+  - `light.floor_1_bar_bar_cove` — Floor 1 Bar Bar Cove (Floor 1 Bar)
+  - `light.floor_1_great_room_kitchen_counter_sides` — Floor 1 Great Room Kitchen Counter Sides (Floor 1 Great Room Kitchen)
+  - `light.makena_sleepnumber_makena_light_1` — Makena SleepNumber Makena Light 1 (Floor 2 Master Suite Master Bed)
+  - `light.floor_1_equipment_utility_floor_1_equipment_utility_maui_island_lts` — Floor 1 Exterior Maui Island Lts (Floor 1 Equipment/Utility)
+
+## Switches
+  - `switch.makena_alarm_panel_chime` — Makena Alarm Panel Chime (House)
+  - `switch.garage_door_garage_relay_raw` — Garage Relay (Garage)
+  - `switch.garage_door_garage_door_button` — Garage Door (legacy button) (Garage)
+  - `switch.bellevue_sleepnumber_bellevue_pause_mode` — Bellevue SleepNumber Bellevue Pause Mode (—)
+  - `switch.4680_system_2_allow_charging_from_grid` — 4680 System 2 Allow charging from grid (Garage)
+  - `switch.gonser_4680_system_1_allow_charging_from_grid` — Gonser 4680 system 1 Allow charging from grid (Garage)
+  - `switch.4680_system_2_storm_watch` — 4680 System 2 Storm watch (Garage)
+  - `switch.gonser_4680_system_1_storm_watch` — Gonser 4680 system 1 Storm watch (Garage)
+  - `switch.lg_webos_tv_2bc9_mute` — LG webOS TV 2BC9 Mute (Living Room)
+  - `switch.south_g6_turret_status_light` — South G6 Turret Status light (South Yard)
+  - `switch.south_g6_turret_overlay_show_name` — South G6 Turret Overlay: show name (South Yard)
+  - `switch.south_g6_turret_overlay_show_date` — South G6 Turret Overlay: show date (South Yard)
+  - `switch.south_g6_turret_overlay_show_logo` — South G6 Turret Overlay: show logo (South Yard)
+  - `switch.south_g6_turret_overlay_show_nerd_mode` — South G6 Turret Overlay: show nerd mode (South Yard)
+  - `switch.south_g6_turret_motion` — South G6 Turret Motion (South Yard)
+  - `switch.south_g6_turret_person_detection` — South G6 Turret Person detection (South Yard)
+  - `switch.south_g6_turret_vehicle_detection` — South G6 Turret Vehicle detection (South Yard)
+  - `switch.south_g6_turret_animal_detection` — South G6 Turret Animal detection (South Yard)
+  - `switch.south_g6_turret_license_plate_detection` — South G6 Turret License plate detection (South Yard)
+  - `switch.south_g6_turret_smoke_detection` — South G6 Turret Smoke detection (South Yard)
+  - `switch.south_g6_turret_co_alarm_detection` — South G6 Turret CO alarm detection (South Yard)
+  - `switch.south_g6_turret_siren_detection` — South G6 Turret Siren detection (South Yard)
+  - `switch.south_g6_turret_baby_cry_detection` — South G6 Turret Baby cry detection (South Yard)
+  - `switch.south_g6_turret_speaking_detection` — South G6 Turret Speaking detection (South Yard)
+  - `switch.south_g6_turret_none` — South G6 Turret Barking detection (South Yard)
+  - `switch.south_g6_turret_car_alarm_detection` — South G6 Turret Car alarm detection (South Yard)
+  - `switch.south_g6_turret_car_horn_detection` — South G6 Turret Car horn detection (South Yard)
+  - `switch.south_g6_turret_glass_break_detection` — South G6 Turret Glass break detection (South Yard)
+  - `switch.south_pool_g6_ptz_status_light` — South Pool G6 PTZ Status light (South Yard)
+  - `switch.south_pool_g6_ptz_system_sounds` — South Pool G6 PTZ System sounds (South Yard)
+  - `switch.south_pool_g6_ptz_overlay_show_name` — South Pool G6 PTZ Overlay: show name (South Yard)
+  - `switch.south_pool_g6_ptz_overlay_show_date` — South Pool G6 PTZ Overlay: show date (South Yard)
+  - `switch.south_pool_g6_ptz_overlay_show_logo` — South Pool G6 PTZ Overlay: show logo (South Yard)
+  - `switch.south_pool_g6_ptz_overlay_show_nerd_mode` — South Pool G6 PTZ Overlay: show nerd mode (South Yard)
+  - `switch.south_pool_g6_ptz_motion` — South Pool G6 PTZ Motion (South Yard)
+  - `switch.south_pool_g6_ptz_person_detection` — South Pool G6 PTZ Person detection (South Yard)
+  - `switch.south_pool_g6_ptz_vehicle_detection` — South Pool G6 PTZ Vehicle detection (South Yard)
+  - `switch.south_pool_g6_ptz_animal_detection` — South Pool G6 PTZ Animal detection (South Yard)
+  - `switch.south_pool_g6_ptz_license_plate_detection` — South Pool G6 PTZ License plate detection (South Yard)
+  - `switch.south_pool_g6_ptz_smoke_detection` — South Pool G6 PTZ Smoke detection (South Yard)
+  - `switch.south_pool_g6_ptz_co_alarm_detection` — South Pool G6 PTZ CO alarm detection (South Yard)
+  - `switch.south_pool_g6_ptz_siren_detection` — South Pool G6 PTZ Siren detection (South Yard)
+  - `switch.south_pool_g6_ptz_baby_cry_detection` — South Pool G6 PTZ Baby cry detection (South Yard)
+  - `switch.south_pool_g6_ptz_speaking_detection` — South Pool G6 PTZ Speaking detection (South Yard)
+  - `switch.south_pool_g6_ptz_none` — South Pool G6 PTZ Barking detection (South Yard)
+  - `switch.south_pool_g6_ptz_car_alarm_detection` — South Pool G6 PTZ Car alarm detection (South Yard)
+  - `switch.south_pool_g6_ptz_car_horn_detection` — South Pool G6 PTZ Car horn detection (South Yard)
+  - `switch.south_pool_g6_ptz_glass_break_detection` — South Pool G6 PTZ Glass break detection (South Yard)
+  - `switch.south_pool_g6_ptz_tracking_person` — South Pool G6 PTZ Tracking: person (South Yard)
+  - `switch.entry_g6_ptz_status_light` — Entry G6 PTZ Status light (—)
+  - `switch.entry_g6_ptz_system_sounds` — Entry G6 PTZ System sounds (—)
+  - `switch.entry_g6_ptz_overlay_show_name` — Entry G6 PTZ Overlay: show name (—)
+  - `switch.entry_g6_ptz_overlay_show_date` — Entry G6 PTZ Overlay: show date (—)
+  - `switch.entry_g6_ptz_overlay_show_logo` — Entry G6 PTZ Overlay: show logo (—)
+  - `switch.entry_g6_ptz_overlay_show_nerd_mode` — Entry G6 PTZ Overlay: show nerd mode (—)
+  - `switch.entry_g6_ptz_motion` — Entry G6 PTZ Motion (—)
+  - `switch.entry_g6_ptz_person_detection` — Entry G6 PTZ Person detection (—)
+  - `switch.entry_g6_ptz_vehicle_detection` — Entry G6 PTZ Vehicle detection (—)
+  - `switch.entry_g6_ptz_animal_detection` — Entry G6 PTZ Animal detection (—)
+  - `switch.entry_g6_ptz_license_plate_detection` — Entry G6 PTZ License plate detection (—)
+  - `switch.entry_g6_ptz_smoke_detection` — Entry G6 PTZ Smoke detection (—)
+  - `switch.entry_g6_ptz_co_alarm_detection` — Entry G6 PTZ CO alarm detection (—)
+  - `switch.entry_g6_ptz_siren_detection` — Entry G6 PTZ Siren detection (—)
+  - `switch.entry_g6_ptz_baby_cry_detection` — Entry G6 PTZ Baby cry detection (—)
+  - `switch.entry_g6_ptz_speaking_detection` — Entry G6 PTZ Speaking detection (—)
+  - `switch.entry_g6_ptz_none` — Entry G6 PTZ Barking detection (—)
+  - `switch.entry_g6_ptz_car_alarm_detection` — Entry G6 PTZ Car alarm detection (—)
+  - `switch.entry_g6_ptz_car_horn_detection` — Entry G6 PTZ Car horn detection (—)
+  - `switch.entry_g6_ptz_glass_break_detection` — Entry G6 PTZ Glass break detection (—)
+  - `switch.entry_g6_ptz_tracking_person` — Entry G6 PTZ Tracking: person (—)
+  - `switch.garage_g5_ptz_status_light` — Garage G5 PTZ Status light (—)
+  - `switch.garage_g5_ptz_overlay_show_name` — Garage G5 PTZ Overlay: show name (—)
+  - `switch.garage_g5_ptz_overlay_show_date` — Garage G5 PTZ Overlay: show date (—)
+  - `switch.garage_g5_ptz_overlay_show_logo` — Garage G5 PTZ Overlay: show logo (—)
+  - `switch.garage_g5_ptz_overlay_show_nerd_mode` — Garage G5 PTZ Overlay: show nerd mode (—)
+  - `switch.garage_g5_ptz_motion` — Garage G5 PTZ Motion (—)
+  - `switch.garage_g5_ptz_person_detection` — Garage G5 PTZ Person detection (—)
+  - `switch.garage_g5_ptz_vehicle_detection` — Garage G5 PTZ Vehicle detection (—)
+  - `switch.garage_g5_ptz_animal_detection` — Garage G5 PTZ Animal detection (—)
+  - `switch.garage_g5_ptz_smoke_detection` — Garage G5 PTZ Smoke detection (—)
+  - `switch.garage_g5_ptz_co_alarm_detection` — Garage G5 PTZ CO alarm detection (—)
+  - `switch.garage_g5_ptz_baby_cry_detection` — Garage G5 PTZ Baby cry detection (—)
+  - `switch.garage_g5_ptz_speaking_detection` — Garage G5 PTZ Speaking detection (—)
+  - `switch.garage_g5_ptz_tracking_person` — Garage G5 PTZ Tracking: person (—)
+  - `switch.north_g6_turret_status_light` — North G6 Turret Status light (—)
+  - `switch.north_g6_turret_overlay_show_name` — North G6 Turret Overlay: show name (—)
+  - `switch.north_g6_turret_overlay_show_date` — North G6 Turret Overlay: show date (—)
+  - `switch.north_g6_turret_overlay_show_logo` — North G6 Turret Overlay: show logo (—)
+  - `switch.north_g6_turret_overlay_show_nerd_mode` — North G6 Turret Overlay: show nerd mode (—)
+  - `switch.north_g6_turret_motion` — North G6 Turret Motion (—)
+  - `switch.north_g6_turret_person_detection` — North G6 Turret Person detection (—)
+  - `switch.north_g6_turret_vehicle_detection` — North G6 Turret Vehicle detection (—)
+  - `switch.north_g6_turret_animal_detection` — North G6 Turret Animal detection (—)
+  - `switch.north_g6_turret_license_plate_detection` — North G6 Turret License plate detection (—)
+  - `switch.north_g6_turret_smoke_detection` — North G6 Turret Smoke detection (—)
+  - `switch.north_g6_turret_co_alarm_detection` — North G6 Turret CO alarm detection (—)
+  - `switch.north_g6_turret_siren_detection` — North G6 Turret Siren detection (—)
+  - `switch.north_g6_turret_baby_cry_detection` — North G6 Turret Baby cry detection (—)
+  - `switch.north_g6_turret_speaking_detection` — North G6 Turret Speaking detection (—)
+  - `switch.north_g6_turret_none` — North G6 Turret Barking detection (—)
+  - `switch.north_g6_turret_car_alarm_detection` — North G6 Turret Car alarm detection (—)
+  - `switch.north_g6_turret_car_horn_detection` — North G6 Turret Car horn detection (—)
+  - `switch.north_g6_turret_glass_break_detection` — North G6 Turret Glass break detection (—)
+  - `switch.g6_instant_status_light` — G6 Instant Status light (—)
+  - `switch.g6_instant_system_sounds` — G6 Instant System sounds (—)
+  - `switch.g6_instant_overlay_show_name` — G6 Instant Overlay: show name (—)
+  - `switch.g6_instant_overlay_show_date` — G6 Instant Overlay: show date (—)
+  - `switch.g6_instant_overlay_show_logo` — G6 Instant Overlay: show logo (—)
+  - `switch.g6_instant_overlay_show_nerd_mode` — G6 Instant Overlay: show nerd mode (—)
+  - `switch.g6_instant_motion` — G6 Instant Motion (—)
+  - `switch.g6_instant_person_detection` — G6 Instant Person detection (—)
+  - `switch.g6_instant_vehicle_detection` — G6 Instant Vehicle detection (—)
+  - `switch.g6_instant_animal_detection` — G6 Instant Animal detection (—)
+  - `switch.g6_instant_license_plate_detection` — G6 Instant License plate detection (—)
+  - `switch.g6_instant_smoke_detection` — G6 Instant Smoke detection (—)
+  - `switch.g6_instant_co_alarm_detection` — G6 Instant CO alarm detection (—)
+  - `switch.g6_instant_siren_detection` — G6 Instant Siren detection (—)
+  - `switch.g6_instant_baby_cry_detection` — G6 Instant Baby cry detection (—)
+  - `switch.g6_instant_speaking_detection` — G6 Instant Speaking detection (—)
+  - `switch.g6_instant_none` — G6 Instant Barking detection (—)
+  - `switch.g6_instant_car_alarm_detection` — G6 Instant Car alarm detection (—)
+  - `switch.g6_instant_car_horn_detection` — G6 Instant Car horn detection (—)
+  - `switch.g6_instant_glass_break_detection` — G6 Instant Glass break detection (—)
+  - `switch.bbq_g6_ptz_status_light` — BBQ G6 PTZ Status light (—)
+  - `switch.bbq_g6_ptz_system_sounds` — BBQ G6 PTZ System sounds (—)
+  - `switch.bbq_g6_ptz_overlay_show_name` — BBQ G6 PTZ Overlay: show name (—)
+  - `switch.bbq_g6_ptz_overlay_show_date` — BBQ G6 PTZ Overlay: show date (—)
+  - `switch.bbq_g6_ptz_overlay_show_logo` — BBQ G6 PTZ Overlay: show logo (—)
+  - `switch.bbq_g6_ptz_overlay_show_nerd_mode` — BBQ G6 PTZ Overlay: show nerd mode (—)
+  - `switch.bbq_g6_ptz_motion` — BBQ G6 PTZ Motion (—)
+  - `switch.bbq_g6_ptz_person_detection` — BBQ G6 PTZ Person detection (—)
+  - `switch.bbq_g6_ptz_vehicle_detection` — BBQ G6 PTZ Vehicle detection (—)
+  - `switch.bbq_g6_ptz_animal_detection` — BBQ G6 PTZ Animal detection (—)
+  - `switch.bbq_g6_ptz_license_plate_detection` — BBQ G6 PTZ License plate detection (—)
+  - `switch.bbq_g6_ptz_smoke_detection` — BBQ G6 PTZ Smoke detection (—)
+  - `switch.bbq_g6_ptz_co_alarm_detection` — BBQ G6 PTZ CO alarm detection (—)
+  - `switch.bbq_g6_ptz_siren_detection` — BBQ G6 PTZ Siren detection (—)
+  - `switch.bbq_g6_ptz_baby_cry_detection` — BBQ G6 PTZ Baby cry detection (—)
+  - `switch.bbq_g6_ptz_speaking_detection` — BBQ G6 PTZ Speaking detection (—)
+  - `switch.bbq_g6_ptz_none` — BBQ G6 PTZ Barking detection (—)
+  - `switch.bbq_g6_ptz_car_alarm_detection` — BBQ G6 PTZ Car alarm detection (—)
+  - `switch.bbq_g6_ptz_car_horn_detection` — BBQ G6 PTZ Car horn detection (—)
+  - `switch.bbq_g6_ptz_glass_break_detection` — BBQ G6 PTZ Glass break detection (—)
+  - `switch.bbq_g6_ptz_tracking_person` — BBQ G6 PTZ Tracking: person (—)
+  - `switch.mud_room_door_hub_entry_status_light` — Mud room door hub - Entry Status light (—)
+  - `switch.mud_room_door_hub_entry_system_sounds` — Mud room door hub - Entry System sounds (—)
+  - `switch.mud_room_door_hub_entry_overlay_show_name` — Mud room door hub - Entry Overlay: show name (—)
+  - `switch.mud_room_door_hub_entry_overlay_show_date` — Mud room door hub - Entry Overlay: show date (—)
+  - `switch.mud_room_door_hub_entry_overlay_show_logo` — Mud room door hub - Entry Overlay: show logo (—)
+  - `switch.mud_room_door_hub_entry_overlay_show_nerd_mode` — Mud room door hub - Entry Overlay: show nerd mode (—)
+  - `switch.mud_room_door_hub_entry_motion` — Mud room door hub - Entry Motion (—)
+  - `switch.master_lanai_g6_ptz_status_light` — Master Lanai G6 PTZ Status light (—)
+  - `switch.master_lanai_g6_ptz_system_sounds` — Master Lanai G6 PTZ System sounds (—)
+  - `switch.master_lanai_g6_ptz_overlay_show_name` — Master Lanai G6 PTZ Overlay: show name (—)
+  - `switch.master_lanai_g6_ptz_overlay_show_date` — Master Lanai G6 PTZ Overlay: show date (—)
+  - `switch.master_lanai_g6_ptz_overlay_show_logo` — Master Lanai G6 PTZ Overlay: show logo (—)
+  - `switch.master_lanai_g6_ptz_overlay_show_nerd_mode` — Master Lanai G6 PTZ Overlay: show nerd mode (—)
+  - `switch.master_lanai_g6_ptz_motion` — Master Lanai G6 PTZ Motion (—)
+  - `switch.master_lanai_g6_ptz_person_detection` — Master Lanai G6 PTZ Person detection (—)
+  - `switch.master_lanai_g6_ptz_vehicle_detection` — Master Lanai G6 PTZ Vehicle detection (—)
+  - `switch.master_lanai_g6_ptz_animal_detection` — Master Lanai G6 PTZ Animal detection (—)
+  - `switch.master_lanai_g6_ptz_license_plate_detection` — Master Lanai G6 PTZ License plate detection (—)
+  - `switch.master_lanai_g6_ptz_smoke_detection` — Master Lanai G6 PTZ Smoke detection (—)
+  - `switch.master_lanai_g6_ptz_co_alarm_detection` — Master Lanai G6 PTZ CO alarm detection (—)
+  - `switch.master_lanai_g6_ptz_siren_detection` — Master Lanai G6 PTZ Siren detection (—)
+  - `switch.master_lanai_g6_ptz_baby_cry_detection` — Master Lanai G6 PTZ Baby cry detection (—)
+  - `switch.master_lanai_g6_ptz_speaking_detection` — Master Lanai G6 PTZ Speaking detection (—)
+  - `switch.master_lanai_g6_ptz_none` — Master Lanai G6 PTZ Barking detection (—)
+  - `switch.master_lanai_g6_ptz_car_alarm_detection` — Master Lanai G6 PTZ Car alarm detection (—)
+  - `switch.master_lanai_g6_ptz_car_horn_detection` — Master Lanai G6 PTZ Car horn detection (—)
+  - `switch.master_lanai_g6_ptz_glass_break_detection` — Master Lanai G6 PTZ Glass break detection (—)
+  - `switch.master_lanai_g6_ptz_tracking_person` — Master Lanai G6 PTZ Tracking: person (—)
+  - `switch.g6_turret_status_light` — G6 Turret Status light (—)
+  - `switch.g6_turret_overlay_show_name` — G6 Turret Overlay: show name (—)
+  - `switch.g6_turret_overlay_show_date` — G6 Turret Overlay: show date (—)
+  - `switch.g6_turret_overlay_show_logo` — G6 Turret Overlay: show logo (—)
+  - `switch.g6_turret_overlay_show_nerd_mode` — G6 Turret Overlay: show nerd mode (—)
+  - `switch.g6_turret_motion` — G6 Turret Motion (—)
+  - `switch.g6_turret_person_detection` — G6 Turret Person detection (—)
+  - `switch.g6_turret_vehicle_detection` — G6 Turret Vehicle detection (—)
+  - `switch.g6_turret_animal_detection` — G6 Turret Animal detection (—)
+  - `switch.g6_turret_license_plate_detection` — G6 Turret License plate detection (—)
+  - `switch.g6_turret_smoke_detection` — G6 Turret Smoke detection (—)
+  - `switch.g6_turret_co_alarm_detection` — G6 Turret CO alarm detection (—)
+  - `switch.g6_turret_siren_detection` — G6 Turret Siren detection (—)
+  - `switch.g6_turret_baby_cry_detection` — G6 Turret Baby cry detection (—)
+  - `switch.g6_turret_speaking_detection` — G6 Turret Speaking detection (—)
+  - `switch.g6_turret_none` — G6 Turret Barking detection (—)
+  - `switch.g6_turret_car_alarm_detection` — G6 Turret Car alarm detection (—)
+  - `switch.g6_turret_car_horn_detection` — G6 Turret Car horn detection (—)
+  - `switch.g6_turret_glass_break_detection` — G6 Turret Glass break detection (—)
+  - `switch.south_g6_turret_privacy_mode` — South G6 Turret Privacy mode (South Yard)
+  - `switch.south_pool_g6_ptz_privacy_mode` — South Pool G6 PTZ Privacy mode (South Yard)
+  - `switch.entry_g6_ptz_privacy_mode` — Entry G6 PTZ Privacy mode (—)
+  - `switch.garage_g5_ptz_privacy_mode` — Garage G5 PTZ Privacy mode (—)
+  - `switch.north_g6_turret_privacy_mode` — North G6 Turret Privacy mode (—)
+  - `switch.g6_instant_privacy_mode` — G6 Instant Privacy mode (—)
+  - `switch.bbq_g6_ptz_privacy_mode` — BBQ G6 PTZ Privacy mode (—)
+  - `switch.master_lanai_g6_ptz_privacy_mode` — Master Lanai G6 PTZ Privacy mode (—)
+  - `switch.g6_turret_privacy_mode` — G6 Turret Privacy mode (—)
+  - `switch.makena_beach_dream_machine_pro_analytics_enabled` — Makena Beach Dream Machine Pro Analytics enabled (—)
+  - `switch.makena_beach_dream_machine_pro_insights_enabled` — Makena Beach Dream Machine Pro Insights enabled (—)
+  - `switch.usp_pdu_pro_usb_outlet_1` — USP PDU Pro USB Outlet 1 (—)
+  - `switch.usp_pdu_pro_usb_outlet_2` — USP PDU Pro USB Outlet 2 (—)
+  - `switch.usp_pdu_pro_usb_outlet_3` — USP PDU Pro USB Outlet 3 (—)
+  - `switch.usp_pdu_pro_usb_outlet_4` — USP PDU Pro USB Outlet 4 (—)
+  - `switch.usp_pdu_pro_outlet_5` — USP PDU Pro Outlet 5 (—)
+  - `switch.usp_pdu_pro_outlet_6` — USP PDU Pro Outlet 6 (—)
+  - `switch.usp_pdu_pro_outlet_7` — USP PDU Pro Outlet 7 (—)
+  - `switch.usp_pdu_pro_outlet_8` — USP PDU Pro Outlet 8 (—)
+  - `switch.usp_pdu_pro_outlet_9` — USP PDU Pro Outlet 9 (—)
+  - `switch.usp_pdu_pro_outlet_10` — USP PDU Pro Outlet 10 (—)
+  - `switch.usp_pdu_pro_outlet_11` — USP PDU Pro Outlet 11 (—)
+  - `switch.usp_pdu_pro_outlet_12` — USP PDU Pro Outlet 12 (—)
+  - `switch.usp_pdu_pro_outlet_13` — USP PDU Pro Outlet 13 (—)
+  - `switch.usp_pdu_pro_outlet_14` — USP PDU Pro Outlet 14 (—)
+  - `switch.usp_pdu_pro_outlet_15` — USP PDU Pro Outlet 15 (—)
+  - `switch.usp_pdu_pro_outlet_16` — USP PDU Pro Outlet 16 (—)
+  - `switch.usp_pdu_pro_outlet_17` — USP PDU Pro Outlet 17 (—)
+  - `switch.usp_pdu_pro_outlet_18` — USP PDU Pro Outlet 18 (—)
+  - `switch.usp_pdu_pro_outlet_19` — USP PDU Pro Outlet 19 (—)
+  - `switch.usp_pdu_pro_outlet_20` — USP PDU Pro Outlet 20 (—)
+  - `switch.usp_pdu_pro_usb_outlet_1_2` — USP PDU Pro USB Outlet 1 (—)
+  - `switch.usp_pdu_pro_usb_outlet_2_2` — USP PDU Pro USB Outlet 2 (—)
+  - `switch.usp_pdu_pro_usb_outlet_3_2` — USP PDU Pro USB Outlet 3 (—)
+  - `switch.usp_pdu_pro_usb_outlet_4_2` — USP PDU Pro USB Outlet 4 (—)
+  - `switch.usp_pdu_pro_outlet_5_2` — USP PDU Pro Outlet 5 (—)
+  - `switch.usp_pdu_pro_outlet_6_2` — USP PDU Pro Outlet 6 (—)
+  - `switch.usp_pdu_pro_outlet_7_2` — USP PDU Pro Outlet 7 (—)
+  - `switch.usp_pdu_pro_outlet_8_2` — USP PDU Pro Outlet 8 (—)
+  - `switch.usp_pdu_pro_outlet_9_2` — USP PDU Pro Outlet 9 (—)
+  - `switch.usp_pdu_pro_outlet_10_2` — USP PDU Pro Outlet 10 (—)
+  - `switch.usp_pdu_pro_outlet_11_2` — USP PDU Pro Outlet 11 (—)
+  - `switch.usp_pdu_pro_outlet_12_2` — USP PDU Pro Outlet 12 (—)
+  - `switch.usp_pdu_pro_outlet_13_2` — USP PDU Pro Outlet 13 (—)
+  - `switch.usp_pdu_pro_outlet_14_2` — USP PDU Pro Outlet 14 (—)
+  - `switch.usp_pdu_pro_outlet_15_2` — USP PDU Pro Outlet 15 (—)
+  - `switch.usp_pdu_pro_outlet_16_2` — USP PDU Pro Outlet 16 (—)
+  - `switch.usp_pdu_pro_outlet_17_2` — USP PDU Pro Outlet 17 (—)
+  - `switch.usp_pdu_pro_outlet_18_2` — USP PDU Pro Outlet 18 (—)
+  - `switch.usp_pdu_pro_outlet_19_2` — USP PDU Pro Outlet 19 (—)
+  - `switch.usp_pdu_pro_outlet_20_2` — USP PDU Pro Outlet 20 (—)
+  - `switch.gonzomatic` — Gonzomatic Enabled (—)
+  - `switch.lights` — Lights (—)
+  - `switch.mainhouseiot` — MainHouseIOT Enabled (—)
+  - `switch.unifi_identity` — UniFi Identity Enabled (—)
+  - `switch.gonzonet` — GonzoNet Enabled (—)
+  - `switch.floor_1_equipment_utility_homeowner_keypads_device_1_keypad_dog_am_led` — Floor 1 Equipment/Utility Homeowner Keypads Device 1 Keypad Dog AM LED (Floor 1 Equipment/Utility)
+  - `switch.floor_1_equipment_utility_homeowner_keypads_device_1_keypad_entertain_led` — Floor 1 Equipment/Utility Homeowner Keypads Device 1 Keypad Entertain LED (Floor 1 Equipment/Utility)
+  - `switch.floor_1_equipment_utility_homeowner_keypads_device_1_keypad_button_3_led` — Floor 1 Equipment/Utility Homeowner Keypads Device 1 Keypad Master Evening LED (Floor 1 Equipment/Utility)
+  - `switch.floor_1_equipment_utility_homeowner_keypads_device_1_keypad_button_4_led` — Floor 1 Equipment/Utility Homeowner Keypads Device 1 Keypad Button 4 LED (Floor 1 Equipment/Utility)
+  - `switch.floor_1_equipment_utility_homeowner_keypads_device_1_keypad_button_5_led` — Floor 1 Equipment/Utility Homeowner Keypads Device 1 Keypad Button 5 LED (Floor 1 Equipment/Utility)
+  - `switch.floor_1_equipment_utility_homeowner_keypads_device_1_keypad_button_6_led` — Floor 1 Equipment/Utility Homeowner Keypads Device 1 Keypad Button 6 LED (Floor 1 Equipment/Utility)
+  - `switch.floor_1_equipment_utility_homeowner_keypads_device_1_keypad_button_7_led` — Floor 1 Equipment/Utility Homeowner Keypads Device 1 Keypad Button 7 LED (Floor 1 Equipment/Utility)
+  - `switch.floor_1_equipment_utility_homeowner_keypads_device_2_keypad_button_1_led` — Floor 1 Equipment/Utility Homeowner Keypads Device 2 Keypad Button 1 LED (Floor 1 Equipment/Utility)
+  - `switch.floor_1_equipment_utility_homeowner_keypads_device_2_keypad_button_2_led` — Floor 1 Equipment/Utility Homeowner Keypads Device 2 Keypad Button 2 LED (Floor 1 Equipment/Utility)
+  - `switch.floor_1_equipment_utility_homeowner_keypads_device_2_keypad_button_3_led` — Floor 1 Equipment/Utility Homeowner Keypads Device 2 Keypad Button 3 LED (Floor 1 Equipment/Utility)
+  - `switch.floor_1_equipment_utility_homeowner_keypads_device_2_keypad_button_4_led` — Floor 1 Equipment/Utility Homeowner Keypads Device 2 Keypad Button 4 LED (Floor 1 Equipment/Utility)
+  - `switch.floor_1_equipment_utility_homeowner_keypads_device_2_keypad_button_5_led` — Floor 1 Equipment/Utility Homeowner Keypads Device 2 Keypad Button 5 LED (Floor 1 Equipment/Utility)
+  - `switch.floor_1_equipment_utility_homeowner_keypads_device_2_keypad_button_6_led` — Floor 1 Equipment/Utility Homeowner Keypads Device 2 Keypad Button 6 LED (Floor 1 Equipment/Utility)
+  - `switch.floor_1_equipment_utility_homeowner_keypads_device_2_keypad_button_7_led` — Floor 1 Equipment/Utility Homeowner Keypads Device 2 Keypad Button 7 LED (Floor 1 Equipment/Utility)
+  - `switch.floor_1_equipment_utility_homeowner_keypads_device_3_keypad_button_1_led` — Floor 1 Equipment/Utility Homeowner Keypads Device 3 Keypad Button 1 LED (Floor 1 Equipment/Utility)
+  - `switch.floor_1_equipment_utility_homeowner_keypads_device_3_keypad_button_2_led` — Floor 1 Equipment/Utility Homeowner Keypads Device 3 Keypad Button 2 LED (Floor 1 Equipment/Utility)
+  - `switch.floor_1_equipment_utility_homeowner_keypads_device_3_keypad_button_3_led` — Floor 1 Equipment/Utility Homeowner Keypads Device 3 Keypad Button 3 LED (Floor 1 Equipment/Utility)
+  - `switch.floor_1_equipment_utility_homeowner_keypads_device_3_keypad_button_4_led` — Floor 1 Equipment/Utility Homeowner Keypads Device 3 Keypad Button 4 LED (Floor 1 Equipment/Utility)
+  - `switch.floor_1_equipment_utility_homeowner_keypads_device_3_keypad_button_5_led` — Floor 1 Equipment/Utility Homeowner Keypads Device 3 Keypad Button 5 LED (Floor 1 Equipment/Utility)
+  - `switch.floor_1_equipment_utility_homeowner_keypads_device_3_keypad_button_6_led` — Floor 1 Equipment/Utility Homeowner Keypads Device 3 Keypad Button 6 LED (Floor 1 Equipment/Utility)
+  - `switch.floor_1_equipment_utility_homeowner_keypads_device_3_keypad_button_7_led` — Floor 1 Equipment/Utility Homeowner Keypads Device 3 Keypad Button 7 LED (Floor 1 Equipment/Utility)
+  - `switch.floor_1_equipment_utility_homeowner_keypads_device_4_keypad_button_1_led` — Floor 1 Equipment/Utility Homeowner Keypads Device 4 Keypad Button 1 LED (Floor 1 Equipment/Utility)
+  - `switch.floor_1_equipment_utility_homeowner_keypads_device_4_keypad_button_2_led` — Floor 1 Equipment/Utility Homeowner Keypads Device 4 Keypad Button 2 LED (Floor 1 Equipment/Utility)
+  - `switch.floor_1_equipment_utility_homeowner_keypads_device_4_keypad_button_3_led` — Floor 1 Equipment/Utility Homeowner Keypads Device 4 Keypad Button 3 LED (Floor 1 Equipment/Utility)
+  - `switch.floor_1_equipment_utility_homeowner_keypads_device_4_keypad_button_4_led` — Floor 1 Equipment/Utility Homeowner Keypads Device 4 Keypad Button 4 LED (Floor 1 Equipment/Utility)
+  - `switch.floor_1_equipment_utility_homeowner_keypads_device_4_keypad_button_5_led` — Floor 1 Equipment/Utility Homeowner Keypads Device 4 Keypad Button 5 LED (Floor 1 Equipment/Utility)
+  - `switch.floor_1_equipment_utility_homeowner_keypads_device_4_keypad_all_lights_off_led` — Floor 1 Equipment/Utility Homeowner Keypads Device 4 Keypad ALL LIGHTS OFF LED (Floor 1 Equipment/Utility)
+  - `switch.floor_1_equipment_utility_homeowner_keypads_device_4_keypad_all_lights_on_led` — Floor 1 Equipment/Utility Homeowner Keypads Device 4 Keypad ALL LIGHTS ON LED (Floor 1 Equipment/Utility)
+  - `switch.floor_1_equipment_utility_exhaust_fan` — Floor 1 Equipment/Utility Exhaust Fan (Floor 1 Equipment/Utility)
+  - `switch.floor_1_great_room_kitchen_keypad_device_1_keypad_kitchen_led` — Floor 1 Great Room Kitchen Keypad Device 1 Keypad Kitchen LED (Floor 1 Great Room Kitchen)
+  - `switch.floor_1_great_room_kitchen_keypad_device_1_keypad_kitchen_led_2` — Floor 1 Great Room Kitchen Keypad Device 1 Keypad Pendants LED (Floor 1 Great Room Kitchen)
+  - `switch.floor_1_great_room_kitchen_keypad_device_1_keypad_kitchen_led_3` — Floor 1 Great Room Kitchen Keypad Device 1 Keypad Undercab LED (Floor 1 Great Room Kitchen)
+  - `switch.floor_1_great_room_kitchen_keypad_device_1_keypad_kitchen_led_4` — Floor 1 Great Room Kitchen Keypad Device 1 Keypad Downlights LED (Floor 1 Great Room Kitchen)
+  - `switch.floor_1_great_room_kitchen_keypad_device_1_keypad_pantry_led` — Floor 1 Great Room Kitchen Keypad Device 1 Keypad Back splash LED (Floor 1 Great Room Kitchen)
+  - `switch.floor_1_great_room_kitchen_keypad_device_1_keypad_button_6_led` — Floor 1 Great Room Kitchen Keypad Device 1 Keypad Counter top LED (Floor 1 Great Room Kitchen)
+  - `switch.floor_1_mudroom_keypad_device_1_keypad_mud_led` — Floor 1 Mudroom Keypad Device 1 Keypad Welcome LED (Floor 1 Mudroom)
+  - `switch.floor_1_mudroom_keypad_device_1_keypad_mud_led_2` — Floor 1 Mudroom Keypad Device 1 Keypad Linear LED (Floor 1 Mudroom)
+  - `switch.floor_1_mudroom_keypad_device_1_keypad_mud_led_3` — Floor 1 Mudroom Keypad Device 1 Keypad Downlights LED (Floor 1 Mudroom)
+  - `switch.floor_1_mudroom_keypad_device_1_keypad_button_4_led` — Floor 1 Mudroom Keypad Device 1 Keypad Exterior LED (Floor 1 Mudroom)
+  - `switch.floor_1_mudroom_keypad_device_1_keypad_button_5_led` — Floor 1 Mudroom Keypad Device 1 Keypad Ext. Niche LED (Floor 1 Mudroom)
+  - `switch.floor_1_mudroom_keypad_device_1_keypad_button_6_led` — Floor 1 Mudroom Keypad Device 1 Keypad Goodbye LED (Floor 1 Mudroom)
+  - `switch.floor_1_mudroom_exhaust_fan` — Floor 1 Mudroom Exhaust Fan (Floor 1 Mudroom)
+  - `switch.floor_1_powder_room_exhaust_fan` — Floor 1 Powder Room Exhaust Fan (Floor 1 Powder Room)
+  - `switch.floor_2_master_suite_master_bath_keypad_device_1_keypad_bath_led` — Floor 2 Master Suite Master Bath Keypad Device 1 Keypad Bathroom LED (Floor 2 Master Suite Master Bath)
+  - `switch.floor_2_master_suite_master_bath_keypad_device_1_keypad_downs_led` — Floor 2 Master Suite Master Bath Keypad Device 1 Keypad Downlights LED (Floor 2 Master Suite Master Bath)
+  - `switch.floor_2_master_suite_master_bath_keypad_device_1_keypad_ext_sconce_led` — Floor 2 Master Suite Master Bath Keypad Device 1 Keypad Cove LED (Floor 2 Master Suite Master Bath)
+  - `switch.floor_2_master_suite_master_bath_keypad_device_1_keypad_linear_led` — Floor 2 Master Suite Master Bath Keypad Device 1 Keypad Vanity LED (Floor 2 Master Suite Master Bath)
+  - `switch.floor_2_master_suite_master_bath_keypad_device_1_keypad_vanity_led` — Floor 2 Master Suite Master Bath Keypad Device 1 Keypad Lanai LED (Floor 2 Master Suite Master Bath)
+  - `switch.floor_2_master_suite_master_bath_keypad_device_1_keypad_closet_led` — Floor 2 Master Suite Master Bath Keypad Device 1 Keypad Shade LED (Floor 2 Master Suite Master Bath)
+  - `switch.floor_1_elevator_hall_control_station_001_device_1_keypad_hall_led` — Floor 1 Elevator Hall Control Station 001 Device 1 Keypad Hallway LED (Floor 1 Elevator Hall)
+  - `switch.floor_1_elevator_hall_control_station_001_device_1_keypad_hall_dim_led` — Floor 1 Elevator Hall Control Station 001 Device 1 Keypad Bed Hall LED (Floor 1 Elevator Hall)
+  - `switch.floor_1_elevator_hall_control_station_001_device_1_keypad_great_room_led` — Floor 1 Elevator Hall Control Station 001 Device 1 Keypad Great Room LED (Floor 1 Elevator Hall)
+  - `switch.floor_1_elevator_hall_control_station_001_device_1_keypad_gr_dim_led` — Floor 1 Elevator Hall Control Station 001 Device 1 Keypad Kitchen LED (Floor 1 Elevator Hall)
+  - `switch.floor_1_elevator_hall_control_station_001_device_1_keypad_button_5_led` — Floor 1 Elevator Hall Control Station 001 Device 1 Keypad Front Entry LED (Floor 1 Elevator Hall)
+  - `switch.floor_1_elevator_hall_control_station_001_device_1_keypad_button_6_led` — Floor 1 Elevator Hall Control Station 001 Device 1 Keypad Privacy LED (Floor 1 Elevator Hall)
+  - `switch.floor_2_stairs_keypad_device_1_keypad_stairs_led` — Floor 2 Stairs Keypad Device 1 Keypad Stairway LED (Floor 2 Stairs)
+  - `switch.floor_2_stairs_keypad_device_1_keypad_down_led` — Floor 2 Stairs Keypad Device 1 Keypad Downlights LED (Floor 2 Stairs)
+  - `switch.floor_2_stairs_keypad_device_1_keypad_art_led` — Floor 2 Stairs Keypad Device 1 Keypad Art Glass LED (Floor 2 Stairs)
+  - `switch.floor_2_stairs_keypad_device_1_keypad_pendants_led` — Floor 2 Stairs Keypad Device 1 Keypad Pendants LED (Floor 2 Stairs)
+  - `switch.floor_2_stairs_keypad_device_1_keypad_hall_led` — Floor 2 Stairs Keypad Device 1 Keypad Mezzanine LED (Floor 2 Stairs)
+  - `switch.floor_2_stairs_keypad_device_1_keypad_upper_film_led` — Floor 2 Stairs Keypad Device 1 Keypad Privacy LED (Floor 2 Stairs)
+  - `switch.floor_1_bar_keypad_device_1_keypad_bar_led` — Floor 1 Bar Keypad Device 1 Keypad Bar LED (Floor 1 Bar)
+  - `switch.floor_1_bar_keypad_device_1_keypad_downlights_led` — Floor 1 Bar Keypad Device 1 Keypad Downlights LED (Floor 1 Bar)
+  - `switch.floor_1_bar_keypad_device_1_keypad_accents_led` — Floor 1 Bar Keypad Device 1 Keypad Accents LED (Floor 1 Bar)
+  - `switch.floor_1_bar_keypad_device_1_keypad_pendant_led` — Floor 1 Bar Keypad Device 1 Keypad Pendants LED (Floor 1 Bar)
+  - `switch.floor_1_bar_keypad_device_1_keypad_bbq_ext_led` — Floor 1 Bar Keypad Device 1 Keypad BBQ Lts LED (Floor 1 Bar)
+  - `switch.floor_1_bar_keypad_device_1_keypad_powder_led` — Floor 1 Bar Keypad Device 1 Keypad Bar Shade LED (Floor 1 Bar)
+  - `switch.floor_1_bedroom_2_suite_bed_2_keypad_device_1_keypad_bed_2_led` — Floor 1 Bedroom 2 Suite Bed 2 Keypad Device 1 Keypad Bedroom LED (Floor 1 Bedroom 2 Suite Bed 2)
+  - `switch.floor_1_bedroom_2_suite_bed_2_keypad_device_1_keypad_down_led` — Floor 1 Bedroom 2 Suite Bed 2 Keypad Device 1 Keypad Downlights LED (Floor 1 Bedroom 2 Suite Bed 2)
+  - `switch.floor_1_bedroom_2_suite_bed_2_keypad_device_1_keypad_linear_led` — Floor 1 Bedroom 2 Suite Bed 2 Keypad Device 1 Keypad Cove LED (Floor 1 Bedroom 2 Suite Bed 2)
+  - `switch.floor_1_bedroom_2_suite_bed_2_keypad_device_1_keypad_sconce_led` — Floor 1 Bedroom 2 Suite Bed 2 Keypad Device 1 Keypad Hallway LED (Floor 1 Bedroom 2 Suite Bed 2)
+  - `switch.floor_1_bedroom_2_suite_bed_2_keypad_device_1_keypad_hall_led` — Floor 1 Bedroom 2 Suite Bed 2 Keypad Device 1 Keypad Bathroom LED (Floor 1 Bedroom 2 Suite Bed 2)
+  - `switch.floor_1_bedroom_2_suite_bed_2_keypad_device_1_keypad_bath_led` — Floor 1 Bedroom 2 Suite Bed 2 Keypad Device 1 Keypad Shade LED (Floor 1 Bedroom 2 Suite Bed 2)
+  - `switch.floor_1_bedroom_3_suite_bed_3_keypad_device_1_keypad_bed_3_led` — Floor 1 Bedroom 3 Suite Bed 3 Keypad Device 1 Keypad Bedroom LED (Floor 1 Bedroom 3 Suite Bed 3)
+  - `switch.floor_1_bedroom_3_suite_bed_3_keypad_device_1_keypad_down_led` — Floor 1 Bedroom 3 Suite Bed 3 Keypad Device 1 Keypad Downlights LED (Floor 1 Bedroom 3 Suite Bed 3)
+  - `switch.floor_1_bedroom_3_suite_bed_3_keypad_device_1_keypad_linear_led` — Floor 1 Bedroom 3 Suite Bed 3 Keypad Device 1 Keypad Cove LED (Floor 1 Bedroom 3 Suite Bed 3)
+  - `switch.floor_1_bedroom_3_suite_bed_3_keypad_device_1_keypad_sconces_led` — Floor 1 Bedroom 3 Suite Bed 3 Keypad Device 1 Keypad Closet LED (Floor 1 Bedroom 3 Suite Bed 3)
+  - `switch.floor_1_bedroom_3_suite_bed_3_keypad_device_1_keypad_closet_led` — Floor 1 Bedroom 3 Suite Bed 3 Keypad Device 1 Keypad Button 5 LED (Floor 1 Bedroom 3 Suite Bed 3)
+  - `switch.floor_1_bedroom_3_suite_bed_3_keypad_device_1_keypad_bath_led` — Floor 1 Bedroom 3 Suite Bed 3 Keypad Device 1 Keypad Bathroom LED (Floor 1 Bedroom 3 Suite Bed 3)
+  - `switch.floor_2_bedroom_4_suite_bed_4_keypad_device_1_keypad_bed_4_led` — Floor 2 Bedroom 4 Suite Bed 4 Keypad Device 1 Keypad Bedroom LED (Floor 2 Bedroom 4 Suite Bed 4)
+  - `switch.floor_2_bedroom_4_suite_bed_4_keypad_device_1_keypad_down_led` — Floor 2 Bedroom 4 Suite Bed 4 Keypad Device 1 Keypad Downlights LED (Floor 2 Bedroom 4 Suite Bed 4)
+  - `switch.floor_2_bedroom_4_suite_bed_4_keypad_device_1_keypad_linear_led` — Floor 2 Bedroom 4 Suite Bed 4 Keypad Device 1 Keypad Cove LED (Floor 2 Bedroom 4 Suite Bed 4)
+  - `switch.floor_2_bedroom_4_suite_bed_4_keypad_device_1_keypad_hall_led` — Floor 2 Bedroom 4 Suite Bed 4 Keypad Device 1 Keypad Hall LED (Floor 2 Bedroom 4 Suite Bed 4)
+  - `switch.floor_2_bedroom_4_suite_bed_4_keypad_device_1_keypad_closet_led` — Floor 2 Bedroom 4 Suite Bed 4 Keypad Device 1 Keypad Lanai LED (Floor 2 Bedroom 4 Suite Bed 4)
+  - `switch.floor_2_bedroom_4_suite_bed_4_keypad_device_1_keypad_bath_led` — Floor 2 Bedroom 4 Suite Bed 4 Keypad Device 1 Keypad Shade LED (Floor 2 Bedroom 4 Suite Bed 4)
+  - `switch.floor_2_bedroom_5_suite_bed_5_keypad_device_1_keypad_bed_4_led` — Floor 2 Bedroom 5 Suite Bed 5 Keypad Device 1 Keypad Bedroom LED (Floor 2 Bedroom 5 Suite Bed 5)
+  - `switch.floor_2_bedroom_5_suite_bed_5_keypad_device_1_keypad_down_led` — Floor 2 Bedroom 5 Suite Bed 5 Keypad Device 1 Keypad Downlights LED (Floor 2 Bedroom 5 Suite Bed 5)
+  - `switch.floor_2_bedroom_5_suite_bed_5_keypad_device_1_keypad_linear_led` — Floor 2 Bedroom 5 Suite Bed 5 Keypad Device 1 Keypad Cove LED (Floor 2 Bedroom 5 Suite Bed 5)
+  - `switch.floor_2_bedroom_5_suite_bed_5_keypad_device_1_keypad_lanai_led` — Floor 2 Bedroom 5 Suite Bed 5 Keypad Device 1 Keypad Closet LED (Floor 2 Bedroom 5 Suite Bed 5)
+  - `switch.floor_2_bedroom_5_suite_bed_5_keypad_device_1_keypad_closet_led` — Floor 2 Bedroom 5 Suite Bed 5 Keypad Device 1 Keypad Lanai LED (Floor 2 Bedroom 5 Suite Bed 5)
+  - `switch.floor_2_bedroom_5_suite_bed_5_keypad_device_1_keypad_bath_led` — Floor 2 Bedroom 5 Suite Bed 5 Keypad Device 1 Keypad Shades LED (Floor 2 Bedroom 5 Suite Bed 5)
+  - `switch.floor_2_elevator_hall_keypad_001_device_1_keypad_hall_led` — Floor 2 Elevator Hall Keypad 001 Device 1 Keypad Hallway LED (Floor 2 Elevator Hall)
+  - `switch.floor_2_elevator_hall_keypad_001_device_1_keypad_dim_hall_led` — Floor 2 Elevator Hall Keypad 001 Device 1 Keypad Bed Hall LED (Floor 2 Elevator Hall)
+  - `switch.floor_2_elevator_hall_keypad_001_device_1_keypad_cat_walk_led` — Floor 2 Elevator Hall Keypad 001 Device 1 Keypad Mezzanine LED (Floor 2 Elevator Hall)
+  - `switch.floor_2_elevator_hall_keypad_001_device_1_keypad_cat_w_dim_led` — Floor 2 Elevator Hall Keypad 001 Device 1 Keypad Button 4 LED (Floor 2 Elevator Hall)
+  - `switch.floor_2_elevator_hall_keypad_001_device_1_keypad_upper_film_led` — Floor 2 Elevator Hall Keypad 001 Device 1 Keypad Button 5 LED (Floor 2 Elevator Hall)
+  - `switch.floor_2_elevator_hall_keypad_001_device_1_keypad_lower_film_led` — Floor 2 Elevator Hall Keypad 001 Device 1 Keypad Privacy LED (Floor 2 Elevator Hall)
+  - `switch.floor_1_great_room_atrium_keypad_device_1_keypad_great_rm_led` — Floor 1 Great Room Atrium Keypad Device 1 Keypad Great Room LED (Floor 1 Great Room Atrium)
+  - `switch.floor_1_great_room_atrium_keypad_device_1_keypad_gr_down_led` — Floor 1 Great Room Atrium Keypad Device 1 Keypad Downlights LED (Floor 1 Great Room Atrium)
+  - `switch.floor_1_great_room_atrium_keypad_device_1_keypad_linear_led` — Floor 1 Great Room Atrium Keypad Device 1 Keypad Accents LED (Floor 1 Great Room Atrium)
+  - `switch.floor_1_great_room_atrium_keypad_device_1_keypad_chand_led` — Floor 1 Great Room Atrium Keypad Device 1 Keypad Chandelier LED (Floor 1 Great Room Atrium)
+  - `switch.floor_1_great_room_atrium_keypad_device_1_keypad_lanai_led` — Floor 1 Great Room Atrium Keypad Device 1 Keypad Lanai LED (Floor 1 Great Room Atrium)
+  - `switch.floor_1_great_room_atrium_keypad_device_1_keypad_home_off_led` — Floor 1 Great Room Atrium Keypad Device 1 Keypad Privacy LED (Floor 1 Great Room Atrium)
+  - `switch.floor_2_master_suite_sitting_room_keypad_002_device_1_keypad_sitting_led` — Floor 2 Master Suite Sitting Room Keypad 002 Device 1 Keypad Sitting Rm LED (Floor 2 Master Suite Sitting Room)
+  - `switch.floor_2_master_suite_sitting_room_keypad_002_device_1_keypad_mstr_bed_led` — Floor 2 Master Suite Sitting Room Keypad 002 Device 1 Keypad Downlights LED (Floor 2 Master Suite Sitting Room)
+  - `switch.floor_2_master_suite_sitting_room_keypad_002_device_1_keypad_down_led` — Floor 2 Master Suite Sitting Room Keypad 002 Device 1 Keypad Cove LED (Floor 2 Master Suite Sitting Room)
+  - `switch.floor_2_master_suite_sitting_room_keypad_002_device_1_keypad_linear_led` — Floor 2 Master Suite Sitting Room Keypad 002 Device 1 Keypad Bath Hall LED (Floor 2 Master Suite Sitting Room)
+  - `switch.floor_2_master_suite_sitting_room_keypad_002_device_1_keypad_path_dwn_led` — Floor 2 Master Suite Sitting Room Keypad 002 Device 1 Keypad Bathroom LED (Floor 2 Master Suite Sitting Room)
+  - `switch.floor_2_master_suite_sitting_room_keypad_002_device_1_keypad_lanai_led` — Floor 2 Master Suite Sitting Room Keypad 002 Device 1 Keypad Lanai LED (Floor 2 Master Suite Sitting Room)
+  - `switch.floor_1_stairs_control_station_001_device_1_keypad_stairs_led` — Floor 1 Stairs Control Station 001 Device 1 Keypad Stairway LED (Floor 1 Stairs)
+  - `switch.floor_1_stairs_control_station_001_device_1_keypad_downlights_led` — Floor 1 Stairs Control Station 001 Device 1 Keypad Downlights LED (Floor 1 Stairs)
+  - `switch.floor_1_stairs_control_station_001_device_1_keypad_art_led` — Floor 1 Stairs Control Station 001 Device 1 Keypad Art Glass LED (Floor 1 Stairs)
+  - `switch.floor_1_stairs_control_station_001_device_1_keypad_pendants_led` — Floor 1 Stairs Control Station 001 Device 1 Keypad Pendants LED (Floor 1 Stairs)
+  - `switch.floor_1_stairs_control_station_001_device_1_keypad_entry_led` — Floor 1 Stairs Control Station 001 Device 1 Keypad Entry LED (Floor 1 Stairs)
+  - `switch.floor_1_stairs_control_station_001_device_1_keypad_film_led` — Floor 1 Stairs Control Station 001 Device 1 Keypad Privacy LED (Floor 1 Stairs)
+  - `switch.floor_1_lp2_unknown_loads_2_sw_4_fan` — Floor 2 Master Suite Master Bath Exhaust Fan (Floor 1 LP2 Unknown Loads)
+  - `switch.floor_1_exterior_color_niche_right` — Floor 1 Exterior Color Niche Right (Floor 1 Exterior)
+  - `switch.floor_1_exterior_zone_12` — Floor 1 Exterior Color Niche Left (Floor 1 Exterior)
+  - `switch.living_room_motion_status_light` — UP sense - stairs Status light (Floor 2 Stairs)
+  - `switch.living_room_motion_detections_motion` — UP sense - stairs Motion detection (Floor 2 Stairs)
+  - `switch.living_room_motion_temperature_sensor` — UP sense - stairs Temperature sensor (Floor 2 Stairs)
+  - `switch.living_room_motion_humidity_sensor` — UP sense - stairs Humidity sensor (Floor 2 Stairs)
+  - `switch.living_room_motion_light_sensor` — UP sense - stairs Light sensor (Floor 2 Stairs)
+  - `switch.living_room_motion_alarm_sound_detection` — UP sense - stairs Alarm sound detection (Floor 2 Stairs)
+  - `switch.pool_double_sliders_status_light` — UP sense - Equipment closet Status light (Floor 1 Equipment/Utility)
+  - `switch.pool_double_sliders_detections_motion` — UP sense - Equipment closet Motion detection (Floor 1 Equipment/Utility)
+  - `switch.pool_double_sliders_temperature_sensor` — UP sense - Equipment closet Temperature sensor (Floor 1 Equipment/Utility)
+  - `switch.pool_double_sliders_humidity_sensor` — UP sense - Equipment closet Humidity sensor (Floor 1 Equipment/Utility)
+  - `switch.pool_double_sliders_light_sensor` — UP sense - Equipment closet Light sensor (Floor 1 Equipment/Utility)
+  - `switch.pool_double_sliders_alarm_sound_detection` — UP sense - Equipment closet Alarm sound detection (Floor 1 Equipment/Utility)
+  - `switch.usl_motion_status_light` — USL-Motion_Bar Status light (Floor 1 Bar)
+  - `switch.usl_motion_motion_detection` — USL-Motion_Bar Motion detection (Floor 1 Bar)
+  - `switch.usl_motion_temperature_sensor` — USL-Motion_Bar Temperature sensor (Floor 1 Bar)
+  - `switch.usl_motion_humidity_sensor` — USL-Motion_Bar Humidity sensor (Floor 1 Bar)
+  - `switch.usl_motion_light_sensor` — USL-Motion_Bar Light sensor (Floor 1 Bar)
+  - `switch.usl_motion_alarm_sound_detection` — USL-Motion_Bar Alarm sound detection (Floor 1 Bar)
+  - `switch.usl_motion_status_light_2` — USL-Motion_Sitting Status light (Floor 2 Master Suite Sitting Room)
+  - `switch.usl_motion_motion_detection_2` — USL-Motion_Sitting Motion detection (Floor 2 Master Suite Sitting Room)
+  - `switch.usl_motion_temperature_sensor_2` — USL-Motion_Sitting Temperature sensor (Floor 2 Master Suite Sitting Room)
+  - `switch.usl_motion_humidity_sensor_2` — USL-Motion_Sitting Humidity sensor (Floor 2 Master Suite Sitting Room)
+  - `switch.usl_motion_light_sensor_2` — USL-Motion_Sitting Light sensor (Floor 2 Master Suite Sitting Room)
+  - `switch.usl_motion_alarm_sound_detection_2` — USL-Motion_Sitting Alarm sound detection (Floor 2 Master Suite Sitting Room)
+  - `switch.usl_motion_status_light_3` — USL-Motion_BBQ Status light (BBQ outdoor kitchen)
+  - `switch.usl_motion_motion_detection_3` — USL-Motion_BBQ Motion detection (BBQ outdoor kitchen)
+  - `switch.usl_motion_temperature_sensor_3` — USL-Motion_BBQ Temperature sensor (BBQ outdoor kitchen)
+  - `switch.usl_motion_humidity_sensor_3` — USL-Motion_BBQ Humidity sensor (BBQ outdoor kitchen)
+  - `switch.usl_motion_light_sensor_3` — USL-Motion_BBQ Light sensor (BBQ outdoor kitchen)
+  - `switch.usl_motion_alarm_sound_detection_3` — USL-Motion_BBQ Alarm sound detection (BBQ outdoor kitchen)
+  - `switch.makena_sleepnumber_makena_pause_mode` — Makena SleepNumber Makena Pause Mode (Floor 2 Master Suite Master Bed)
+  - `switch.floor_2_master_suite_master_bed_tabletop_keypad_device_1_keypad_open_led` — Floor 2 Master Suite Master Bed Tabletop Keypad Device 1 Keypad Open LED (Floor 2 Master Suite Master Bed)
+  - `switch.floor_2_master_suite_master_bed_tabletop_keypad_device_1_keypad_75_led` — Floor 2 Master Suite Master Bed Tabletop Keypad Device 1 Keypad 75% LED (Floor 2 Master Suite Master Bed)
+  - `switch.floor_2_master_suite_master_bed_tabletop_keypad_device_1_keypad_50_led` — Floor 2 Master Suite Master Bed Tabletop Keypad Device 1 Keypad 50% LED (Floor 2 Master Suite Master Bed)
+  - `switch.floor_2_master_suite_master_bed_tabletop_keypad_device_1_keypad_25_led` — Floor 2 Master Suite Master Bed Tabletop Keypad Device 1 Keypad 25% LED (Floor 2 Master Suite Master Bed)
+  - `switch.floor_2_master_suite_master_bed_tabletop_keypad_device_1_keypad_close_led` — Floor 2 Master Suite Master Bed Tabletop Keypad Device 1 Keypad Close LED (Floor 2 Master Suite Master Bed)
+  - `switch.floor_2_master_suite_master_bed_tabletop_keypad_device_1_keypad_mstr_bed_led` — Floor 2 Master Suite Master Bed Tabletop Keypad Device 1 Keypad Mstr Bed LED (Floor 2 Master Suite Master Bed)
+  - `switch.floor_2_master_suite_master_bed_tabletop_keypad_device_1_keypad_downlights_led` — Floor 2 Master Suite Master Bed Tabletop Keypad Device 1 Keypad Downlights LED (Floor 2 Master Suite Master Bed)
+  - `switch.floor_2_master_suite_master_bed_tabletop_keypad_device_1_keypad_cove_led` — Floor 2 Master Suite Master Bed Tabletop Keypad Device 1 Keypad Cove LED (Floor 2 Master Suite Master Bed)
+  - `switch.floor_2_master_suite_master_bed_tabletop_keypad_device_1_keypad_lanai_led` — Floor 2 Master Suite Master Bed Tabletop Keypad Device 1 Keypad Lanai LED (Floor 2 Master Suite Master Bed)
+  - `switch.floor_2_master_suite_master_bed_tabletop_keypad_device_1_keypad_button_10_led` — Floor 2 Master Suite Master Bed Tabletop Keypad Device 1 Keypad Button 10 LED (Floor 2 Master Suite Master Bed)
+  - `switch.floor_2_master_suite_master_bed_tabletop_keypad_device_1_keypad_mstr_bed_led_2` — Floor 2 Master Suite Master Bed Tabletop Keypad Device 1 Keypad Mstr Bed LED (Floor 2 Master Suite Master Bed)
+  - `switch.floor_2_master_suite_master_bed_tabletop_keypad_device_1_keypad_downlights_led_2` — Floor 2 Master Suite Master Bed Tabletop Keypad Device 1 Keypad Downlights LED (Floor 2 Master Suite Master Bed)
+  - `switch.floor_2_master_suite_master_bed_tabletop_keypad_device_1_keypad_cove_led_2` — Floor 2 Master Suite Master Bed Tabletop Keypad Device 1 Keypad Cove LED (Floor 2 Master Suite Master Bed)
+  - `switch.floor_2_master_suite_master_bed_tabletop_keypad_device_1_keypad_lanai_led_2` — Floor 2 Master Suite Master Bed Tabletop Keypad Device 1 Keypad Lanai LED (Floor 2 Master Suite Master Bed)
+  - `switch.floor_2_master_suite_master_bed_tabletop_keypad_device_1_keypad_button_15_led` — Floor 2 Master Suite Master Bed Tabletop Keypad Device 1 Keypad Button 15 LED (Floor 2 Master Suite Master Bed)
+  - `switch.floor_2_master_suite_master_bed_tabletop_keypad_device_1_keypad_sitting_low_led` — Floor 2 Master Suite Master Bed Tabletop Keypad Device 1 Keypad Sitting Low LED (Floor 2 Master Suite Master Bed)
+  - `switch.floor_2_master_suite_master_bed_tabletop_keypad_device_1_keypad_sitting_on_led` — Floor 2 Master Suite Master Bed Tabletop Keypad Device 1 Keypad Sitting On LED (Floor 2 Master Suite Master Bed)
+  - `switch.floor_1_bedroom_2_suite_bed_2_bath_exhaust_fan` — Floor 1 Bedroom 2 Suite Bed 2 Bath Exhaust Fan (Floor 1 Bedroom 2 Suite Bed 2 Bath)
+  - `switch.floor_1_bedroom_3_suite_bed_3_bath_exhaust_fan` — Floor 1 Bedroom 3 Suite Bed 3 Bath Exhaust Fan (Floor 1 Bedroom 3 Suite Bed 3 Bath)
+  - `switch.floor_2_bedroom_4_suite_bed_4_bath_room_exhaust_fan` — Floor 2 Bedroom 4 Suite Bed 4 Bath Room Exhaust Fan (Floor 2 Bedroom 4 Suite Bed 4 Bath)
+  - `switch.floor_2_bedroom_5_suite_bed_5_bath_exhaust_fan` — Floor 2 Bedroom 5 Suite Bed 5 Bath Exhaust Fan (Floor 2 Bedroom 5 Suite Bed 5 Bath)
+  - `switch.malihini` — malihini Enabled (—)
+
+## Media players
+  - `media_player.65_oled` — 65" OLED (TV Bar)
+  - `media_player.65_the_frame` — 65" The Frame (—)
+  - `media_player.jbl_bar_1300_a78f_2` — audiocast JBL BAR 1300_A78F (—)
+  - `media_player.65_oled_3` — 65" OLED (TV Bar)
+  - `media_player.jbl_bar_1300_a78f` — JBL BAR 1300_A78F (Floor 1 Bar)
+  - `media_player.65_the_frame_2` — 65" The Frame (Sitting Room)
+  - `media_player.lr_apple_tv` — LR Apple TV (LR)
+  - `media_player.great_room` — Great Room (Floor 1 Great Room Atrium)
+  - `media_player.great_room_lanai` — Great Room Lanai (Floor 1 Great room lanai)
+  - `media_player.master_bed` — Master Bed (Floor 2 Master Suite Master Bed)
+  - `media_player.bbq_lanai` — BBQ Lanai (BBQ outdoor kitchen)
+  - `media_player.great_room_tv_bsr` — Bar (Floor 1 Bar)
+  - `media_player.master_bath` — Master Bath (Floor 2 Master Suite Master Bath)
+  - `media_player.master_lanai` — Master Lanai (Floor 2 master lanai)
+  - `media_player.master_sitting_room` — Master Sitting Room (Floor 2 Master Suite Sitting Room)
+  - `media_player.molokini_guest_bed` — Molokini Guest Bed (Floor 2 Bedroom 4 Suite Bed 4)
+  - `media_player.beach_guest_bed` — Beach Guest Bed (Floor 1 Bedroom 2 Suite Bed 2 Bath)
+  - `media_player.back_yard` — Back Yard (—)
+  - `media_player.master_bath_lanai` — Master Bath Lanai (Floor 2 master lanai)
+  - `media_player.lg_webos_tv_2bc9` — LG webOS TV 2BC9 (Living Room)
+  - `media_player.south_pool_g6_ptz_speaker` — South Pool G6 PTZ Speaker (South Yard)
+  - `media_player.entry_g6_ptz_speaker` — Entry G6 PTZ Speaker (—)
+  - `media_player.g6_instant_speaker` — G6 Instant Speaker (—)
+  - `media_player.bbq_g6_ptz_speaker` — BBQ G6 PTZ Speaker (—)
+  - `media_player.mud_room_door_hub_entry_speaker` — Mud room door hub - Entry Speaker (—)
+  - `media_player.master_lanai_g6_ptz_speaker` — Master Lanai G6 PTZ Speaker (—)
+  - `media_player.65_oled_2` — 65" OLED (Floor 1 Bar)
+  - `media_player.master_bed_tv` — master bed tv (—)
+  - `media_player.molokini_room_tv` — Molokini Room TV (—)
+  - `media_player.65_the_frame_3` — 65" The Frame (—)
+  - `media_player.fire_tv_192_168_1_131` — Atrium TV (Living Room)
+  - `media_player.master_bed_tv_2` — master bed tv (Floor 2 Master Suite Master Bed)
+  - `media_player.beach_tv` — Beach TV (Floor 1 Bedroom 3 Suite Bed 3)
+  - `media_player.front_yard` — Front Yard (—)
+
+## Climate
+  - `climate.atrium` — Maui-Atrium (—)
+  - `climate.bar` — Maui-Bar (—)
+  - `climate.kitchen` — Maui-Kitchen (—)
+  - `climate.apartment` — MI APARTMENT (—)
+  - `climate.bellevue_br` — MI Bellevue BR (—)
+  - `climate.kitchen_2` — MI KITCHEN (—)
+  - `climate.master_bed` — MI MASTER BED (—)
+  - `climate.office` — MI OFFICE (—)
+  - `climate.pub` — MI PUB (—)
+  - `climate.stairs` — MI STAIRS (—)
+  - `climate.up_stairs_hall` — MI Upper Hall (—)
+  - `climate.thermostat` — Bend Upstairs (—)
+  - `climate.maui_bar` — Maui-Molokini (—)
+  - `climate.beach_room` — Maui-Beach Rm (—)
+  - `climate.boardroom` — Maui-BoardRm (—)
+  - `climate.master_bed_2` — Maui-MasterBed (—)
+  - `climate.sitting` — Maui-Sitting (—)
+  - `climate.upper_mauka` — Maui-UpMauka (—)
+
+## Covers
+  - `cover.garage_door_garage_door` — Garage Door (cover) (Garage)
+  - `cover.floor_1_equipment_utility_window` — Floor 1 Equipment/Utility Window (Floor 1 Equipment/Utility)
+  - `cover.floor_1_bedroom_2_suite_bed_2_bath_shade_group_1` — Floor 1 Bedroom 2 Suite Bed 2 Bath Shade Group 1 (Floor 1 Bedroom 2 Suite Bed 2 Bath)
+  - `cover.floor_2_master_suite_master_bath_shade_group_1` — Floor 2 Master Suite Master Bath Shade Group 1 (Floor 2 Master Suite Master Bath)
+  - `cover.floor_2_bedroom_4_suite_bed_4_bath_shade_group_1` — Floor 2 Bedroom 4 Suite Bed 4 Bath Shade Group 1 (Floor 2 Bedroom 4 Suite Bed 4 Bath)
+  - `cover.floor_1_bar_shade_group_1` — Floor 1 Bar Shade Group 1 (Floor 1 Bar)
+  - `cover.floor_2_master_suite_master_bed_shade_group_1` — Floor 2 Master Suite Master Bed Shade Group 1 (Floor 2 Master Suite Master Bed)
+  - `cover.floor_1_bedroom_2_suite_bed_2_shade_group_1` — Floor 1 Bedroom 2 Suite Bed 2 Shade Group 1 (Floor 1 Bedroom 2 Suite Bed 2)
+  - `cover.floor_2_bedroom_4_suite_bed_4_shade_group_1` — Floor 2 Bedroom 4 Suite Bed 4 Shade Group 1 (Floor 2 Bedroom 4 Suite Bed 4)
+  - `cover.floor_2_bedroom_5_suite_bed_5_shade_group_1` — Floor 2 Bedroom 5 Suite Bed 5 Shade Group 1 (Floor 2 Bedroom 5 Suite Bed 5)
+  - `cover.floor_2_bedroom_5_suite_bed_5_shade_group_2` — Floor 2 Bedroom 5 Suite Bed 5 Shade Group 2 (Floor 2 Bedroom 5 Suite Bed 5)
+
+## Cameras
+  - `camera.south_g6_turret_high_resolution_channel` — South G6 Turret High resolution channel (South Yard)
+  - `camera.south_pool_g6_ptz_high_resolution_channel` — South Pool G6 PTZ High resolution channel (South Yard)
+  - `camera.entry_g6_ptz_high_resolution_channel` — Entry G6 PTZ High resolution channel (—)
+  - `camera.garage_g5_ptz_high_resolution_channel` — Garage G5 PTZ High resolution channel (—)
+  - `camera.north_g6_turret_high_resolution_channel` — North G6 Turret High resolution channel (—)
+  - `camera.g6_instant_high_resolution_channel` — G6 Instant High resolution channel (—)
+  - `camera.bbq_g6_ptz_high_resolution_channel` — BBQ G6 PTZ High resolution channel (—)
+  - `camera.mud_room_door_hub_entry_high_resolution_channel` — Mud room door hub - Entry High resolution channel (—)
+  - `camera.master_lanai_g6_ptz_high_resolution_channel` — Master Lanai G6 PTZ High resolution channel (—)
+  - `camera.g6_turret_high_resolution_channel` — G6 Turret High resolution channel (—)
+  - `camera.mud_room_door_hub_entry_medium_resolution_channel` — Mud room door hub - Entry Medium resolution channel (—)
+
+## Locks
+
+
+## Alarms
+  - `alarm_control_panel.makena_alarm_partition_1` — Makena Alarm Partition 1 (House)
+  - `alarm_control_panel.ltem_xv` — LTEM-XV (Floor 1 Equipment/Utility)
+  - `alarm_control_panel.makena_beach_dream_machine_pro_alarm_manager` — Makena Beach Dream Machine Pro Alarm Manager (—)
+
+## Recommended dashboard structure
+- Whole-house overview (Super View tiles already in this app)
+- Room: Back yard
+- Room: BBQ outdoor kitchen
+- Room: Bedroom
+- Room: Floor 1 Bar
+- Room: Floor 1 Bedroom 2 Suite Bed 2
+- Room: Floor 1 Bedroom 2 Suite Bed 2 Bath
+- Room: Floor 1 Bedroom 3 Suite Bed 3
+- Room: Floor 1 Bedroom 3 Suite Bed 3 Bath
+- Room: Floor 1 Elevator Hall
+- Room: Floor 1 Entry
+- Room: Floor 1 Equipment/Utility
+- Room: Floor 1 Exterior
+- Audio scenes page
+- Energy page
+- Security/status page

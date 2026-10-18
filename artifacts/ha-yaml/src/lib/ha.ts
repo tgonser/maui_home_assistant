@@ -7,6 +7,7 @@ export type HAState = {
   attributes: Record<string, unknown>;
   last_changed: string;
   last_updated: string;
+  last_reported?: string;
 };
 
 export type HAConfig = {

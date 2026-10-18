@@ -14,3 +14,4 @@
 - [HA kiosk privileged-action boundaries](ha-kiosk-privileged-actions.md) — service-name filters are insufficient; bind approvals fully and gate indirect/helper/composite proxy paths
 - [Honeywell climate write idempotency](honeywell-climate-write-idempotency.md) — HVAC mode is entity state; guard every cloud write and never auto-change fan mode
 - [Git attachment checkpoints](git-attachment-checkpoints.md) — uploaded screenshots may become local commits; clean release history before pushing to avoid publishing them
+- [Solar period semantics](ha-solar-period-semantics.md) — Envoy period labels can carry lifetime values; equality alone is not invalid, and bad HA data does not prove an integration defect
