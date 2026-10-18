@@ -8,6 +8,26 @@
 import * as zod from "zod";
 
 /**
+ * @summary Create a five-minute single-use survey upload ticket in development Studio
+ */
+export const PrepareSurveyShareResponse = zod.object({
+  ticket: zod.string(),
+});
+
+/**
+ * @summary Save reviewed reports to the development workspace only
+ */
+export const ShareSurveyBody = zod.object({
+  ticket: zod.string(),
+  reports: zod.record(zod.string(), zod.string()),
+});
+
+export const ShareSurveyResponse = zod.object({
+  ok: zod.boolean(),
+  reference: zod.string(),
+});
+
+/**
  * Returns server health status
  * @summary Health check
  */

@@ -21,9 +21,12 @@ import type {
   EntityAliasInput,
   EntityAliasMap,
   HealthStatus,
+  PrepareSurveyShare200,
   RoomAlias,
   RoomAliasInput,
   RoomAliasMap,
+  ShareSurvey200,
+  SurveyShareInput,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -34,6 +37,173 @@ type AwaitedInput<T> = PromiseLike<T> | T;
 type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+/**
+ * @summary Create a five-minute single-use survey upload ticket in development Studio
+ */
+export const getPrepareSurveyShareUrl = () => {
+  return `/api/ha/survey-share/prepare`;
+};
+
+export const prepareSurveyShare = async (
+  options?: RequestInit,
+): Promise<PrepareSurveyShare200> => {
+  return customFetch<PrepareSurveyShare200>(getPrepareSurveyShareUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getPrepareSurveyShareMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof prepareSurveyShare>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof prepareSurveyShare>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["prepareSurveyShare"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof prepareSurveyShare>>,
+    void
+  > = () => {
+    return prepareSurveyShare(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PrepareSurveyShareMutationResult = NonNullable<
+  Awaited<ReturnType<typeof prepareSurveyShare>>
+>;
+
+export type PrepareSurveyShareMutationError = ErrorType<void>;
+
+/**
+ * @summary Create a five-minute single-use survey upload ticket in development Studio
+ */
+export const usePrepareSurveyShare = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof prepareSurveyShare>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof prepareSurveyShare>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getPrepareSurveyShareMutationOptions(options));
+};
+
+/**
+ * @summary Save reviewed reports to the development workspace only
+ */
+export const getShareSurveyUrl = () => {
+  return `/api/ha/survey-share`;
+};
+
+export const shareSurvey = async (
+  surveyShareInput: SurveyShareInput,
+  options?: RequestInit,
+): Promise<ShareSurvey200> => {
+  return customFetch<ShareSurvey200>(getShareSurveyUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(surveyShareInput),
+  });
+};
+
+export const getShareSurveyMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof shareSurvey>>,
+    TError,
+    { data: BodyType<SurveyShareInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof shareSurvey>>,
+  TError,
+  { data: BodyType<SurveyShareInput> },
+  TContext
+> => {
+  const mutationKey = ["shareSurvey"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof shareSurvey>>,
+    { data: BodyType<SurveyShareInput> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return shareSurvey(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ShareSurveyMutationResult = NonNullable<
+  Awaited<ReturnType<typeof shareSurvey>>
+>;
+export type ShareSurveyMutationBody = BodyType<SurveyShareInput>;
+export type ShareSurveyMutationError = ErrorType<void>;
+
+/**
+ * @summary Save reviewed reports to the development workspace only
+ */
+export const useShareSurvey = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof shareSurvey>>,
+    TError,
+    { data: BodyType<SurveyShareInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof shareSurvey>>,
+  TError,
+  { data: BodyType<SurveyShareInput> },
+  TContext
+> => {
+  return useMutation(getShareSurveyMutationOptions(options));
+};
 
 /**
  * Returns server health status

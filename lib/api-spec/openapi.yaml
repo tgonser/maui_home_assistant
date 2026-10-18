@@ -15,6 +15,50 @@ tags:
   - name: entityAliases
     description: Per-entity display name overrides for the kiosk
 paths:
+  /ha/survey-share/prepare:
+    post:
+      operationId: prepareSurveyShare
+      summary: Create a five-minute single-use survey upload ticket in development Studio
+      responses:
+        "200":
+          description: Ticket issued
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ticket]
+                properties:
+                  ticket: { type: string }
+        "403": { description: Same-origin check failed }
+        "404": { description: Not a development Studio }
+        "429": { description: Too many outstanding tickets }
+  /ha/survey-share:
+    post:
+      operationId: shareSurvey
+      summary: Save reviewed reports to the development workspace only
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SurveyShareInput"
+      responses:
+        "200":
+          description: Snapshot saved; not installed in HA
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, reference]
+                properties:
+                  ok: { type: boolean }
+                  reference: { type: string }
+        "400": { description: Invalid report shape }
+        "403": { description: Invalid origin or expired ticket }
+        "404": { description: Not a development Studio }
+        "409": { description: Inbox full }
+        "413": { description: Snapshot too large }
+        "500": { description: Save failed }
   /healthz:
     get:
       operationId: healthCheck
@@ -124,6 +168,14 @@ paths:
           description: Deleted
 components:
   schemas:
+    SurveyShareInput:
+      type: object
+      required: [ticket, reports]
+      properties:
+        ticket: { type: string }
+        reports:
+          type: object
+          additionalProperties: { type: string }
     HealthStatus:
       type: object
       properties:

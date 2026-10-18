@@ -1,4 +1,9 @@
-import { haCall, haWsBatch, type HAState } from "./ha";
+import { dump } from "js-yaml";
+import { haCall, haWsBatch, type HAState } from "./ha.ts";
+import { collectSurvey, type ConfigurationRetrieval, type SurveySource } from "./surveyRetrieval.ts";
+import { sanitizeSurvey } from "./surveySanitize.ts";
+
+export { sanitizeSurvey } from "./surveySanitize.ts";
 
 export type SurveyProgress = (step: string, pct: number) => void;
 
@@ -44,73 +49,16 @@ export type SurveyData = {
   scenes: unknown[];
   automations: unknown[];
   dashboards: unknown[];
+  configurationRetrieval?: ConfigurationRetrieval[];
+  sources?: Record<string, SurveySource>;
+  warnings?: string[];
   generatedAt: string;
 };
 
 export async function runSurvey(
   onProgress: SurveyProgress = () => {},
 ): Promise<{ ok: boolean; data?: SurveyData; error?: string }> {
-  onProgress("Fetching states & config…", 5);
-  const [statesRes, configRes] = await Promise.all([
-    haCall<HAState[]>("/api/states"),
-    haCall<Record<string, unknown>>("/api/config"),
-  ]);
-  if (!statesRes.ok) return { ok: false, error: `states: ${statesRes.error}` };
-  if (!configRes.ok) return { ok: false, error: `config: ${configRes.error}` };
-
-  onProgress("Fetching registries (areas/devices/entities)…", 25);
-  const ws = await haWsBatch([
-    { type: "config/area_registry/list" },
-    { type: "config/floor_registry/list" },
-    { type: "config/device_registry/list" },
-    { type: "config/entity_registry/list" },
-    { type: "config_entries/get" },
-    { type: "lovelace/dashboards/list" },
-  ]);
-  if (!ws.ok) return { ok: false, error: ws.error ?? "WebSocket failed" };
-
-  const [areasR, floorsR, devicesR, entitiesR, configEntriesR, dashboardsR] =
-    ws.results;
-  const areas = ((areasR?.result as Area[]) ?? []) as Area[];
-  const floors = ((floorsR?.result as FloorEntry[]) ?? []) as FloorEntry[];
-  const devices = ((devicesR?.result as DeviceEntry[]) ?? []) as DeviceEntry[];
-  const entities = ((entitiesR?.result as EntityEntry[]) ??
-    []) as EntityEntry[];
-  const configEntries = ((configEntriesR?.result as ConfigEntry[]) ??
-    []) as ConfigEntry[];
-  const dashboards = ((dashboardsR?.result as unknown[]) ?? []) as unknown[];
-
-  onProgress("Fetching automations / scripts / scenes…", 60);
-  const [automations, scripts, scenes] = await Promise.all([
-    haCall<unknown[]>("/api/config/automation/config").then((r) =>
-      r.ok ? (r.data as unknown[]) : [],
-    ),
-    haCall<unknown[]>("/api/config/script/config").then((r) =>
-      r.ok ? (r.data as unknown[]) : [],
-    ),
-    haCall<unknown[]>("/api/config/scene/config").then((r) =>
-      r.ok ? (r.data as unknown[]) : [],
-    ),
-  ]);
-
-  onProgress("Done — building reports", 95);
-  return {
-    ok: true,
-    data: {
-      config: configRes.data,
-      states: statesRes.data,
-      areas,
-      floors,
-      devices,
-      entities,
-      configEntries,
-      scripts,
-      scenes,
-      automations,
-      dashboards,
-      generatedAt: new Date().toISOString(),
-    },
-  };
+  return collectSurvey({ call: haCall, wsBatch: haWsBatch }, onProgress);
 }
 
 const friendly = (s: HAState) =>
@@ -168,6 +116,7 @@ function indexEntities(d: SurveyData) {
 }
 
 export function buildExecutiveSummary(d: SurveyData): string {
+  d = sanitizeSurvey(d);
   const idx = indexEntities(d);
   const integrations = new Map<string, number>();
   for (const e of d.entities) {
@@ -192,16 +141,21 @@ export function buildExecutiveSummary(d: SurveyData): string {
   lines.push(`**Version:** ${cfg.version ?? "?"}  `);
   lines.push(`**Time zone:** ${cfg.time_zone ?? "?"}\n`);
   lines.push(`## Totals`);
-  lines.push(`- Areas: **${d.areas.length}**`);
-  lines.push(`- Floors: **${d.floors.length}**`);
-  lines.push(`- Devices: **${d.devices.length}**`);
-  lines.push(`- Entities (registry): **${d.entities.length}**`);
+  const total = (key: string, count: number) =>
+    d.sources?.[key]?.status === "unavailable" ? "**unavailable** (not zero)" : `**${count}**`;
+  lines.push(`- Areas: ${total("areas", d.areas.length)}`);
+  lines.push(`- Floors: ${total("floors", d.floors.length)}`);
+  lines.push(`- Devices: ${total("devices", d.devices.length)}`);
+  lines.push(`- Entities (registry): ${total("entities", d.entities.length)}`);
   lines.push(`- Live states: **${d.states.length}**`);
-  lines.push(`- Integrations (config entries): **${d.configEntries.length}**`);
-  lines.push(`- Automations: **${d.automations.length}**`);
-  lines.push(`- Scripts: **${d.scripts.length}**`);
-  lines.push(`- Scenes: **${d.scenes.length}**`);
-  lines.push(`- Dashboards: **${d.dashboards.length}**\n`);
+  lines.push(`- Integrations (config entries): ${total("configEntries", d.configEntries.length)}`);
+  for (const [label, domain] of [["Automations", "automation"], ["Scripts", "script"], ["Scenes", "scene"]]) {
+    const count = d.states.filter((s) => domainOf(s.entity_id) === domain).length;
+    const retrieved = d.configurationRetrieval?.filter((r) => r.domain === domain && r.status === "retrieved").length;
+    lines.push(`- ${label} (live states): **${count}**; individual configs retrieved: **${retrieved ?? "coverage unknown"}**`);
+  }
+  lines.push(`- Dashboards (metadata only): ${total("dashboards", d.dashboards.length)}\n`);
+  lines.push(buildCoverageWarnings(d));
   lines.push(`## Major systems present`);
   lines.push(`- Media players: ${audioCount}`);
   lines.push(`- Lights: ${lightCount}`);
@@ -239,6 +193,7 @@ export function buildExecutiveSummary(d: SurveyData): string {
 }
 
 export function buildAreaMap(d: SurveyData): string {
+  d = sanitizeSurvey(d);
   const idx = indexEntities(d);
   const lines: string[] = [`# Area Map\n`];
   lines.push(`Total areas: ${d.areas.length}\n`);
@@ -323,6 +278,7 @@ export function buildAreaMap(d: SurveyData): string {
 }
 
 export function buildAudioInventory(d: SurveyData): string {
+  d = sanitizeSurvey(d);
   const idx = indexEntities(d);
   const players = idx.entitiesByDomain.get("media_player") ?? [];
   const lines: string[] = [`# Audio / Media Inventory\n`];
@@ -411,6 +367,7 @@ export function buildAudioInventory(d: SurveyData): string {
 }
 
 export function buildEnergyInventory(d: SurveyData): string {
+  d = sanitizeSurvey(d);
   const idx = indexEntities(d);
   const sensors = idx.entitiesByDomain.get("sensor") ?? [];
 
@@ -472,29 +429,23 @@ export function buildEnergyInventory(d: SurveyData): string {
 }
 
 export function buildExistingYaml(d: SurveyData): string {
-  const lines: string[] = [`# Existing YAML / JSON Reference\n`];
-  const stringify = (label: string, items: unknown[]) => {
-    lines.push(`## ${label} (${items.length})`);
-    if (!items.length) {
-      lines.push(`_(none)_\n`);
-      return;
+  d = sanitizeSurvey(d);
+  const lines: string[] = [`# Existing YAML / JSON Reference\n`, buildCoverageWarnings(d), buildLiveConfigurationInventory(d)];
+  lines.push("## Retrieved configuration reference");
+  lines.push("Sanitized API representations, not original YAML files or a complete backup. Redacted values must be supplied locally; review before use.\n");
+  for (const entry of d.configurationRetrieval ?? []) {
+    if (entry.status !== "retrieved") continue;
+    lines.push(`### ${entry.entityId}`, `Source: ${entry.source}`, "```yaml", dump(entry.configuration, { noRefs: true, lineWidth: -1 }).trimEnd(), "```\n");
+  }
+  if (!d.configurationRetrieval) {
+    lines.push("Per-entity configuration provenance is unavailable for this snapshot.");
+    for (const [label, items] of [["Automations", d.automations], ["Scripts", d.scripts], ["Scenes", d.scenes]] as const) {
+      if (items.length) lines.push(`### ${label} (legacy, coverage unknown)`, "```yaml", dump(items, { noRefs: true, lineWidth: -1 }).trimEnd(), "```\n");
     }
-    lines.push("```yaml");
-    for (const item of items) {
-      lines.push(`# ---`);
-      try {
-        lines.push(jsonToYaml(item, 0));
-      } catch {
-        lines.push(JSON.stringify(item, null, 2));
-      }
-    }
-    lines.push("```\n");
-  };
-  stringify("Automations", d.automations);
-  stringify("Scripts", d.scripts);
-  stringify("Scenes", d.scenes);
-  lines.push(`## Dashboards`);
-  if (!d.dashboards.length) lines.push(`_(none)_`);
+  }
+  lines.push(`## Dashboards (metadata only, not dashboard YAML)`);
+  if (d.sources?.dashboards?.status === "unavailable") lines.push("Unavailable — see coverage warnings; this does not mean no dashboards.");
+  else if (!d.dashboards.length) lines.push("No dashboard metadata returned. The default dashboard may still exist.");
   else {
     for (const d2 of d.dashboards as Array<Record<string, unknown>>) {
       lines.push(`- **${d2.title ?? d2.url_path}** — \`${d2.url_path}\` (mode: ${d2.mode ?? "?"})`);
@@ -503,63 +454,23 @@ export function buildExistingYaml(d: SurveyData): string {
   return lines.join("\n");
 }
 
-function jsonToYaml(value: unknown, indent: number): string {
-  const pad = "  ".repeat(indent);
-  if (value === null) return "null";
-  if (typeof value === "string") {
-    if (/[:\n#&*?{}\[\]|>!%@`,]/.test(value) || value === "") {
-      return JSON.stringify(value);
-    }
-    return value;
-  }
-  if (typeof value === "number" || typeof value === "boolean")
-    return String(value);
-  if (Array.isArray(value)) {
-    if (!value.length) return "[]";
-    return value
-      .map((v) => `${pad}- ${jsonToYaml(v, indent + 1).replace(/^/, "").trimStart()}`)
-      .join("\n");
-  }
-  if (typeof value === "object") {
-    const obj = value as Record<string, unknown>;
-    const keys = Object.keys(obj);
-    if (!keys.length) return "{}";
-    return keys
-      .map((k) => {
-        const v = obj[k];
-        if (
-          v !== null &&
-          (typeof v === "object" || Array.isArray(v)) &&
-          (Array.isArray(v) ? v.length > 0 : Object.keys(v).length > 0)
-        ) {
-          return `${pad}${k}:\n${jsonToYaml(v, indent + 1)}`;
-        }
-        return `${pad}${k}: ${jsonToYaml(v, indent + 1)}`;
-      })
-      .join("\n");
-  }
-  return "";
-}
-
 export function buildPackage(d: SurveyData): string {
+  d = sanitizeSurvey(d);
   const idx = indexEntities(d);
   const lines: string[] = [`# PACKAGE FOR YAML DESIGN\n`];
   lines.push(`## Areas`);
   for (const a of d.areas.sort((x, y) => x.name.localeCompare(y.name))) {
     lines.push(`- ${a.name} (\`${a.area_id}\`)`);
   }
-  lines.push(`\n## Existing scripts`);
-  for (const s of d.scripts as Array<Record<string, unknown>>) {
-    lines.push(`- ${s.alias ?? s.id ?? "?"} (\`script.${s.id}\`)`);
-  }
-  lines.push(`\n## Existing scenes`);
-  for (const s of d.scenes as Array<Record<string, unknown>>) {
-    lines.push(`- ${s.name ?? s.id} (\`scene.${s.id}\`)`);
-  }
-  lines.push(`\n## Existing automations`);
-  for (const s of d.automations as Array<Record<string, unknown>>) {
-    lines.push(`- ${s.alias ?? s.id ?? "?"}`);
-  }
+  lines.push(buildCoverageWarnings(d));
+  lines.push(buildLiveConfigurationInventory(d));
+  lines.push("\n## Full live inventory (sanitized; source: GET /api/states)");
+  lines.push("These are runtime states and attributes, not complete entity configuration.");
+  lines.push("```yaml", dump(d.states.map((state) => ({
+    ...state,
+    inventory_source: "GET /api/states",
+    integration_source: idx.integrationForEntity(state.entity_id) ?? "unknown (registry evidence unavailable or no entry)",
+  })), { noRefs: true, lineWidth: -1 }).trimEnd(), "```");
   const promote = (domain: string) => {
     const arr = idx.entitiesByDomain.get(domain) ?? [];
     return arr
@@ -585,12 +496,58 @@ export function buildPackage(d: SurveyData): string {
 }
 
 export function buildAllReports(d: SurveyData): Record<string, string> {
-  return {
+  d = sanitizeSurvey(d);
+  const reports = {
     "ha_executive_summary.md": buildExecutiveSummary(d),
     "ha_area_map.md": buildAreaMap(d),
     "ha_audio_inventory.md": buildAudioInventory(d),
     "ha_energy_inventory.md": buildEnergyInventory(d),
     "ha_existing_yaml.md": buildExistingYaml(d),
     "ha_package.md": buildPackage(d),
+    "ha_survey_warnings.md": buildCoverageWarnings(d),
   };
+  return Object.fromEntries(Object.entries(reports).map(([name, content]) => [
+    name,
+    sanitizeSurvey(["ha_area_map.md", "ha_audio_inventory.md", "ha_energy_inventory.md"].includes(name)
+      ? `${buildCoverageWarnings(d)}\n\n${content}` : content),
+  ]));
+}
+
+/** Warnings are also exported as ha_survey_warnings.md for dialog consumers. */
+export function getSurveyWarnings(d: SurveyData): string[] {
+  const warnings = [
+    "Coverage is a live-state snapshot, not a complete configuration export. Disabled/unloaded entities, YAML-only definitions, blueprints, secrets, includes and dashboard contents may be absent. No services or writes were invoked.",
+    ...(d.warnings ?? []),
+  ];
+  for (const [name, source] of Object.entries(d.sources ?? {})) {
+    if (source.status === "unavailable") warnings.push(`${name}: unavailable from ${source.source}: ${source.error ?? "Unknown failure"}. Do not interpret as none.`);
+  }
+  for (const domain of ["automation", "script", "scene"]) {
+    const live = d.states.filter((s) => domainOf(s.entity_id) === domain);
+    const retrieved = d.configurationRetrieval?.filter((r) => r.domain === domain && r.status === "retrieved").length;
+    warnings.push(`${domain}: ${live.length} live entities; ${retrieved ?? "unknown"} individual configs retrieved. ${retrieved === undefined ? "Configuration coverage was not recorded." : `${live.length - retrieved} live entities without retrieved configuration.`} Non-live definitions are not enumerated.`);
+  }
+  for (const entry of d.configurationRetrieval ?? []) {
+    if (entry.status !== "retrieved") warnings.push(`${entry.entityId}: ${entry.status} — ${entry.error ?? "Config unavailable"}; ${entry.source}`);
+  }
+  return sanitizeSurvey([...new Set(warnings)]);
+}
+
+export function buildCoverageWarnings(d: SurveyData): string {
+  return `## Survey coverage & warnings\n\n${getSurveyWarnings(d).map((warning) => `- ${warning}`).join("\n")}`;
+}
+
+export function buildLiveConfigurationInventory(d: SurveyData): string {
+  d = sanitizeSurvey(d);
+  const lines = ["## Live automations, scripts and scenes", "Inventory source: GET /api/states. Configuration access is tracked separately.\n"];
+  for (const domain of ["automation", "script", "scene"]) {
+    const live = d.states.filter((s) => domainOf(s.entity_id) === domain);
+    lines.push(`### ${domain} (${live.length} live)`);
+    if (!live.length) lines.push("No entities in live states for this domain; non-live configurations are unknown.");
+    for (const state of live) {
+      const retrieval = d.configurationRetrieval?.find((entry) => entry.entityId === state.entity_id);
+      lines.push(`- \`${state.entity_id}\` — ${friendly(state)}; state: ${state.state}; inventory source: GET /api/states; configuration: ${retrieval?.status ?? "coverage unknown"}; config source: ${retrieval?.source ?? "not recorded"}${retrieval?.error ? `; reason: ${retrieval.error}` : ""}`);
+    }
+  }
+  return lines.join("\n");
 }

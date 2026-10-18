@@ -5,6 +5,13 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export type SurveyShareInputReports = { [key: string]: string };
+
+export interface SurveyShareInput {
+  ticket: string;
+  reports: SurveyShareInputReports;
+}
+
 export interface HealthStatus {
   status: string;
 }
@@ -44,3 +51,12 @@ export interface EntityAliasInput {
 export interface EntityAliasMap {
   [key: string]: string;
 }
+
+export type PrepareSurveyShare200 = {
+  ticket: string;
+};
+
+export type ShareSurvey200 = {
+  ok: boolean;
+  reference: string;
+};

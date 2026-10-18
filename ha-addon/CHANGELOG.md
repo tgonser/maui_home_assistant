@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.73
+
+- HA Survey counts live automations, scripts and scenes independently of readable
+  configuration. Individual configuration and registry failures are reported,
+  not silently converted to empty inventories.
+- Added reviewed sharing to the development Studio workspace. Sharing is disabled
+  in the HA add-on and published builds; report downloads remain available.
+
 ## 1.0.72
 
 - Added read-only diagnostic export in Wall Settings with category selection,
