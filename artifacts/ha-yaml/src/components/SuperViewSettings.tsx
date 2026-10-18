@@ -5,6 +5,7 @@ import { X, Search, Check } from "lucide-react";
 import type { HAState } from "@/lib/ha";
 import { CoolingMatrix } from "./CoolingMatrix";
 import { StormPrepSettings } from "./StormPrepSettings";
+import { DiagnosticsExport } from "./DiagnosticsExport";
 
 export type SuperViewSlot =
   | "weather"
@@ -266,6 +267,7 @@ export function SettingsPanelBody({
   const { overrides, setOverride, reset } = useSuperViewOverrides();
   return (
     <div className="space-y-5 pb-10">
+      {includeStormPrep && <DiagnosticsExport />}
       <CoolingMatrix states={states} />
       <div className="border-t border-stone-800" />
       {includeStormPrep && (

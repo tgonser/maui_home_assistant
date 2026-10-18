@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.72
+
+- Added read-only diagnostic export in Wall Settings with category selection,
+  a fresh Home Assistant state snapshot, exact sanitized preview and reviewed
+  JSON download. No new credentials or Home Assistant package update required.
+
 ## 1.0.71
 
 - **Fixed: solar period totals showed lifetime production** — Main Envoy's
