@@ -3,7 +3,7 @@ import {
   ShieldCheck, ShieldAlert, ShieldOff, Moon, Home as HomeIcon, Unlock, Lock, RefreshCw,
   Search, Loader2, AlertTriangle, CheckCircle2, X, Eye, EyeOff, ChevronDown, ChevronUp, WifiOff,
 } from "lucide-react";
-import { haCallService, haStormPrepSecurity, type HAState } from "@/lib/ha";
+import { haCallService, haAlarmSecurity, type HAState } from "@/lib/ha";
 import {
   discoverAlarmSystems, companionHealth, keypadInfo, panelTone, prettyState, zoneBadges,
   filterZones, availableActions, validCode, writeGuard, activeIssues, parseAcks, pruneAcks,
@@ -43,19 +43,26 @@ export function AlarmPanel({ states, connected, lastOkMs, connection, onRefresh 
   const systems = useMemo(() => discoverAlarmSystems(states), [states]);
   const [secure, setSecure] = useState<boolean | null>(null);
   const [secureErr, setSecureErr] = useState<string | null>(null);
+  const [pinFreeEntity, setPinFreeEntity] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     let off = false;
-    haStormPrepSecurity().then((r) => {
+    const check = () => haAlarmSecurity().then((r) => {
       if (off) return;
-      if (r.ok) setSecure(r.data.secureTransport);
-      else { setSecure(false); setSecureErr(r.error); }
+      if (r.ok) {
+        setSecure(r.data.secureTransport);
+        setSecureErr(null);
+        setPinFreeEntity(connection === "__supervisor__" && r.data.pinFree ? r.data.entityId : null);
+      }
+      else { setSecure(false); setPinFreeEntity(null); setSecureErr(r.error); }
     });
+    void check();
+    const securityTimer = window.setInterval(check, 15_000);
     const id = window.setInterval(() => setNow(Date.now()), 2000);
-    return () => { off = true; window.clearInterval(id); };
-  }, []);
+    return () => { off = true; window.clearInterval(id); window.clearInterval(securityTimer); };
+  }, [connection]);
 
   // Local acknowledgements — this wall only.
   const storageKey = ackStorageKey(connection);
@@ -120,14 +127,15 @@ export function AlarmPanel({ states, connected, lastOkMs, connection, onRefresh 
           <p className="text-sm mt-1">Looking for <span className="font-mono">alarm_control_panel.*_partition_N</span> entities from Home Assistant.</p>
         </div>
       ) : systems.map((sys) => (
-        <SystemCard key={sys.panel.entity_id} sys={sys} secure={secure} connected={connected} lastOkMs={lastOkMs}
+        <SystemCard key={sys.panel.entity_id} sys={sys} pinFree={pinFreeEntity === sys.panel.entity_id} secure={secure} connected={connected} lastOkMs={lastOkMs}
           now={now} onRefresh={onRefresh} acks={acks} onAck={ack} onUnack={unack} />
       ))}
     </div>
   );
 }
 
-function SystemCard({ sys, secure, connected, lastOkMs, now, onRefresh, acks, onAck, onUnack }: {
+function SystemCard({ sys, pinFree, secure, connected, lastOkMs, now, onRefresh, acks, onAck, onUnack }: {
+  pinFree: boolean;
   sys: AlarmSystem; secure: boolean | null; connected: boolean; lastOkMs: number | null; now: number;
   onRefresh: () => Promise<void> | void; acks: AckMap; onAck: (ids: string[]) => void; onUnack: (id: string) => void;
 }) {
@@ -170,7 +178,7 @@ function SystemCard({ sys, secure, connected, lastOkMs, now, onRefresh, acks, on
         </div>
       </div>
 
-      <ActionBar sys={sys} secure={secure} connected={connected} lastOkMs={lastOkMs} now={now} onRefresh={onRefresh} />
+      <ActionBar sys={sys} pinFree={pinFree} secure={secure} connected={connected} lastOkMs={lastOkMs} now={now} onRefresh={onRefresh} />
       <IssuesList issues={issues} acks={acks} onAck={onAck} onUnack={onUnack} />
       <ZoneList sys={sys} />
     </section>
@@ -187,7 +195,8 @@ type Phase =
   | { k: "timeout"; action: AlarmAction; last: string }
   | { k: "error"; action: AlarmAction; message: string };
 
-function ActionBar({ sys, secure, connected, lastOkMs, now, onRefresh }: {
+function ActionBar({ sys, pinFree, secure, connected, lastOkMs, now, onRefresh }: {
+  pinFree: boolean;
   sys: AlarmSystem; secure: boolean | null; connected: boolean; lastOkMs: number | null; now: number; onRefresh: () => Promise<void> | void;
 }) {
   const p = sys.panel;
@@ -209,7 +218,7 @@ function ActionBar({ sys, secure, connected, lastOkMs, now, onRefresh }: {
   // Invalidate a pending code/confirm step (and drop the code) if the panel
   // state, entity or connection changes underneath it.
   const pendingSnap = useRef<string | null>(null);
-  const snap = `${p.entity_id}|${p.state}|${p.last_changed}|${connected}`;
+  const snap = `${p.entity_id}|${p.state}|${p.last_changed}|${connected}|${pinFree}`;
   const latest = useRef({ snap, secure, connected, lastOkMs, panelState: p.state });
   latest.current = { snap, secure, connected, lastOkMs, panelState: p.state };
   useEffect(() => {
@@ -256,9 +265,13 @@ function ActionBar({ sys, secure, connected, lastOkMs, now, onRefresh }: {
     lock.current = true;
     setPhase({ k: "sending", action });
     try {
-      const sec = await haStormPrepSecurity();
+      const sec = await haAlarmSecurity();
       if (!sec.ok || !sec.data.secureTransport) {
         setPhase({ k: "error", action, message: "Secure connection could not be verified; nothing was sent." });
+        return;
+      }
+      if (pinFree && (!sec.data.pinFree || sec.data.entityId !== p.entity_id)) {
+        setPhase({ k: "error", action, message: "PIN-free settings changed. Refresh the panel before trying again." });
         return;
       }
       const current = latest.current;
@@ -271,7 +284,9 @@ function ActionBar({ sys, secure, connected, lastOkMs, now, onRefresh }: {
         setPhase({ k: "error", action, message: "Panel state or connection changed; nothing was sent. Review the current state and start again." });
         return;
       }
-      const r = await haCallService("alarm_control_panel", action.service, { entity_id: p.entity_id, code: c });
+      const r = await haCallService("alarm_control_panel", action.service, {
+        entity_id: p.entity_id, ...(!pinFree ? { code: c } : {}),
+      });
       if (!r.ok) {
         setPhase({ k: "error", action, message: r.status === 429
           ? "Too many alarm commands. Wait one minute and check the keypad before retrying."
@@ -293,6 +308,10 @@ function ActionBar({ sys, secure, connected, lastOkMs, now, onRefresh }: {
         <div className="text-xs uppercase tracking-[0.18em] text-[var(--cream-muted)]">Arm / Disarm</div>
         {guard.blocked && phase.k === "idle" && <div className="text-xs text-amber-200 text-right" data-testid="text-write-blocked">{guard.reason}</div>}
       </div>
+      {pinFree && <p data-testid="notice-alarm-pin-free" className="text-sm text-amber-200">
+        PIN-free controls enabled. Anyone with access to this secure wall can disarm.
+        The saved alarm code stays on the add-on server; confirmation is still required.
+      </p>}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {actions.map((a) => {
           const I = ACTION_ICON[a.service];
@@ -300,7 +319,7 @@ function ActionBar({ sys, secure, connected, lastOkMs, now, onRefresh }: {
           return (
             <button key={a.service} type="button" data-testid={`button-${a.service}-${p.entity_id}`}
               disabled={guard.blocked || busy || current || phase.k === "code" || phase.k === "confirm"}
-              onClick={() => { setCode(""); setPhase({ k: "code", action: a }); }}
+              onClick={() => { setCode(""); setPhase({ k: pinFree ? "confirm" : "code", action: a }); }}
               className={`h-16 rounded-xl border flex items-center justify-center gap-2 text-base font-medium transition disabled:opacity-40 ${
                 a.service === "alarm_disarm" ? "border-red-500/50 text-red-100 bg-red-500/10" : current ? "wall-btn-active" : "wall-btn"}`}>
               <I className="w-5 h-5" /> {a.label}{current ? " · now" : ""}

@@ -16,4 +16,4 @@
 - [Git attachment checkpoints](git-attachment-checkpoints.md) — uploaded screenshots may become local commits; clean release history before pushing to avoid publishing them
 - [Solar period semantics](ha-solar-period-semantics.md) — Envoy period labels can carry lifetime values; equality alone is not invalid, and bad HA data does not prove an integration defect
 - [Diagnostic sharing scope](diagnostic-sharing.md) — troubleshooting starts with user-reviewed downloads, not persistent remote access.
-- [Wall alarm safety](wall-alarm-safety.md) — alarm codes are transient; local acknowledgment must never clear or conceal an unresolved physical fault.
+- [Wall alarm safety](wall-alarm-safety.md) — user chose optional PIN-free controls with server-held code; acknowledgment never clears physical faults.

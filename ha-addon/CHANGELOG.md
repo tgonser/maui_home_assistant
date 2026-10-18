@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.75
+
+- Optional PIN-free Alarm controls: configure `alarm_pin_free`,
+  `alarm_panel_entity_id`, and `alarm_code` in add-on options.
+- The code remains server-side and is used only for the configured panel
+  through the local Supervisor connection. HTTPS/secure ingress, explicit
+  action confirmation, rate limits and live-state verification remain required.
+- Disabled by default. Anyone with access to the secure wall can disarm when
+  this mode is enabled. Turn it off to return to per-action alarm-code entry.
+
 ## 1.0.74
 
 - Added a dedicated Alarm section for EyezOn/Envisalink: partition status,

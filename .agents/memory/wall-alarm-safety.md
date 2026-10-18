@@ -5,7 +5,14 @@ description: Alarm-code handling and the distinction between local acknowledgmen
 
 Alarm actions use the physical alarm-system code, not the homeowner PIN used
 for storm preparation. Require secure ingress/HTTPS for code entry and actions;
-never persist codes or expose them through service errors.
+never expose codes through service errors or browser storage.
+
+The user requested "pin free to begin", explicitly choosing PIN-free wall controls.
+Support opt-in server-side code storage bound to a single panel and the local
+Supervisor connection. Retain action confirmation and a visible warning that
+anyone with secure-wall access can disarm. Do not silently reintroduce a PIN gate.
+
+**Why:** The user chose PIN-free controls after the access risk was explained.
 
 The user confirmed the underlying alarm is Honeywell and they can create a
 user code through their mobile app.
@@ -13,7 +20,7 @@ user code through their mobile app.
 **Why:** User-provided setup information; do not require physical-keypad
 programming when guiding them to create a dedicated HA alarm user.
 
-**Why:** A shared wall display must not retain a reusable disarm credential,
+**Why:** The shared browser must not retain a reusable disarm credential,
 and the two credentials serve different authorities.
 
 Issue dismissal means local acknowledgment, not physical trouble reset,

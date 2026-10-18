@@ -52,6 +52,13 @@ export interface EntityAliasMap {
   [key: string]: string;
 }
 
+export type GetAlarmSecurity200 = {
+  secureTransport: boolean;
+  pinFree: boolean;
+  /** @nullable */
+  entityId: string | null;
+};
+
 export type PrepareSurveyShare200 = {
   ticket: string;
 };

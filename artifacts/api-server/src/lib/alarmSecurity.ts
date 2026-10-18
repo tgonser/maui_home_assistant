@@ -1,4 +1,4 @@
-/** Guards the wall's alarm service calls without storing or logging alarm codes. */
+/** Validates alarm service calls without logging codes or retaining request data. */
 const SERVICES = new Set([
   "alarm_arm_home", "alarm_arm_away", "alarm_arm_night", "alarm_disarm",
 ]);

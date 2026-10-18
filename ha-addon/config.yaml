@@ -1,6 +1,6 @@
 name: "Wall Kiosk"
 description: "Solar-aware tablet dashboard for Maui home."
-version: "1.0.74"
+version: "1.0.75"
 slug: "wall_kiosk"
 startup: application
 boot: auto
@@ -26,5 +26,11 @@ panel_icon: mdi:tablet-dashboard
 panel_title: Wall
 options:
   storm_prep_pin: ""
+  alarm_pin_free: false
+  alarm_panel_entity_id: ""
+  alarm_code: ""
 schema:
   storm_prep_pin: password
+  alarm_pin_free: bool
+  alarm_panel_entity_id: str
+  alarm_code: password

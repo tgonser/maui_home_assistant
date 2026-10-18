@@ -15,6 +15,22 @@ tags:
   - name: entityAliases
     description: Per-entity display name overrides for the kiosk
 paths:
+  /ha/alarm/security:
+    get:
+      operationId: getAlarmSecurity
+      summary: Alarm transport and server-side code mode, never the code
+      responses:
+        "200":
+          description: Current alarm control mode
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [secureTransport, pinFree, entityId]
+                properties:
+                  secureTransport: { type: boolean }
+                  pinFree: { type: boolean }
+                  entityId: { type: [string, "null"] }
   /ha/survey-share/prepare:
     post:
       operationId: prepareSurveyShare

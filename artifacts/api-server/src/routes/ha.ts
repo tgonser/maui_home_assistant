@@ -1,5 +1,6 @@
 import { Router, type IRouter, type Request } from "express";
 import { AlarmAttemptLimiter, alarmServiceAccessError, isAlarmServicePath, isAlarmWsCommand } from "../lib/alarmSecurity";
+import { loadAlarmOptions, alarmBodyWithStoredCode } from "../lib/alarmOptions";
 import {
   createStormPrepSession,
   isSensitiveStormPrepCall,
@@ -135,6 +136,17 @@ router.get("/addon-config", (_req, res) => {
   }
 });
 
+router.get("/ha/alarm/security", (req, res) => {
+  const options = loadAlarmOptions();
+  const enabled = options.enabled && Boolean(process.env.SUPERVISOR_TOKEN);
+  res.setHeader("Cache-Control", "no-store");
+  res.json({
+    secureTransport: hasProtectedStormPrepTransport(req),
+    pinFree: enabled,
+    entityId: enabled ? options.entityId : null,
+  });
+});
+
 router.get("/ha/storm-prep/security", (req, res) => {
   const secureTransport = hasProtectedStormPrepTransport(req);
   const expiresAt = secureTransport
@@ -224,9 +236,22 @@ router.post("/ha/call", async (req, res) => {
   const { url: clientUrl, token: clientToken, path, method, body, binary } = req.body ?? {};
 
   const alarmCall = isAlarmServicePath(path);
+  if (alarmCall) {
+    const origin = req.get("origin");
+    const expectedHost = req.get("x-forwarded-host") || req.get("host");
+    let sameOrigin = !origin;
+    try { if (origin) sameOrigin = new URL(origin).host === expectedHost; } catch { sameOrigin = false; }
+    const fetchSite = req.get("sec-fetch-site");
+    if (!sameOrigin || (fetchSite && fetchSite !== "same-origin" && fetchSite !== "none")) {
+      return res.status(403).json({ ok: false, error: "Alarm commands must originate from this wall." });
+    }
+  }
+  const upstreamBody = alarmCall
+    ? alarmBodyWithStoredCode(body, clientUrl, loadAlarmOptions(), Boolean(process.env.SUPERVISOR_TOKEN))
+    : body;
   const alarmError = alarmServiceAccessError(
     path, typeof method === "string" ? method.toUpperCase() : "GET",
-    body, hasProtectedStormPrepTransport(req),
+    upstreamBody, hasProtectedStormPrepTransport(req),
   );
   if (alarmError) return res.status(alarmError.status).json({ ok: false, ...alarmError });
   if (alarmCall && !alarmAttempts.allow(`${req.ip ?? req.socket.remoteAddress}:${body.entity_id}`)) {
@@ -312,7 +337,7 @@ router.post("/ha/call", async (req, res) => {
       body:
         httpMethod === "GET" || httpMethod === "HEAD" || body === undefined
           ? undefined
-          : JSON.stringify(body),
+          : JSON.stringify(upstreamBody),
       // Honeywell TCC and a few other cloud-backed climate integrations
       // routinely take 10-20s to ack a write (HA -> Nabu Casa -> HA -> cloud
       // -> thermostat over a slow IoT channel). 15s was too tight and gave

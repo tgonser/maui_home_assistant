@@ -8,6 +8,15 @@
 import * as zod from "zod";
 
 /**
+ * @summary Alarm transport and server-side code mode, never the code
+ */
+export const GetAlarmSecurityResponse = zod.object({
+  secureTransport: zod.boolean(),
+  pinFree: zod.boolean(),
+  entityId: zod.string().nullable(),
+});
+
+/**
  * @summary Create a five-minute single-use survey upload ticket in development Studio
  */
 export const PrepareSurveyShareResponse = zod.object({

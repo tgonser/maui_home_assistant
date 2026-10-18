@@ -9,6 +9,7 @@
 export * from "./entityAlias";
 export * from "./entityAliasInput";
 export * from "./entityAliasMap";
+export * from "./getAlarmSecurity200";
 export * from "./healthStatus";
 export * from "./prepareSurveyShare200";
 export * from "./roomAlias";

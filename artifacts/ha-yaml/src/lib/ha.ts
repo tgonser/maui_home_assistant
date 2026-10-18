@@ -305,6 +305,24 @@ export async function haCallService(
   });
 }
 
+export async function haAlarmSecurity(): Promise<
+  | { ok: true; data: { secureTransport: boolean; pinFree: boolean; entityId: string | null } }
+  | { ok: false; error: string }
+> {
+  try {
+    const res = await fetch(`${getApiBase()}/api/ha/alarm/security`, { cache: "no-store" });
+    if (!res.ok) return { ok: false, error: "Could not check alarm security settings" };
+    const data = await res.json();
+    if (typeof data.secureTransport !== "boolean" || typeof data.pinFree !== "boolean" ||
+        (data.entityId !== null && typeof data.entityId !== "string")) {
+      return { ok: false, error: "Invalid alarm security response" };
+    }
+    return { ok: true, data };
+  } catch {
+    return { ok: false, error: "Could not check alarm security settings" };
+  }
+}
+
 export type StormPrepSecurityState = {
   pinConfigured: boolean;
   secureTransport: boolean;

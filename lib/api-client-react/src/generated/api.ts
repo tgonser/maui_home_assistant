@@ -20,6 +20,7 @@ import type {
   EntityAlias,
   EntityAliasInput,
   EntityAliasMap,
+  GetAlarmSecurity200,
   HealthStatus,
   PrepareSurveyShare200,
   RoomAlias,
@@ -37,6 +38,81 @@ type AwaitedInput<T> = PromiseLike<T> | T;
 type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+/**
+ * @summary Alarm transport and server-side code mode, never the code
+ */
+export const getGetAlarmSecurityUrl = () => {
+  return `/api/ha/alarm/security`;
+};
+
+export const getAlarmSecurity = async (
+  options?: RequestInit,
+): Promise<GetAlarmSecurity200> => {
+  return customFetch<GetAlarmSecurity200>(getGetAlarmSecurityUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetAlarmSecurityQueryKey = () => {
+  return [`/api/ha/alarm/security`] as const;
+};
+
+export const getGetAlarmSecurityQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAlarmSecurity>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getAlarmSecurity>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAlarmSecurityQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getAlarmSecurity>>
+  > = ({ signal }) => getAlarmSecurity({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAlarmSecurity>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetAlarmSecurityQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAlarmSecurity>>
+>;
+export type GetAlarmSecurityQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Alarm transport and server-side code mode, never the code
+ */
+
+export function useGetAlarmSecurity<
+  TData = Awaited<ReturnType<typeof getAlarmSecurity>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getAlarmSecurity>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetAlarmSecurityQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary Create a five-minute single-use survey upload ticket in development Studio
