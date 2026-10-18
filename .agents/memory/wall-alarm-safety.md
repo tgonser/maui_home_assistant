@@ -7,6 +7,12 @@ Alarm actions use the physical alarm-system code, not the homeowner PIN used
 for storm preparation. Require secure ingress/HTTPS for code entry and actions;
 never persist codes or expose them through service errors.
 
+The user confirmed the underlying alarm is Honeywell and they can create a
+user code through their mobile app.
+
+**Why:** User-provided setup information; do not require physical-keypad
+programming when guiding them to create a dedicated HA alarm user.
+
 **Why:** A shared wall display must not retain a reusable disarm credential,
 and the two credentials serve different authorities.
 
