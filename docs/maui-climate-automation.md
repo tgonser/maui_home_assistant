@@ -188,7 +188,9 @@ The house has a distinct east/west solar exposure pattern. The automation treats
 
 ## Battery Protection
 
-Two battery thresholds govern when the automation shifts into conservative mode. The automation uses the **lower** of the two battery systems (to account for unbalanced AC loads between the two systems).
+> **Superseded (2026):** battery level no longer affects climate targets — the matrix is purely solar-driven by design (see `.agents/memory/ha-solar-tier-matrix.md`). The thresholds below describe the earlier design and are kept for reference only. For the two-system battery imbalance, see `docs/maintenance-2026-11.md`.
+
+Earlier design: two battery thresholds governed when the automation shifted into conservative mode, using the **lower** of the two battery systems.
 
 - **Protect threshold (default 25%)** — if the lower battery falls below this AND solar is under 10 kW, all rooms go to protect setpoint. Solar production overrides this: strong production means the house is running off solar regardless of battery state.
 - **Good threshold (default 80%)** — above this the battery is considered full and Solar Good setpoints apply even if solar production is temporarily low.
