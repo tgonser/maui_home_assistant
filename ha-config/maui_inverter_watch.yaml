@@ -1,0 +1,247 @@
+# =============================================================================
+# Maui Inverter Watch — daily check of every Enphase microinverter (and both Envoys)
+# =============================================================================
+#
+# What it does
+#   - Every 15 min while the sun is up, samples each microinverter's power and adds
+#     it to a running "energy today" total per inverter (Wh, approximate).
+#   - At 7:30 PM HST it checks each inverter against ITS OWN usual share of the site's
+#     production (a slow-moving average learned over recent days). Because every panel
+#     is compared with itself, north-facing panels in winter don't trigger it, and the
+#     baseline drifts with the seasons on its own. Cloudy days are skipped.
+#   - Flags: an inverter not reporting most of the day; an inverter that produced
+#     nothing on a sunny day; an inverter well below its usual share; an Envoy that is
+#     offline at check time; no inverter data at all.
+#   - If anything is flagged: phone notification + a persistent notification in HA.
+#     The latest result is always visible on sensor.maui_inverter_watch.
+#
+# Why
+#   Arrays 9 and 10 lost a stretch of production to inverter problems after install,
+#   and nobody noticed until the lifetime totals were compared. This catches the next
+#   one within a day.
+#
+# Install
+#   Put this file in /config/packages/ (packages must be enabled in configuration.yaml:
+#     homeassistant:
+#       packages: !include_dir_named packages
+#   ), then Developer tools → YAML → check configuration → restart.
+#
+# BEFORE INSTALLING — verify two things (Developer tools → Template):
+#   1. Per-inverter power sensors exist and are enabled. Paste:
+#        {{ integration_entities('enphase_envoy') | select('match', 'sensor\.inverter_\d+$') | list | count }}
+#      It should be about the number of panels. If it's 0: Settings → Devices &
+#      services → Enphase Envoy → open an "Inverter …" device and enable its power
+#      sensor, or tell Claude the actual entity names so the pattern can be changed.
+#      (Pattern is in three places below, marked  # INVERTER PATTERN.)
+#   2. The notify service: notify.mobile_app_tom_iphone17_temp (from Maui Auto Presence).
+#
+# Learning period: for the first 5 usable days it only reports "not reporting",
+# "produced nothing" and Envoy problems; the "below its usual share" check starts
+# once it has learned each inverter's normal share.
+#
+# Notes
+#   - No `initial:` anywhere (resets on restart). Trigger-based template sensors
+#     restore their state and attributes after a restart, so a mid-day restart
+#     keeps the running totals and the learned baseline.
+#   - The per-inverter "energy today" is sampled by this package on purpose, instead
+#     of Envoy "today" sensors, whose period labels have been unreliable here
+#     (.agents/memory/ha-solar-period-semantics.md).
+# =============================================================================
+
+template:
+  # ---------------------------------------------------------------------------
+  # Running per-inverter totals for today (Wh), sampled every 15 min in daylight.
+  # ---------------------------------------------------------------------------
+  - trigger:
+      - trigger: time_pattern
+        minutes: "/15"
+    sensor:
+      - name: Maui Inverter Watch Today
+        unique_id: maui_inverter_watch_today
+        icon: mdi:solar-panel
+        unit_of_measurement: inverters
+        # State: number of inverters seen today.
+        state: >-
+          {{ (this.attributes.get('energy') or {}) | count }}
+        attributes:
+          date: >-
+            {{ now().date() | string }}
+          samples: >-
+            {% set today = now().date() | string %}
+            {% set prev = (this.attributes.get('samples', 0) | int(0))
+                          if this.attributes.get('date') == today else 0 %}
+            {{ prev + (1 if is_state('sun.sun', 'above_horizon') else 0) }}
+          energy: >-
+            {% set today = now().date() | string %}
+            {% set prev = (this.attributes.get('energy') or {})
+                          if this.attributes.get('date') == today else {} %}
+            {% set ns = namespace(d=prev) %}
+            {% if is_state('sun.sun', 'above_horizon') %}
+              {# INVERTER PATTERN #}
+              {% for id in integration_entities('enphase_envoy')
+                           | select('match', 'sensor\.inverter_\d+$') %}
+                {% set w = states(id) | float(-1) %}
+                {% if w >= 0 %}
+                  {% set ns.d = dict(ns.d, **{id: ((ns.d.get(id, 0) | float(0)) + w / 4) | round(1)}) %}
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+            {{ ns.d }}
+          missing: >-
+            {% set today = now().date() | string %}
+            {% set prev = (this.attributes.get('missing') or {})
+                          if this.attributes.get('date') == today else {} %}
+            {% set ns = namespace(d=prev) %}
+            {% if is_state('sun.sun', 'above_horizon') %}
+              {# INVERTER PATTERN #}
+              {% for id in integration_entities('enphase_envoy')
+                           | select('match', 'sensor\.inverter_\d+$') %}
+                {% if states(id) | float(-1) < 0 %}
+                  {% set ns.d = dict(ns.d, **{id: (ns.d.get(id, 0) | int(0)) + 1}) %}
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+            {{ ns.d }}
+
+  # ---------------------------------------------------------------------------
+  # Learned baseline + latest result. Updated only by the nightly check (event).
+  # State = number of issues found at the last check.
+  # ---------------------------------------------------------------------------
+  - trigger:
+      - trigger: event
+        event_type: maui_inverter_watch_result
+    sensor:
+      - name: Maui Inverter Watch
+        unique_id: maui_inverter_watch
+        icon: mdi:solar-panel-large
+        unit_of_measurement: issues
+        state: >-
+          {{ trigger.event.data.issues | count }}
+        attributes:
+          last_check: >-
+            {{ now().isoformat() }}
+          issues: >-
+            {{ trigger.event.data.issues }}
+          site_kwh_sampled: >-
+            {{ trigger.event.data.site_kwh }}
+          inverters_seen: >-
+            {{ trigger.event.data.inverters_seen }}
+          learned_days: >-
+            {{ trigger.event.data.days }}
+          shares: >-
+            {{ trigger.event.data.shares }}
+
+automation:
+  - alias: Maui Inverter Watch — nightly check
+    description: >
+      Compares each microinverter's production today with its own usual share of the
+      site total, checks for inverters/Envoys not reporting, and notifies if anything
+      looks wrong. See ha-config/maui_inverter_watch.yaml for details.
+    mode: single
+    triggers:
+      - trigger: time
+        at: "19:30:00"
+    variables:
+      # ---- Tunables ---------------------------------------------------------
+      min_site_kwh: 30        # skip the share check on very cloudy days
+      share_ratio: 0.6        # flag if today's share < 60% of its usual share
+      missing_ratio: 0.5      # flag if unavailable for >= 50% of daylight samples
+      alpha: 0.2              # baseline learning rate (~5-day memory)
+      warmup_days: 5          # days of learning before the share check starts
+      max_listed: 10          # list at most this many inverters in a message
+      envoys:
+        - sensor.envoy_202445013483_current_power_production
+        - sensor.envoy_202445013488_current_power_production
+      # ---- Inputs -----------------------------------------------------------
+      energy: "{{ state_attr('sensor.maui_inverter_watch_today', 'energy') or {} }}"
+      missing: "{{ state_attr('sensor.maui_inverter_watch_today', 'missing') or {} }}"
+      samples: "{{ state_attr('sensor.maui_inverter_watch_today', 'samples') | int(0) }}"
+      baseline: "{{ state_attr('sensor.maui_inverter_watch', 'shares') or {} }}"
+      days: "{{ state_attr('sensor.maui_inverter_watch', 'learned_days') | int(0) }}"
+      inverters: >-
+        {# INVERTER PATTERN #}
+        {{ integration_entities('enphase_envoy')
+           | select('match', 'sensor\.inverter_\d+$') | list }}
+      site_wh: "{{ energy.values() | map('float', 0) | sum }}"
+      sunny: "{{ site_wh / 1000 >= min_site_kwh }}"
+      # ---- Checks -----------------------------------------------------------
+      flagged: >-
+        {% set ns = namespace(out=[]) %}
+        {% for id in inverters %}
+          {% set e = energy.get(id, 0) | float(0) %}
+          {% set miss = missing.get(id, 0) | int(0) %}
+          {% set name = state_attr(id, 'friendly_name') or id %}
+          {% if samples >= 8 and miss >= samples * missing_ratio %}
+            {% set ns.out = ns.out + [{'id': id, 'msg': name ~ ': not reporting (' ~ miss ~ ' of ' ~ samples ~ ' daytime checks)'}] %}
+          {% elif sunny and e == 0 %}
+            {% set ns.out = ns.out + [{'id': id, 'msg': name ~ ': produced nothing'}] %}
+          {% elif sunny and days >= warmup_days and baseline.get(id) %}
+            {% set share = e / site_wh %}
+            {% if share < baseline[id] * share_ratio %}
+              {% set ns.out = ns.out + [{'id': id, 'msg': name ~ ': ' ~ (100 * share / baseline[id]) | round(0) | int ~ '% of its usual output'}] %}
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.out }}
+      envoy_issues: >-
+        {% set ns = namespace(out=[]) %}
+        {% set producing = envoys | map('states') | map('float', -1) | select('gt', 0) | list | count %}
+        {% for e in envoys %}
+          {% set v = states(e) | float(-1) %}
+          {% if v < 0 %}
+            {% set ns.out = ns.out + ['Envoy ' ~ e.split('_')[1] ~ ': offline / not reporting'] %}
+          {% endif %}
+        {% endfor %}
+        {% if inverters | count == 0 %}
+          {% set ns.out = ns.out + ['No microinverter sensors found — check the Enphase integration or the entity pattern'] %}
+        {% elif samples >= 8 and energy | count == 0 %}
+          {% set ns.out = ns.out + ['No microinverter data at all today'] %}
+        {% endif %}
+        {{ ns.out }}
+      issues: >-
+        {{ envoy_issues + (flagged | map(attribute='msg') | list) }}
+      # ---- Learn (only on sunny days, never from flagged inverters) ---------
+      flagged_ids: "{{ flagged | map(attribute='id') | list }}"
+      new_shares: >-
+        {% set ns = namespace(d=baseline) %}
+        {% if sunny %}
+          {% for id in inverters %}
+            {% set e = energy.get(id, 0) | float(0) %}
+            {% if id not in flagged_ids and e > 0 %}
+              {% set s = e / site_wh %}
+              {% set old = baseline.get(id) %}
+              {% set ns.d = dict(ns.d, **{id: (s if old is none else old * (1 - alpha) + s * alpha) | round(5)}) %}
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+        {{ ns.d }}
+      new_days: "{{ days + (1 if sunny else 0) }}"
+      message: >-
+        {% set lines = issues[:max_listed] %}
+        {{ lines | join('\n') }}{% if issues | count > max_listed %}
+        …and {{ issues | count - max_listed }} more. Many at once usually means an Envoy, a breaker, or a whole array — check the Enphase app.{% endif %}
+    actions:
+      - event: maui_inverter_watch_result
+        event_data:
+          issues: "{{ issues }}"
+          shares: "{{ new_shares }}"
+          days: "{{ new_days }}"
+          site_kwh: "{{ (site_wh / 1000) | round(1) }}"
+          inverters_seen: "{{ energy | count }}"
+      - if:
+          - condition: template
+            value_template: "{{ issues | count > 0 }}"
+        then:
+          - action: persistent_notification.create
+            data:
+              notification_id: maui_inverter_watch
+              title: "Solar: {{ issues | count }} inverter issue{{ 's' if issues | count != 1 }}"
+              message: "{{ message }}"
+          - action: notify.mobile_app_tom_iphone17_temp
+            data:
+              title: "☀️ Maui solar: {{ issues | count }} issue{{ 's' if issues | count != 1 }}"
+              message: "{{ message }}"
+        else:
+          - action: persistent_notification.dismiss
+            data:
+              notification_id: maui_inverter_watch

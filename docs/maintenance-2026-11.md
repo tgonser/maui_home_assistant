@@ -192,6 +192,18 @@ Item 3 says whether it's allowed.
 - [ ] Enphase yearly per-array screenshots
 - [ ] After AC move settles: decide whether a solar move is still needed
 
+### Inverter watch (new, not installed yet)
+`ha-config/maui_inverter_watch.yaml`, a package that checks every Enphase microinverter
+and both Envoys each evening (7:30 PM HST) and notifies on problems: not reporting,
+produced nothing on a sunny day, or well below its own usual share of site output.
+Each inverter is compared with itself, so north-facing panels in winter don't trigger it.
+Added after learning that Arrays 9 and 10 lost production to inverter issues after
+install without anyone noticing. Logic tested offline with simulated inverters.
+
+- [ ] Verify per-inverter sensors exist and are enabled (template check in the file header)
+- [ ] Copy to /config/packages/, check config, restart
+- [ ] After 5 sunny days, confirm `sensor.maui_inverter_watch` shows 0 issues and learned_days >= 5
+
 ---
 
 ## 3. Old alarm integration (Total Connect) — remove
