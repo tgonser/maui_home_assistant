@@ -131,13 +131,32 @@ Do this **second**, after seeing the effect of Walter's AC move. Change one thin
 | Best | 5, 7, 9, 10, 11, 12 | ~2.15–2.26 kWh |
 | Middle | 1, unlabeled top group, 4, 13 | ~1.5–1.7 kWh |
 | Low, even | 6, 8 | ~0.80–0.87 kWh |
-| Low, uneven | 3 | 308–874 Wh (likely self-shading from the building) |
+| Low, uneven | 3 | 308–874 Wh (winter self-shading; uniform in July) |
 
-- Single low panels to re-check on other clear days: Array 4 (555 Wh vs ~1.5),
-  top group (944 Wh vs ~1.7), Array 1 (1.06 kWh vs ~1.47). If always low and not near a
-  roof edge or vent, raise with the installer as a warranty question.
 - Tesla data (Oct 2 – Nov 5): System 1 solar ~45 kWh vs System 2 ~35 kWh, 9 AM–5 PM.
-  Hypothesis: the weak faces (Arrays 3, 6, 8) mostly feed System 2. Unconfirmed.
+  Hypothesis: the weak winter faces (Arrays 3, 6, 8) mostly feed System 2. Unconfirmed.
+
+### Orientation and season (Nov 11 vs Jul 18, per panel)
+Compass from drone photos: pool/ocean side = **west**, entrance = **east**; the long
+roof ridges run east–west, with panel blocks on the south and north sides of each ridge.
+
+| Arrays | Nov 11 | Jul 18 | Face |
+|---|---|---|---|
+| 3, 6, 8 | 0.3–0.87 kWh | 2.18–2.24 kWh | North: worst in winter, best in summer |
+| 1, 2 (top group), 4, 13 | 0.55–1.7 | 1.89–2.27 | East/west: in between |
+| 5, 7, 9, 10, 11, 12 | 2.15–2.26 | 1.95–2.12 | South: best in winter, slightly lower in summer |
+
+Site total: 109 kWh (Nov 11) vs 146 kWh (Jul 18).
+
+- **No faulty panels.** The single low November panels (Array 4 555 Wh, top group
+  944 Wh, Array 1 1.06 kWh) and Array 3's spread were all normal in July. They were
+  winter self-shading from taller roof sections with the low sun. Removed from the watch list.
+- In summer all arrays are within ~15%, so each system's solar ≈ its **panel count**.
+  In winter it depends on its **north/south mix**.
+- **If rebalancing solar: swap, don't just move.** Trade a north array on System 2 for a
+  south array of similar size on System 1 (e.g. Array 6 or 8 ↔ Array 7, ~7 panels each)
+  so both systems get a similar mix — balanced in winter without unbalancing summer.
+  Only valid if the north arrays are confirmed to be on System 2.
 
 ### Data needed to plan a move
 1. **Solar wiring (installer):** which arrays feed which Tesla system; how panels are
