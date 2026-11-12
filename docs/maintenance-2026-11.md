@@ -73,6 +73,17 @@ string from System 1 to System 2 (solar installer job).
   System 1 should still reach ~100% most afternoons. If System 1 starts ending nights
   low while System 2 sits full, the imbalance has flipped.
 
+### Occupancy matters (added Nov 12)
+- House is occupied **Nov–May** (vacant in summer). Balance for those months only; summer
+  has surplus solar and light load. Do any rewiring in summer while the house is empty.
+- When occupied: **Boardroom (System 2) cools the most** (hottest room, mostly daytime —
+  directly competes with System 2 recharging). Master + Sitting (System 1) moderate, sliders
+  open in the evening. **Atrium little** (big sliders open). Others held ~80°F.
+- So **Boardroom is the priority move**; Atrium is optional. The Oct–Nov baseline was mostly
+  vacant, which is why the Atrium looked so large. Fix that in HA instead: in Vacation mode give
+  the Atrium a warmer target (keep the dew-point floor).
+- Real test: 2 weeks of data **while occupied** after the move.
+
 ### SPAN panels (3 panels, 2 Tesla systems)
 | SPAN panel | Tesla system | Notes |
 |---|---|---|
