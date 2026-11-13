@@ -40,7 +40,7 @@ conditions:
       {{ not is_state('input_select.maui_house_mode', 'Visitors') and
          not is_state('input_select.maui_house_mode', 'Suspend') }}
   - condition: state
-    entity_id: device_tracker.tom_iphone17_temp
+    entity_id: device_tracker.temp
     state: home
 
 variables:
