@@ -219,8 +219,22 @@ install without anyone noticing. Logic tested offline with simulated inverters.
 Updated paste-ready automation: `ha-config/maui_auto_presence.yaml` (dead Total Connect
 sensors removed; slots for the EyezOn motion zones marked TODO).
 
+### EyezOn zones (from T2, Nov 13 2026)
+| Zone | Sensor | Type |
+|---|---|---|
+| 2 | Kitchen motion | motion |
+| 5 | Sitting room motion | motion |
+| 6 | Bar sliding door | door |
+| 7 | Front door | door |
+| 8 | Bar bath door | door |
+| 11 | Mudroom door | door |
+| 17 | Kitchen sliding door | door |
+| 18 | Great room sliding door | door |
+
+Other zones (1, 3, 4, 9, 10, 12–16, 19–24) not yet identified.
+
 ### Checklist
-- [ ] Get the EyezOn zone list (zone number → sensor) from the installer/EyezOn portal
+- [x] Get the EyezOn zone list (zone number → sensor) from the installer/EyezOn portal
 - [ ] Rename `binary_sensor.makena_alarm_zone_N` friendly names; set motion zones'
       device class to `motion` (currently all 24 are `opening`)
 - [ ] Fill the TODO zone entity IDs in `maui_auto_presence.yaml`, paste over the

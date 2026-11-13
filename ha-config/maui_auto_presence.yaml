@@ -8,12 +8,12 @@
 # Changes vs. live version (Nov 2026):
 #   - Removed binary_sensor.motion_kitchen and binary_sensor.motion_upstairs.
 #     They belonged to the old Total Connect alarm integration, which no longer loads.
-#   - Added TODO slots for the EyezOn (envisalink_new) motion zones. Fill in the
-#     zone entity IDs once the zone list is known, in BOTH places marked TODO.
+#   - Added the EyezOn (envisalink_new) motion zones: zone 2 = kitchen motion,
+#     zone 5 = sitting room motion (zone list from T2, Nov 13 2026).
+#   - Phone renamed: tracker is device_tracker.temp, notify is notify.mobile_app_temp.
 #   - The motion list lives in one variable for the recent-motion check.
 #     (Trigger entity lists can't use variables, so it is repeated in triggers.)
 #
-# Safe to paste as-is: without the TODO lines it uses the three working sensors.
 
 alias: Maui Auto Presence
 description: >
@@ -30,9 +30,8 @@ triggers:
       - binary_sensor.up_stair_motion_motion
       - binary_sensor.usl_motion_sitting
       - binary_sensor.usl_motion_motion
-      # TODO EyezOn motion zones, e.g.:
-      # - binary_sensor.makena_alarm_zone_NN   # kitchen motion
-      # - binary_sensor.makena_alarm_zone_NN   # upstairs motion
+      - binary_sensor.makena_alarm_zone_2    # EyezOn: kitchen motion
+      - binary_sensor.makena_alarm_zone_5    # EyezOn: sitting room motion
 
 conditions:
   - condition: template
@@ -48,7 +47,8 @@ variables:
     - binary_sensor.up_stair_motion_motion
     - binary_sensor.usl_motion_sitting
     - binary_sensor.usl_motion_motion
-    # TODO same EyezOn motion zones as in triggers above
+    - binary_sensor.makena_alarm_zone_2      # EyezOn: kitchen motion
+    - binary_sensor.makena_alarm_zone_5      # EyezOn: sitting room motion
   has_recent_motion: >-
     {% set cutoff = now().timestamp() - 3600 %}
     {{ expand(motion_sensors) | map(attribute='last_changed')
