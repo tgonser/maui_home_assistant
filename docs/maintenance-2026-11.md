@@ -200,8 +200,8 @@ Each inverter is compared with itself, so north-facing panels in winter don't tr
 Added after learning that Arrays 9 and 10 lost production to inverter issues after
 install without anyone noticing. Logic tested offline with simulated inverters.
 
-- [ ] Verify per-inverter sensors exist and are enabled (template check in the file header)
-- [ ] Copy to /config/packages/, check config, restart
+- [x] Verified: 70 inverter sensors, one Envoy (202445013483) (Nov 13)
+- [x] Installed in /homeassistant/packages/ and reloaded (Nov 13); first samples counting all 70
 - [ ] After 5 sunny days, confirm `sensor.maui_inverter_watch` shows 0 issues and learned_days >= 5
 
 ---
@@ -235,10 +235,10 @@ Zones 1, 3, 4, 9, 10, 12–16 and 19–24 are unused (per T2) — candidates to 
 
 ### Checklist
 - [x] Get the EyezOn zone list (zone number → sensor) from the installer/EyezOn portal
-- [ ] Rename `binary_sensor.makena_alarm_zone_N` friendly names; set motion zones'
-      device class to `motion` (currently all 24 are `opening`)
-- [ ] Fill the TODO zone entity IDs in `maui_auto_presence.yaml`, paste over the
-      existing automation in the UI (Edit in YAML)
+- [x] Renamed zones 2, 5, 6, 7, 8, 11, 17, 18; zones 2 and 5 set to `motion` (Nov 13)
+- [x] Live Maui Auto Presence updated (Nov 13): phone tracker `device_tracker.temp`, notify
+      `notify.mobile_app_temp`, zones 2 + 5 in, Total Connect sensors out
+- [x] `configuration.yaml` "Maui Someone Home": Total Connect sensors replaced by zones 2 + 5 (Nov 13)
 - [ ] Delete the Total Connect integration (Settings → Devices & services)
 - [ ] After deletion, check whether old names (e.g. `binary_sensor.front_door`) are
       now free and worth reusing for the EyezOn zones
