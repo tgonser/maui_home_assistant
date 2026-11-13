@@ -74,7 +74,7 @@ actions:
           notification_id: maui_presence
           title: Maui Presence Detected
           message: Motion detected indoors — switching to Owners Home and adjusting AC.
-      - action: notify.mobile_app_tom_iphone17_temp
+      - action: notify.mobile_app_temp
         data:
           title: "🏠 Maui Presence Detected"
           message: Motion detected indoors — switching to Owners Home and adjusting AC.

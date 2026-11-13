@@ -1,5 +1,5 @@
 # =============================================================================
-# Maui Inverter Watch — daily check of every Enphase microinverter (and both Envoys)
+# Maui Inverter Watch — daily check of every Enphase microinverter (and its Envoy)
 # =============================================================================
 #
 # What it does
@@ -33,7 +33,8 @@
 #      services → Enphase Envoy → open an "Inverter …" device and enable its power
 #      sensor, or tell Claude the actual entity names so the pattern can be changed.
 #      (Pattern is in three places below, marked  # INVERTER PATTERN.)
-#   2. The notify service: notify.mobile_app_tom_iphone17_temp (from Maui Auto Presence).
+#   2. The notify service: notify.mobile_app_temp (T2's iPhone, device renamed
+#      "Tom_iPhone17" — verified Nov 13, 2026).
 #
 # Learning period: for the first 5 usable days it only reports "not reporting",
 # "produced nothing" and Envoy problems; the "below its usual share" check starts
@@ -149,9 +150,11 @@ automation:
       alpha: 0.2              # baseline learning rate (~5-day memory)
       warmup_days: 5          # days of learning before the share check starts
       max_listed: 10          # list at most this many inverters in a message
-      envoys:
-        - sensor.envoy_202445013483_current_power_production
-        - sensor.envoy_202445013488_current_power_production
+      # All Envoys configured in HA (found automatically). As of Nov 2026 only
+      # Envoy 202445013483 is set up, and all 70 microinverters report through it.
+      envoys: >-
+        {{ integration_entities('enphase_envoy')
+           | select('match', 'sensor\.envoy_\d+_current_power_production$') | list }}
       # ---- Inputs -----------------------------------------------------------
       energy: "{{ state_attr('sensor.maui_inverter_watch_today', 'energy') or {} }}"
       missing: "{{ state_attr('sensor.maui_inverter_watch_today', 'missing') or {} }}"
@@ -237,7 +240,7 @@ automation:
               notification_id: maui_inverter_watch
               title: "Solar: {{ issues | count }} inverter issue{{ 's' if issues | count != 1 }}"
               message: "{{ message }}"
-          - action: notify.mobile_app_tom_iphone17_temp
+          - action: notify.mobile_app_temp
             data:
               title: "☀️ Maui solar: {{ issues | count }} issue{{ 's' if issues | count != 1 }}"
               message: "{{ message }}"
