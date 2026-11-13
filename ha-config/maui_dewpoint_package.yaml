@@ -316,11 +316,11 @@ automation:
           {{ dp is not none and tgt is not none and tgt < dp
              and trigger.to_state.state in ['cool', 'heat_cool', 'auto'] }}
     actions:
-      # Phone push. CHANGE notify.mobile_app_tom to your phone's notify service
+      # Phone push. Phone notify service (verified Nov 13, 2026)
       # (Developer Tools -> Actions -> type "notify." to find yours).
       # continue_on_error keeps the in-HA notification working even if this
       # service name has not been customized yet, so the YAML is safe as-is.
-      - action: notify.mobile_app_tom
+      - action: notify.mobile_app_temp
         continue_on_error: true
         data:
           title: "Dew point conflict"
