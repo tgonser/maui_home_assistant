@@ -84,22 +84,30 @@ string from System 1 to System 2 (solar installer job).
   the Atrium a warmer target (keep the dew-point floor).
 - Real test: 2 weeks of data **while occupied** after the move.
 
-### SPAN panels (3 panels, 2 Tesla systems)
-| SPAN panel | Tesla system | Notes |
-|---|---|---|
-| "Garage" panel (Pool Subpanel, Subpanel Garage, Main House solar water heater) | System 1 (inferred) | Only 3 circuits, ~240–300 W at night |
-| System 1 Mudroom | System 1 | ~1.1–1.2 kW at night (inferred by difference) |
-| System 2 Mudroom | System 2 | 0.7 kW from grid at 12% on Nov 12 |
+### SPAN panels (3 panels, 2 Tesla systems) — confirmed Nov 13 via HA
+All three are MAIN 32 on spanos3/r202639/04, connected to HA with the official local
+API (SpanPanel/span v2.2.0, passphrase auth; needs HA ≥ 2026.8, so Core was updated to
+2026.11.1 the same day).
 
-**SPAN app gotcha:** the **Flow** screen's "home" kW and battery % appear to be the
-*whole Tesla system's* figures, not that panel's own load — both System 1 panels showed
-~1.3–1.5 kW and 55%. Only the **Circuits** tab is panel-specific. (Alternative: the
-garage panel feeds System 1 Mudroom through feed-through lugs.) Asked Walter which.
-Judge the AC move by system totals (Flow / Tesla / HA), not one panel's circuit list.
+| HA name | SPAN app name | Tesla system (Powerwall 3 serial) | Circuits |
+|---|---|---|---|
+| Span Panel | System 1 Mudroom | System 1 (tg12518700062e) | 37 |
+| Span Panel 2 | Garage panel (Pool Subpanel, Subpanel Garage, Main House solar water heater) | System 1 (tg12518700062e) | 10 |
+| Span Panel 3 | System 2 Mudroom | System 2 (tg1251870006gx) | 34 |
+
+- **SPAN app Flow screen = whole Tesla system total.** Confirmed: both System 1 panels
+  report the same battery and nearly the same site power. Only per-circuit numbers are
+  panel-specific. The garage panel's feed-through power is 0, so it doesn't feed another panel.
+- Circuit names show AC condensers on both systems (e.g. System 1: "AC Subpanel 2nd Floor
+  bedrooms & AC condenser 2"; System 2: "Laundry / Dryer & AC condenser Living Room",
+  "Dryer 2 / Master Bedroom & AC condenser Downstairs"). The thermostat-based AC → system
+  table above is an inference; re-check it against SPAN circuit data before Walter's move.
+- Battery state-of-energy at the time implied ~43 kWh (System 1) vs ~58 kWh (System 2)
+  usable. Rough (System 2 was at 10%); worth confirming how many Powerwalls each system has.
 
 ### Checklist
 - [x] Walter confirmed the plan: move Atrium + Boardroom (Nov 12)
-- [ ] Walter answers: is the garage panel on System 1, and does it feed or get fed by System 1 Mudroom? Is Flow a system total?
+- [x] Garage panel is on System 1, feeds nothing; Flow = system total (confirmed via SPAN in HA, Nov 13)
 - [ ] Circuits moved (date: ____)
 - [ ] 1–2 weeks after: re-run `parse.py` / `cap.py` and compare to the Oct 2 – Nov 5 baseline
 - [ ] If the imbalance flips, ask Walter to move Boardroom back
