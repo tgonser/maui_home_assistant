@@ -231,7 +231,7 @@ sensors removed; slots for the EyezOn motion zones marked TODO).
 | 17 | Kitchen sliding door | door |
 | 18 | Great room sliding door | door |
 
-Other zones (1, 3, 4, 9, 10, 12–16, 19–24) not yet identified.
+Zones 1, 3, 4, 9, 10, 12–16 and 19–24 are unused (per T2) — candidates to disable in HA.
 
 ### Checklist
 - [x] Get the EyezOn zone list (zone number → sensor) from the installer/EyezOn portal
