@@ -108,8 +108,10 @@ API (SpanPanel/span v2.2.0, passphrase auth; needs HA ≥ 2026.8, so Core was up
 - **Tesla app issues found (Nov 15):**
   - System 2 (TG1251870006GX) site address is **4860** Makena Alanui — should be **4680**
     (System 1 is correct). Fix via Edit in the Tesla app; affects Storm Watch / forecasting.
-  - System 2 firmware **26.34.3** vs System 1 **26.42.0**. Ask installer/Tesla why System 2
-    is behind (connectivity?) and to push the update.
+  - Firmware: System 2 **26.34.3** is the mainstream build (~90% of Powerwall 3s per
+    Netzero tracker, Nov 15); System 1 **26.42.0** is an early staged rollout (~1%, first seen
+    Nov 3). Normal — nothing to do; System 2 should get 26.42 in coming weeks. No public
+    26.42 release notes found.
 
 ### Checklist
 - [x] Walter confirmed the plan: move Atrium + Boardroom (Nov 12)
