@@ -20,7 +20,7 @@ circuits, so Tesla cannot move energy between the two systems.
 ### Findings
 | | System 1 | System 2 |
 |---|---|---|
-| Usable capacity (estimated from charge data) | ~58 kWh | ~54 kWh |
+| Battery | 3 × Powerwall 3 (~40.5 kWh) | 3 × Powerwall 3 (~40.5 kWh) |
 | Battery discharge, 5 PM – 9 AM (avg) | ~12 kWh | ~10 kWh (+ ~5 kWh grid) |
 | Solar 9 AM – 5 PM (avg) | ~45 kWh | ~35 kWh |
 | Load 9 AM – 5 PM (avg) | ~17 kWh | ~20 kWh |
@@ -102,8 +102,14 @@ API (SpanPanel/span v2.2.0, passphrase auth; needs HA ≥ 2026.8, so Core was up
   bedrooms & AC condenser 2"; System 2: "Laundry / Dryer & AC condenser Living Room",
   "Dryer 2 / Master Bedroom & AC condenser Downstairs"). The thermostat-based AC → system
   table above is an inference; re-check it against SPAN circuit data before Walter's move.
-- Battery state-of-energy at the time implied ~43 kWh (System 1) vs ~58 kWh (System 2)
-  usable. Rough (System 2 was at 10%); worth confirming how many Powerwalls each system has.
+- **Batteries are identical:** both systems have **3 × Powerwall 3** (~40.5 kWh each),
+  confirmed in the Tesla app Nov 15. (An earlier estimate of 43 vs 58 kWh from a single
+  low-charge reading was wrong.) So the imbalance is entirely load + solar.
+- **Tesla app issues found (Nov 15):**
+  - System 2 (TG1251870006GX) site address is **4860** Makena Alanui — should be **4680**
+    (System 1 is correct). Fix via Edit in the Tesla app; affects Storm Watch / forecasting.
+  - System 2 firmware **26.34.3** vs System 1 **26.42.0**. Ask installer/Tesla why System 2
+    is behind (connectivity?) and to push the update.
 
 ### Checklist
 - [x] Walter confirmed the plan: move Atrium + Boardroom (Nov 12)
