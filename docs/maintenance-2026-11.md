@@ -116,7 +116,15 @@ API (SpanPanel/span v2.2.0, passphrase auth; needs HA ≥ 2026.8, so Core was up
 ### Checklist
 - [x] Walter confirmed the plan: move Atrium + Boardroom (Nov 12)
 - [x] Garage panel is on System 1, feeds nothing; Flow = system total (confirmed via SPAN in HA, Nov 13)
-- [ ] Circuits moved (date: ____)
+- [x] Circuits moved: **Walter moved BOTH Atrium and Boardroom ACs to System 1** (reported Nov 16).
+      SPAN shows the switch ~2–3 PM HST Nov 16: System 2 "Laundry / Dryer & AC condenser Living Room"
+      last drew >200 W at 2 PM; a new 240 V circuit appeared on System 1 Mudroom (tabs 9:11,
+      "AC condenser / Living & AC condenser Master Bedroom…", first active 3 PM). Walter also
+      updated the SPAN breaker map, so circuit names may have changed — verify which
+      condensers moved against thermostat data. Boardroom can go back if System 1 runs short.
+      Baseline = before Nov 16 2 PM HST; post-move = after.
+- [x] Walter confirmed: garage panel + System 1 Mudroom are both on Tesla System 1, and SPAN's
+      Flow total is read from Tesla (system total), not summed from that panel's circuits.
 - [ ] 1–2 weeks after: re-run `parse.py` / `cap.py` and compare to the Oct 2 – Nov 5 baseline
 - [ ] If the imbalance flips, ask Walter to move Boardroom back
 - [ ] Update the AC → system table above after the move
