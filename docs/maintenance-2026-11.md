@@ -248,8 +248,9 @@ after-move night. Nov 17 is forecast cloudy; the real before/after comparison is
 - **System 2 never got above ~30%** in these four days; most nights it sat at its reserve and ran on
   the grid. Nov 13–14 were very heavy (AC load on System 2 from the earlier 75°F settings).
 - **System 1 is not always full either:** on cloudy Nov 14 it dropped to 8% and imported 9 kWh.
-- **Backup reserve is now 20% on both systems** (it was 10% in early November). System 2 holds at
-  ~20% and goes to grid below that — that's the reserve working, not a fault. Who changed it?
+- **Backup reserve is now 20% on both systems** (T2 raised it from 10% in November). System 2 holds
+  at ~20% and goes to grid below that — the reserve working as intended. Trade-off: ~32 kWh usable
+  per system instead of ~36 kWh, in exchange for more outage backup.
 - **Solar:** System 1 47–69 kWh/day vs System 2 29–42 kWh/day (≈40% less), consistent with the
   north-facing arrays being on System 2 in winter.
 - **Batteries:** identical (3 × Powerwall 3 each, ~40.5 kWh).
@@ -302,7 +303,6 @@ after-move night. Nov 17 is forecast cloudy; the real before/after comparison is
 3. Which circuit is the new water heater on? Neither SPAN water heater circuit shows any load.
 4. The island lights: did they move to the new dimmer? The old Lutron "Maui Island Lts" load turns
    on but nothing lights up.
-5. Did anyone change both Powerwall backup reserves from 10% to 20%?
 
 ### Questions for the solar installer
 1. Which arrays feed which Tesla system? Measured winter solar is System 1 ~47–69 vs System 2
