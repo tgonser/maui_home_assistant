@@ -230,6 +230,89 @@ install without anyone noticing. Logic tested offline with simulated inverters.
 
 ---
 
+## 6. SPAN check-in — Nov 17, 2026 (first circuit-level look)
+
+Data: SPAN (all 3 panels) + Tesla, Nov 13 8 AM → Nov 17 6 AM HST. House in **Vacation** mode.
+The AC move happened ~3 PM HST Nov 16, so this is mostly a **before** baseline plus one
+after-move night. Nov 17 is forecast cloudy; the real before/after comparison is the Nov 24 check-in.
+
+### Per system, per day (Tesla, kWh)
+| Day | S1 solar | S1 day load | S1 night load | S1 night from grid | S2 solar | S2 day load | S2 night load | S2 night from grid |
+|---|---|---|---|---|---|---|---|---|
+| Nov 13 | 59 | 26 | 19 | 0 | 42 | 55 | 57 | 56 |
+| Nov 14 | 47 | 22 | 16 | 9 | 29 | 45 | 27 | 27 |
+| Nov 15 | 69 | 15 | 17 | 0 | 34 | 24 | 20 | 14 |
+| Nov 16 (move 3 PM) | 59 | 21 | 18* | 0 | 33 | 29 | 14* | 14 |
+*partial night (to 6 AM). Day = 9 AM–5 PM, night = 5 PM–9 AM.
+
+- **System 2 never got above ~30%** in these four days; most nights it sat at its reserve and ran on
+  the grid. Nov 13–14 were very heavy (AC load on System 2 from the earlier 75°F settings).
+- **System 1 is not always full either:** on cloudy Nov 14 it dropped to 8% and imported 9 kWh.
+- **Backup reserve is now 20% on both systems** (it was 10% in early November). System 2 holds at
+  ~20% and goes to grid below that — that's the reserve working, not a fault. Who changed it?
+- **Solar:** System 1 47–69 kWh/day vs System 2 29–42 kWh/day (≈40% less), consistent with the
+  north-facing arrays being on System 2 in winter.
+- **Batteries:** identical (3 × Powerwall 3 each, ~40.5 kWh).
+
+### Biggest circuits (before the move, kWh/day)
+| kWh/day (day / night) | Circuit | System |
+|---|---|---|
+| 29.5 (24.3 / 5.2) | Pool Subpanel | S1 (garage panel) |
+| 20.4 (8.9 / 11.5) | "Laundry / Dryer & AC condenser Living Room" | S2 → **moved to S1** |
+| 11.2 (6.6 / 4.6) | "AC Subpanel 2nd Floor bedrooms & AC condenser 2" | S1 |
+| 9.5 (5.5 / 4.1) | "Dryer 2 / Master Bedroom & AC condenser Downstairs" | S2 → **moved to S1** |
+| 8.6 (3.2 / 5.4) | Outlets / Rack 1 (network rack) | S1 |
+| 3.5 | Subpanel Garage | S1 |
+| ~1–3 each | Lutron lighting circuits 10/11/14, wine coolers, elevator & gate, fridges | mixed |
+
+### Which condenser is which (SPAN circuit vs thermostat cooling, 5-min data)
+- **"AC condenser Living Room"** circuit = the **Boardroom** zone: it ran in 99% of Boardroom
+  cooling periods and 96% of its run time was during Boardroom cooling. The SPAN name is misleading.
+- **"Master Bedroom & AC condenser Downstairs"** (peaks ~7.8 kW): runs mainly with Boardroom/Atrium
+  cooling — most likely the **Atrium** unit. Weaker match (few run hours).
+- **"AC Subpanel 2nd Floor bedrooms & AC condenser 2"** (System 1): a subpanel serving several zones
+  (Kitchen, Master Bed and others), not a single room.
+- Both System 2 condenser circuits stopped reporting at the move, and **one new 240 V circuit appeared
+  on System 1 Mudroom (tabs 9:11)**, labeled "AC condenser / Living & AC condenser Master Bedroom".
+  It peaked at 7.2 kW the first evening.
+
+### What the move should do (estimate, from the before data)
+- Shifts ~30 kWh/day to System 1: ~14 kWh daytime + ~16 kWh evening/overnight (less in
+  Vacation mode, more when occupied and the Boardroom is cooled).
+- **System 2:** day load drops to roughly 10–15 kWh against ~33 kWh of solar → should refill to
+  ~60–70% on sunny days and end nights well above reserve.
+- **System 1:** night load rises from ~18 to ~30+ kWh, close to its ~32 kWh usable above the 20%
+  reserve. **Risk of overshoot on cloudy days or when the Boardroom is used heavily.** First night
+  after the move: System 1 went 91% → 44% by 6 AM; System 2 held at reserve (20%) and drew ~1 kW from grid.
+- Biggest lever left on System 1: the **pool subpanel (~24 kWh/day in daytime)** — check its schedule
+  (pump/heater hours) before considering moving the Boardroom back.
+
+### Other checks
+- **Water heater:** fixed. No 4.5 kW switching-on pattern since Nov 14 (was ~80/day in early Nov).
+  Neither SPAN water heater circuit shows any load, so the new heater must be on another circuit.
+- **Inverter watch:** running, 0 issues, 4 days learned (output check starts after 5 sunny days).
+  Nov 16 sampled site total 81 kWh.
+
+### Questions for Walter
+1. Which SPAN circuit(s) did you move? System 2's "Laundry / Dryer & AC condenser Living Room" and
+   "Dryer 2 / Master Bedroom & AC condenser Downstairs" both disappeared and one new circuit (tabs
+   9–11) appeared on System 1 Mudroom. **Did any dryers move with the condensers?**
+2. Can the SPAN circuit names match the thermostats? The "Living Room" condenser is actually the
+   Boardroom unit, and "Master Bedroom & condenser Downstairs" looks like the Atrium.
+3. Which circuit is the new water heater on? Neither SPAN water heater circuit shows any load.
+4. The island lights: did they move to the new dimmer? The old Lutron "Maui Island Lts" load turns
+   on but nothing lights up.
+5. Did anyone change both Powerwall backup reserves from 10% to 20%?
+
+### Questions for the solar installer
+1. Which arrays feed which Tesla system? Measured winter solar is System 1 ~47–69 vs System 2
+   ~29–42 kWh/day, which fits north-facing arrays 3, 6 and 8 being on System 2.
+2. With Enphase branch circuits: can one north array on System 2 be **swapped** with a similar-size
+   south array on System 1 (e.g. Array 6 or 8 ↔ Array 7)? Any interconnection or HECO paperwork needed?
+3. Per-system PV limits for each Powerwall 3 system, and does a swap stay within them?
+
+---
+
 ## 3. Old alarm integration (Total Connect) — remove
 
 - `totalconnect` config entry is still installed, state `setup_error`; **72 entities**,
