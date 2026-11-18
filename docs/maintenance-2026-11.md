@@ -132,7 +132,7 @@ API (SpanPanel/span v2.2.0, passphrase auth; needs HA ≥ 2026.8, so Core was up
 
 ---
 
-## 2. New water heater cycling around the clock (System 2)
+## 2. New water heater cycling around the clock (System 2) — CORRECTED Nov 17: it was the AC condensers, not the water heater (see section 6)
 
 Since ~3 PM HST **Nov 3**, a ~4.5 kW load on System 2 switches on roughly every 18 min
 (~8 min on), day and night — about 20 starts per 6 h vs ~1 per 6 h before. That is
@@ -289,10 +289,28 @@ after-move night. Nov 17 is forecast cloudy; the real before/after comparison is
   (pump/heater hours) before considering moving the Boardroom back.
 
 ### Other checks
-- **Water heater:** fixed. No 4.5 kW switching-on pattern since Nov 14 (was ~80/day in early Nov).
-  Neither SPAN water heater circuit shows any load, so the new heater must be on another circuit.
+- **Water heater:** see Walter's answers below — on System 1 (garage), drawing almost nothing; the early-Nov
+  4.5 kW cycling on System 2 was the AC condensers, not the water heater.
 - **Inverter watch:** running, 0 issues, 4 days learned (output check starts after 5 sunny days).
   Nov 16 sampled site total 81 kWh.
+
+
+### Walter's answers (Nov 17)
+- He moved the **Atrium and Boardroom ACs** — both now on **System 1 Mudroom, spaces 9–11**.
+  The dryers did NOT move: System 2's "Laundry / Dryer & AC condenser Living Room" is now just
+  **Downstairs Dryer**, and "Dryer 2 / Master Bedroom & AC condenser Downstairs" is just **Upstairs Dryer**
+  (each breaker previously fed a dryer + a condenser). So before the move: "Living Room" condenser =
+  Boardroom (99% match), "Master Bedroom/Downstairs" condenser = Atrium.
+- He'll relabel SPAN circuits on site to match the thermostat names.
+- **Water heater** is on the **garage panel (System 1)**: "Main House solar water heater", spaces 26–28.
+  SPAN shows its relay ON (closed) but **~0.1 kWh/day since Nov 13** (max 7 W). Lifetime 726 kWh, so it
+  has run before. Either the electric backup isn't needed (solar thermal + empty house) or it's off/on a
+  timer — check before occupancy.
+- **Correction:** the ~4.5 kW cycling on System 2 in early November was **not** the water heater (that's
+  on System 1). From Nov 7 on, 36 of 39 such switch-ons happened while the Atrium/Boardroom/Bar were
+  cooling, so it was almost certainly the **AC condensers** (then on System 2). Data before Nov 7 has
+  aged out of HA's 5-minute history.
+- Walter plans to visit the week of Nov 29.
 
 ### Questions for Walter
 1. Which SPAN circuit(s) did you move? System 2's "Laundry / Dryer & AC condenser Living Room" and
