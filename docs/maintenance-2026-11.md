@@ -303,9 +303,10 @@ after-move night. Nov 17 is forecast cloudy; the real before/after comparison is
   Boardroom (99% match), "Master Bedroom/Downstairs" condenser = Atrium.
 - He'll relabel SPAN circuits on site to match the thermostat names.
 - **Water heater** is on the **garage panel (System 1)**: "Main House solar water heater", spaces 26–28.
-  SPAN shows its relay ON (closed) but **~0.1 kWh/day since Nov 13** (max 7 W). Lifetime 726 kWh, so it
-  has run before. Either the electric backup isn't needed (solar thermal + empty house) or it's off/on a
-  timer — check before occupancy.
+  SPAN shows its relay ON (closed) but **~0.1 kWh/day since Nov 13** (max 7 W) — explained: T2 confirmed
+  the new heater was **turned off after install because nobody is home**. Turn it back on ~1 day before
+  arrival. When it's on, it adds load to **System 1** (same system now carrying Atrium + Boardroom AC),
+  so prefer heating during midday solar (timer, or SPAN/HA schedule) rather than evenings.
 - **Correction:** the ~4.5 kW cycling on System 2 in early November was **not** the water heater (that's
   on System 1). From Nov 7 on, 36 of 39 such switch-ons happened while the Atrium/Boardroom/Bar were
   cooling, so it was almost certainly the **AC condensers** (then on System 2). Data before Nov 7 has
