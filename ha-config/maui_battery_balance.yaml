@@ -70,6 +70,82 @@ template:
         delay_on:
           minutes: 5
 
+  # ---- Dashboard / scorecard sensors -----------------------------------------------
+  - sensor:
+      - name: Maui Net Meter Power
+        unique_id: maui_net_meter_power
+        icon: mdi:meter-electric
+        unit_of_measurement: kW
+        device_class: power
+        state_class: measurement
+        # Positive = buying from Maui Electric, negative = exporting (both Tesla systems combined).
+        state: >-
+          {{ (states('sensor.gonser_4680_system_1_grid_power') | float(0)
+              + states('sensor.4680_system_2_grid_power') | float(0)) | round(2) }}
+      - name: Maui Balance Status
+        unique_id: maui_balance_status
+        icon: mdi:scale-balance
+        state: >-
+          {% set r1 = states('number.gonser_4680_system_1_backup_reserve') | float(0) %}
+          {% set r2 = states('number.4680_system_2_backup_reserve') | float(0) %}
+          {% set hm = now().strftime('%H:%M') %}
+          {% if is_state('input_boolean.maui_storm_prep_active', 'on') or is_state('input_boolean.maui_storm_prep_pending', 'on') or is_state('sensor.gonser_4680_system_1_storm_watch_active', 'on') or is_state('sensor.4680_system_2_storm_watch_active', 'on') %}Paused (storm prep / Storm Watch)
+          {%- elif not is_state('input_boolean.maui_balance_enabled', 'on') %}Off
+          {%- elif r2 > 20 %}Boosting System 2 to {{ r2 | int }}%
+          {%- elif r1 > 20 %}Boosting System 1 to {{ r1 | int }}%
+          {%- elif '09:30' <= hm < '14:30' %}Watching (no boost needed)
+          {%- else %}Idle (works 9:30 AM to 2:30 PM){% endif %}
+
+  # Accumulated once a minute; reset at midnight. Restored across restarts.
+  - triggers:
+      - trigger: time_pattern
+        minutes: "/1"
+        id: tick
+      - trigger: time
+        at: "00:00:00"
+        id: reset
+    sensor:
+      - name: Maui Balance Moved Today
+        unique_id: maui_balance_moved_today
+        icon: mdi:battery-arrow-up
+        unit_of_measurement: kWh
+        device_class: energy
+        state_class: total_increasing
+        # Energy the boosted side pulled through the shared meter (= the other side's surplus).
+        state: >-
+          {% set r1 = states('number.gonser_4680_system_1_backup_reserve') | float(0) %}
+          {% set r2 = states('number.4680_system_2_backup_reserve') | float(0) %}
+          {% set p = [states('sensor.4680_system_2_grid_power') | float(0), 0] | max if r2 > 20 else ([states('sensor.gonser_4680_system_1_grid_power') | float(0), 0] | max if r1 > 20 else 0) %}
+          {{ 0 if trigger.id == 'reset' else ((this.state | float(0)) + p / 60) | round(3) }}
+      - name: Maui Balance Bought During Boost Today
+        unique_id: maui_balance_bought_today
+        icon: mdi:cash-minus
+        unit_of_measurement: kWh
+        device_class: energy
+        state_class: total_increasing
+        # Whole-house grid purchase while a boost is on. Should stay near 0.
+        state: >-
+          {% set boosting = states('number.gonser_4680_system_1_backup_reserve') | float(0) > 20 or states('number.4680_system_2_backup_reserve') | float(0) > 20 %}
+          {% set net = states('sensor.gonser_4680_system_1_grid_power') | float(0) + states('sensor.4680_system_2_grid_power') | float(0) %}
+          {% set p = [net, 0] | max if boosting else 0 %}
+          {{ 0 if trigger.id == 'reset' else ((this.state | float(0)) + p / 60) | round(3) }}
+
+  # Charge of each system when the 5 PM peak starts — the number that matters.
+  - triggers:
+      - trigger: time
+        at: "17:00:00"
+    sensor:
+      - name: Maui System 1 Charge at 5 PM
+        unique_id: maui_s1_soc_5pm
+        icon: mdi:battery-clock
+        unit_of_measurement: "%"
+        state: "{{ states('sensor.gonser_4680_system_1_percentage_charged') | float(0) | round(0) }}"
+      - name: Maui System 2 Charge at 5 PM
+        unique_id: maui_s2_soc_5pm
+        icon: mdi:battery-clock
+        unit_of_measurement: "%"
+        state: "{{ states('sensor.4680_system_2_percentage_charged') | float(0) | round(0) }}"
+
 automation:
   # ---------------------------------------------------------------------------
   - alias: Maui Battery Balance — control
@@ -135,6 +211,7 @@ automation:
                   - action: logbook.log
                     data:
                       name: Maui Battery Balance
+                      entity_id: input_boolean.maui_balance_enabled
                       message: >-
                         System 2 reserve back to {{ base_reserve }}% (charge {{ soc2 | round(0) }}%,
                         reason: {{ 'time' if past_window else ('house importing' if importing else 'target reached') }}).
@@ -155,6 +232,7 @@ automation:
                   - action: logbook.log
                     data:
                       name: Maui Battery Balance
+                      entity_id: input_boolean.maui_balance_enabled
                       message: >-
                         System 1 reserve back to {{ base_reserve }}% (charge {{ soc1 | round(0) }}%,
                         reason: {{ 'time' if past_window else ('house importing' if importing else 'target reached') }}).
@@ -176,6 +254,7 @@ automation:
               - action: logbook.log
                 data:
                   name: Maui Battery Balance
+                  entity_id: input_boolean.maui_balance_enabled
                   message: >-
                     System 1 full ({{ soc1 | round(0) }}%) and exporting — System 2 reserve raised
                     to {{ target }}% (charge {{ soc2 | round(0) }}%) to absorb the surplus.
@@ -197,6 +276,7 @@ automation:
               - action: logbook.log
                 data:
                   name: Maui Battery Balance
+                  entity_id: input_boolean.maui_balance_enabled
                   message: >-
                     System 2 full ({{ soc2 | round(0) }}%) and exporting — System 1 reserve raised
                     to {{ target }}% (charge {{ soc1 | round(0) }}%) to absorb the surplus.
@@ -251,4 +331,5 @@ automation:
                 - action: logbook.log
                   data:
                     name: Maui Battery Balance
+                    entity_id: input_boolean.maui_balance_enabled
                     message: "Safety reset: {{ repeat.item }} back to {{ base_reserve }}% ({{ trigger.platform }})."

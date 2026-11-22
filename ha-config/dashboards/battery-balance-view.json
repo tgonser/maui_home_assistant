@@ -1,0 +1,127 @@
+{
+ "title": "Battery Balance",
+ "path": "battery-balance",
+ "icon": "mdi:scale-balance",
+ "cards": [
+  {
+   "type": "entities",
+   "title": "Battery Balance — now",
+   "state_color": true,
+   "entities": [
+    {
+     "entity": "input_boolean.maui_balance_enabled",
+     "name": "Balancing on"
+    },
+    {
+     "entity": "sensor.maui_balance_status",
+     "name": "Status"
+    },
+    {
+     "entity": "sensor.maui_net_meter_power",
+     "name": "Net meter (+ buying / − exporting)"
+    }
+   ]
+  },
+  {
+   "type": "grid",
+   "columns": 2,
+   "square": false,
+   "cards": [
+    {
+     "type": "tile",
+     "entity": "sensor.gonser_4680_system_1_percentage_charged",
+     "name": "System 1 charge"
+    },
+    {
+     "type": "tile",
+     "entity": "sensor.4680_system_2_percentage_charged",
+     "name": "System 2 charge"
+    },
+    {
+     "type": "tile",
+     "entity": "number.gonser_4680_system_1_backup_reserve",
+     "name": "System 1 reserve"
+    },
+    {
+     "type": "tile",
+     "entity": "number.4680_system_2_backup_reserve",
+     "name": "System 2 reserve"
+    }
+   ]
+  },
+  {
+   "type": "history-graph",
+   "title": "Charge and reserve — today",
+   "hours_to_show": 14,
+   "entities": [
+    {
+     "entity": "sensor.gonser_4680_system_1_percentage_charged",
+     "name": "S1 charge"
+    },
+    {
+     "entity": "sensor.4680_system_2_percentage_charged",
+     "name": "S2 charge"
+    },
+    {
+     "entity": "number.gonser_4680_system_1_backup_reserve",
+     "name": "S1 reserve"
+    },
+    {
+     "entity": "number.4680_system_2_backup_reserve",
+     "name": "S2 reserve"
+    }
+   ]
+  },
+  {
+   "type": "history-graph",
+   "title": "Net meter — should stay below 0 during a boost",
+   "hours_to_show": 14,
+   "entities": [
+    {
+     "entity": "sensor.maui_net_meter_power",
+     "name": "Net meter"
+    },
+    {
+     "entity": "sensor.gonser_4680_system_1_grid_power",
+     "name": "S1 grid"
+    },
+    {
+     "entity": "sensor.4680_system_2_grid_power",
+     "name": "S2 grid"
+    }
+   ]
+  },
+  {
+   "type": "entities",
+   "title": "Scorecard",
+   "entities": [
+    {
+     "entity": "sensor.maui_balance_moved_today",
+     "name": "Moved between systems today"
+    },
+    {
+     "entity": "sensor.maui_balance_bought_during_boost_today",
+     "name": "Bought from grid during boosts"
+    },
+    {
+     "entity": "sensor.maui_system_1_charge_at_5_pm",
+     "name": "System 1 at 5 PM"
+    },
+    {
+     "entity": "sensor.maui_system_2_charge_at_5_pm",
+     "name": "System 2 at 5 PM"
+    }
+   ]
+  },
+  {
+   "type": "logbook",
+   "title": "What it did",
+   "hours_to_show": 48,
+   "target": {
+    "entity_id": [
+     "input_boolean.maui_balance_enabled"
+    ]
+   }
+  }
+ ]
+}
