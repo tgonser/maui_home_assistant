@@ -313,6 +313,19 @@ after-move night. Nov 17 is forecast cloudy; the real before/after comparison is
   aged out of HA's 5-minute history.
 - Walter plans to visit the week of Nov 29.
 
+### Nov 22 finding: System 2 load that SPAN doesn't see
+- At 10:23 AM HST Nov 22 (Vacation mode, sunny): Tesla System 2 load **3.3 kW**, but the System 2
+  SPAN panel's circuits sum to only **~0.33 kW**. Over the past 6 days the gap averages **~1.1 kW**
+  (max ~3.5 kW) and rises when AC zones are cooling (Beach Room, Sitting, Boardroom, Bar all
+  +0.7–1.5 kW on average — confounded, since zones cool together).
+- So **something on System 2 is fed from its Tesla gateway outside the SPAN panel** — most likely
+  one or more AC condensers (the Bar / Beach Room units were never found on any SPAN circuit).
+  This is what's eating System 2's morning solar.
+- Same moment: System 1 at 87% and **exporting 4.5 kW**, while System 2 charged at only 1.9 kW —
+  a live case for the cross-charge (reserve) test.
+- **Ask Walter:** what does System 2's Tesla gateway feed besides the System 2 SPAN panel?
+  Is there a separate (non-SPAN) panel or condenser disconnects?
+
 ### Questions for Walter
 1. Which SPAN circuit(s) did you move? System 2's "Laundry / Dryer & AC condenser Living Room" and
    "Dryer 2 / Master Bedroom & AC condenser Downstairs" both disappeared and one new circuit (tabs
