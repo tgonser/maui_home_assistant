@@ -484,3 +484,9 @@ from System 2's gateway, not System 1, even though its SPAN battery data shows S
 and/or water heater move to System 1? If not, can the pool run hours be set to 10 AM–3 PM?* (Runs ~9:45–3:45 now.)
 Note: with all AC now on System 1, moving the pool too would overload System 1 instead. Simplest lever may be
 balancing (now automated) plus keeping the pool and water heater on midday solar.
+
+**Nov 22 — pool schedule change (T2):** pool equipment (circulation, edge, spa pumps) moved to start 9–10 AM and end by
+3 PM HST (was ~9:45 AM–4/4:30 PM, all on System 2 via the Garage panel). Measure with the Battery Balance scorecard
+("System 2 at 5 PM") over the following days. OmniLogic HA integration: not a login issue — the built-in integration
+crashes on pool + spa (two bodies of water); local HACS integration (cryptk/haomnilogic-local) is the option if HA
+control is wanted later.
