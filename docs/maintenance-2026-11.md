@@ -602,3 +602,15 @@ lights low, shades stay; live camera (Pool/Front entry/BBQ) on the wake screen. 
 - Boardroom (Bed 3) glass garage-style door → `climate.boardroom` (new USL-Entry).
 - Bath 2 and Bath 3 outdoor-shower doors (108D, 111B): not covered, by choice.
 - Motion sensors: Bath 2 and Bath 3, high in the corner by the door from the bedroom, aimed into the bath.
+
+### Upstairs door → thermostat map (from T2's plan, Nov 23)
+- Molokini (Bed 4): west slider 206A to the Bed 4 lanai → `climate.maui_bar` (new USL-Entry).
+- Mauka (Bed 5): east slider 211A to the Bed 5 lanai → `climate.upper_mauka` (new USL-Entry).
+- Bath 4 outdoor door 207D: not covered, by choice (same as downstairs).
+- Master suite (201 sliders 201A/201D, sitting 202A): owner-managed, no sensors planned.
+- Motion sensors: Bath 4 and Bath 5, high in the corner by the door from the bedroom/WIC, aimed into the bath.
+- Note: the Great Room is double-height ("open to below" upstairs), which fits the Atrium thermostat serving it.
+
+### Final shopping list
+- 4 × USL-Entry (Beach 107A, Boardroom glass door, Molokini 206A, Mauka 211A)
+- 4 × USL-Motion (Baths 2–5)
