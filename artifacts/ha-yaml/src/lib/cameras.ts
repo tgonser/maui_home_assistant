@@ -33,5 +33,15 @@ export function listCameras(states: Map<string, HAState>): CameraInfo[] {
       available: live.length > 0,
     });
   }
+  // Two cameras can clean up to the same name ("Entry"): give those back
+  // their model so they can be told apart.
+  const counts = new Map<string, number>();
+  out.forEach((c) => counts.set(c.name, (counts.get(c.name) ?? 0) + 1));
+  for (const c of out) {
+    if ((counts.get(c.name) ?? 0) > 1) {
+      const full = String(states.get(c.id)?.attributes.friendly_name ?? c.name).replace(/\s*(High|Medium|Low) resolution channel$/i, "").trim();
+      c.name = full;
+    }
+  }
   return out.sort((a, b) => Number(b.available) - Number(a.available) || a.name.localeCompare(b.name));
 }
