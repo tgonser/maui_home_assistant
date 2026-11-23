@@ -111,12 +111,12 @@
 .v2-seg button { height: 42px; padding: 0 24px; border: 0; border-radius: 999px; background: transparent; color: var(--ink-2); font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
 .v2-seg button.on { background: var(--teal); color: #FFF; }
 .v2-light-sections { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; overflow: auto; }
-.v2-light-sec { padding: 10px 14px 12px; }
-.v2-sec-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.v2-light-sec { padding: 8px 14px 10px; }
+.v2-sec-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
 .v2-mini { height: 34px; padding: 0 12px; border-radius: 10px; border: 1.5px solid #C9BFAE; background: #FFF; color: var(--ink); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
 .v2-mini:disabled { opacity: 0.45; cursor: default; }
 .v2-light-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 8px; }
-.v2-ltile { height: 74px; border-radius: 14px; padding: 9px 11px; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; text-align: left; background: #F8F4EC; border: 2px solid transparent; color: var(--ink); font: inherit; cursor: pointer; }
+.v2-ltile { height: 64px; border-radius: 14px; padding: 9px 11px; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; text-align: left; background: #F8F4EC; border: 2px solid transparent; color: var(--ink); font: inherit; cursor: pointer; }
 .v2-ltile:disabled { opacity: 0.5; cursor: default; }
 .v2-ltile.all { background: #FCE7A8; border-color: var(--gold); }
 .v2-ltile.some { background: #FFF4D6; border-color: #EDD07E; }
