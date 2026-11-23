@@ -543,3 +543,10 @@ EyezOn zones 6 Bar Sliding Door → climate.bar; 17 Kitchen Sliding Door → cli
 18 Great Room Sliding Door → climate.atrium. Door open 5 min → that zone's AC off (remember setpoint);
 closed 2 min → restore. Show "AC paused — slider open" on the wall. Skip during storm prep.
 Needs the live EyezOn zone entity IDs to confirm before building.
+
+**Tablets (Nov 23):** 3 × Samsung Galaxy Tab A11+ (11", 1920×1200 → ~1280×800 CSS, same as the F-row designs).
+Fully Kiosk Browser as launcher; Samsung "Protect battery" on; kiosk handles dim/wake.
+- **Master / mobile** — owner view, opens to Home; in Visitors mode asks for the owner PIN after 10 idle minutes.
+- **Molokini Suite** — guest-only, opens to Molokini Suite (`?room=molokini`), returns there when idle.
+- **Beach Suite** — guest-only, opens to Beach Suite (`?room=beach`), returns there when idle.
+Lights redesign agreed: Rooms tab (whole house on one screen, On/Off/Mixed tiles, tap to toggle) + Scenes tab.
