@@ -557,7 +557,8 @@ lights low, shades stay; live camera (Pool/Front entry/BBQ) on the wake screen. 
 ## 10. Motion lighting + door-open AC pause (agreed Nov 23)
 
 **Hardware to buy (all UniFi SuperLink, existing gateway):**
-- 2 × USL-Motion: Molokini bath, Bedroom 5 bath.
+- 4 × USL-Motion, one per guest bath (Bed 2, 3, 4, 5). Checked Nov 23: no guest bath has a motion sensor today.
+  - Existing sensors: USL Sitting, USL Bar/Pub, USL BBQ, UP-Sense stairs, UP-Sense equipment closet.
 - 4 × USL-Entry, one per door:
   - Molokini (upstairs, ocean side) → `climate.maui_bar`
   - Mauka (upstairs, mountain side) → `climate.upper_mauka`
@@ -566,8 +567,13 @@ lights low, shades stay; live camera (Pool/Front entry/BBQ) on the wake screen. 
 - Mounting: motion sensor high in a corner, aimed at the bathroom doorway. Entry-sensor magnet on the moving slider panel, sensor on the frame at the latch side.
 
 **Motion lighting:**
-- Master/bath: keep T2's existing night path automation unchanged. The owner view gets an on/off switch and a "path on" indicator.
-- Guest baths (Beach and Bedroom 3 now; Molokini and Bedroom 5 once sensors arrive): copy the pattern of the master path.
+- Existing night paths use blueprint `night_motion_lights.yaml`:
+  - Sitting: `binary_sensor.usl_motion_sitting` → `light.sitting_lights`, 00:00–07:00, 20%, 5 min.
+  - Stairs: UP-Sense → `light.stair_helper_lights`, 20%, dims to 5% after 2 min.
+  - Pub: 00:00–06:00.
+  - BBQ: 35%, 10 min.
+- Keep these unchanged. The owner view gets an on/off switch and a "path on" indicator.
+- Guest baths, once sensors arrive: use the same blueprint, targeting each bath's toe-kick light (Bed 4 and 5 have `..._toe_kick(s)`).
   - Day: normal on.
   - Night: dim warm path light only.
   - Manual override wins.
