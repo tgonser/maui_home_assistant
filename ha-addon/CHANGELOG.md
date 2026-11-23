@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.84
+
+- New wall › Shades: all 12 Lutron shades by floor and room (Bar, Beach, Master, Closets,
+  Molokini, Mauka and their baths, utility window) with a little window picture of how far each
+  is open, Open / Half / Close, and Open all / Close all per floor. Garage door shown as status only.
+- New wall › Climate: idle zones say "At target" or "Idle" instead of "Holding", which was easy
+  to confuse with a manual hold.
+
 ## 1.0.83
 
 - New wall › Climate: all nine zones on one screen with inside temperature, target, and − / +
