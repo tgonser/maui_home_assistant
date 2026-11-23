@@ -221,3 +221,21 @@
 .v2-shade-btns button { height: 34px; border-radius: 9px; border: 1.5px solid #C9BFAE; background: #FFF; font: inherit; font-size: 12px; font-weight: 600; color: var(--ink); cursor: pointer; }
 .v2-shade-btns button:disabled { opacity: 0.45; cursor: default; }
 .v2-garage { display: flex; align-items: baseline; gap: 14px; }
+
+/* Energy */
+.v2-energy { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; }
+.v2-energy-mid { flex: 1; min-height: 0; display: flex; gap: 12px; }
+.v2-chart-card { flex: 1.6; min-width: 0; padding: 10px 16px; display: flex; flex-direction: column; }
+.v2-chart { flex: 1; min-height: 0; width: 100%; }
+.lg-solar { background: #F6D98A; }
+.lg-house { height: 2px !important; background: var(--ink); }
+.v2-pw { flex: 1; min-width: 300px; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+.v2-sys { padding: 10px 12px; border-radius: 14px; background: #F8F4EC; display: flex; flex-direction: column; gap: 6px; }
+.v2-sys-top { display: flex; justify-content: space-between; align-items: baseline; }
+.v2-sys-name { font-size: 15px; font-weight: 600; }
+.v2-sys-pct { font-family: Outfit, Inter, sans-serif; font-size: 28px; font-weight: 600; color: var(--teal); }
+.v2-bar { height: 10px; border-radius: 999px; background: #E7DFCF; overflow: hidden; }
+.v2-bar i { display: block; height: 100%; background: var(--teal); border-radius: 999px; }
+.v2-energy-tiles { display: flex; gap: 12px; }
+.v2-etile { flex: 1; min-width: 0; padding: 12px 16px; display: flex; flex-direction: column; gap: 4px; }
+.v2-ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
