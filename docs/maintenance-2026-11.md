@@ -490,3 +490,30 @@ balancing (now automated) plus keeping the pool and water heater on midday solar
 ("System 2 at 5 PM") over the following days. OmniLogic HA integration: not a login issue — the built-in integration
 crashes on pool + spa (two bodies of water); local HACS integration (cryptk/haomnilogic-local) is the option if HA
 control is wanted later.
+
+## 8. Nov 22 evening — disk full, Wall Kiosk 1.0.76/1.0.77
+
+**Why add-on updates "never show up":** the HA Green (28 GB) had 0.6 GB free; Supervisor blocks every
+add-on store refresh (`GitRepo.pull blocked … not enough free space`). Usage: system 10.4 GB, history
+database 7.8 GB, 3 automatic backups 7.9 GB (each contains the DB; +~300 MB/day), add-on data 3.1 GB.
+
+**Cause:** official SPAN integration (~Nov 19) — 388 entities updating every ~5 s = 89% of all state
+writes (~1.2 M rows/day). Next: weather-station wind speed/direction.
+
+**Done (T2 approved):**
+- Deleted the Nov 19 and Nov 20 local backups (Nov 21 kept locally and in Nabu Casa cloud). Free → 5.2 GB.
+- Backup retention 3 → 2 copies.
+- New package `ha-config/maui_recorder.yaml`: 7-day history; SPAN recorded only for the three panel
+  totals; wind speed/direction live only. Restarted HA (~6:57 PM HST); verified exclusions work.
+- `recorder.purge_entities` (412 SPAN/wind entities) + `recorder.purge` keep 7 days with repack queued.
+  DB file shrinks only when the repack runs — check size in the next review (expect ~1–2 GB).
+
+**Wall Kiosk 1.0.76 → 1.0.77 installed** (store refresh worked once space was freed):
+Solar Today/7-Day unit field fix; Envoy night-time "stale" fix; "Partial data" from overnight export
+gaps fixed; Net Grid Power chart continuous + 5-min refresh. Verified on the wall: Solar Today
+101.8 kWh (= 62.0 + 39.2), 7-Day 706.6 kWh, no Partial data warning.
+
+**Open issue — Running Net Balance prices the cross-charge as a purchase:** it costs each system's
+imports and exports separately (System 2's 4.0 kWh boost import at the buy rate, System 1's export at
+$0.04), but both systems share one meter, so energy moved between them is never bought. Today shows
+−$0.03 when the meter actually net-exported 12.9 kWh. Fix: net the two systems per hour before pricing.
