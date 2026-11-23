@@ -631,3 +631,10 @@ lights low, shades stay; live camera (Pool/Front entry/BBQ) on the wake screen. 
 - Caught live at 07:10 HST on circuit `sensor.span_panel_outlets_kitchen_dishwasher_power` (0 → 735 W → 0 over 33 s).
 - CONFIRMED (T2, Nov 23): the kitchen has an Insta-Hot tap, which is the source. About 0.6–0.7 kWh/day.
 - On site: check under the kitchen sink. Turn the tank down or off, or put it on a daytime smart plug. If there is no tank, have the dishwasher serviced for idle heating.
+
+## 11. Wall build — phase 1 shipped (Nov 23, add-on 1.0.80)
+- New design preview: classic Settings › "New wall design" › Try it. "Classic view" in the header switches back. The choice is stored per tablet (localStorage `wall:ui`).
+- Live updates: `POST /api/ha/stream` holds one HA websocket per tablet and pushes changes; the tablet falls back to 6-second polling after 3 failures. The header shows Live / Polling / Offline.
+- Home screen is live: floor-plan map (lights, temperatures, doors, motion, music, suites in use), power strip, Right now panel, and All lights off / Open shades / Close shades / Leave (each needs a second tap to confirm).
+- Verified on HA at 1280×800: Live, real values. Room taps and quick buttons have not been exercised, to avoid switching lights in the house remotely.
+- Next screens, in order: Lights (rooms + scenes + capture), Music, Climate, Shades, Energy, Alarm, Cameras, then the guest view and the night look.
