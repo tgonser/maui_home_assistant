@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.86
+
+- New wall › Alarm: big status (Disarmed / Armed …) with what's open and the keypad text, every
+  named zone (doors, sliders, motion) with Closed / Open / Bypassed / Fault, and panel health
+  (ready, AC power, battery, panel, fire, alarm). "Arm or disarm…" opens the existing alarm
+  keypad unchanged, so the code handling and safety checks are exactly as before.
+
 ## 1.0.85
 
 - New wall › Energy: the live power strip, a "Last 24 hours" chart of solar production against
