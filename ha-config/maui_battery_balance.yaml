@@ -1,0 +1,335 @@
+# =============================================================================
+# Maui Battery Balance — move one Tesla system's spare solar into the other's batteries
+# =============================================================================
+#
+# Why
+#   The house has two independent Tesla systems (System 1, System 2) behind ONE utility
+#   meter. Each only covers its own loads, so one side can be full and exporting while the
+#   other is low. Raising the LOW side's backup reserve above its charge makes it "charge
+#   from the grid" — and because both sides share the meter, that power is really the
+#   other side's surplus solar. Tested Nov 22 2026: System 2 went from charging 1.9 kW to
+#   5.0 kW while the house as a whole kept exporting ~2.8 kW (nothing bought).
+#
+# What it does (only when input_boolean.maui_balance_enabled is on)
+#   Every 5 min between 9:30 AM and 2:30 PM HST:
+#   - START: if one side is >= 80% and has been exporting > 2 kW for 10 min, and the other
+#     side is at least 15 points lower and below 75%, raise the low side's backup reserve
+#     to (its charge + 15), max 80%.
+#   - STOP (reserve back to 20%): when the boosted side reaches its target, the whole house
+#     has been importing for 5 min (the surplus is gone), or it's 2:30 PM.
+#   At most one change per side every 10 minutes.
+#
+# Safety
+#   - Hard reset of BOTH reserves to 20% at 2:45 PM, on HA start, when the master switch
+#     is turned off, and if either system's Tesla data is unavailable for 15 min — so a
+#     raised reserve can never carry into the 5–9 PM peak.
+#   - Never acts during storm prep (active / pending / recovery) or Tesla Storm Watch.
+#   - While enabled, any reserve above 20% (including one set by hand) is treated as a
+#     boost and is returned to 20% by 2:30–2:45 PM.
+#   - Every change is written to the logbook ("Maui Battery Balance").
+#
+# Base reserve is 20% (T2's setting, Nov 2026). To change it, edit `base_reserve` in both
+# automations below. No `initial:` on the helper, so its on/off state survives restarts.
+# =============================================================================
+
+input_boolean:
+  maui_balance_enabled:
+    name: Maui Battery Balance enabled
+    icon: mdi:scale-balance
+
+template:
+  - binary_sensor:
+      - name: Maui S1 Solar Surplus
+        unique_id: maui_s1_solar_surplus
+        icon: mdi:solar-power
+        # System 1 >= 80% and exporting more than 2 kW (grid power negative = export), sustained.
+        state: >-
+          {{ states('sensor.gonser_4680_system_1_percentage_charged') | float(0) >= 80
+             and states('sensor.gonser_4680_system_1_grid_power') | float(0) < -2.0 }}
+        delay_on:
+          minutes: 10
+        delay_off:
+          minutes: 3
+      - name: Maui S2 Solar Surplus
+        unique_id: maui_s2_solar_surplus
+        icon: mdi:solar-power
+        state: >-
+          {{ states('sensor.4680_system_2_percentage_charged') | float(0) >= 80
+             and states('sensor.4680_system_2_grid_power') | float(0) < -2.0 }}
+        delay_on:
+          minutes: 10
+        delay_off:
+          minutes: 3
+      - name: Maui House Importing
+        unique_id: maui_house_importing
+        icon: mdi:transmission-tower-import
+        # Net at the shared meter = System 1 grid + System 2 grid (positive = buying).
+        state: >-
+          {{ (states('sensor.gonser_4680_system_1_grid_power') | float(0)
+              + states('sensor.4680_system_2_grid_power') | float(0)) > 0.3 }}
+        delay_on:
+          minutes: 5
+
+  # ---- Dashboard / scorecard sensors -----------------------------------------------
+  - sensor:
+      - name: Maui Net Meter Power
+        unique_id: maui_net_meter_power
+        icon: mdi:meter-electric
+        unit_of_measurement: kW
+        device_class: power
+        state_class: measurement
+        # Positive = buying from Maui Electric, negative = exporting (both Tesla systems combined).
+        state: >-
+          {{ (states('sensor.gonser_4680_system_1_grid_power') | float(0)
+              + states('sensor.4680_system_2_grid_power') | float(0)) | round(2) }}
+      - name: Maui Balance Status
+        unique_id: maui_balance_status
+        icon: mdi:scale-balance
+        state: >-
+          {% set r1 = states('number.gonser_4680_system_1_backup_reserve') | float(0) %}
+          {% set r2 = states('number.4680_system_2_backup_reserve') | float(0) %}
+          {% set hm = now().strftime('%H:%M') %}
+          {% if is_state('input_boolean.maui_storm_prep_active', 'on') or is_state('input_boolean.maui_storm_prep_pending', 'on') or is_state('sensor.gonser_4680_system_1_storm_watch_active', 'on') or is_state('sensor.4680_system_2_storm_watch_active', 'on') %}Paused (storm prep / Storm Watch)
+          {%- elif not is_state('input_boolean.maui_balance_enabled', 'on') %}Off
+          {%- elif r2 > 20 %}Boosting System 2 to {{ r2 | int }}%
+          {%- elif r1 > 20 %}Boosting System 1 to {{ r1 | int }}%
+          {%- elif '09:30' <= hm < '14:30' %}Watching (no boost needed)
+          {%- else %}Idle (works 9:30 AM to 2:30 PM){% endif %}
+
+  # Accumulated once a minute; reset at midnight. Restored across restarts.
+  - triggers:
+      - trigger: time_pattern
+        minutes: "/1"
+        id: tick
+      - trigger: time
+        at: "00:00:00"
+        id: reset
+    sensor:
+      - name: Maui Balance Moved Today
+        unique_id: maui_balance_moved_today
+        icon: mdi:battery-arrow-up
+        unit_of_measurement: kWh
+        device_class: energy
+        state_class: total_increasing
+        # Energy the boosted side pulled through the shared meter (= the other side's surplus).
+        state: >-
+          {% set r1 = states('number.gonser_4680_system_1_backup_reserve') | float(0) %}
+          {% set r2 = states('number.4680_system_2_backup_reserve') | float(0) %}
+          {% set p = [states('sensor.4680_system_2_grid_power') | float(0), 0] | max if r2 > 20 else ([states('sensor.gonser_4680_system_1_grid_power') | float(0), 0] | max if r1 > 20 else 0) %}
+          {{ 0 if trigger.id == 'reset' else ((this.state | float(0)) + p / 60) | round(3) }}
+      - name: Maui Balance Bought During Boost Today
+        unique_id: maui_balance_bought_today
+        icon: mdi:cash-minus
+        unit_of_measurement: kWh
+        device_class: energy
+        state_class: total_increasing
+        # Whole-house grid purchase while a boost is on. Should stay near 0.
+        state: >-
+          {% set boosting = states('number.gonser_4680_system_1_backup_reserve') | float(0) > 20 or states('number.4680_system_2_backup_reserve') | float(0) > 20 %}
+          {% set net = states('sensor.gonser_4680_system_1_grid_power') | float(0) + states('sensor.4680_system_2_grid_power') | float(0) %}
+          {% set p = [net, 0] | max if boosting else 0 %}
+          {{ 0 if trigger.id == 'reset' else ((this.state | float(0)) + p / 60) | round(3) }}
+
+  # Charge of each system when the 5 PM peak starts — the number that matters.
+  - triggers:
+      - trigger: time
+        at: "17:00:00"
+    sensor:
+      - name: Maui System 1 Charge at 5 PM
+        unique_id: maui_s1_soc_5pm
+        icon: mdi:battery-clock
+        unit_of_measurement: "%"
+        state: "{{ states('sensor.gonser_4680_system_1_percentage_charged') | float(0) | round(0) }}"
+      - name: Maui System 2 Charge at 5 PM
+        unique_id: maui_s2_soc_5pm
+        icon: mdi:battery-clock
+        unit_of_measurement: "%"
+        state: "{{ states('sensor.4680_system_2_percentage_charged') | float(0) | round(0) }}"
+
+automation:
+  # ---------------------------------------------------------------------------
+  - alias: Maui Battery Balance — control
+    description: >
+      Raises the low Tesla system's backup reserve while the other system is full and
+      exporting, so it charges from the other side's surplus through the shared meter.
+      See packages/maui_battery_balance.yaml.
+    mode: single
+    triggers:
+      - trigger: time_pattern
+        minutes: "/5"
+    conditions:
+      - condition: state
+        entity_id: input_boolean.maui_balance_enabled
+        state: "on"
+      - condition: time
+        after: "09:30:00"
+        before: "14:45:00"
+      - condition: template
+        value_template: >-
+          {{ not is_state('input_boolean.maui_storm_prep_active', 'on')
+             and not is_state('input_boolean.maui_storm_prep_pending', 'on')
+             and not is_state('input_boolean.maui_storm_prep_recovery_required', 'on')
+             and not is_state('sensor.gonser_4680_system_1_storm_watch_active', 'on')
+             and not is_state('sensor.4680_system_2_storm_watch_active', 'on') }}
+    variables:
+      base_reserve: 20
+      boost_points: 15
+      max_reserve: 80
+      min_gap: 15
+      cooldown_min: 10
+      soc1: "{{ states('sensor.gonser_4680_system_1_percentage_charged') | float(-1) }}"
+      soc2: "{{ states('sensor.4680_system_2_percentage_charged') | float(-1) }}"
+      res1: "{{ states('number.gonser_4680_system_1_backup_reserve') | float(-1) }}"
+      res2: "{{ states('number.4680_system_2_backup_reserve') | float(-1) }}"
+      ready1: >-
+        {{ (now() - states.number['gonser_4680_system_1_backup_reserve'].last_changed).total_seconds()
+           > cooldown_min * 60 }}
+      ready2: >-
+        {{ (now() - states.number['4680_system_2_backup_reserve'].last_changed).total_seconds()
+           > cooldown_min * 60 }}
+      past_window: "{{ now().strftime('%H:%M') >= '14:30' }}"
+      importing: "{{ is_state('binary_sensor.maui_house_importing', 'on') }}"
+      data_ok: "{{ soc1 >= 0 and soc2 >= 0 and res1 >= 0 and res2 >= 0 }}"
+    actions:
+      - condition: template
+        value_template: "{{ data_ok }}"
+      - choose:
+          # ---- A boost is active on System 2: decide whether to stop it ----------------
+          - conditions:
+              - condition: template
+                value_template: "{{ res2 > base_reserve }}"
+            sequence:
+              - if:
+                  - condition: template
+                    value_template: "{{ past_window or importing or soc2 >= res2 - 1 }}"
+                then:
+                  - action: number.set_value
+                    target:
+                      entity_id: number.4680_system_2_backup_reserve
+                    data:
+                      value: "{{ base_reserve }}"
+                  - action: logbook.log
+                    data:
+                      name: Maui Battery Balance
+                      entity_id: input_boolean.maui_balance_enabled
+                      message: >-
+                        System 2 reserve back to {{ base_reserve }}% (charge {{ soc2 | round(0) }}%,
+                        reason: {{ 'time' if past_window else ('house importing' if importing else 'target reached') }}).
+          # ---- A boost is active on System 1 ------------------------------------------
+          - conditions:
+              - condition: template
+                value_template: "{{ res1 > base_reserve }}"
+            sequence:
+              - if:
+                  - condition: template
+                    value_template: "{{ past_window or importing or soc1 >= res1 - 1 }}"
+                then:
+                  - action: number.set_value
+                    target:
+                      entity_id: number.gonser_4680_system_1_backup_reserve
+                    data:
+                      value: "{{ base_reserve }}"
+                  - action: logbook.log
+                    data:
+                      name: Maui Battery Balance
+                      entity_id: input_boolean.maui_balance_enabled
+                      message: >-
+                        System 1 reserve back to {{ base_reserve }}% (charge {{ soc1 | round(0) }}%,
+                        reason: {{ 'time' if past_window else ('house importing' if importing else 'target reached') }}).
+          # ---- No boost: start one if System 1 has surplus and System 2 is low -------
+          - conditions:
+              - condition: template
+                value_template: >-
+                  {{ not past_window and not importing and ready2
+                     and is_state('binary_sensor.maui_s1_solar_surplus', 'on')
+                     and soc2 < soc1 - min_gap and soc2 < max_reserve - 5 }}
+            sequence:
+              - variables:
+                  target: "{{ [ (soc2 + boost_points) | round(0) | int, max_reserve ] | min }}"
+              - action: number.set_value
+                target:
+                  entity_id: number.4680_system_2_backup_reserve
+                data:
+                  value: "{{ target }}"
+              - action: logbook.log
+                data:
+                  name: Maui Battery Balance
+                  entity_id: input_boolean.maui_balance_enabled
+                  message: >-
+                    System 1 full ({{ soc1 | round(0) }}%) and exporting — System 2 reserve raised
+                    to {{ target }}% (charge {{ soc2 | round(0) }}%) to absorb the surplus.
+          # ---- No boost: start one if System 2 has surplus and System 1 is low -------
+          - conditions:
+              - condition: template
+                value_template: >-
+                  {{ not past_window and not importing and ready1
+                     and is_state('binary_sensor.maui_s2_solar_surplus', 'on')
+                     and soc1 < soc2 - min_gap and soc1 < max_reserve - 5 }}
+            sequence:
+              - variables:
+                  target: "{{ [ (soc1 + boost_points) | round(0) | int, max_reserve ] | min }}"
+              - action: number.set_value
+                target:
+                  entity_id: number.gonser_4680_system_1_backup_reserve
+                data:
+                  value: "{{ target }}"
+              - action: logbook.log
+                data:
+                  name: Maui Battery Balance
+                  entity_id: input_boolean.maui_balance_enabled
+                  message: >-
+                    System 2 full ({{ soc2 | round(0) }}%) and exporting — System 1 reserve raised
+                    to {{ target }}% (charge {{ soc1 | round(0) }}%) to absorb the surplus.
+
+  # ---------------------------------------------------------------------------
+  - alias: Maui Battery Balance — safety reset
+    description: >
+      Guarantees both Tesla backup reserves are back at 20% before the evening peak, after a
+      restart, when balancing is switched off, or when Tesla data goes stale.
+    mode: queued
+    triggers:
+      - trigger: time
+        at: "14:45:00"
+      - trigger: homeassistant
+        event: start
+      - trigger: state
+        entity_id: input_boolean.maui_balance_enabled
+        to: "off"
+      - trigger: state
+        entity_id:
+          - sensor.gonser_4680_system_1_percentage_charged
+          - sensor.4680_system_2_percentage_charged
+        to: unavailable
+        for:
+          minutes: 15
+    conditions:
+      # Never undo a storm-prep reserve.
+      - condition: template
+        value_template: >-
+          {{ not is_state('input_boolean.maui_storm_prep_active', 'on')
+             and not is_state('input_boolean.maui_storm_prep_recovery_required', 'on')
+             and not is_state('sensor.gonser_4680_system_1_storm_watch_active', 'on')
+             and not is_state('sensor.4680_system_2_storm_watch_active', 'on') }}
+    variables:
+      base_reserve: 20
+    actions:
+      - repeat:
+          for_each:
+            - number.gonser_4680_system_1_backup_reserve
+            - number.4680_system_2_backup_reserve
+          sequence:
+            - if:
+                - condition: template
+                  value_template: "{{ states(repeat.item) | float(0) > base_reserve }}"
+              then:
+                - action: number.set_value
+                  continue_on_error: true
+                  target:
+                    entity_id: "{{ repeat.item }}"
+                  data:
+                    value: "{{ base_reserve }}"
+                - action: logbook.log
+                  data:
+                    name: Maui Battery Balance
+                    entity_id: input_boolean.maui_balance_enabled
+                    message: "Safety reset: {{ repeat.item }} back to {{ base_reserve }}% ({{ trigger.platform }})."

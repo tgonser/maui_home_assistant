@@ -1,0 +1,89 @@
+# Maui Auto Presence — paste-ready replacement for automation.maui_auto_presence_2
+#
+# How to apply: Settings → Automations → "Maui Auto Presence" → ⋮ → Edit in YAML,
+# replace everything with this file, Save.
+# No `id:` line on purpose — the UI editor refuses to save pasted YAML that has one
+# (see .agents/memory/ha-ui-automation-paste.md). The existing automation keeps its id.
+#
+# Changes vs. live version (Nov 2026):
+#   - Removed binary_sensor.motion_kitchen and binary_sensor.motion_upstairs.
+#     They belonged to the old Total Connect alarm integration, which no longer loads.
+#   - Added the EyezOn (envisalink_new) motion zones: zone 2 = kitchen motion,
+#     zone 5 = sitting room motion (zone list from T2, Nov 13 2026).
+#   - Phone renamed: tracker is device_tracker.temp, notify is notify.mobile_app_temp.
+#   - The motion list lives in one variable for the recent-motion check.
+#     (Trigger entity lists can't use variables, so it is repeated in triggers.)
+#
+
+alias: Maui Auto Presence
+description: >
+  Switches to Owners Home when indoor motion is detected, back to Vacation after
+  one hour of quiet. Never touches Visitors or Suspend.
+mode: single
+
+triggers:
+  - trigger: time_pattern
+    minutes: 0
+  - trigger: state
+    to: "on"
+    entity_id:
+      - binary_sensor.up_stair_motion_motion
+      - binary_sensor.usl_motion_sitting
+      - binary_sensor.usl_motion_motion
+      - binary_sensor.makena_alarm_zone_2    # EyezOn: kitchen motion
+      - binary_sensor.makena_alarm_zone_5    # EyezOn: sitting room motion
+
+conditions:
+  - condition: template
+    value_template: >-
+      {{ not is_state('input_select.maui_house_mode', 'Visitors') and
+         not is_state('input_select.maui_house_mode', 'Suspend') }}
+  - condition: state
+    entity_id: device_tracker.temp
+    state: home
+
+variables:
+  motion_sensors:
+    - binary_sensor.up_stair_motion_motion
+    - binary_sensor.usl_motion_sitting
+    - binary_sensor.usl_motion_motion
+    - binary_sensor.makena_alarm_zone_2      # EyezOn: kitchen motion
+    - binary_sensor.makena_alarm_zone_5      # EyezOn: sitting room motion
+  has_recent_motion: >-
+    {% set cutoff = now().timestamp() - 3600 %}
+    {{ expand(motion_sensors) | map(attribute='last_changed')
+       | map('as_timestamp') | select('gt', cutoff) | list | count > 0 }}
+
+actions:
+  - if:
+      - condition: template
+        value_template: "{{ has_recent_motion }}"
+    then:
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: input_select.maui_house_mode
+            state: Owners Home
+      - action: input_select.select_option
+        target:
+          entity_id: input_select.maui_house_mode
+        data:
+          option: Owners Home
+      - action: persistent_notification.create
+        data:
+          notification_id: maui_presence
+          title: Maui Presence Detected
+          message: Motion detected indoors — switching to Owners Home and adjusting AC.
+      - action: notify.mobile_app_temp
+        data:
+          title: "🏠 Maui Presence Detected"
+          message: Motion detected indoors — switching to Owners Home and adjusting AC.
+    else:
+      - condition: state
+        entity_id: input_select.maui_house_mode
+        state: Owners Home
+      - action: input_select.select_option
+        target:
+          entity_id: input_select.maui_house_mode
+        data:
+          option: Vacation

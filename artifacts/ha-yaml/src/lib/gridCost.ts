@@ -83,6 +83,8 @@ export type GridCostSummary = {
 const HST_OFFSET_MS = 10 * 60 * 60 * 1000;
 const HOUR_MS = 60 * 60 * 1000;
 const INTERVAL_TOLERANCE_MS = 60 * 1000;
+/** A gap whose bridging hourly bucket is at or below this is treated as zero energy. */
+const ZERO_GAP_KWH = 0.01;
 
 export function hstRate(hstHour: number) {
   if (hstHour >= 9 && hstHour < 17) return GRID_RATES.offPeak;
@@ -372,10 +374,24 @@ export function calculateGridCosts(
           if (startMs !== null) invalidMonthKeys.add(hstMonthKey(startMs));
           continue;
         }
+        const kwh = rawChange ?? 0;
+
+        // HA skips hourly rows while a sensor is unavailable (Tesla's daily export
+        // counter goes blank overnight until the first export), and the first row
+        // after the gap carries everything accrued during it. The gap is therefore
+        // safe to treat as covered when (a) it is an export (flat sell rate, so hour
+        // attribution can't change the credit) or (b) the bridging bucket shows
+        // essentially no energy. A real import inside a gap stays "incomplete".
+        if (
+          lastAcceptedEndMs !== null &&
+          startMs > lastAcceptedEndMs + INTERVAL_TOLERANCE_MS &&
+          (kind === "export" || kwh <= ZERO_GAP_KWH)
+        ) {
+          acceptedById.get(id)?.push({ startMs: lastAcceptedEndMs, endMs: startMs });
+        }
+
         lastAcceptedEndMs = endMs;
         acceptedById.get(id)?.push({ startMs, endMs });
-
-        const kwh = rawChange ?? 0;
         const costChange =
           kind === "import"
             ? kwh * hstRate(hstHour(startMs))

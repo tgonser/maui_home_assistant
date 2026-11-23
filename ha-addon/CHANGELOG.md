@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.0.76
+
+- Energy › Solar Today / Solar 7-Day: fixed "statistics are unavailable or have
+  unverified units". HA reports the stored unit as `statistics_unit_of_measurement`;
+  the kiosk read a field that HA does not send, so it failed for every Envoy.
+- Running Net Balance: no longer shows "Partial data" for overnight hours when Tesla's
+  daily export counter is blank (no export happened). Export gaps never change the
+  credit (flat sell rate); import gaps are still flagged unless the bridging hour shows
+  no energy.
+- Net Grid Power chart: carries each system's last reading forward (a missing update
+  was treated as 0 kW), draws continuous export/import areas so the line no longer
+  breaks when the net hovers near zero (e.g. during battery-balance boosts), and
+  refreshes every 5 minutes instead of only at page load.
+
 ## 1.0.75
 
 - Optional PIN-free Alarm controls: configure `alarm_pin_free`,

@@ -45,9 +45,12 @@ export async function loadSolarSnapshot(
   const source = Array.isArray(metadata)
     ? metadata.find((item) => item?.statistic_id === id)
     : null;
+  // HA reports the stored unit as `statistics_unit_of_measurement` (e.g. "MWh" for
+  // Envoy lifetime energy). Older responses/tests used `unit_of_measurement`.
+  const statisticsUnit = source?.statistics_unit_of_measurement ?? source?.unit_of_measurement;
   if (
     !source || source.has_sum !== true ||
-    energyToKwh(1, source.unit_of_measurement) === null ||
+    energyToKwh(1, statisticsUnit) === null ||
     (source.unit_class != null && source.unit_class !== "energy")
   ) {
     throw new Error("Main Envoy lifetime energy statistics are unavailable or have unverified units");

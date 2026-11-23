@@ -353,3 +353,42 @@ test("expires a live snapshot after the refresh SLA or Hawaii midnight", () => {
     true,
   );
 });
+import { calculateGridCosts as _calc, GRID_STAT_IDS as _IDS } from "./gridCost.ts";
+
+test("an overnight export gap (sensor blank until first export) does not mark the month incomplete", () => {
+  const H = 3600_000;
+  const now = Date.parse("2026-11-02T22:30:00Z"); // 12:30 PM HST Nov 2
+  const monthStart = Date.parse("2026-11-01T10:00:00Z"); // Nov 1 00:00 HST
+  const hours = (from: number, to: number, change = 0) =>
+    Array.from({ length: (to - from) / H }, (_, k) => ({
+      start: from + k * H, end: from + (k + 1) * H, change,
+    }));
+  const full = hours(monthStart, Date.parse("2026-11-02T22:00:00Z"));
+  const gappy = [
+    ...hours(monthStart, Date.parse("2026-11-02T10:00:00Z")),
+    // 10:00Z–18:00Z missing (00:00–08:00 HST), then the bridging bucket shows ~0
+    ...hours(Date.parse("2026-11-02T18:00:00Z"), Date.parse("2026-11-02T22:00:00Z"), 0.001),
+  ];
+  const stats = Object.fromEntries(_IDS.map((sid) => [sid, sid.includes("system_2_grid_exported") ? gappy : full]));
+  const summary = _calc(stats, now);
+  assert.equal(summary.isCurrentMonthComplete, true, summary.dataIssues.join("; "));
+});
+
+test("an import gap that hides real energy is still reported as incomplete", () => {
+  const H = 3600_000;
+  const now = Date.parse("2026-11-02T22:30:00Z");
+  const monthStart = Date.parse("2026-11-01T10:00:00Z");
+  const hours = (from: number, to: number, change = 0) =>
+    Array.from({ length: (to - from) / H }, (_, k) => ({
+      start: from + k * H, end: from + (k + 1) * H, change,
+    }));
+  const full = hours(monthStart, Date.parse("2026-11-02T22:00:00Z"));
+  const gappy = [
+    ...hours(monthStart, Date.parse("2026-11-02T10:00:00Z")),
+    ...hours(Date.parse("2026-11-02T18:00:00Z"), Date.parse("2026-11-02T19:00:00Z"), 4.2), // 4.2 kWh bridged
+    ...hours(Date.parse("2026-11-02T19:00:00Z"), Date.parse("2026-11-02T22:00:00Z")),
+  ];
+  const stats = Object.fromEntries(_IDS.map((sid) => [sid, sid.includes("system_2_grid_imported") ? gappy : full]));
+  const summary = _calc(stats, now);
+  assert.equal(summary.isCurrentMonthComplete, false);
+});

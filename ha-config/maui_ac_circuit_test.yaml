@@ -1,0 +1,270 @@
+# =============================================================================
+# Maui AC Circuit Test — find which circuit / Tesla system each AC zone's condenser is on
+# =============================================================================
+#
+# Why
+#   System 2's Tesla load runs 1–3.5 kW above everything SPAN Panel 3 can see, and the gap
+#   grows when the AC cools — so at least one condenser is fed from System 2 outside SPAN.
+#
+# What script.maui_ac_circuit_test does (about 3 hours, run on a sunny midday)
+#   1. Pauses automation.maui_solar_aware_climate (it re-applies setpoints every 15 min).
+#   2. Sets all 9 Maui zones to 86°F (idle) and waits 8 min for a quiet baseline.
+#   3. For each zone: snapshot loads → set that zone to 68°F → wait 12 min → snapshot again
+#      → record: Tesla System 1/2 load change, SPAN panel totals change, the SPAN circuit that
+#      rose the most, and the "unmetered" part (Tesla change minus SPAN change on that system)
+#      → set the zone back to 86°F and wait 6 min.
+#   4. Restores every zone's original setpoint, re-enables and re-runs Solar-Aware Climate.
+#   Skips remaining zones after 3:30 PM so nothing runs into the 5 PM peak.
+#   If the script stops early for any reason, the watchdog restores the climate automation.
+#
+# Results: sensor.maui_ac_circuit_test (attribute `results`), shown on the "AC Circuit Test"
+# dashboard tab. Battery balancing keeps running — it changes battery charging, not house load.
+# =============================================================================
+
+input_boolean:
+  maui_ac_test_running:
+    name: Maui AC circuit test running
+    icon: mdi:air-conditioner
+
+template:
+  - triggers:
+      - trigger: event
+        event_type: maui_ac_test_start
+        id: start
+      - trigger: event
+        event_type: maui_ac_test_result
+        id: result
+      - trigger: event
+        event_type: maui_ac_test_done
+        id: done
+    sensor:
+      - name: Maui AC Circuit Test
+        unique_id: maui_ac_circuit_test_results
+        icon: mdi:air-conditioner
+        state: "{{ trigger.event.data.status if trigger.id == 'done' else 'running' }}"
+        attributes:
+          results: >-
+            {% if trigger.id == 'start' %}{{ [] }}
+            {% elif trigger.id == 'result' %}{{ (this.attributes.get('results', []) if this.attributes is defined else []) + [trigger.event.data] }}
+            {% else %}{{ this.attributes.get('results', []) }}{% endif %}
+          started: >-
+            {{ now().isoformat() if trigger.id == 'start' else this.attributes.get('started', '') }}
+          finished: >-
+            {{ now().isoformat() if trigger.id == 'done' else ('' if trigger.id == 'start' else this.attributes.get('finished', '')) }}
+
+script:
+  maui_ac_circuit_test:
+    alias: Maui AC Circuit Test
+    icon: mdi:air-conditioner
+    description: >
+      Turns each Maui AC zone on by itself and records which SPAN circuit and which Tesla
+      system its condenser shows up on. ~3 h. Restores all setpoints afterwards.
+    mode: single
+    sequence:
+      - condition: template
+        value_template: "{{ '08:00' <= now().strftime('%H:%M') < '13:30' }}"
+      - variables:
+          zones:
+            - climate.atrium
+            - climate.bar
+            - climate.beach_room
+            - climate.boardroom
+            - climate.kitchen
+            - climate.master_bed_2
+            - climate.maui_bar
+            - climate.sitting
+            - climate.upper_mauka
+          idle_temp: 86
+          test_temp: 68
+          on_minutes: 12
+          off_minutes: 6
+          saved: >-
+            {% set ns = namespace(l=[]) %}
+            {% for z in ['climate.atrium','climate.bar','climate.beach_room','climate.boardroom','climate.kitchen','climate.master_bed_2','climate.maui_bar','climate.sitting','climate.upper_mauka'] %}
+            {% set ns.l = ns.l + [[z, state_attr(z, 'temperature') | int(82)]] %}
+            {% endfor %}{{ ns.l }}
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.maui_ac_test_running
+      - event: maui_ac_test_start
+      - action: automation.turn_off
+        target:
+          entity_id: automation.maui_solar_aware_climate
+        data:
+          stop_actions: false
+      - action: logbook.log
+        data:
+          name: Maui AC Circuit Test
+          entity_id: input_boolean.maui_ac_test_running
+          message: "Started. Solar-Aware Climate paused; all zones to {{ idle_temp }}°F for baseline."
+      - repeat:
+          for_each: "{{ zones }}"
+          sequence:
+            - action: climate.set_temperature
+              continue_on_error: true
+              target:
+                entity_id: "{{ repeat.item }}"
+              data:
+                hvac_mode: cool
+                temperature: "{{ idle_temp }}"
+      - delay:
+          minutes: 8
+      - repeat:
+          for_each: "{{ zones }}"
+          sequence:
+            - condition: template
+              value_template: "{{ now().strftime('%H:%M') < '15:30' }}"
+            - variables:
+                b1: "{{ states('sensor.gonser_4680_system_1_load_power') | float(0) }}"
+                b2: "{{ states('sensor.4680_system_2_load_power') | float(0) }}"
+                bp1: "{{ states('sensor.span_panel_current_power') | float(0) }}"
+                bp2: "{{ states('sensor.span_panel_2_current_power') | float(0) }}"
+                bp3: "{{ states('sensor.span_panel_3_current_power') | float(0) }}"
+                base_c: >-
+                  {% set ns = namespace(l=[]) %}
+                  {% for s in states.sensor
+                       | selectattr('entity_id', 'match', 'sensor\.span_panel')
+                       | selectattr('attributes.device_class', 'defined')
+                       | selectattr('attributes.device_class', 'eq', 'power')
+                       | rejectattr('entity_id', 'search', 'current_power|_grid_power|_site_power|battery|solar_pv|feed|pool_subpanel') %}
+                  {% set ns.l = ns.l + [[s.entity_id, s.state | float(0)]] %}
+                  {% endfor %}{{ ns.l }}
+            - action: climate.set_temperature
+              continue_on_error: true
+              target:
+                entity_id: "{{ repeat.item }}"
+              data:
+                hvac_mode: cool
+                temperature: "{{ test_temp }}"
+            - delay:
+                minutes: "{{ on_minutes }}"
+            - variables:
+                d1: "{{ (states('sensor.gonser_4680_system_1_load_power') | float(0) - b1) | round(2) }}"
+                d2: "{{ (states('sensor.4680_system_2_load_power') | float(0) - b2) | round(2) }}"
+                dp1: "{{ ((states('sensor.span_panel_current_power') | float(0) - bp1) / 1000) | round(2) }}"
+                dp2: "{{ ((states('sensor.span_panel_2_current_power') | float(0) - bp2) / 1000) | round(2) }}"
+                dp3: "{{ ((states('sensor.span_panel_3_current_power') | float(0) - bp3) / 1000) | round(2) }}"
+                top: >-
+                  {% set ns = namespace(c='', d=-99999) %}
+                  {% for p in base_c %}{% set dd = states(p[0]) | float(0) - p[1] %}
+                  {% if dd > ns.d %}{% set ns.c = p[0] %}{% set ns.d = dd %}{% endif %}{% endfor %}
+                  {{ {'c': ns.c, 'd': (ns.d / 1000) | round(2)} }}
+                action_now: "{{ state_attr(repeat.item, 'hvac_action') }}"
+            - variables:
+                u1: "{{ (d1 - dp1 - dp2) | round(2) }}"
+                u2: "{{ (d2 - dp3) | round(2) }}"
+                cname: >-
+                  {{ (state_attr(top.c, 'friendly_name') or top.c)
+                     | replace('Span Panel 3 ', 'P3: ') | replace('Span Panel 2 ', 'Garage: ')
+                     | replace('Span Panel ', 'P1: ') | replace(' Power', '') }}
+                csys: "{{ 'System 2' if top.c.startswith('sensor.span_panel_3_') else 'System 1' }}"
+            - variables:
+                verdict: >-
+                  {% if [d1, d2, top.d] | max < 0.6 %}No clear load — unit may not have started
+                  {%- elif u2 >= 0.6 and d2 >= d1 %}UNMETERED on System 2 (+{{ u2 }} kW not on SPAN)
+                  {%- elif u1 >= 0.6 and d1 > d2 %}UNMETERED on System 1 (+{{ u1 }} kW not on SPAN)
+                  {%- else %}On SPAN: {{ cname }} ({{ csys }}){% endif %}
+            - event: maui_ac_test_result
+              event_data:
+                zone: "{{ state_attr(repeat.item, 'friendly_name') | replace('Maui-', '') }}"
+                entity: "{{ repeat.item }}"
+                time: "{{ now().strftime('%H:%M') }}"
+                hvac_action: "{{ action_now }}"
+                s1_kw: "{{ d1 }}"
+                s2_kw: "{{ d2 }}"
+                span_p1_kw: "{{ dp1 }}"
+                span_garage_kw: "{{ dp2 }}"
+                span_p3_kw: "{{ dp3 }}"
+                top_circuit: "{{ cname }}"
+                top_circuit_kw: "{{ top.d }}"
+                unmetered_s1_kw: "{{ u1 }}"
+                unmetered_s2_kw: "{{ u2 }}"
+                verdict: "{{ verdict }}"
+            - action: logbook.log
+              data:
+                name: Maui AC Circuit Test
+                entity_id: input_boolean.maui_ac_test_running
+                message: "{{ state_attr(repeat.item, 'friendly_name') }}: {{ verdict }} (S1 {{ d1 }} kW, S2 {{ d2 }} kW)"
+            - action: climate.set_temperature
+              continue_on_error: true
+              target:
+                entity_id: "{{ repeat.item }}"
+              data:
+                temperature: "{{ idle_temp }}"
+            - delay:
+                minutes: "{{ off_minutes }}"
+      # ---- Restore ---------------------------------------------------------------------
+      - repeat:
+          for_each: "{{ saved }}"
+          sequence:
+            - action: climate.set_temperature
+              continue_on_error: true
+              target:
+                entity_id: "{{ repeat.item[0] }}"
+              data:
+                hvac_mode: cool
+                temperature: "{{ repeat.item[1] }}"
+      - action: automation.turn_on
+        target:
+          entity_id: automation.maui_solar_aware_climate
+      - action: automation.trigger
+        target:
+          entity_id: automation.maui_solar_aware_climate
+        data:
+          skip_condition: false
+      - event: maui_ac_test_done
+        event_data:
+          status: complete
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.maui_ac_test_running
+      - action: logbook.log
+        data:
+          name: Maui AC Circuit Test
+          entity_id: input_boolean.maui_ac_test_running
+          message: "Finished. Setpoints restored; Solar-Aware Climate back on."
+
+automation:
+  - alias: Maui AC Circuit Test — watchdog
+    description: >
+      If the AC circuit test stops early (cancelled, error, restart) or is still running at
+      4 PM, put the climate automation back in charge.
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: script.maui_ac_circuit_test
+        from: "on"
+        to: "off"
+        for:
+          seconds: 30
+      - trigger: time
+        at: "16:00:00"
+      - trigger: homeassistant
+        event: start
+    conditions:
+      - condition: state
+        entity_id: input_boolean.maui_ac_test_running
+        state: "on"
+    actions:
+      - action: script.turn_off
+        target:
+          entity_id: script.maui_ac_circuit_test
+      - action: automation.turn_on
+        target:
+          entity_id: automation.maui_solar_aware_climate
+      - action: automation.trigger
+        target:
+          entity_id: automation.maui_solar_aware_climate
+        data:
+          skip_condition: false
+      - event: maui_ac_test_done
+        event_data:
+          status: stopped early
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.maui_ac_test_running
+      - action: logbook.log
+        data:
+          name: Maui AC Circuit Test
+          entity_id: input_boolean.maui_ac_test_running
+          message: "Stopped early ({{ trigger.platform }}). Solar-Aware Climate restored and re-run."
