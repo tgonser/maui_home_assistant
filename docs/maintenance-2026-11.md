@@ -553,3 +553,29 @@ Lights redesign agreed: Rooms tab (whole house on one screen, On/Off/Mixed tiles
 **Wake-up (guest tablets, Nov 23):** time, tomorrow / every day of stay — choosing "every day" asks "When do you leave?" and repeats through that date (14-day backstop; any change out of Visitors also clears it). No per-suite stay tracking (T2: overkill).
 music fade-up on suite speaker, lights fade over 10 min, shades open, tablet chime; snooze 9 min = music paused,
 lights low, shades stay; live camera (Pool/Front entry/BBQ) on the wake screen. Runs in HA, not on the tablet.
+
+## 10. Motion lighting + door-open AC pause (agreed Nov 23)
+
+**Hardware to buy (all UniFi SuperLink, existing gateway):**
+- 2 × USL-Motion: Molokini bath, Bedroom 5 bath.
+- 4 × USL-Entry, one per door:
+  - Molokini (upstairs, ocean side) → `climate.maui_bar`
+  - Mauka (upstairs, mountain side) → `climate.upper_mauka`
+  - Beach (lower level, ocean side) → `climate.beach_room`
+  - Boardroom (lower level, mountain side) → `climate.boardroom`
+- Mounting: motion sensor high in a corner, aimed at the bathroom doorway. Entry-sensor magnet on the moving slider panel, sensor on the frame at the latch side.
+
+**Motion lighting:**
+- Master/bath: keep T2's existing night path automation unchanged. The owner view gets an on/off switch and a "path on" indicator.
+- Guest baths (Beach and Bedroom 3 now; Molokini and Bedroom 5 once sensors arrive): copy the pattern of the master path.
+  - Day: normal on.
+  - Night: dim warm path light only.
+  - Manual override wins.
+  - PIR off-delay about 10 minutes at night, longer by day, so someone sitting still is not left in the dark.
+
+**Door-open AC pause (per zone):**
+- Door open ≥ 3 min → store the zone's mode and setpoint, then turn the zone off.
+- Door closed ≥ 2 min → restore the zone.
+- `automation.maui_solar_aware_climate` must skip zones whose door is open.
+- The Wall shows "Door open — AC paused" for the room. An owner switch disables the feature.
+- The same logic covers the downstairs EyezOn sliders (zones 6, 17, 18) once their entity ids are confirmed.
