@@ -7,6 +7,7 @@ import { LightsScreen } from "./LightsScreen";
 import { MusicScreen } from "./MusicScreen";
 import { ClimateScreen } from "./ClimateScreen";
 import { ShadesScreen } from "./ShadesScreen";
+import { EnergyScreen } from "./EnergyScreen";
 import "./wall-v2.css";
 
 // The redesigned wall (sand palette, menu across the top). Screens are added
@@ -23,7 +24,7 @@ export function wantsWallV2(): boolean {
 
 const NAV = ["Home", "Rooms", "Lights", "Climate", "Shades", "Music", "Energy", "Alarm", "Cameras"] as const;
 type Nav = (typeof NAV)[number];
-const BUILT: Nav[] = ["Home", "Lights", "Music", "Climate", "Shades"];
+const BUILT: Nav[] = ["Home", "Lights", "Music", "Climate", "Shades", "Energy"];
 const MAUI_TZ = "Pacific/Honolulu";
 
 export function WallV2() {
@@ -78,6 +79,8 @@ export function WallV2() {
           <ClimateScreen states={states} now={now} />
         ) : tab === "Shades" ? (
           <ShadesScreen states={states} />
+        ) : tab === "Energy" ? (
+          <EnergyScreen states={states} />
         ) : tab === "Music" ? (
           <MusicScreen states={states} />
         ) : (
@@ -231,7 +234,7 @@ function Node({ top, big, unit, sub, color }: { top: string; big: string; unit: 
 
 const kw = (n: number) => (Math.abs(n) < 10 ? n.toFixed(1) : n.toFixed(0));
 
-function EnergyStrip({ states }: { states: Map<string, HAState> }) {
+export function EnergyStrip({ states }: { states: Map<string, HAState> }) {
   const e = energyNow(states);
   const charging = e.batteryKw < -0.05, discharging = e.batteryKw > 0.05;
   const selling = e.gridKw < -0.05, buying = e.gridKw > 0.05;

@@ -923,7 +923,7 @@ type EnergyRow = {
 /** Wall history charts re-fetch on this cadence so a long-open tablet stays current. */
 const HISTORY_REFRESH_MS = 5 * 60 * 1000;
 
-function useEntityHistory(entityId: string) {
+export function useEntityHistory(entityId: string) {
   const [points, setPoints] = useState<{ t: number; v: number }[]>([]);
   useEffect(() => {
     if (!entityId) return;
@@ -1117,7 +1117,7 @@ function NetGridChart() {
   );
 }
 
-type GridCostLoadState = {
+export type GridCostLoadState = {
   summary: GridCostSummary | null;
   loading: boolean;
   error: string | null;
@@ -1140,7 +1140,7 @@ function formatRefreshAge(successMs: number | null, asOfMs: number) {
   return `${hours} hour${hours === 1 ? "" : "s"} ago`;
 }
 
-function useGridCostStatistics(): GridCostLoadState {
+export function useGridCostStatistics(): GridCostLoadState {
   const [live, setLive] = useState(createGridStatisticsSnapshot);
   const [history, setHistory] = useState(createGridStatisticsSnapshot);
   const [historyLoading, setHistoryLoading] = useState(true);

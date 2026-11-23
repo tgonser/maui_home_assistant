@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.85
+
+- New wall › Energy: the live power strip, a "Last 24 hours" chart of solar production against
+  house use, both Powerwall systems (charge, charging/supplying, solar today) with the battery
+  balancer's status, and tiles for solar made today, sold/bought, today vs. grid, this month's
+  bill and solar over the last 7 days. Uses the same calculations as the classic Energy page.
+
 ## 1.0.84
 
 - New wall › Shades: all 12 Lutron shades by floor and room (Bar, Beach, Master, Closets,
