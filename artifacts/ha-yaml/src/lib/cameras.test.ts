@@ -25,3 +25,12 @@ test("listCameras keeps one live channel per camera", () => {
   assert.equal(c.find((x) => x.name === "BBQ")?.motionId, "binary_sensor.bbq_g6_ptz_motion");
   assert.equal(c[c.length - 1].available, false);
 });
+
+test("duplicate clean names keep their model", () => {
+  const m = new Map([
+    st("camera.entry_g6_ptz_high_resolution_channel", "recording", "Entry G6 PTZ High resolution channel"),
+    st("camera.g6_pro_entry_high_resolution_channel", "recording", "G6 Pro Entry High resolution channel"),
+  ].map((s) => [s.entity_id, s]));
+  const names = listCameras(m).map((c) => c.name).sort();
+  assert.deepEqual(names, ["Entry G6 PTZ", "G6 Pro Entry"]);
+});
