@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.78
+
+- Running Net Balance and monthly costs now price each hour at the shared utility meter:
+  both Tesla systems' imports and exports are netted per hour first. Energy one system
+  sends to the other (e.g. Battery Balance boosts) was previously costed as a purchase at
+  the buy rate while the matching export earned only the $0.04 sell rate.
+
 ## 1.0.77
 
 - Energy › Solar Today / Solar 7-Day: no longer show "lifetime energy sensor is stale"

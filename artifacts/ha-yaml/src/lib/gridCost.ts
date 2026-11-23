@@ -301,7 +301,8 @@ export function isGridStatisticsSnapshotStale(
 
 /**
  * Converts HA's hourly total-increasing statistics into one shared cost model.
- * Imports are costs; exports are credits. Both the daily running balance and
+ * Both Tesla systems share one utility meter, so each hour is priced on the net
+ * of all systems: net import is a cost at that hour's rate, net export a credit. Both the daily running balance and
  * monthly bars are derived from the exact same hourly contributions.
  */
 export function calculateGridCosts(
@@ -326,6 +327,10 @@ export function calculateGridCosts(
     Array<{ startMs: number; endMs: number }>
   >(GRID_STAT_IDS.map((id) => [id, []]));
   const invalidMonthKeys = new Set<string>();
+  const hourly = new Map<
+    number,
+    { importKwh: number; exportKwh: number; endMs: number }
+  >();
 
   let latestBucketStartMs: number | null = null;
   let latestBucketEndMs: number | null = null;
@@ -392,26 +397,15 @@ export function calculateGridCosts(
 
         lastAcceptedEndMs = endMs;
         acceptedById.get(id)?.push({ startMs, endMs });
-        const costChange =
-          kind === "import"
-            ? kwh * hstRate(hstHour(startMs))
-            : -kwh * GRID_RATES.sell;
-        const monthKey = hstMonthKey(startMs);
-        monthly.set(monthKey, (monthly.get(monthKey) ?? 0) + costChange);
-
-        if (hstDayKey(startMs) === currentDayKey) {
-          const existing = daily.get(startMs) ?? {
-            plotAt: Math.min(endMs, nowMs),
-            balanceChange: 0,
-          };
-          existing.plotAt = Math.max(
-            existing.plotAt,
-            Math.min(endMs, nowMs),
-          );
-          // A positive cost is a negative balance; an export credit is positive.
-          existing.balanceChange -= costChange;
-          daily.set(startMs, existing);
-        }
+        // Both Tesla systems sit behind ONE utility meter. Energy one system
+        // exports while the other imports in the same hour never crosses the
+        // meter, so it is neither bought nor sold. Collect both systems' hourly
+        // imports and exports here and price only the hourly net (below).
+        const hour = hourly.get(startMs) ?? { importKwh: 0, exportKwh: 0, endMs };
+        if (kind === "import") hour.importKwh += kwh;
+        else hour.exportKwh += kwh;
+        hour.endMs = Math.max(hour.endMs, endMs);
+        hourly.set(startMs, hour);
 
         if (latestBucketStartMs === null || startMs > latestBucketStartMs) {
           latestBucketStartMs = startMs;
@@ -425,6 +419,26 @@ export function calculateGridCosts(
 
   consume(GRID_IMPORT_STAT_IDS, "import");
   consume(GRID_EXPORT_STAT_IDS, "export");
+
+  // Price each hour at the shared meter: net import at that hour's rate,
+  // net export at the flat sell rate.
+  for (const [startMs, hour] of hourly) {
+    const netKwh = hour.importKwh - hour.exportKwh;
+    const costChange =
+      netKwh >= 0
+        ? netKwh * hstRate(hstHour(startMs))
+        : netKwh * GRID_RATES.sell;
+    const monthKey = hstMonthKey(startMs);
+    monthly.set(monthKey, (monthly.get(monthKey) ?? 0) + costChange);
+
+    if (hstDayKey(startMs) === currentDayKey) {
+      // A positive cost is a negative balance; an export credit is positive.
+      daily.set(startMs, {
+        plotAt: Math.min(hour.endMs, nowMs),
+        balanceChange: -costChange,
+      });
+    }
+  }
 
   const incompleteIdsForPeriod = (periodStart: number, periodEnd: number) => {
     if (periodEnd <= periodStart) return [] as string[];
