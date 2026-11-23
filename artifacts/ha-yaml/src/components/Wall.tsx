@@ -62,6 +62,7 @@ import { WallControls } from "./WallControls";
 import { RoomsView } from "./RoomsView";
 import { GroupedByRoomView } from "./GroupedByRoomView";
 import { SettingsPanelBody } from "./SuperViewSettings";
+import { setWallUi } from "./v2/WallV2";
 import { Home as HomeIcon } from "lucide-react";
 
 type CategoryKey =
@@ -2747,6 +2748,13 @@ export function Wall() {
           <AnimatePresence mode="popLayout">
             {active === "settings" ? (
               <div key="settings" className="max-w-2xl">
+                <div className="mb-4 rounded-2xl border border-[var(--cream)]/20 p-4 flex items-center justify-between gap-4">
+                  <div>
+                    <div className="font-semibold">New wall design (preview)</div>
+                    <div className="text-sm text-[var(--cream-muted)]">Sand look, menu across the top, live house map. Switch back any time with "Classic view".</div>
+                  </div>
+                  <button type="button" onClick={() => setWallUi("v2")} className="shrink-0 rounded-xl px-4 py-2 bg-[var(--cream)] text-black font-semibold">Try it</button>
+                </div>
                 <SettingsPanelBody states={states} onChanged={refresh} />
               </div>
             ) : active === "overview" ? (

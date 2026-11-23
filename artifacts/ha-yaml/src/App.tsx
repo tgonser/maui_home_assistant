@@ -7,6 +7,7 @@ import { TopBar } from "@/components/TopBar";
 import { YamlEditor } from "@/components/YamlEditor";
 import { DashboardView } from "@/components/DashboardView";
 import { Wall } from "@/components/Wall";
+import { WallV2, wantsWallV2 } from "@/components/v2/WallV2";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { ThemeProvider } from "next-themes";
 import { useEffect, useState } from "react";
@@ -63,7 +64,7 @@ function App() {
   if (ingressBase) {
     return (
       <AppProviders>
-        <Wall />
+        {wantsWallV2() ? <WallV2 /> : <Wall />}
       </AppProviders>
     );
   }
@@ -74,6 +75,7 @@ function App() {
         <Switch>
           <Route path="/" component={Home} />
           <Route path="/wall" component={Wall} />
+          <Route path="/wall2" component={WallV2} />
           <Route component={NotFound} />
         </Switch>
       </WouterRouter>

@@ -66,7 +66,7 @@ export const useHAStore = create<HAStore>()(
 // Compute the API base at call time so it picks up the <base> tag that
 // Express injects for HA ingress paths (e.g. /api/hassio_ingress/<hash>/).
 // Uses a relative URL (no leading slash) so it works from any mount point.
-function getApiBase(): string {
+export function getApiBase(): string {
   if (typeof document !== "undefined") {
     const href = document.querySelector("base")?.getAttribute("href");
     if (href) return href.replace(/\/$/, "");
