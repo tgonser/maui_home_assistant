@@ -536,7 +536,7 @@ Direction: "Mākena Day" sand palette, menu across the top. Two views:
   (speeds 2/4/6 of 6) + 1-hour sleep timer; owners: all speeds, direction, timer. Bath exhaust fans
   (Lutron switches): on/off with 30-min auto-off.
 
-**Open:** hide the master suite from guests? (currently hidden in the mockup)
+**Decided (Nov 23):** guests cannot pick the master suite (bedroom, bath, sitting room, lanais, closets); it is owners-view only, including its two fans.
 
 **Planned automation — pause AC while a slider is open** (T2: yes, Nov 23):
 EyezOn zones 6 Bar Sliding Door → climate.bar; 17 Kitchen Sliding Door → climate.kitchen;
