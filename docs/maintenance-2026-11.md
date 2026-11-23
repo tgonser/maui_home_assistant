@@ -585,3 +585,11 @@ lights low, shades stay; live camera (Pool/Front entry/BBQ) on the wake screen. 
 - `automation.maui_solar_aware_climate` must skip zones whose door is open.
 - The Wall shows "Door open — AC paused" for the room. An owner switch disables the feature.
 - The same logic covers the downstairs EyezOn sliders (zones 6, 17, 18) once their entity ids are confirmed.
+
+### Suite map (T2, Nov 23 — authoritative)
+| HA name | Room | Location | Thermostat | Night light for bath path (by friendly name; entity ids are scrambled — test in daytime) |
+|---|---|---|---|---|
+| Bed 2 | Beach | Ground floor, ocean side | `climate.beach_room` | "Bed 2 Bath Toe Kick" = `light.floor_1_exterior_bed_2_ext_sconces` |
+| Bed 3 | Boardroom | Ground floor, mountain side; warmest in the AM (south-facing garage-door glass) | `climate.boardroom` | "Bed 3 Bath Toe Kick" = `light.floor_1_bedroom_2_suite_bed_2_bath_linear_lighting` |
+| Bed 4 | Molokini | Upstairs, ocean side | `climate.maui_bar` | `light.floor_2_bedroom_4_suite_bed_4_bath_toe_kicks` |
+| Bed 5 | Mauka | Upstairs, mountain side | `climate.upper_mauka` | `light.floor_2_bedroom_5_suite_bed_5_bath_toe_kick` |
