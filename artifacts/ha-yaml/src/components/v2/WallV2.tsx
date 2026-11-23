@@ -9,6 +9,7 @@ import { ClimateScreen } from "./ClimateScreen";
 import { ShadesScreen } from "./ShadesScreen";
 import { EnergyScreen } from "./EnergyScreen";
 import { AlarmScreen } from "./AlarmScreen";
+import { CamerasScreen } from "./CamerasScreen";
 import "./wall-v2.css";
 
 // The redesigned wall (sand palette, menu across the top). Screens are added
@@ -25,7 +26,7 @@ export function wantsWallV2(): boolean {
 
 const NAV = ["Home", "Rooms", "Lights", "Climate", "Shades", "Music", "Energy", "Alarm", "Cameras"] as const;
 type Nav = (typeof NAV)[number];
-const BUILT: Nav[] = ["Home", "Lights", "Music", "Climate", "Shades", "Energy", "Alarm"];
+const BUILT: Nav[] = ["Home", "Lights", "Music", "Climate", "Shades", "Energy", "Alarm", "Cameras"];
 const MAUI_TZ = "Pacific/Honolulu";
 
 export function WallV2() {
@@ -61,6 +62,7 @@ export function WallV2() {
           <LiveDot mode={mode} error={error} />
           {Number.isFinite(outside) && <span className="v2-chip">Outside {Math.round(outside)}°</span>}
           <span className="v2-clock">{hm} <small>{ampm}</small></span>
+          <FullScreenButton />
           <button type="button" className="v2-link" onClick={() => setWallUi("classic")}>Classic view</button>
         </div>
       </header>
@@ -80,6 +82,8 @@ export function WallV2() {
           <ClimateScreen states={states} now={now} />
         ) : tab === "Shades" ? (
           <ShadesScreen states={states} />
+        ) : tab === "Cameras" ? (
+          <CamerasScreen states={states} />
         ) : tab === "Alarm" ? (
           <AlarmScreen states={states} lastMs={lastMs} />
         ) : tab === "Energy" ? (
@@ -253,4 +257,27 @@ export function EnergyStrip({ states }: { states: Map<string, HAState> }) {
       <Node top="Grid" big={kw(Math.abs(e.gridKw))} unit="kW" sub={selling ? "selling now" : buying ? "buying now" : "not in use"} color={buying ? "#7A2E14" : "#2E6B3A"} />
     </section>
   );
+}
+
+// Hides Home Assistant's sidebar and header (and the tablet's bars) where the
+// browser allows it. Inside the HA app this needs the ingress frame to allow
+// full screen; if it doesn't, the button hides itself after a failed try.
+function FullScreenButton() {
+  const [on, setOn] = useState(() => !!document.fullscreenElement);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    const f = () => setOn(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", f);
+    return () => document.removeEventListener("fullscreenchange", f);
+  }, []);
+  if (failed || !document.fullscreenEnabled) return null;
+  const toggle = async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else await document.documentElement.requestFullscreen({ navigationUI: "hide" });
+    } catch {
+      setFailed(true);
+    }
+  };
+  return <button type="button" className="v2-chip v2-chip-btn" onClick={toggle} aria-pressed={on}>{on ? "Exit full screen" : "Full screen"}</button>;
 }
