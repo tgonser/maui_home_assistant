@@ -133,6 +133,28 @@ const LIGHT_RULES: Array<[RegExp, string]> = [
   [/^floor_2_master_suite_closets_/, "mwic"],
   [/^floor_2_master_suite_sitting_room_/, "sitting"],
   [/^floor_2_master_suite_master_bed_/, "master"],
+  [/^floor_1_exterior_great_r(oo)?m_lanai_/, "ext_lanai"],
+  [/^floor_1_exterior_bbq_/, "ext_bbq"],
+  [/^floor_1_lp2_unknown_loads_2_6_2$/, "ext_master"], // master lanai downlights (Lutron name unset)
+  [/^floor_2_exterior_(master|sitting)_/, "ext_master"],
+  [/^floor_[12]_exterior_bed_[2-5]_/, "ext_suites"],
+];
+
+/** Lights screen layout: every light group, by floor, in walking order. */
+export const LIGHT_SECTIONS: Array<{ title: string; groups: Array<[string, string]> }> = [
+  { title: "Ground floor", groups: [
+    ["kitchen", "Kitchen"], ["great", "Great Room"], ["bar", "Bar"], ["entry", "Entry & hall"],
+    ["mud", "Mud & powder"], ["pantry", "Pantry"], ["utility", "AV / utility"],
+    ["beach", "Beach"], ["bath2", "Beach bath"], ["boardroom", "Boardroom"], ["bath3", "Boardroom bath"],
+  ] },
+  { title: "Upstairs", groups: [
+    ["master", "Master"], ["sitting", "Sitting"], ["mbath", "Master bath"], ["mwic", "Closets"],
+    ["stair", "Stairs & walkway"], ["molokini", "Molokini"], ["bath4", "Molokini bath"],
+    ["mauka", "Mauka"], ["bath5", "Mauka bath"],
+  ] },
+  { title: "Outside", groups: [
+    ["ext_lanai", "Great Room lanai"], ["ext_bbq", "BBQ"], ["ext_master", "Master lanais"], ["ext_suites", "Suite lanais"],
+  ] },
 ];
 
 export function lightGroup(entityId: string): string | null {

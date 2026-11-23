@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.81
+
+- New wall › Lights: every room by floor (Ground floor, Upstairs, Outside) on one screen, each
+  showing On / Off / Mixed; tap to switch, plus an "off" button per floor.
+- New wall › Lights › Scenes: run Home Assistant scenes and Leave; "+ Save as scene" captures the
+  lights (and for whole-house scenes, the shades) exactly as they are now into a saved scene;
+  wall-made scenes can be re-captured. Planned scenes (Good morning, Sunset, Good night, Dinner,
+  Master reading, Master night) show as ready to set up.
+- Outside lights now belong to groups: Great Room lanai, BBQ, Master lanais, Suite lanais.
+
 ## 1.0.80
 
 - New wall: the live link now stays open through the Home Assistant ingress proxy (1.0.79 closed
