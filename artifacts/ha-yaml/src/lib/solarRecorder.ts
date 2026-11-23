@@ -86,7 +86,18 @@ export function solarSourceIssue(states: HAState[], nowMs: number): string | nul
       !["total", "total_increasing"].includes(String(source.attributes.state_class))) {
     return "Main Envoy lifetime sensor is not a verified cumulative energy source";
   }
-  const reportedAt = Date.parse(source.last_reported ?? source.last_updated);
+  // The Envoy stops re-reporting its lifetime counter once production stops at
+  // sunset (observed Nov 2026), so after dark the lifetime sensor alone looks stale.
+  // The same Envoy's live production sensor keeps reporting every poll; when it is
+  // fresh, the integration is alive and an unchanged lifetime counter is genuine.
+  const live = states.find((state) => state.entity_id === SOLAR_SOURCE_IDS.live);
+  const liveReportedAt = live && live.state !== "unavailable" && live.state !== "unknown"
+    ? Date.parse(live.last_reported ?? live.last_updated)
+    : NaN;
+  const sourceReportedAt = Date.parse(source.last_reported ?? source.last_updated);
+  const reportedAt = Number.isFinite(liveReportedAt) && live?.last_reported
+    ? Math.max(sourceReportedAt, liveReportedAt)
+    : sourceReportedAt;
   const maxAge = source.last_reported ? 15 * 60_000 : 26 * 60 * 60_000;
   if (!Number.isFinite(reportedAt) || reportedAt > nowMs + 60_000 || nowMs - reportedAt > maxAge) {
     return "Main Envoy lifetime energy sensor is stale";

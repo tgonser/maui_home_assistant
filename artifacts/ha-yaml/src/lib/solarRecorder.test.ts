@@ -96,3 +96,18 @@ test("accepts HA's real metadata shape (statistics_unit_of_measurement, no unit_
   const snapshot = await loadSolarSnapshot(async () => reply([real]), now, () => now);
   assert.equal(snapshot.unit, "kWh");
 });
+
+test("an unchanged lifetime counter after sunset is not stale while the Envoy's live sensor keeps reporting", () => {
+  const threeHoursAgo = new Date(now - 3 * 3600_000).toISOString();
+  const lifetime = sensor({ last_updated: threeHoursAgo, last_reported: threeHoursAgo });
+  const live = {
+    entity_id: SOLAR_SOURCE_IDS.live, state: "-0.015",
+    attributes: { unit_of_measurement: "kW", device_class: "power" },
+    last_updated: new Date(now - 60_000).toISOString(), last_changed: new Date(now - 60_000).toISOString(),
+    last_reported: new Date(now - 60_000).toISOString(),
+  };
+  assert.equal(solarSourceIssue([lifetime, live] as never, now), null);
+  // ...but if the live sensor has also gone quiet or unavailable, it is still stale.
+  const deadLive = { ...live, state: "unavailable" };
+  assert.match(solarSourceIssue([lifetime, deadLive] as never, now)!, /stale/);
+});
