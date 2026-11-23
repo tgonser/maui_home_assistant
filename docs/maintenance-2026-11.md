@@ -415,3 +415,37 @@ Current: Supervisor 2026.10.5, Wall Kiosk 1.0.75, HACS 2.0.5, WireGuard, all Uni
 `docs/maui-climate-automation.md` "Battery Protection" said the automation uses the
 lower of the two batteries. Battery no longer affects targets (purely solar-driven by
 design); section updated to say so.
+
+## 7. Nov 22 — battery balancing live; AC circuit test; Garage SPAN panel appears to be on System 2 (PRELIMINARY)
+
+**Battery balance (ha-config/maui_battery_balance.yaml, installed + enabled):** first day ran two boosts of System 2's reserve
+(~51% ≈10:50 HST, cut short when the house briefly imported; 60% ≈12:40–1:40 HST). System 2 finished the solar day at ~59%
+(vs ~20% on recent days); System 1 was full from ~1 PM HST and exported ~3 h, so later/longer/higher boosts are worth trying
+once a few normal days are logged. Dashboard tab "Battery Balance".
+
+**AC circuit test (ha-config/maui_ac_circuit_test.yaml):** ran 11:22 AM–~2:20 PM HST, each of the 9 zones alone at 68°F.
+Restore confirmed (test flag off, Solar-Aware Climate back on). System 1 Tesla load tracked SPAN Panel 1 step for step
+(condenser steps 2–4 kW, peak ~9 kW); System 2 Tesla load stayed flat ~3.3 kW with no AC steps. Per-zone results card
+not yet reviewed (did not render on phone).
+
+**Key finding — Garage SPAN panel (Pool Subpanel, Subpanel Garage, water heater) appears to be fed by SYSTEM 2, not System 1:**
+
+| | before ~4 PM HST step | after |
+|---|---|---|
+| Tesla System 2 load | ~3.3 kW | 1.65 kW |
+| SPAN Garage panel | ~3.0 kW | 1.34 kW |
+| SPAN Panel 3 | ~0.5 kW | 0.50 kW |
+| Garage + Panel 3 | ~3.5 kW | 1.84 kW |
+
+Same-minute step, matching magnitude, and Garage + Panel 3 ≈ System 2 load before and after. This would explain the
+"unmetered System 2 load" (it was metered — on the panel we had assigned to System 1) and much of the imbalance:
+the pool subpanel (~29.5 kWh/day) and the water heater are on the battery bank that runs low.
+
+To confirm: SPAN app Flow screen for the Garage panel (which Tesla system's numbers it shows); HA comparison of
+sensor.span_panel_2_battery_battery_power against each Tesla system's battery power.
+
+Question for Walter: *Is the Garage SPAN panel (pool subpanel + water heater) fed from System 2's Tesla gateway?
+We had it as System 1.* If yes, options: move pool/water heater to System 1, or run them midday on solar.
+
+Earlier sections that place Pool Subpanel / water heater on System 1 (sec. 1 SPAN table, sec. 6 top circuits and
+move estimate) need correcting once confirmed.
