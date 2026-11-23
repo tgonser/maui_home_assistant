@@ -513,7 +513,9 @@ Solar Today/7-Day unit field fix; Envoy night-time "stale" fix; "Partial data" f
 gaps fixed; Net Grid Power chart continuous + 5-min refresh. Verified on the wall: Solar Today
 101.8 kWh (= 62.0 + 39.2), 7-Day 706.6 kWh, no Partial data warning.
 
-**Open issue — Running Net Balance prices the cross-charge as a purchase:** it costs each system's
+**FIXED in Wall Kiosk 1.0.78 (installed Nov 22) — Running Net Balance priced the cross-charge as a purchase:** it costs each system's
 imports and exports separately (System 2's 4.0 kWh boost import at the buy rate, System 1's export at
 $0.04), but both systems share one meter, so energy moved between them is never bought. Today shows
 −$0.03 when the meter actually net-exported 12.9 kWh. Fix: net the two systems per hour before pricing.
+
+Wall Kiosk 1.0.78 verified: today's Running Net Balance +$0.51 (= 12.93 kWh net export × $0.04), was −$0.03.
