@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.79
+
+- New wall design preview (Settings › "New wall design" › Try it; "Classic view" switches back):
+  sand look with the menu across the top and a live Home screen. Home shows both floors of the
+  house drawn from the floor plans, with lights, temperatures, open doors, motion and music on the
+  map (tap a room to switch its lights), a live power strip, and a "Right now" panel with
+  All lights off / Open shades / Close shades / Leave. Other tabs open the classic wall for now.
+- Live updates: the new design receives changes from Home Assistant as they happen instead of
+  re-reading every state every 6 seconds (falls back to 6-second polling if the live link fails).
+  SPAN circuit sensors and wind readings are left out of the live feed.
+
 ## 1.0.78
 
 - Running Net Balance and monthly costs now price each hour at the shared utility meter:

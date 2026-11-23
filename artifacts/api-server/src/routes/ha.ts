@@ -221,7 +221,7 @@ router.post("/ha/storm-prep/unlock", (req, res) => {
 // url="__supervisor__" — the browser never sees the real token.
 const SUPERVISOR_URL = "http://supervisor/core";
 
-function resolveHaCredentials(clientUrl: unknown, clientToken: unknown) {
+export function resolveHaCredentials(clientUrl: unknown, clientToken: unknown) {
   if (clientUrl === "__supervisor__") {
     const tok = process.env.SUPERVISOR_TOKEN;
     if (!tok) return { err: "SUPERVISOR_TOKEN not set — not running as HA add-on" };

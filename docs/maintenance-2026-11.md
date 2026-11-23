@@ -513,7 +513,121 @@ Solar Today/7-Day unit field fix; Envoy night-time "stale" fix; "Partial data" f
 gaps fixed; Net Grid Power chart continuous + 5-min refresh. Verified on the wall: Solar Today
 101.8 kWh (= 62.0 + 39.2), 7-Day 706.6 kWh, no Partial data warning.
 
-**Open issue — Running Net Balance prices the cross-charge as a purchase:** it costs each system's
+**FIXED in Wall Kiosk 1.0.78 (installed Nov 22) — Running Net Balance priced the cross-charge as a purchase:** it costs each system's
 imports and exports separately (System 2's 4.0 kWh boost import at the buy rate, System 1's export at
 $0.04), but both systems share one meter, so energy moved between them is never bought. Today shows
 −$0.03 when the meter actually net-exported 12.9 kWh. Fix: net the two systems per hour before pricing.
+
+Wall Kiosk 1.0.78 verified: today's Running Net Balance +$0.51 (= 12.93 kWh net export × $0.04), was −$0.03.
+
+## 9. Wall redesign + guest mode (agreed Nov 23, design canvas: "Mākena Wall — redesign directions")
+
+Direction: "Mākena Day" sand palette, menu across the top. Two views:
+- **Owners** — full wall (Home, Rooms, Lights, Climate, Shades, Music, Energy, Alarm, Cameras). Settings and
+  edit controls hidden until the clock is held 3 s + owner PIN; edit re-locks after 10 min.
+- **Guests (house mode Visitors)** — Rooms first: pick a room, control what's there (lights, shades, fans,
+  room audio, climate 72–80°F, outside temp + "open the sliders" tip when ≥3° cooler outside), plus
+  Cameras and Movement. No alarm, energy, house mode, settings or edit. Owner PIN to leave guest view.
+- **Music (owners)** — pick rooms or presets (Whole house / Downstairs / Master suite / Outside), one
+  source for the group, "All rooms" volume plus per-room volume. 13 Bluesound players.
+- **Fans** — 6 Modern Forms WiFi ceiling fans: 4 guest suites, master bedroom, master sitting room.
+  3 of 6 online in the Modern Forms app; T2 adding the rest. Then add via HA Modern Forms integration
+  (local; auto-discovery on the Green's network, else by IP; reserve IPs in UniFi). Guests: Off/Low/Med/High
+  (speeds 2/4/6 of 6) + 1-hour sleep timer; owners: all speeds, direction, timer. Bath exhaust fans
+  (Lutron switches): on/off with 30-min auto-off.
+
+**Decided (Nov 23):** guests cannot pick the master suite (bedroom, bath, sitting room, lanais, closets); it is owners-view only, including its two fans.
+
+**Planned automation — pause AC while a slider is open** (T2: yes, Nov 23):
+EyezOn zones 6 Bar Sliding Door → climate.bar; 17 Kitchen Sliding Door → climate.kitchen;
+18 Great Room Sliding Door → climate.atrium. Door open 5 min → that zone's AC off (remember setpoint);
+closed 2 min → restore. Show "AC paused — slider open" on the wall. Skip during storm prep.
+Needs the live EyezOn zone entity IDs to confirm before building.
+
+**Tablets (Nov 23):** 3 × Samsung Galaxy Tab A11+ (11", 1920×1200 → ~1280×800 CSS, same as the F-row designs).
+Fully Kiosk Browser as launcher; Samsung "Protect battery" on; kiosk handles dim/wake.
+- **Master / mobile** — owner view, opens to Home; in Visitors mode asks for the owner PIN after 10 idle minutes.
+- **Molokini Suite** — guest-only, opens to Molokini Suite (`?room=molokini`), returns there when idle.
+- **Beach Suite** — guest-only, opens to Beach Suite (`?room=beach`), returns there when idle.
+Lights redesign agreed: Rooms tab (whole house on one screen, On/Off/Mixed tiles, tap to toggle) + Scenes tab.
+**Wake-up (guest tablets, Nov 23):** time, tomorrow / every day of stay — choosing "every day" asks "When do you leave?" and repeats through that date (14-day backstop; any change out of Visitors also clears it). No per-suite stay tracking (T2: overkill).
+music fade-up on suite speaker, lights fade over 10 min, shades open, tablet chime; snooze 9 min = music paused,
+lights low, shades stay; live camera (Pool/Front entry/BBQ) on the wake screen. Runs in HA, not on the tablet.
+
+## 10. Motion lighting + door-open AC pause (agreed Nov 23)
+
+**Hardware to buy (all UniFi SuperLink, existing gateway):**
+- 4 × USL-Motion, one per guest bath (Bed 2, 3, 4, 5). Checked Nov 23: no guest bath has a motion sensor today.
+  - Existing sensors: USL Sitting, USL Bar/Pub, USL BBQ, UP-Sense stairs, UP-Sense equipment closet.
+- 4 × USL-Entry, one per door:
+  - Molokini (upstairs, ocean side) → `climate.maui_bar`
+  - Mauka (upstairs, mountain side) → `climate.upper_mauka`
+  - Beach (lower level, ocean side) → `climate.beach_room`
+  - Boardroom (lower level, mountain side) → `climate.boardroom`
+- Mounting: motion sensor high in a corner, aimed at the bathroom doorway. Entry-sensor magnet on the moving slider panel, sensor on the frame at the latch side.
+
+**Motion lighting:**
+- Existing night paths use blueprint `night_motion_lights.yaml`:
+  - Sitting: `binary_sensor.usl_motion_sitting` → `light.sitting_lights`, 00:00–07:00, 20%, 5 min.
+  - Stairs: UP-Sense → `light.stair_helper_lights`, 20%, dims to 5% after 2 min.
+  - Pub: 00:00–06:00.
+  - BBQ: 35%, 10 min.
+- Keep these unchanged. The owner view gets an on/off switch and a "path on" indicator.
+- Guest baths, once sensors arrive: use the same blueprint, targeting each bath's toe-kick light (Bed 4 and 5 have `..._toe_kick(s)`).
+  - Day: normal on.
+  - Night: dim warm path light only.
+  - Manual override wins.
+  - PIR off-delay about 10 minutes at night, longer by day, so someone sitting still is not left in the dark.
+
+**Door-open AC pause (per zone):**
+- Door open ≥ 3 min → store the zone's mode and setpoint, then turn the zone off.
+- Door closed ≥ 2 min → restore the zone.
+- `automation.maui_solar_aware_climate` must skip zones whose door is open.
+- The Wall shows "Door open — AC paused" for the room. An owner switch disables the feature.
+- The same logic covers the downstairs EyezOn sliders (zones 6, 17, 18) once their entity ids are confirmed.
+
+### Suite map (T2, Nov 23 — authoritative)
+| HA name | Room | Location | Thermostat | Night light for bath path (by friendly name; entity ids are scrambled — test in daytime) |
+|---|---|---|---|---|
+| Bed 2 | Beach | Ground floor, ocean side | `climate.beach_room` | "Bed 2 Bath Toe Kick" = `light.floor_1_exterior_bed_2_ext_sconces` |
+| Bed 3 | Boardroom | Ground floor, mountain side; warmest in the AM (south-facing garage-door glass) | `climate.boardroom` | "Bed 3 Bath Toe Kick" = `light.floor_1_bedroom_2_suite_bed_2_bath_linear_lighting` |
+| Bed 4 | Molokini | Upstairs, ocean side | `climate.maui_bar` | `light.floor_2_bedroom_4_suite_bed_4_bath_toe_kicks` |
+| Bed 5 | Mauka | Upstairs, mountain side | `climate.upper_mauka` | `light.floor_2_bedroom_5_suite_bed_5_bath_toe_kick` |
+
+### Ground-floor door → thermostat map (from T2's plan, Nov 23)
+- Kitchen and Great Room are one open space (T2, Nov 23). If EITHER the Great Room west sliders (102A, zone 18) OR the Kitchen north sliders (102B, zone 17) are open, pause BOTH `climate.atrium` and `climate.kitchen`.
+  - The Great Room supply is in the wall above the slider; the kitchen supply is over the pantry.
+- Bar sliders (103A, to outdoor kitchen), alarm zone 6 → `climate.bar`.
+- Beach (Bed 2) slider 107A → `climate.beach_room` (new USL-Entry).
+- Boardroom (Bed 3) glass garage-style door → `climate.boardroom` (new USL-Entry).
+- Bath 2 and Bath 3 outdoor-shower doors (108D, 111B): not covered, by choice.
+- Motion sensors: Bath 2 and Bath 3, high in the corner by the door from the bedroom, aimed into the bath.
+
+### Upstairs door → thermostat map (from T2's plan, Nov 23)
+- Molokini (Bed 4): west slider 206A to the Bed 4 lanai → `climate.maui_bar` (new USL-Entry).
+- Mauka (Bed 5): east slider 211A to the Bed 5 lanai → `climate.upper_mauka` (new USL-Entry).
+- Bath 4 outdoor door 207D: not covered, by choice (same as downstairs).
+- Master suite (201 sliders 201A/201D, sitting 202A): owner-managed, no sensors planned.
+- Motion sensors: Bath 4 and Bath 5, high in the corner by the door from the bedroom/WIC, aimed into the bath.
+- Note: the Great Room is double-height ("open to below" upstairs), which fits the Atrium thermostat serving it.
+
+### Final shopping list
+- 4 × USL-Entry (Beach 107A, Boardroom glass door, Molokini 206A, Mauka 211A)
+- 4 × USL-Motion (Baths 2–5)
+
+### Suite "in use today" (decided Nov 23)
+- A guest suite counts as in use if, in the last 24 h, any of these had activity: bath motion, slider, lights or music.
+- No manual toggle and no checkout date. Shown on the Home map as "G" and in the "Right now" panel.
+
+### Scenes (decided Nov 23)
+- Scenes live in Home Assistant, not the Wall app, so the tablet, phone and automations share them.
+- Starter set: Good morning, Sunset, Good night, Leave, Dinner, Entertain Evening (exists, 23 lights), Master reading, Master night.
+- Light levels are set by "capture": T2 sets a room, then taps "+ Save as scene" on the tablet.
+- BUILT Nov 23: `script.maui_leave` ("Maui — Leave"). It turns off all lights and closes all 12 Lutron shades. It never touches the garage door. Not run yet.
+- TVs get their own tab later. The existing TV scripts (Netflix, Max, Apple TV, Watch TV) are unreliable; revisit on site.
+
+### Overnight spikes on System 1 (found Nov 23)
+- About 735 W for roughly 30 s, every 12–20 min, all night.
+- Caught live at 07:10 HST on circuit `sensor.span_panel_outlets_kitchen_dishwasher_power` (0 → 735 W → 0 over 33 s).
+- CONFIRMED (T2, Nov 23): the kitchen has an Insta-Hot tap, which is the source. About 0.6–0.7 kWh/day.
+- On site: check under the kitchen sink. Turn the tank down or off, or put it on a daytime smart plug. If there is no tank, have the dishwasher serviced for idle heating.

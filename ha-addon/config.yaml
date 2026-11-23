@@ -1,6 +1,6 @@
 name: "Wall Kiosk"
 description: "Solar-aware tablet dashboard for Maui home."
-version: "1.0.78"
+version: "1.0.79"
 slug: "wall_kiosk"
 startup: application
 boot: auto
