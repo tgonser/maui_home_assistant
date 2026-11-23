@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.83
+
+- New wall › Climate: all nine zones on one screen with inside temperature, target, and − / +
+  (sent after a short pause so several taps become one change), Cool / Turn on, and what each
+  room is doing. Rooms held by a manual change show "Held until …" with "Back to schedule".
+  A top bar shows house mode, inside average, outside temperature and how many zones are cooling,
+  with an "open a slider" tip on cool evenings and mornings, and a note when a door is open.
+
 ## 1.0.82
 
 - New wall › Music: all 13 Bluesound rooms by area (Main house, Master suite, Guest suites,

@@ -180,3 +180,29 @@
 .v2-vol b { width: 28px; text-align: right; font-weight: 600; }
 .v2-vol-all span { font-weight: 600; }
 .v2-mini-on { background: var(--orange); border-color: var(--orange); color: #FFF; }
+
+/* Climate */
+.v2-climate { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; }
+.v2-climate-bar { display: flex; align-items: center; gap: 22px; padding: 12px 20px; }
+.v2-stat { display: flex; flex-direction: column; gap: 2px; white-space: nowrap; }
+.v2-stat-val { font-size: 18px; font-weight: 600; }
+.v2-tip { flex: 1; min-width: 0; padding: 8px 12px; border-radius: 12px; background: #E3EEF0; color: #0A4553; font-size: 13px; }
+.v2-tip-quiet { background: #F8F4EC; color: var(--muted); }
+.v2-zone-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); gap: 10px; }
+.v2-zone { padding: 10px 14px; display: flex; flex-direction: column; justify-content: space-between; gap: 6px; min-height: 0; }
+.v2-zone.cooling { box-shadow: inset 0 0 0 2px #B9D3D9; }
+.v2-zone.off { background: #FBF8F2; }
+.v2-zone-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.v2-zone-name { font-size: 16px; font-weight: 600; }
+.v2-zone-body { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.v2-zone-now { display: flex; flex-direction: column; }
+.v2-zone-temp { font-family: Outfit, Inter, sans-serif; font-size: 34px; font-weight: 600; line-height: 1; }
+.v2-zone-temp.warm { color: #7A2E14; }
+.v2-setpoint { display: flex; align-items: center; gap: 10px; }
+.v2-setpoint .v2-round { width: 46px; height: 46px; font-size: 22px; }
+.v2-set-val { display: flex; flex-direction: column; align-items: center; min-width: 52px; }
+.v2-set-val span { font-family: Outfit, Inter, sans-serif; font-size: 24px; font-weight: 600; color: var(--teal); }
+.v2-set-val small { font-size: 11px; color: var(--muted); }
+.v2-zone-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 34px; }
+.v2-hold { font-size: 12px; font-weight: 600; color: #7A4A14; background: #FBEBDD; padding: 4px 8px; border-radius: 999px; }
+.v2-mini-teal { background: #E3EEF0; border-color: #B9D3D9; color: #0A4553; }

@@ -5,6 +5,7 @@ import { energyNow, GUEST_SUITES, restartMinute, roomStatus, ROOM_CLIMATE, suite
 import { HouseMap } from "./HouseMap";
 import { LightsScreen } from "./LightsScreen";
 import { MusicScreen } from "./MusicScreen";
+import { ClimateScreen } from "./ClimateScreen";
 import "./wall-v2.css";
 
 // The redesigned wall (sand palette, menu across the top). Screens are added
@@ -21,7 +22,7 @@ export function wantsWallV2(): boolean {
 
 const NAV = ["Home", "Rooms", "Lights", "Climate", "Shades", "Music", "Energy", "Alarm", "Cameras"] as const;
 type Nav = (typeof NAV)[number];
-const BUILT: Nav[] = ["Home", "Lights", "Music"];
+const BUILT: Nav[] = ["Home", "Lights", "Music", "Climate"];
 const MAUI_TZ = "Pacific/Honolulu";
 
 export function WallV2() {
@@ -72,6 +73,8 @@ export function WallV2() {
           <HomeScreen states={states} now={now} />
         ) : tab === "Lights" ? (
           <LightsScreen states={states} now={now} />
+        ) : tab === "Climate" ? (
+          <ClimateScreen states={states} now={now} />
         ) : tab === "Music" ? (
           <MusicScreen states={states} />
         ) : (
