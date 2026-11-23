@@ -37,7 +37,7 @@ export function AlarmScreen({ states, lastMs }: { states: Map<string, HAState>; 
         {kp.text && <div className="v2-keypad">{kp.text}</div>}
         <div className="v2-grow" />
         <button type="button" className="v2-btn v2-primary v2-wide" onClick={() => setOpen(true)}>Arm or disarm…</button>
-        <div className="v2-small">Opens the alarm keypad. Your alarm code is entered there every time.</div>
+        <div className="v2-small">Opens the alarm keypad. Every arm or disarm asks you to confirm first.</div>
       </section>
       <div className="v2-alarm-right">
         <section className="v2-card v2-alarm-zones" aria-label="Zones">
