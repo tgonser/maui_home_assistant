@@ -614,3 +614,7 @@ lights low, shades stay; live camera (Pool/Front entry/BBQ) on the wake screen. 
 ### Final shopping list
 - 4 × USL-Entry (Beach 107A, Boardroom glass door, Molokini 206A, Mauka 211A)
 - 4 × USL-Motion (Baths 2–5)
+
+### Suite "in use today" (decided Nov 23)
+- A guest suite counts as in use if, in the last 24 h, any of these had activity: bath motion, slider, lights or music.
+- No manual toggle and no checkout date. Shown on the Home map as "G" and in the "Right now" panel.
