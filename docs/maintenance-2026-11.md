@@ -593,3 +593,12 @@ lights low, shades stay; live camera (Pool/Front entry/BBQ) on the wake screen. 
 | Bed 3 | Boardroom | Ground floor, mountain side; warmest in the AM (south-facing garage-door glass) | `climate.boardroom` | "Bed 3 Bath Toe Kick" = `light.floor_1_bedroom_2_suite_bed_2_bath_linear_lighting` |
 | Bed 4 | Molokini | Upstairs, ocean side | `climate.maui_bar` | `light.floor_2_bedroom_4_suite_bed_4_bath_toe_kicks` |
 | Bed 5 | Mauka | Upstairs, mountain side | `climate.upper_mauka` | `light.floor_2_bedroom_5_suite_bed_5_bath_toe_kick` |
+
+### Ground-floor door → thermostat map (from T2's plan, Nov 23)
+- Great Room west sliders (102A, to pool lanai), alarm zone 18 → `climate.atrium`. The Great Room supply is in the wall above the slider.
+- Kitchen north sliders (102B, toward BBQ patio), alarm zone 17 → `climate.kitchen`. The kitchen has its own supply over the pantry.
+- Bar sliders (103A, to outdoor kitchen), alarm zone 6 → `climate.bar`.
+- Beach (Bed 2) slider 107A → `climate.beach_room` (new USL-Entry).
+- Boardroom (Bed 3) glass garage-style door → `climate.boardroom` (new USL-Entry).
+- Bath 2 and Bath 3 outdoor-shower doors (108D, 111B): not covered, by choice.
+- Motion sensors: Bath 2 and Bath 3, high in the corner by the door from the bedroom, aimed into the bath.
