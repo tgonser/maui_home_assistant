@@ -22,6 +22,7 @@ import {
 import { useEntityAliases } from "@/lib/entityAliases";
 import { useRoomAliases } from "@/lib/roomAliases";
 import { useSolarPeriods } from "@/lib/useSolarPeriods";
+import { buildNetGridSeries } from "@/lib/netGrid";
 import { useRegistry, isLightingSwitch } from "@/lib/rooms";
 import { friendlyName, motionSensorLabel, displayNameWithRoom } from "@/lib/display";
 import {
@@ -52,7 +53,7 @@ import {
   Zap,
   Droplets,
 } from "lucide-react";
-import { ComposedChart, AreaChart, Area, Line, ReferenceArea, ResponsiveContainer, XAxis, YAxis, ReferenceLine, Tooltip, BarChart, Bar, Cell, LabelList } from "recharts";
+import { ComposedChart, AreaChart, Area, ReferenceArea, ResponsiveContainer, XAxis, YAxis, ReferenceLine, Tooltip, BarChart, Bar, Cell, LabelList } from "recharts";
 import "./wall-theme.css";
 import { SuperView } from "./SuperView";
 import { AlarmPanel } from "./AlarmPanel";
@@ -918,19 +919,31 @@ type EnergyRow = {
   warning?: boolean;
 };
 
+/** Wall history charts re-fetch on this cadence so a long-open tablet stays current. */
+const HISTORY_REFRESH_MS = 5 * 60 * 1000;
+
 function useEntityHistory(entityId: string) {
   const [points, setPoints] = useState<{ t: number; v: number }[]>([]);
   useEffect(() => {
     if (!entityId) return;
-    haHistory(entityId, 24).then((res) => {
-      if (!res.ok) return;
-      const series = res.data[0] ?? [];
-      setPoints(
-        series
-          .map((p) => ({ t: new Date(p.last_changed).getTime(), v: parseFloat(p.state) }))
-          .filter((p) => !isNaN(p.v)),
-      );
-    });
+    let cancelled = false;
+    const load = () =>
+      haHistory(entityId, 24).then((res) => {
+        if (cancelled || !res.ok) return;
+        const series = res.data[0] ?? [];
+        setPoints(
+          series
+            .map((p) => ({ t: new Date(p.last_changed).getTime(), v: parseFloat(p.state) }))
+            .filter((p) => !isNaN(p.v)),
+        );
+      });
+    void load();
+    // A wall tablet stays open for days: refresh instead of freezing at page load.
+    const timer = window.setInterval(() => void load(), HISTORY_REFRESH_MS);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
   }, [entityId]);
   return points;
 }
@@ -1006,33 +1019,9 @@ function NetGridChart() {
   const sys2Pts = useEntityHistory("sensor.4680_system_2_grid_power");
 
   const data = useMemo(() => {
-    if (sys1Pts.length === 0 && sys2Pts.length === 0) return [];
-    const bin = (t: number) => Math.round(t / (5 * 60000)) * (5 * 60000);
-    const map = new Map<number, { t: number; sys1: number; sys2: number }>();
-    for (const p of sys1Pts) {
-      const b = bin(p.t);
-      const e = map.get(b) ?? { t: b, sys1: 0, sys2: 0 };
-      e.sys1 = p.v;
-      map.set(b, e);
-    }
-    for (const p of sys2Pts) {
-      const b = bin(p.t);
-      const e = map.get(b) ?? { t: b, sys1: 0, sys2: 0 };
-      e.sys2 = p.v;
-      map.set(b, e);
-    }
-    return Array.from(map.values())
-      .sort((a, b) => a.t - b.t)
-      .map(({ t, sys1, sys2 }) => {
-        const net = -(sys1 + sys2);
-        return {
-          t,
-          net,
-          exp: net > 0.01 ? net : (null as number | null),
-          imp: net < -0.01 ? net : (null as number | null),
-          zero: net >= -0.01 && net <= 0.01 ? 0 : (null as number | null),
-        };
-      });
+    if (sys1Pts.length === 0 || sys2Pts.length === 0) return [];
+    const endMs = Date.now();
+    return buildNetGridSeries(sys1Pts, sys2Pts, endMs - 24 * 3600_000, endMs);
   }, [sys1Pts, sys2Pts]);
 
   if (data.length === 0) return null;
@@ -1117,9 +1106,10 @@ function NetGridChart() {
             labelFormatter={(t: unknown) => fmtTime(t as number)}
             contentStyle={{ background: "rgba(20,12,4,0.92)", border: "1px solid rgba(201,153,74,0.3)", borderRadius: 8, fontSize: 11 }}
           />
-          <Area type="monotone" dataKey="exp" stroke="#4ade80" strokeWidth={1.5} fill="url(#ngExport)" dot={false} isAnimationActive={false} baseValue={0} connectNulls={false} />
-          <Area type="monotone" dataKey="imp" stroke="#f87171" strokeWidth={1.5} fill="url(#ngImport)" dot={false} isAnimationActive={false} baseValue={0} connectNulls={false} />
-          <Line type="monotone" dataKey="zero" stroke="#c99a4a" strokeWidth={2} dot={false} isAnimationActive={false} connectNulls={false} strokeDasharray="4 3" />
+          {/* Linear (not monotone) so the curve can't overshoot across zero. Both
+              series are continuous: exp is 0 while importing and vice versa. */}
+          <Area type="linear" dataKey="exp" stroke="#4ade80" strokeWidth={1.5} fill="url(#ngExport)" dot={false} isAnimationActive={false} baseValue={0} />
+          <Area type="linear" dataKey="imp" stroke="#f87171" strokeWidth={1.5} fill="url(#ngImport)" dot={false} isAnimationActive={false} baseValue={0} />
         </ComposedChart>
       </ResponsiveContainer>
     </div>

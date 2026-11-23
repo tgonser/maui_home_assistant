@@ -87,3 +87,12 @@ test("last_reported detects stalled sources without rejecting an unchanged overn
     assert.match(solarSourceIssue([sensor({ last_updated })], now)!, /stale/);
   }
 });
+test("accepts HA's real metadata shape (statistics_unit_of_measurement, no unit_of_measurement)", async () => {
+  // Shape returned by HA 2026.11 recorder/get_statistics_metadata for the Envoy lifetime sensor.
+  const real = {
+    statistic_id: id, has_sum: true, has_mean: false, mean_type: 0, name: null, source: "recorder",
+    statistics_unit_of_measurement: "MWh", display_unit_of_measurement: "MWh", unit_class: "energy",
+  };
+  const snapshot = await loadSolarSnapshot(async () => reply([real]), now, () => now);
+  assert.equal(snapshot.unit, "kWh");
+});
