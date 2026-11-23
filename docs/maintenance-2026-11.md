@@ -416,7 +416,7 @@ Current: Supervisor 2026.10.5, Wall Kiosk 1.0.75, HACS 2.0.5, WireGuard, all Uni
 lower of the two batteries. Battery no longer affects targets (purely solar-driven by
 design); section updated to say so.
 
-## 7. Nov 22 — battery balancing live; AC circuit test; Garage SPAN panel appears to be on System 2 (PRELIMINARY)
+## 7. Nov 22 — battery balancing live; AC circuit test; Garage SPAN panel is on System 2 (CONFIRMED from data)
 
 **Battery balance (ha-config/maui_battery_balance.yaml, installed + enabled):** first day ran two boosts of System 2's reserve
 (~51% ≈10:50 HST, cut short when the house briefly imported; 60% ≈12:40–1:40 HST). System 2 finished the solar day at ~59%
@@ -425,8 +425,7 @@ once a few normal days are logged. Dashboard tab "Battery Balance".
 
 **AC circuit test (ha-config/maui_ac_circuit_test.yaml):** ran 11:22 AM–~2:20 PM HST, each of the 9 zones alone at 68°F.
 Restore confirmed (test flag off, Solar-Aware Climate back on). System 1 Tesla load tracked SPAN Panel 1 step for step
-(condenser steps 2–4 kW, peak ~9 kW); System 2 Tesla load stayed flat ~3.3 kW with no AC steps. Per-zone results card
-not yet reviewed (did not render on phone).
+(condenser steps 2–4 kW, peak ~9 kW); System 2 Tesla load stayed flat ~3.3 kW with no AC steps. Per-zone results below.
 
 **Key finding — Garage SPAN panel (Pool Subpanel, Subpanel Garage, water heater) appears to be fed by SYSTEM 2, not System 1:**
 
@@ -449,3 +448,39 @@ We had it as System 1.* If yes, options: move pool/water heater to System 1, or 
 
 Earlier sections that place Pool Subpanel / water heater on System 1 (sec. 1 SPAN table, sec. 6 top circuits and
 move estimate) need correcting once confirmed.
+
+### Nov 22 evening — confirmation and per-zone results
+
+**Garage panel → System 2, confirmed over 10 h of HA history (2-min samples):**
+- System 2 Tesla load vs SPAN Panel 3 + Garage: mean error **0.09 kW**, correlation **0.991**.
+- System 2 Tesla load vs SPAN Panel 3 alone (old assumption): mean error 1.9 kW, correlation 0.14.
+- System 1 Tesla load vs SPAN Panel 1 alone: correlation 0.95.
+- Twist: the Garage SPAN panel's *battery* readings track System 1's Powerwalls (correlation 0.98), which is
+  probably how it got labelled System 1. Its power, however, flows through System 2's gateway.
+- The Garage step is a ~3 kW block from ~9:45 AM to ~3:45 PM HST (pool equipment on a timer, to confirm).
+
+**AC circuit test, per zone** (each alone at 68°F for 12 min; changes < 0.6 kW are noise):
+
+| Zone | System 1 Δ | System 2 Δ | Circuit that rose | Result |
+|---|---|---|---|---|
+| Atrium | +6.4 kW | −0.1 | P1 "AC condenser / Living & AC condenser Master Bedroom" +6.4 | System 1 |
+| Bar | +1.0 | 0.0 | same P1 circuit +1.3 | System 1 |
+| Beach Rm | +0.3 | 0.0 | same P1 circuit +1.3 | System 1 |
+| Boardroom | +2.2 | +0.1 | same P1 circuit +2.4 | System 1 |
+| Kitchen | −1.3 | −0.2 | — | no clear load (Honeywell command errors logged; retest) |
+| MasterBed | +1.4 | −0.1 | P1 "AC Subpanel 2nd Floor bedrooms & AC condenser 2" +2.6 | System 1 |
+| Molokini | +2.2 | 0.0 | same 2nd-floor circuit +2.0 | System 1 |
+| Sitting | −0.2 | +0.1 | 2nd-floor circuit +1.0 | System 1 (weak) |
+| UpMauka | +0.6 | −0.1 | P1 "AC condenser / Living..." +0.8 | System 1 |
+
+**Conclusion:** no AC zone draws from System 2. Every condenser that ran showed up on SPAN Panel 1 (System 1),
+on two circuits: zones sharing the "Living / Master Bedroom" condenser circuit (Atrium, Bar, Beach Rm, Boardroom,
+UpMauka) and the "2nd Floor bedrooms" circuit (MasterBed, Molokini, Sitting). Walter's moves took the AC off System 2.
+System 2's load is Panel 3's base load (~0.3–0.5 kW) plus the whole Garage panel (pool subpanel, garage subpanel,
+water heater).
+
+**Revised question for Walter:** *The Garage SPAN panel (pool subpanel, garage subpanel, solar water heater) is fed
+from System 2's gateway, not System 1, even though its SPAN battery data shows System 1. Can the pool subpanel
+and/or water heater move to System 1? If not, can the pool run hours be set to 10 AM–3 PM?* (Runs ~9:45–3:45 now.)
+Note: with all AC now on System 1, moving the pool too would overload System 1 instead. Simplest lever may be
+balancing (now automated) plus keeping the pool and water heater on midday solar.
