@@ -519,3 +519,27 @@ $0.04), but both systems share one meter, so energy moved between them is never 
 −$0.03 when the meter actually net-exported 12.9 kWh. Fix: net the two systems per hour before pricing.
 
 Wall Kiosk 1.0.78 verified: today's Running Net Balance +$0.51 (= 12.93 kWh net export × $0.04), was −$0.03.
+
+## 9. Wall redesign + guest mode (agreed Nov 23, design canvas: "Mākena Wall — redesign directions")
+
+Direction: "Mākena Day" sand palette, menu across the top. Two views:
+- **Owners** — full wall (Home, Rooms, Lights, Climate, Shades, Music, Energy, Alarm, Cameras). Settings and
+  edit controls hidden until the clock is held 3 s + owner PIN; edit re-locks after 10 min.
+- **Guests (house mode Visitors)** — Rooms first: pick a room, control what's there (lights, shades, fans,
+  room audio, climate 72–80°F, outside temp + "open the sliders" tip when ≥3° cooler outside), plus
+  Cameras and Movement. No alarm, energy, house mode, settings or edit. Owner PIN to leave guest view.
+- **Music (owners)** — pick rooms or presets (Whole house / Downstairs / Master suite / Outside), one
+  source for the group, "All rooms" volume plus per-room volume. 13 Bluesound players.
+- **Fans** — 6 Modern Forms WiFi ceiling fans: 4 guest suites, master bedroom, master sitting room.
+  3 of 6 online in the Modern Forms app; T2 adding the rest. Then add via HA Modern Forms integration
+  (local; auto-discovery on the Green's network, else by IP; reserve IPs in UniFi). Guests: Off/Low/Med/High
+  (speeds 2/4/6 of 6) + 1-hour sleep timer; owners: all speeds, direction, timer. Bath exhaust fans
+  (Lutron switches): on/off with 30-min auto-off.
+
+**Open:** hide the master suite from guests? (currently hidden in the mockup)
+
+**Planned automation — pause AC while a slider is open** (T2: yes, Nov 23):
+EyezOn zones 6 Bar Sliding Door → climate.bar; 17 Kitchen Sliding Door → climate.kitchen;
+18 Great Room Sliding Door → climate.atrium. Door open 5 min → that zone's AC off (remember setpoint);
+closed 2 min → restore. Show "AC paused — slider open" on the wall. Skip during storm prep.
+Needs the live EyezOn zone entity IDs to confirm before building.
