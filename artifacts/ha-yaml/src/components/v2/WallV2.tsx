@@ -8,6 +8,7 @@ import { MusicScreen } from "./MusicScreen";
 import { ClimateScreen } from "./ClimateScreen";
 import { ShadesScreen } from "./ShadesScreen";
 import { EnergyScreen } from "./EnergyScreen";
+import { AlarmScreen } from "./AlarmScreen";
 import "./wall-v2.css";
 
 // The redesigned wall (sand palette, menu across the top). Screens are added
@@ -24,14 +25,14 @@ export function wantsWallV2(): boolean {
 
 const NAV = ["Home", "Rooms", "Lights", "Climate", "Shades", "Music", "Energy", "Alarm", "Cameras"] as const;
 type Nav = (typeof NAV)[number];
-const BUILT: Nav[] = ["Home", "Lights", "Music", "Climate", "Shades", "Energy"];
+const BUILT: Nav[] = ["Home", "Lights", "Music", "Climate", "Shades", "Energy", "Alarm"];
 const MAUI_TZ = "Pacific/Honolulu";
 
 export function WallV2() {
   const url = useHAStore((s) => s.url);
   const [tab, setTab] = useState<Nav>("Home");
   const [now, setNow] = useState(Date.now());
-  const { states, mode, error } = useLiveStates();
+  const { states, mode, error, lastMs } = useLiveStates();
 
   useEffect(() => { if (!url) void haAutoConnectIfAddon(); }, [url]);
   useEffect(() => {
@@ -79,6 +80,8 @@ export function WallV2() {
           <ClimateScreen states={states} now={now} />
         ) : tab === "Shades" ? (
           <ShadesScreen states={states} />
+        ) : tab === "Alarm" ? (
+          <AlarmScreen states={states} lastMs={lastMs} />
         ) : tab === "Energy" ? (
           <EnergyScreen states={states} />
         ) : tab === "Music" ? (

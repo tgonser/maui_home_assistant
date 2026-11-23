@@ -239,3 +239,30 @@
 .v2-energy-tiles { display: flex; gap: 12px; }
 .v2-etile { flex: 1; min-width: 0; padding: 12px 16px; display: flex; flex-direction: column; gap: 4px; }
 .v2-ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Alarm */
+.v2-alarm { flex: 1; min-height: 0; display: flex; gap: 12px; }
+.v2-alarm-hero { flex: 0 0 340px; padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; border-top: 6px solid #B9B1A3; }
+.v2-alarm-hero.t-ok { border-top-color: var(--green); }
+.v2-alarm-hero.t-warn { border-top-color: var(--orange); }
+.v2-alarm-hero.t-alert { border-top-color: #B3261E; background: #FBE9E7; }
+.v2-alarm-state { font-family: Outfit, Inter, sans-serif; font-size: 40px; font-weight: 600; line-height: 1.1; }
+.v2-keypad { font-family: ui-monospace, monospace; font-size: 13px; padding: 8px 10px; border-radius: 10px; background: #F8F4EC; white-space: pre-wrap; }
+.v2-alarm-right { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.v2-alarm-zones { flex: 1; min-height: 0; padding: 12px 16px; display: flex; flex-direction: column; }
+.v2-zone-list { flex: 1; min-height: 0; overflow: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; align-content: start; }
+.v2-azone { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: #F8F4EC; border-left: 5px solid #B9B1A3; }
+.v2-azone.t-ok { border-left-color: var(--green); }
+.v2-azone.t-warn { border-left-color: var(--orange); background: #FBF1E6; }
+.v2-azone.t-alert { border-left-color: #B3261E; background: #FBE9E7; }
+.v2-azone-no { font-size: 12px; color: var(--muted); width: 20px; }
+.v2-azone-name { flex: 1; font-weight: 600; font-size: 14px; }
+.v2-azone-state { font-size: 12px; color: var(--muted); }
+.v2-alarm-health { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; padding: 10px 14px; }
+.v2-health { display: flex; flex-direction: column; gap: 2px; padding: 6px 8px; border-radius: 10px; background: #F8F4EC; }
+.v2-health b { font-size: 14px; }
+.v2-health.t-warn b { color: #7A4A14; }
+.v2-health.t-alert b { color: #B3261E; }
+.v2-alarm-sheet { width: min(900px, 94vw); max-height: 90vh; overflow: auto; border-radius: 18px; padding: 16px 20px; position: relative; }
+.v2-alarm-sheet-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 18px; font-weight: 600; position: relative; z-index: 1; }
+.v2-alarm-sheet > * { position: relative; z-index: 1; }
