@@ -625,3 +625,9 @@ lights low, shades stay; live camera (Pool/Front entry/BBQ) on the wake screen. 
 - Light levels are set by "capture": T2 sets a room, then taps "+ Save as scene" on the tablet.
 - BUILT Nov 23: `script.maui_leave` ("Maui — Leave"). It turns off all lights and closes all 12 Lutron shades. It never touches the garage door. Not run yet.
 - TVs get their own tab later. The existing TV scripts (Netflix, Max, Apple TV, Watch TV) are unreliable; revisit on site.
+
+### Overnight spikes on System 1 (found Nov 23)
+- About 735 W for roughly 30 s, every 12–20 min, all night.
+- Caught live at 07:10 HST on circuit `sensor.span_panel_outlets_kitchen_dishwasher_power` (0 → 735 W → 0 over 33 s).
+- Likely an under-sink instant hot water tank sharing the dishwasher circuit. About 0.6–0.7 kWh/day.
+- On site: check under the kitchen sink. Turn the tank down or off, or put it on a daytime smart plug. If there is no tank, have the dishwasher serviced for idle heating.
