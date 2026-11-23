@@ -629,5 +629,5 @@ lights low, shades stay; live camera (Pool/Front entry/BBQ) on the wake screen. 
 ### Overnight spikes on System 1 (found Nov 23)
 - About 735 W for roughly 30 s, every 12–20 min, all night.
 - Caught live at 07:10 HST on circuit `sensor.span_panel_outlets_kitchen_dishwasher_power` (0 → 735 W → 0 over 33 s).
-- Likely an under-sink instant hot water tank sharing the dishwasher circuit. About 0.6–0.7 kWh/day.
+- CONFIRMED (T2, Nov 23): the kitchen has an Insta-Hot tap, which is the source. About 0.6–0.7 kWh/day.
 - On site: check under the kitchen sink. Turn the tank down or off, or put it on a daytime smart plug. If there is no tank, have the dishwasher serviced for idle heating.
