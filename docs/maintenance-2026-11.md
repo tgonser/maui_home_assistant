@@ -595,8 +595,8 @@ lights low, shades stay; live camera (Pool/Front entry/BBQ) on the wake screen. 
 | Bed 5 | Mauka | Upstairs, mountain side | `climate.upper_mauka` | `light.floor_2_bedroom_5_suite_bed_5_bath_toe_kick` |
 
 ### Ground-floor door → thermostat map (from T2's plan, Nov 23)
-- Great Room west sliders (102A, to pool lanai), alarm zone 18 → `climate.atrium`. The Great Room supply is in the wall above the slider.
-- Kitchen north sliders (102B, toward BBQ patio), alarm zone 17 → `climate.kitchen`. The kitchen has its own supply over the pantry.
+- Kitchen and Great Room are one open space (T2, Nov 23). If EITHER the Great Room west sliders (102A, zone 18) OR the Kitchen north sliders (102B, zone 17) are open, pause BOTH `climate.atrium` and `climate.kitchen`.
+  - The Great Room supply is in the wall above the slider; the kitchen supply is over the pantry.
 - Bar sliders (103A, to outdoor kitchen), alarm zone 6 → `climate.bar`.
 - Beach (Bed 2) slider 107A → `climate.beach_room` (new USL-Entry).
 - Boardroom (Bed 3) glass garage-style door → `climate.boardroom` (new USL-Entry).
