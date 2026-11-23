@@ -392,3 +392,23 @@ test("an import gap that hides real energy is still reported as incomplete", () 
   const summary = _calc(stats, now);
   assert.equal(summary.isCurrentMonthComplete, false);
 });
+
+test("energy moved between the two systems in the same hour is not priced as a purchase", () => {
+  const H = 3600_000;
+  const now = Date.parse("2026-11-22T23:30:00Z"); // 1:30 PM HST
+  const dayStart = Date.parse("2026-11-01T10:00:00Z");
+  const boostHour = Date.parse("2026-11-22T22:00:00Z"); // 12:00–1:00 PM HST
+  const series = (changeAtBoost: number) =>
+    Array.from({ length: (Date.parse("2026-11-22T23:00:00Z") - dayStart) / H }, (_, k) => {
+      const start = dayStart + k * H;
+      return { start, end: start + H, change: start === boostHour ? changeAtBoost : 0 };
+    });
+  const stats = Object.fromEntries(_IDS.map((sid) => {
+    if (sid.includes("system_1_grid_exported")) return [sid, series(5)]; // System 1 sends 5 kWh out
+    if (sid.includes("system_2_grid_imported")) return [sid, series(4)]; // System 2 pulls 4 kWh "from grid"
+    return [sid, series(0)];
+  }));
+  const summary = _calc(stats, now);
+  // The meter saw a net 1 kWh export: credit 1 × sell rate. Nothing was bought.
+  assert.ok(Math.abs(summary.todayBalance - 0.04) < 1e-9, `balance ${summary.todayBalance}`);
+});
