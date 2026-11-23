@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.77
+
+- Energy › Solar Today / Solar 7-Day: no longer show "lifetime energy sensor is stale"
+  every evening. The Envoy stops re-reporting its lifetime counter after sunset; the
+  kiosk now accepts the unchanged counter while the same Envoy's live production
+  sensor is still reporting. If both go quiet, it is still flagged.
+
 ## 1.0.76
 
 - Energy › Solar Today / Solar 7-Day: fixed "statistics are unavailable or have

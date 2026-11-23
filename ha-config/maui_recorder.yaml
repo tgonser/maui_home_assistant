@@ -1,0 +1,35 @@
+# =============================================================================
+# Maui Recorder — keep the history database small (HA Green has 28 GB total)
+# =============================================================================
+#
+# Why (Nov 22 2026): the database had grown to 7.8 GB and the disk to 0.6 GB free,
+# which silently blocked add-on store refreshes ("no updates ever show"). The
+# official SPAN integration (installed ~Nov 19) adds 388 entities, most updating
+# every ~5 s: 89% of all state writes (~1.2 M rows/day). Each daily backup copies
+# the database, so backups grew ~300 MB/day as well.
+#
+# What this keeps
+#   - Everything else as before, for 7 days (was the default 10).
+#   - SPAN: only the three panel totals (used by the Battery Balance / AC test graphs).
+#     All other SPAN sensors keep working live (dashboards, AC test, automations);
+#     only their saved history is dropped. The SPAN app keeps its own history.
+#   - Weather-station wind speed/direction: live only (they update every few seconds).
+#
+# Note: excluded entities also get no long-term statistics. Tesla, Envoy and
+# all package sensors are unaffected.
+#
+# Recorder settings need a Home Assistant restart to take effect.
+# =============================================================================
+
+recorder:
+  purge_keep_days: 7
+  include:
+    entities:
+      - sensor.span_panel_current_power
+      - sensor.span_panel_2_current_power
+      - sensor.span_panel_3_current_power
+  exclude:
+    entity_globs:
+      - sensor.span_panel*
+      - binary_sensor.span_panel*
+      - sensor.makena_4_wind_*
