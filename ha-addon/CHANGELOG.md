@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.87
+
+- New wall › Cameras: every UniFi Protect camera as a snapshot grid (refreshed every 10 s),
+  a green "Motion" badge while a camera sees movement, and tap to enlarge (refreshes every 2 s).
+- New wall: "Full screen" button in the header hides Home Assistant's menus and the tablet's
+  bars where the browser allows it.
+- New wall › Alarm: the keypad hint now says every arm/disarm asks for confirmation (the saved
+  code is used, so it isn't typed each time).
+
 ## 1.0.86
 
 - New wall › Alarm: big status (Disarmed / Armed …) with what's open and the keypad text, every
