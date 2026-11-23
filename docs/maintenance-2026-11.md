@@ -550,3 +550,9 @@ Fully Kiosk Browser as launcher; Samsung "Protect battery" on; kiosk handles dim
 - **Molokini Suite** — guest-only, opens to Molokini Suite (`?room=molokini`), returns there when idle.
 - **Beach Suite** — guest-only, opens to Beach Suite (`?room=beach`), returns there when idle.
 Lights redesign agreed: Rooms tab (whole house on one screen, On/Off/Mixed tiles, tap to toggle) + Scenes tab.
+**Guest stays (Nov 23):** occupancy is per suite (Beach, Molokini, Bedroom 3, Bedroom 5), each with its own
+"guests until" date on an owner Guests screen. Checkout morning per suite: wake-ups clear, AC to away, lights off,
+tablet resets. Visitors mode on while any suite is occupied; back to Vacation the morning after the last checkout.
+Wake-up (guest tablets): time, tomorrow / every day of stay (ends at that suite's checkout, 14-day backstop),
+music fade-up on suite speaker, lights fade over 10 min, shades open, tablet chime; snooze 9 min = music paused,
+lights low, shades stay; live camera (Pool/Front entry/BBQ) on the wake screen. Runs in HA, not on the tablet.
