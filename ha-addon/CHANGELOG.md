@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.88
+
+- New wall: swipe left or right on a screen to go to the next or previous tab (touches that start
+  on a slider, text box or open dialog are ignored, and vertical scrolling is unaffected).
+- New wall › Cameras: cameras whose short names would match (two "Entry") keep their model name.
+
 ## 1.0.87
 
 - New wall › Cameras: every UniFi Protect camera as a snapshot grid (refreshed every 10 s),

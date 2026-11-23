@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { NO_SWIPE_SELECTOR, swipeDirection } from "@/lib/swipe";
 import { haAutoConnectIfAddon, haCallService, useHAStore, type HAState } from "@/lib/ha";
 import { useLiveStates, type LiveMode } from "@/lib/liveStates";
 import { energyNow, GUEST_SUITES, restartMinute, roomStatus, ROOM_CLIMATE, suiteInUse, FLOORS } from "@/lib/houseMap";
@@ -47,6 +48,26 @@ export function WallV2() {
   const dateStr = d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: MAUI_TZ });
   const [hm, ampm] = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: MAUI_TZ }).split(" ");
 
+  // Swipe left/right anywhere on the screen body to move to the next/previous
+  // tab. Touches that start on sliders, inputs or an open dialog are ignored.
+  const touch = useRef<{ x: number; y: number; t: number } | null>(null);
+  const onTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    const target = e.target as HTMLElement | null;
+    touch.current = e.touches.length === 1 && !target?.closest(NO_SWIPE_SELECTOR) ? { x: t.clientX, y: t.clientY, t: Date.now() } : null;
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const start = touch.current;
+    touch.current = null;
+    if (!start) return;
+    const t = e.changedTouches[0];
+    const dir = swipeDirection(t.clientX - start.x, t.clientY - start.y, Date.now() - start.t);
+    if (!dir) return;
+    const i = NAV.indexOf(tab);
+    const next = NAV[(i + dir + NAV.length) % NAV.length];
+    setTab(next);
+  };
+
   if (!url) {
     return <div className="v2-root v2-center">Connecting to Home Assistant…</div>;
   }
@@ -73,7 +94,7 @@ export function WallV2() {
           </button>
         ))}
       </nav>
-      <main className="v2-main">
+      <main className="v2-main" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} key={tab}>
         {tab === "Home" ? (
           <HomeScreen states={states} now={now} />
         ) : tab === "Lights" ? (
