@@ -206,3 +206,18 @@
 .v2-zone-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 34px; }
 .v2-hold { font-size: 12px; font-weight: 600; color: #7A4A14; background: #FBEBDD; padding: 4px 8px; border-radius: 999px; }
 .v2-mini-teal { background: #E3EEF0; border-color: #B9D3D9; color: #0A4553; }
+
+/* Shades */
+.v2-shades { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; overflow: auto; }
+.v2-shade-sec { padding: 10px 14px 12px; }
+.v2-sec-actions { display: inline-flex; gap: 6px; }
+.v2-shade-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; }
+.v2-shade { border-radius: 14px; background: #F8F4EC; padding: 9px 10px; display: flex; flex-direction: column; gap: 7px; }
+.v2-shade.open { background: #E3EEF0; }
+.v2-shade-top { display: flex; flex-direction: column; gap: 1px; }
+.v2-shade-win { height: 34px; border-radius: 6px; background: linear-gradient(#BFE0EA, #E9F4F7); overflow: hidden; border: 1.5px solid #D8CFBF; }
+.v2-shade-win i { display: block; width: 100%; background: repeating-linear-gradient(#D6C9B2 0 3px, #E7DCC8 3px 6px); }
+.v2-shade-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.v2-shade-btns button { height: 34px; border-radius: 9px; border: 1.5px solid #C9BFAE; background: #FFF; font: inherit; font-size: 12px; font-weight: 600; color: var(--ink); cursor: pointer; }
+.v2-shade-btns button:disabled { opacity: 0.45; cursor: default; }
+.v2-garage { display: flex; align-items: baseline; gap: 14px; }
