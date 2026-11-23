@@ -618,3 +618,10 @@ lights low, shades stay; live camera (Pool/Front entry/BBQ) on the wake screen. 
 ### Suite "in use today" (decided Nov 23)
 - A guest suite counts as in use if, in the last 24 h, any of these had activity: bath motion, slider, lights or music.
 - No manual toggle and no checkout date. Shown on the Home map as "G" and in the "Right now" panel.
+
+### Scenes (decided Nov 23)
+- Scenes live in Home Assistant, not the Wall app, so the tablet, phone and automations share them.
+- Starter set: Good morning, Sunset, Good night, Leave, Dinner, Entertain Evening (exists, 23 lights), Master reading, Master night.
+- Light levels are set by "capture": T2 sets a room, then taps "+ Save as scene" on the tablet.
+- BUILT Nov 23: `script.maui_leave` ("Maui — Leave"). It turns off all lights and closes all 12 Lutron shades. It never touches the garage door. Not run yet.
+- TVs get their own tab later. The existing TV scripts (Netflix, Max, Apple TV, Watch TV) are unreliable; revisit on site.
