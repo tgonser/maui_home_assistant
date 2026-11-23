@@ -30,7 +30,9 @@ router.post("/ha/stream", (req, res) => {
   const wsUrl = `${wsScheme}//${base.host}${basePath}/api/websocket`;
 
   res.status(200);
-  res.setHeader("Content-Type", "application/x-ndjson; charset=utf-8");
+  // text/event-stream makes the HA ingress proxy pass chunks straight through
+  // instead of buffering the whole response.
+  res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
   res.setHeader("Cache-Control", "no-cache, no-transform");
   res.setHeader("X-Accel-Buffering", "no");
   res.flushHeaders();
@@ -50,7 +52,8 @@ router.post("/ha/stream", (req, res) => {
   };
   const hb = setInterval(() => write({ hb: 1 }), HEARTBEAT_MS);
 
-  req.on("close", () => end());
+  // Not req "close": Node fires that as soon as the POST body is read.
+  res.on("close", () => end());
   ws.addEventListener("error", () => end("upstream error"));
   ws.addEventListener("close", () => end("upstream closed"));
   ws.addEventListener("message", (ev) => {

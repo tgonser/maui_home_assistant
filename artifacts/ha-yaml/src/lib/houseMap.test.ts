@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { lightGroup, roomStatus, suiteInUse, energyNow, fitLabel, FLOORS } from "./houseMap.ts";
+import { lightGroup, roomStatus, suiteInUse, restartMinute, energyNow, fitLabel, FLOORS } from "./houseMap.ts";
 
 const st = (entity_id: string, state: string, attributes: Record<string, unknown> = {}, last_changed = "2026-11-23T10:00:00Z") =>
   ({ entity_id, state, attributes, last_changed, last_updated: last_changed });
@@ -63,4 +63,16 @@ test("every room sits inside its floor bounds", () => {
   for (const f of FLOORS) for (const r of f.rooms) {
     assert.ok(r.x0 >= f.ox && r.x1 <= f.ox + f.w && r.y0 >= f.oy && r.y1 <= f.oy + f.h, `${f.id}/${r.id}`);
   }
+});
+
+test("a restart stamp is not activity", () => {
+  const now = Date.parse("2026-11-23T10:00:00Z");
+  const boot = "2026-11-23T03:00:05Z";
+  const entries = Array.from({ length: 30 }, (_, i) => st(`sensor.x${i}`, "1", {}, boot));
+  entries.push(st("light.floor_2_bedroom_4_suite_bed_4_bath_toe_kicks", "off", {}, boot));
+  const m = new Map(entries.map((s) => [s.entity_id, s]));
+  assert.notEqual(restartMinute(m), null);
+  assert.equal(suiteInUse(m, { id: "molokini", bath: "bath4" }, now), false);
+  m.set("light.floor_2_bedroom_4_suite_bed_4_bath_vanity_sconces", st("light.floor_2_bedroom_4_suite_bed_4_bath_vanity_sconces", "off", {}, "2026-11-23T06:10:00Z"));
+  assert.equal(suiteInUse(m, { id: "molokini", bath: "bath4" }, now), true);
 });

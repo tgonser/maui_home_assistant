@@ -214,16 +214,35 @@ export function roomStatus(states: Map<string, HAState>, nowMs: number): Map<str
   return out;
 }
 
+/** Home Assistant stamps every entity with the same last_changed when it
+ *  restarts. Find that minute (the one shared by a large share of entities)
+ *  so a restart is not mistaken for activity. */
+export function restartMinute(states: Map<string, HAState>): number | null {
+  const counts = new Map<number, number>();
+  for (const st of states.values()) {
+    const t = Date.parse(st.last_changed);
+    if (!Number.isFinite(t)) continue;
+    const m = Math.floor(t / 60_000);
+    counts.set(m, (counts.get(m) ?? 0) + 1);
+  }
+  let best: number | null = null, bestN = 0;
+  for (const [m, n] of counts) if (n > bestN) { best = m; bestN = n; }
+  return bestN >= Math.max(20, states.size * 0.2) ? best : null;
+}
+
 /** A guest suite is "in use today" if any of its lights, its bath lights or
- *  its music changed in the last 24 hours. (Bath motion joins this list once
- *  those sensors are installed.) */
-export function suiteInUse(states: Map<string, HAState>, suite: { id: string; bath: string }, nowMs: number): boolean {
+ *  its music changed in the last 24 hours, ignoring the restart stamp. (Bath
+ *  motion joins this list once those sensors are installed.) */
+export function suiteInUse(states: Map<string, HAState>, suite: { id: string; bath: string }, nowMs: number, restart: number | null = restartMinute(states)): boolean {
   for (const st of states.values()) {
     const g = lightGroup(st.entity_id);
     const mine = g === suite.id || g === suite.bath || st.entity_id === ROOM_MEDIA[suite.id];
     if (!mine) continue;
     const t = Date.parse(st.last_changed);
-    if (Number.isFinite(t) && nowMs - t < DAY_MS && st.state !== "unavailable") return true;
+    if (!Number.isFinite(t) || st.state === "unavailable") continue;
+    const m = Math.floor(t / 60_000);
+    if (restart != null && Math.abs(m - restart) <= 1) continue;
+    if (nowMs - t < DAY_MS) return true;
   }
   return false;
 }
