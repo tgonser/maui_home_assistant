@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { haAutoConnectIfAddon, haCallService, useHAStore, type HAState } from "@/lib/ha";
 import { useLiveStates, type LiveMode } from "@/lib/liveStates";
-import { energyNow, GUEST_SUITES, roomStatus, ROOM_CLIMATE, suiteInUse, FLOORS } from "@/lib/houseMap";
+import { energyNow, GUEST_SUITES, restartMinute, roomStatus, ROOM_CLIMATE, suiteInUse, FLOORS } from "@/lib/houseMap";
 import { HouseMap } from "./HouseMap";
 import "./wall-v2.css";
 
@@ -93,7 +93,7 @@ function NotYet({ name }: { name: string; built: Nav[] }) {
 
 function HomeScreen({ states, now }: { states: Map<string, HAState>; now: number }) {
   const status = useMemo(() => roomStatus(states, now), [states, now]);
-  const inUse = useMemo(() => new Set(GUEST_SUITES.filter((s) => suiteInUse(states, s, now)).map((s) => s.id)), [states, now]);
+  const inUse = useMemo(() => { const boot = restartMinute(states); return new Set(GUEST_SUITES.filter((s) => suiteInUse(states, s, now, boot)).map((s) => s.id)); }, [states, now]);
   const [busy, setBusy] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<string | null>(null);
 

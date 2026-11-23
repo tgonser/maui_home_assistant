@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.80
+
+- New wall: the live link now stays open through the Home Assistant ingress proxy (1.0.79 closed
+  it straight away and fell back to polling).
+- New wall: "Suites in use today" ignores the timestamp every entity gets when Home Assistant
+  restarts, so a restart no longer marks every suite as in use.
+
 ## 1.0.79
 
 - New wall design preview (Settings › "New wall design" › Try it; "Classic view" switches back):
