@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.82
+
+- New wall › Music: all 13 Bluesound rooms by area (Main house, Master suite, Guest suites,
+  Outside) with what each is playing, its volume and a colour dot for grouped rooms. Tap rooms to
+  pick them (a grouped room picks its whole group), then control them together: "Play together
+  in N rooms" groups them, plus play/pause/next, source, a volume for all picked rooms and one per
+  room, mute, Remove from group, and Stop. Spotify started from a phone shows as "controlled
+  from a phone" and can be spread to other rooms.
+- New wall › Lights: shorter tiles so the whole house fits without scrolling.
+
 ## 1.0.81
 
 - New wall › Lights: every room by floor (Ground floor, Upstairs, Outside) on one screen, each
