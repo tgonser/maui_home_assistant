@@ -676,7 +676,7 @@ Dec–Mar bills are the real test.
 |---|---|
 | Main filter | 8:30–11:59 AM 2016 rpm · 11:59 AM–2 PM 3008 rpm · 2–4 PM 1504 rpm |
 | Edge (infinity booster) | 11 AM–2 PM 2173 rpm |
-| Spa | 12–1 PM 2000 rpm |
+| Spa | 11 AM–2:30 PM 1600 rpm |
 | All | off 4 PM–8:30 AM |
 
 Pool 51,950 gal incl. surge trough; HydraPure UV max 120 GPM (design flow 144 — bypass unverified), so the
