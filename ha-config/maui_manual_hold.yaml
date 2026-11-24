@@ -49,6 +49,15 @@ conditions:
   # Not caused by an automation (automation service calls have a parent id).
   - condition: template
     value_template: '{{ trigger.to_state.context.parent_id is none }}'
+  # Ignore Honeywell cloud echo (added Nov 23): right after the solar
+  # automation or a house-mode change writes setpoints, TCC can briefly report
+  # the OLD value, which looked like a person and started false holds.
+  - condition: template
+    value_template: >-
+      {% set sa = state_attr('automation.maui_solar_aware_climate', 'last_triggered') %}
+      {% set hm = states.input_select.maui_house_mode.last_changed %}
+      {{ (sa is none or (now() - sa).total_seconds() > 240)
+         and (now() - hm).total_seconds() > 240 }}
   # Holds start in Owners Home, Visitors, and Vacation. Suspend = system off.
   - condition: template
     value_template: >-

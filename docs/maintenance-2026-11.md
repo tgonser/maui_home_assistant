@@ -650,3 +650,7 @@ lights low, shades stay; live camera (Pool/Front entry/BBQ) on the wake screen. 
 - System 2's reserve was raised to 73% at 1:55 PM. Tesla then reported a stale 20% (1:56–2:57 PM), so the 14:45 safety reset saw "already 20%" and did nothing. The real reserve stayed at 73% into late afternoon: System 2 bought 0.46 kW from the grid while System 1 exported 1.9 kW.
 - Fixed by hand at 4:29 PM: S2 reserve set to 20% (logged). S2 then supplied its own load and grid import went to 0.
 - Package fix (installed, config valid): the safety reset now also runs at 15:30 and 16:40, and on scheduled runs always sends 20% regardless of the reported value.
+
+## 14. False manual holds fixed (Nov 23)
+- Cause: at 3:34 PM, switching Suspend → Vacation made the solar automation set 84°. About 15 s later, Honeywell TCC briefly reported the old 78° with no automation context, so the hold automation started 2-hour holds on Beach and Boardroom.
+- Fix (live in HA, automation id 1784393891358, mirrored in `ha-config/maui_manual_hold.yaml`): ignore changes within 4 minutes after the solar automation runs or the house mode changes.
