@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.102
+
+- Music: "Your Spotify playlists" (from the Spotify integration) appear as one-tap buttons for
+  the picked rooms. The wall starts the playlist on a speaker Spotify can see (preferring one of
+  the picked rooms), then groups the other picked rooms with it. If Spotify can't see any picked
+  room it says which room it will start in and asks for a second tap. The list is remembered on
+  the tablet for times Spotify is idle.
+
 ## 1.0.101
 
 - Music: when no Spotify is connected, the controls explain why it's missing (Spotify only

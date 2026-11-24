@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { haCallService, type HAState } from "@/lib/ha";
+import { haCallService, haWsBatch, type HAState } from "@/lib/ha";
+import { parsePlaylists, planSpotify, PLAYLIST_CACHE_KEY, spotifyEntity, type Playlist } from "@/lib/spotify";
 import { describeNowPlaying, effectivePlayer, groupFor, musicGroups, MUSIC_SECTIONS, pickLeader, PLAYER_NAMES } from "@/lib/music";
 
 // Music: pick rooms on the left, control them on the right. Tapping a room
@@ -158,6 +159,7 @@ function Control({ states, picked, setPicked }: { states: Map<string, HAState>; 
         </div>
       )}
 
+      <SpotifyPlaylists states={states} picked={picked} groups={groups} />
       {!sources.includes("Spotify") && (
         <div className="v2-tip v2-tip-quiet">
           No Spotify right now: Spotify only shows up while a phone is connected to a speaker. Start it from a phone (tap the speaker icon in Spotify and pick a room) — then you can spread it to other rooms here. Favourites saved as presets in the BluOS app will appear here as one-tap buttons.
@@ -190,5 +192,57 @@ function Control({ states, picked, setPicked }: { states: Map<string, HAState>; 
       <div className="v2-grow" />
       <button type="button" className="v2-btn" disabled={busy} onClick={() => act(async () => { for (const id of picked) await call("media_stop", { entity_id: id }); })}>Stop music in picked rooms</button>
     </section>
+  );
+}
+
+// Your Spotify playlists as one-tap buttons for the picked rooms. Spotify
+// starts the playlist on a speaker it can see, then Bluesound grouping
+// carries it to the other picked rooms.
+function SpotifyPlaylists({ states, picked, groups }: { states: Map<string, HAState>; picked: string[]; groups: ReturnType<typeof musicGroups> }) {
+  const sp = spotifyEntity(states);
+  const [lists, setLists] = useState<Playlist[]>(() => { try { return JSON.parse(localStorage.getItem(PLAYLIST_CACHE_KEY) ?? "[]") as Playlist[]; } catch { return []; } });
+  const [msg, setMsg] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState<string | null>(null);
+  const spId = sp?.entity_id;
+  useEffect(() => {
+    if (!spId) return;
+    void haWsBatch([{ type: "media_player/browse_media", entity_id: spId, media_content_type: "current_user_playlists", media_content_id: "current_user_playlists" }]).then((r) => {
+      const got = r.ok && r.results[0]?.success ? parsePlaylists(r.results[0].result) : [];
+      if (got.length) { setLists(got); try { localStorage.setItem(PLAYLIST_CACHE_KEY, JSON.stringify(got)); } catch { /* ignore */ } }
+    });
+  }, [spId]);
+  if (!sp || lists.length === 0) return null;
+
+  const play = async (pl: Playlist) => {
+    const plan = planSpotify(states, (sp.attributes.source_list as string[] | undefined) ?? [], picked);
+    if (!plan) { setMsg("Spotify can't see any of the speakers right now. Play anything on one speaker from the Spotify app once to wake it, then try again."); return; }
+    if (plan.extraRoom && confirm !== pl.uri) {
+      setConfirm(pl.uri);
+      setMsg(`Spotify can't see the picked rooms right now, so this will start in ${PLAYER_NAMES.get(plan.leader) ?? plan.device} and spread from there. Tap the playlist again to go ahead.`);
+      return;
+    }
+    setConfirm(null); setBusy(pl.uri); setMsg(null);
+    await haCallService("media_player", "select_source", { entity_id: sp.entity_id, source: plan.device });
+    await new Promise((r) => window.setTimeout(r, 2500));
+    const r = await haCallService("media_player", "play_media", { entity_id: sp.entity_id, media_content_id: pl.uri, media_content_type: "playlist" });
+    if (r.ok && plan.joiners.length) {
+      for (const id of plan.joiners) if ((groupFor(groups, id)?.members.length ?? 1) > 1) await call("unjoin", { entity_id: id });
+      await call("join", { entity_id: plan.leader, group_members: plan.joiners });
+    }
+    setBusy(null);
+    setMsg(r.ok ? `Playing "${pl.title}"${plan.joiners.length ? ` in ${1 + plan.joiners.length} rooms` : ""}.` : `Spotify didn't start: ${r.error}`);
+  };
+
+  return (
+    <div className="v2-playlists">
+      <div className="v2-cap">Your Spotify playlists</div>
+      <div className="v2-sources">
+        {lists.map((pl) => (
+          <button key={pl.uri} type="button" className={confirm === pl.uri ? "on" : ""} disabled={busy != null} onClick={() => void play(pl)}>{busy === pl.uri ? "Starting…" : pl.title}</button>
+        ))}
+      </div>
+      {msg && <div className="v2-small">{msg}</div>}
+    </div>
   );
 }
