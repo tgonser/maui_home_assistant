@@ -3,8 +3,8 @@
 # =============================================================================
 # The guest tablet in a suite sets these helpers; at the wake time this
 # package fades up THAT suite's bedroom lights, opens its bedroom shades and
-# (where the suite has a speaker) says good morning every 2 minutes, up to 3
-# times. Snooze dims the lights, stops the voice and rings again in 9 min.
+# (where the suite has a speaker) plays a Spotify playlist quiet → louder, or
+# says good morning every 2 minutes, up to 3 times. Snooze dims the lights, stops the voice and rings again in 9 min.
 # "I'm up" stops everything. Nothing outside the suite is touched.
 # Repeat: "Once" turns itself off after ringing; "Every day until I leave"
 # rings each day through the leave date, then turns itself off.
@@ -73,6 +73,22 @@ input_boolean:
   wake_mauka_ringing:
     name: "Mauka wake-up ringing now"
     icon: mdi:alarm
+  wake_beach_music:
+    name: "Beach wake-up music"
+    icon: mdi:music
+  wake_molokini_music:
+    name: "Molokini wake-up music"
+    icon: mdi:music
+
+input_text:
+  wake_beach_playlist:
+    name: "Beach wake-up playlist"
+    icon: mdi:playlist-music
+    max: 255
+  wake_molokini_playlist:
+    name: "Molokini wake-up playlist"
+    icon: mdi:playlist-music
+    max: 255
 
 input_datetime:
   wake_beach_time:
@@ -203,10 +219,83 @@ automation maui_wake:
           - action: input_boolean.turn_off
             target:
               entity_id: input_boolean.wake_beach_enabled
+      # Music (a Spotify playlist on the bedroom Bluesound, quiet → louder over
+      # ~5 min) when Spotify can see the speaker and isn't already playing
+      # somewhere else; otherwise the good-morning voice.
+      - variables:
+          music_ok: >-
+            {{ is_state('input_boolean.wake_beach_music', 'on')
+               and states('input_text.wake_beach_playlist') is match('spotify:')
+               and 'Beach Guest Bed' in (state_attr('media_player.spotify_gonzomatic', 'source_list') or [])
+               and not is_state('media_player.spotify_gonzomatic', 'playing') }}
       - if:
-          - condition: state
-            entity_id: input_boolean.wake_beach_voice
-            state: "on"
+          - condition: template
+            value_template: "{{ music_ok }}"
+        then:
+          # Good morning once (voice first — speaking over Spotify would cut it off), then music.
+          - if:
+              - condition: state
+                entity_id: input_boolean.wake_beach_voice
+                state: "on"
+            then:
+              - action: media_player.volume_set
+                target:
+                  entity_id: media_player.beach_guest_bed
+                data:
+                  volume_level: 0.2
+                continue_on_error: true
+              - action: tts.speak
+                target:
+                  entity_id: tts.home_assistant_cloud
+                data:
+                  media_player_entity_id: media_player.beach_guest_bed
+                  message: "Good morning. It's {{ now().strftime('%-I:%M') }}. Time to wake up."
+                continue_on_error: true
+              - delay: "00:00:08"
+          - action: media_player.volume_set
+            target:
+              entity_id: media_player.beach_guest_bed
+            data:
+              volume_level: 0.04
+            continue_on_error: true
+          - action: media_player.select_source
+            target:
+              entity_id: media_player.spotify_gonzomatic
+            data:
+              source: "Beach Guest Bed"
+            continue_on_error: true
+          - delay: "00:00:03"
+          - action: media_player.play_media
+            target:
+              entity_id: media_player.spotify_gonzomatic
+            data:
+              media_content_id: "{{ states('input_text.wake_beach_playlist') }}"
+              media_content_type: playlist
+            continue_on_error: true
+          - action: media_player.shuffle_set
+            target:
+              entity_id: media_player.spotify_gonzomatic
+            data:
+              shuffle: true
+            continue_on_error: true
+          - repeat:
+              count: 12
+              sequence:
+                - delay: "00:00:25"
+                - condition: state
+                  entity_id: input_boolean.wake_beach_ringing
+                  state: "on"
+                - action: media_player.volume_set
+                  target:
+                    entity_id: media_player.beach_guest_bed
+                  data:
+                    volume_level: "{{ [0.04 + 0.025 * repeat.index, 0.32] | min }}"
+                  continue_on_error: true
+      - if:
+          - condition: template
+            value_template: >-
+              {{ not music_ok and (is_state('input_boolean.wake_beach_voice', 'on')
+                 or is_state('input_boolean.wake_beach_music', 'on')) }}
         then:
           - action: media_player.volume_set
             target:
@@ -345,10 +434,83 @@ automation maui_wake:
           - action: input_boolean.turn_off
             target:
               entity_id: input_boolean.wake_molokini_enabled
+      # Music (a Spotify playlist on the bedroom Bluesound, quiet → louder over
+      # ~5 min) when Spotify can see the speaker and isn't already playing
+      # somewhere else; otherwise the good-morning voice.
+      - variables:
+          music_ok: >-
+            {{ is_state('input_boolean.wake_molokini_music', 'on')
+               and states('input_text.wake_molokini_playlist') is match('spotify:')
+               and 'Molokini Guest Bed' in (state_attr('media_player.spotify_gonzomatic', 'source_list') or [])
+               and not is_state('media_player.spotify_gonzomatic', 'playing') }}
       - if:
-          - condition: state
-            entity_id: input_boolean.wake_molokini_voice
-            state: "on"
+          - condition: template
+            value_template: "{{ music_ok }}"
+        then:
+          # Good morning once (voice first — speaking over Spotify would cut it off), then music.
+          - if:
+              - condition: state
+                entity_id: input_boolean.wake_molokini_voice
+                state: "on"
+            then:
+              - action: media_player.volume_set
+                target:
+                  entity_id: media_player.molokini_guest_bed
+                data:
+                  volume_level: 0.2
+                continue_on_error: true
+              - action: tts.speak
+                target:
+                  entity_id: tts.home_assistant_cloud
+                data:
+                  media_player_entity_id: media_player.molokini_guest_bed
+                  message: "Good morning. It's {{ now().strftime('%-I:%M') }}. Time to wake up."
+                continue_on_error: true
+              - delay: "00:00:08"
+          - action: media_player.volume_set
+            target:
+              entity_id: media_player.molokini_guest_bed
+            data:
+              volume_level: 0.04
+            continue_on_error: true
+          - action: media_player.select_source
+            target:
+              entity_id: media_player.spotify_gonzomatic
+            data:
+              source: "Molokini Guest Bed"
+            continue_on_error: true
+          - delay: "00:00:03"
+          - action: media_player.play_media
+            target:
+              entity_id: media_player.spotify_gonzomatic
+            data:
+              media_content_id: "{{ states('input_text.wake_molokini_playlist') }}"
+              media_content_type: playlist
+            continue_on_error: true
+          - action: media_player.shuffle_set
+            target:
+              entity_id: media_player.spotify_gonzomatic
+            data:
+              shuffle: true
+            continue_on_error: true
+          - repeat:
+              count: 12
+              sequence:
+                - delay: "00:00:25"
+                - condition: state
+                  entity_id: input_boolean.wake_molokini_ringing
+                  state: "on"
+                - action: media_player.volume_set
+                  target:
+                    entity_id: media_player.molokini_guest_bed
+                  data:
+                    volume_level: "{{ [0.04 + 0.025 * repeat.index, 0.32] | min }}"
+                  continue_on_error: true
+      - if:
+          - condition: template
+            value_template: >-
+              {{ not music_ok and (is_state('input_boolean.wake_molokini_voice', 'on')
+                 or is_state('input_boolean.wake_molokini_music', 'on')) }}
         then:
           - action: media_player.volume_set
             target:
@@ -448,6 +610,14 @@ script maui_wake:
       - action: input_boolean.turn_off
         target:
           entity_id: input_boolean.wake_beach_ringing
+      - if:
+          - condition: template
+            value_template: "{{ state_attr('media_player.spotify_gonzomatic', 'source') == 'Beach Guest Bed' }}"
+        then:
+          - action: media_player.media_pause
+            target:
+              entity_id: media_player.spotify_gonzomatic
+            continue_on_error: true
       - action: media_player.media_stop
         target:
           entity_id: media_player.beach_guest_bed
@@ -472,6 +642,14 @@ script maui_wake:
       - action: timer.cancel
         target:
           entity_id: timer.wake_beach_snooze
+      - if:
+          - condition: template
+            value_template: "{{ state_attr('media_player.spotify_gonzomatic', 'source') == 'Beach Guest Bed' }}"
+        then:
+          - action: media_player.media_pause
+            target:
+              entity_id: media_player.spotify_gonzomatic
+            continue_on_error: true
       - action: media_player.media_stop
         target:
           entity_id: media_player.beach_guest_bed
@@ -510,6 +688,14 @@ script maui_wake:
       - action: input_boolean.turn_off
         target:
           entity_id: input_boolean.wake_molokini_ringing
+      - if:
+          - condition: template
+            value_template: "{{ state_attr('media_player.spotify_gonzomatic', 'source') == 'Molokini Guest Bed' }}"
+        then:
+          - action: media_player.media_pause
+            target:
+              entity_id: media_player.spotify_gonzomatic
+            continue_on_error: true
       - action: media_player.media_stop
         target:
           entity_id: media_player.molokini_guest_bed
@@ -534,6 +720,14 @@ script maui_wake:
       - action: timer.cancel
         target:
           entity_id: timer.wake_molokini_snooze
+      - if:
+          - condition: template
+            value_template: "{{ state_attr('media_player.spotify_gonzomatic', 'source') == 'Molokini Guest Bed' }}"
+        then:
+          - action: media_player.media_pause
+            target:
+              entity_id: media_player.spotify_gonzomatic
+            continue_on_error: true
       - action: media_player.media_stop
         target:
           entity_id: media_player.molokini_guest_bed

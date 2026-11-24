@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { haCallService, haCameraImage, type HAState } from "@/lib/ha";
+import { playlistLabel, spotifyEntity, wakePlaylists } from "@/lib/spotify";
+import { usePlaylists } from "./usePlaylists";
 import { nextWakeDay, prettyTime, readWake, shiftTime, WAKE_FEATURES, WAKE_PRESETS, wakeId } from "@/lib/wake";
 
 // Wake-up for ONE suite: set a time, choose what happens, and "Every day
@@ -19,6 +21,12 @@ export function WakeScreen({ states, suite, suiteName }: { states: Map<string, H
   const [lights, setLights] = useState(w.enabled ? w.lights : true);
   const [shades, setShades] = useState(w.enabled ? w.shades : f.shades);
   const [voice, setVoice] = useState(w.enabled ? w.voice : f.voice);
+  const [playlist, setPlaylist] = useState(w.music && w.playlist.startsWith("spotify:") ? w.playlist : "");
+  const { lists } = usePlaylists(states);
+  const choices = wakePlaylists(lists);
+  const sp = spotifyEntity(states);
+  const speakerVisible = !!f.speaker && ((sp?.attributes.source_list as string[] | undefined) ?? []).includes(f.speaker);
+  const musicOn = w.musicAvailable && !!f.speaker;
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const first = useRef(true);
@@ -33,6 +41,10 @@ export function WakeScreen({ states, suite, suiteName }: { states: Map<string, H
     await haCallService("input_select", "select_option", { entity_id: wakeId(suite, "repeat", "input_select"), option: repeat });
     if (repeat !== "Once") await haCallService("input_datetime", "set_datetime", { entity_id: wakeId(suite, "until", "input_datetime"), date: until });
     await bool("lights", lights); await bool("shades", shades && f.shades); await bool("voice", voice && f.voice);
+    if (musicOn) {
+      if (playlist) await haCallService("input_text", "set_value", { entity_id: `input_text.wake_${suite}_playlist`, value: playlist });
+      await bool("music", !!playlist);
+    }
     const r = enable ? await bool("enabled", true) : { ok: true as const };
     setBusy(false);
     setMsg(r.ok ? `On — wakes you ${when}.` : `Couldn't save: ${"error" in r ? r.error : ""}`);
@@ -45,7 +57,7 @@ export function WakeScreen({ states, suite, suiteName }: { states: Map<string, H
     const t = window.setTimeout(() => void save(false), 700);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [time, repeat, until, lights, shades, voice]);
+  }, [time, repeat, until, lights, shades, voice, playlist]);
 
   if (!w.available) return <section className="v2-card v2-center v2-notyet"><div className="v2-h">Wake-up isn't set up for this suite yet</div></section>;
 
@@ -99,6 +111,18 @@ export function WakeScreen({ states, suite, suiteName }: { states: Map<string, H
               {f.shades && <Check on={shades} set={setShades} label="Open the shades" />}
               {f.voice && <Check on={voice} set={setVoice} label="Say good morning on the speaker" />}
             </div>
+            {musicOn && choices.length > 0 && (
+              <div className="v2-wake-music">
+                <div className="v2-cap">Wake up to music</div>
+                <div className="v2-seg" role="radiogroup" aria-label="Wake-up music">
+                  <button type="button" role="radio" aria-checked={!playlist} className={!playlist ? "on" : ""} onClick={() => setPlaylist("")}>None</button>
+                  {choices.map((pl) => (
+                    <button key={pl.uri} type="button" role="radio" aria-checked={playlist === pl.uri} className={playlist === pl.uri ? "on" : ""} onClick={() => setPlaylist(pl.uri)}>{playlistLabel(pl.title)}</button>
+                  ))}
+                </div>
+                {playlist && <div className="v2-small">Starts quiet and gets louder over about 5 minutes{voice ? ", right after the good morning" : ""}.{speakerVisible ? "" : " Spotify can't reach this room's speaker right now — if that's still true at wake time, you'll get the voice instead."}</div>}
+              </div>
+            )}
           </div>
         </div>
         {msg && <div className="v2-alert" role="status">{msg}</div>}

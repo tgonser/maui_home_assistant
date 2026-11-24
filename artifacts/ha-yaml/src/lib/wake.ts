@@ -2,10 +2,10 @@ import type { HAState } from "./ha";
 
 // Per-suite guest wake-up, backed by the maui_wake.yaml HA package.
 
-export const WAKE_FEATURES: Record<string, { shades: boolean; voice: boolean }> = {
-  beach: { shades: true, voice: true },
+export const WAKE_FEATURES: Record<string, { shades: boolean; voice: boolean; speaker?: string }> = {
+  beach: { shades: true, voice: true, speaker: "Beach Guest Bed" },
   boardroom: { shades: false, voice: false },
-  molokini: { shades: true, voice: true },
+  molokini: { shades: true, voice: true, speaker: "Molokini Guest Bed" },
   mauka: { shades: true, voice: false },
 };
 
@@ -14,6 +14,7 @@ export const wakeId = (suite: string, part: string, domain = "input_boolean") =>
 export type WakeState = {
   available: boolean; enabled: boolean; time: string; repeat: "Once" | "Every day until I leave";
   until: string; lights: boolean; shades: boolean; voice: boolean; ringing: boolean; snoozeEnds: string | null;
+  music: boolean; playlist: string; musicAvailable: boolean;
 };
 
 export function readWake(states: Map<string, HAState>, s: string): WakeState {
@@ -27,6 +28,8 @@ export function readWake(states: Map<string, HAState>, s: string): WakeState {
     repeat: states.get(wakeId(s, "repeat", "input_select"))?.state === "Every day until I leave" ? "Every day until I leave" : "Once",
     until: states.get(wakeId(s, "until", "input_datetime"))?.state ?? "",
     lights: b("lights"), shades: b("shades"), voice: b("voice"), ringing: b("ringing"),
+    music: b("music"), playlist: states.get(`input_text.wake_${s}_playlist`)?.state ?? "",
+    musicAvailable: states.has(`input_text.wake_${s}_playlist`),
     snoozeEnds: snooze?.state === "active" ? String(snooze.attributes.finishes_at ?? "") || null : null,
   };
 }

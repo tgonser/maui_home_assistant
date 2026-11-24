@@ -376,3 +376,6 @@
 .v2-walker-bob { animation: v2walk 0.9s ease-in-out infinite alternate; }
 @keyframes v2walk { from { transform: translate(-3px, 0); } to { transform: translate(3px, -3px); } }
 @media (prefers-reduced-motion: reduce) { .v2-walker-bob { animation: none; } }
+.v2-wake-music { display: flex; flex-direction: column; gap: 6px; }
+.v2-wake-music .v2-seg { flex-wrap: wrap; border-radius: 22px; }
+.v2-wake-music .v2-seg button { padding: 0 18px; }

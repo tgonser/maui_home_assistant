@@ -32,3 +32,22 @@ test("wallPlaylists keeps only house-named playlists when there are any", () => 
   assert.deepEqual(wallPlaylists(all).shown.map((p) => p.title), ["MauiCool", "Mākena Morning"]);
   assert.equal(wallPlaylists([{ title: "Boats", uri: "b" }]).filtered, false);
 });
+
+import { playlistLabel, wakePlaylists } from "./spotify.ts";
+
+test("playlistLabel drops the house prefix", () => {
+  assert.equal(playlistLabel("MA-Hawaiian"), "Hawaiian");
+  assert.equal(playlistLabel("Maui-Sunset"), "Sunset");
+  assert.equal(playlistLabel("Maui Rock"), "Rock");
+  assert.equal(playlistLabel("MauiCool"), "Cool");
+  assert.equal(playlistLabel("Makena - Jazz"), "Jazz");
+  assert.equal(playlistLabel("Maui"), "Maui");
+  assert.equal(playlistLabel("Mellow Jazz Horns"), "Mellow Jazz Horns");
+  assert.equal(playlistLabel("Mabel"), "Mabel");
+});
+
+test("wakePlaylists prefers MA- lists", () => {
+  const all = [{ title: "MA-Rock", uri: "spotify:a" }, { title: "MauiCool", uri: "spotify:b" }, { title: "Boats", uri: "spotify:c" }];
+  assert.deepEqual(wakePlaylists(all).map((p) => p.title), ["MA-Rock"]);
+  assert.deepEqual(wakePlaylists(all.slice(1)).map((p) => p.title), ["MauiCool"]);
+});

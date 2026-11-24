@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.106
+
+- Wake-up music (Beach and Molokini): pick one of the "MA-" Spotify playlists (shown without the
+  prefix, e.g. "Hawaiian"). At wake time the voice says good morning once, then the playlist starts
+  on the bedroom Bluesound at 4% and rises to ~32% over ~5 minutes. Snooze/I'm up pause it. If
+  Spotify can't reach the speaker or is already playing elsewhere, the voice is used instead.
+- Music: playlists starting "Maui-" / "MA-" show without the prefix ("Maui-Sunset" → "Sunset").
+  "MA-" playlists also count as house playlists.
+- Needs the updated `maui_wake.yaml` package (new `input_boolean.wake_<suite>_music` and
+  `input_text.wake_<suite>_playlist`).
+
 ## 1.0.105
 
 - Wake-up: the time ("7:00 AM") stays on one line on the tablet.

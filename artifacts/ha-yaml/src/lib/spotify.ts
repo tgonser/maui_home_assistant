@@ -42,9 +42,30 @@ export function parsePlaylists(result: unknown): Playlist[] {
 }
 
 /** Only playlists named for the house show on the wall: titles starting
- *  "Maui", "Makena" or "Mākena" (any case). If none are named that way yet,
+ *  "Maui", "Makena", "Mākena" or "MA-" (any case). If none are named that way yet,
  *  nothing is filtered, so the wall is never empty by surprise. */
 export function wallPlaylists(all: Playlist[]): { shown: Playlist[]; filtered: boolean } {
-  const house = all.filter((p) => /^(maui|makena|mākena)/i.test(p.title.trim()));
+  const house = all.filter((p) => /^(maui|makena|mākena|ma-)/i.test(p.title.trim()));
   return house.length ? { shown: house, filtered: true } : { shown: all, filtered: false };
+}
+
+/** What the wall shows for a playlist: the house prefix is dropped, so
+ *  "Maui-Sunset" → "Sunset", "MA-Hawaiian" → "Hawaiian", "MauiCool" → "Cool". */
+export function playlistLabel(title: string): string {
+  const t = title.trim();
+  const m = t.match(/^(?:ma-|(?:maui|makena|mākena)(?:[\s\-_:·]+|(?=[A-Z0-9])))(.+)$/i);
+  if (m && /^(?:ma-|maui|makena|mākena)/i.test(t)) {
+    // "Maui" glued to a lowercase word ("Mauinight") is left alone.
+    const rest = m[1].trim();
+    const glued = !/^(ma-|maui[\s\-_:·]|makena[\s\-_:·]|mākena[\s\-_:·])/i.test(t);
+    if (rest && (!glued || /^[A-Z0-9]/.test(rest))) return rest;
+  }
+  return t;
+}
+
+/** Wake-up music: the "MA-" playlists (e.g. MA-Hawaiian, MA-Rock, MA-Jazz);
+ *  if there are none yet, the house playlists. */
+export function wakePlaylists(all: Playlist[]): Playlist[] {
+  const ma = all.filter((p) => /^ma-/i.test(p.title.trim()));
+  return ma.length ? ma : wallPlaylists(all).shown;
 }
