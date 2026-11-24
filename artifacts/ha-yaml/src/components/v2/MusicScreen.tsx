@@ -158,6 +158,11 @@ function Control({ states, picked, setPicked }: { states: Map<string, HAState>; 
         </div>
       )}
 
+      {!sources.includes("Spotify") && (
+        <div className="v2-tip v2-tip-quiet">
+          No Spotify right now: Spotify only shows up while a phone is connected to a speaker. Start it from a phone (tap the speaker icon in Spotify and pick a room) — then you can spread it to other rooms here. Favourites saved as presets in the BluOS app will appear here as one-tap buttons.
+        </div>
+      )}
       <div className="v2-vols">
         {picked.length > 1 && (
           <label className="v2-vol v2-vol-all">
