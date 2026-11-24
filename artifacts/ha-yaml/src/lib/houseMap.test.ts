@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { lightGroup, roomStatus, suiteInUse, restartMinute, energyNow, fitLabel, FLOORS } from "./houseMap.ts";
+import { lightGroup, roomStatus, suiteInUse, restartMinute, energyNow, energyFlows, fitLabel, FLOORS } from "./houseMap.ts";
 
 const st = (entity_id: string, state: string, attributes: Record<string, unknown> = {}, last_changed = "2026-11-23T10:00:00Z") =>
   ({ entity_id, state, attributes, last_changed, last_updated: last_changed });
@@ -75,4 +75,15 @@ test("a restart stamp is not activity", () => {
   assert.equal(suiteInUse(m, { id: "molokini", bath: "bath4" }, now), false);
   m.set("light.floor_2_bedroom_4_suite_bed_4_bath_vanity_sconces", st("light.floor_2_bedroom_4_suite_bed_4_bath_vanity_sconces", "off", {}, "2026-11-23T06:10:00Z"));
   assert.equal(suiteInUse(m, { id: "molokini", bath: "bath4" }, now), true);
+});
+
+test("energyFlows splits sun between house, batteries and grid", () => {
+  const base = { soc1: null, soc2: null };
+  assert.deepEqual(energyFlows({ ...base, solarKw: 6, houseKw: 3.9, batteryKw: -2.1, gridKw: 0 }),
+    { sunToHouse: 3.9, sunToBattery: 2.1, sunToGrid: 0, batteryToHouse: 0, gridToHouse: 0, gridToBattery: 0 });
+  // evening: batteries run the house
+  assert.deepEqual(energyFlows({ ...base, solarKw: 0, houseKw: 1.2, batteryKw: 1.2, gridKw: 0 }),
+    { sunToHouse: 0, sunToBattery: 0, sunToGrid: 0, batteryToHouse: 1.2, gridToHouse: 0, gridToBattery: 0 });
+  // midday surplus: charging and selling
+  assert.equal(energyFlows({ ...base, solarKw: 15, houseKw: 2, batteryKw: -5, gridKw: -8 }).sunToGrid, 8);
 });
