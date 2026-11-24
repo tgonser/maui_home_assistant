@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.96
+
+- Home map wording: the AC line reads "set 84°" (with ❄ while cooling) instead of "→ 84°", and
+  guest suites used in the last 24 hours say "guests" instead of "in use", which read like the AC.
+
 ## 1.0.95
 
 - Power strip: the lines now add up to what the grid shows. When one system's battery covers its
