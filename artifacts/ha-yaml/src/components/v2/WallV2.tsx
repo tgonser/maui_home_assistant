@@ -262,11 +262,11 @@ function HomeScreen({ states, now }: { states: Map<string, HAState>; now: number
           </div>
           <div className="v2-legend">
             <span><i className="lg-lit" />Lights on</span>
-            <span><i className="lg-temp" />Cool → warm</span>
+            <span><i className="lg-temp" />Room temp (red = above target)</span>
             <span><i className="lg-door" />Door</span>
             <span><i className="lg-open" />Open</span>
             <span><i className="lg-motion" />Motion</span>
-            <span>♪ Music · G In use today</span>
+            <span>❄ 75° cooling to target · → 75° at target · ♪ music · "in use" guest suite</span>
           </div>
           <HouseMap states={states} status={status} inUse={inUse} onRoomTap={onRoomTap} />
         </section>

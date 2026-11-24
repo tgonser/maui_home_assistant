@@ -352,3 +352,6 @@
 .v2-dest b { font-size: 17px; }
 .v2-dest small { color: var(--muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media (prefers-reduced-motion: reduce) { .v2-flowbox circle { display: none; } }
+.v2-hot { fill: #B3261E; }
+.v2-ac-cool { fill: #1F6FA8; font-weight: 700; font-family: Inter, sans-serif; }
+.v2-ac-idle { fill: #56646A; font-weight: 600; font-family: Inter, sans-serif; }

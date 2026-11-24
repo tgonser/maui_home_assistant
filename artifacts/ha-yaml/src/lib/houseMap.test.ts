@@ -21,7 +21,7 @@ test("roomStatus counts lights, temps, music and recent motion", () => {
     st("light.floor_1_bar_pendants", "on"),
     st("light.floor_1_bar_downlights", "off"),
     st("light.floor_1_bar_cove", "unavailable"),
-    st("climate.atrium", "cool", { current_temperature: 77.4 }),
+    st("climate.atrium", "cool", { current_temperature: 77.4, temperature: 75, hvac_action: "cooling" }),
     st("media_player.great_room", "playing"),
     st("binary_sensor.usl_motion_sitting", "off", {}, "2026-11-23T10:00:30Z"),
   ].map((s) => [s.entity_id, s]));
@@ -29,6 +29,8 @@ test("roomStatus counts lights, temps, music and recent motion", () => {
   assert.equal(r.get("bar")?.lightsOn, 1);
   assert.equal(r.get("bar")?.lightIds.length, 2);
   assert.equal(r.get("great")?.temp, 77);
+  assert.equal(r.get("great")?.target, 75);
+  assert.equal(r.get("great")?.cooling, true);
   assert.equal(r.get("great")?.playing, true);
   assert.equal(r.get("sitting")?.motion, true);
 });

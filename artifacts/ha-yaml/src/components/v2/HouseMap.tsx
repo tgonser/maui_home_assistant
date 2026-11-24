@@ -66,7 +66,11 @@ function Floor({ floor: f, states, status, inUse, onRoomTap }: Props & { floor: 
           if (lit) fill = t != null ? mix(fill, "#FFF1C9", 0.55) : "#FFF1C9";
           const w = r.x1 - r.x0, h = r.y1 - r.y0;
           const tappable = r.kind !== "void" && r.kind !== "elev" && (s?.lightIds.length ?? 0) > 0;
-          const icons = (s?.playing && r.kind === "room" && !r.group ? "♪ " : "") + (inUse.has(r.id) ? "G" : "");
+          const icons = (s?.playing && r.kind === "room" && !r.group ? "♪ " : "") + (inUse.has(r.id) ? "in use" : "");
+          // Current room temperature, then the AC: ❄ + target while cooling,
+          // "→ target" when idle, "AC off" when switched off.
+          const ac = t == null ? "" : s?.acOff ? "AC off" : s?.target != null ? `${s.cooling ? "❄ " : "→ "}${s.target}°` : "";
+          const hot = t != null && !s?.acOff && s?.target != null && t > s.target + 1;
           const pad = lab.compact ? 10 : 22;
           const nameY = r.y0 + pad + lab.fs * 0.85;
           const name = r.kind === "elev" ? (
@@ -76,7 +80,7 @@ function Floor({ floor: f, states, status, inUse, onRoomTap }: Props & { floor: 
           ) : (
             <text x={r.x0 + pad} y={nameY} fontSize={lab.fs} className={r.kind === "void" ? "v2-void-label" : "v2-room-label"}>{r.name}</text>
           );
-          const label = `${r.name || "Hall"}${t != null ? `, ${t}°` : ""}${tappable ? `, ${s!.lightsOn} of ${s!.lightIds.length} lights on` : ""}`;
+          const label = `${r.name || "Hall"}${t != null ? `, ${t}° now${s?.acOff ? ", AC off" : s?.target != null ? `, set to ${s.target}°${s.cooling ? ", cooling" : ""}` : ""}` : ""}${tappable ? `, ${s!.lightsOn} of ${s!.lightIds.length} lights on` : ""}`;
           return (
             <g
               key={r.id}
@@ -90,8 +94,13 @@ function Floor({ floor: f, states, status, inUse, onRoomTap }: Props & { floor: 
             >
               <rect x={r.x0 + 3} y={r.y0 + 3} width={w - 6} height={h - 6} rx={16} fill={fill} className={lit ? "v2-lit" : undefined} />
               {name}
-              {t != null && !lab.compact && <text x={r.x0 + pad} y={nameY + 58} fontSize={52} className="v2-room-temp">{t}°</text>}
-              {icons && !lab.compact && <text x={r.x0 + pad} y={nameY + (t != null ? 100 : 44)} fontSize={34} className="v2-room-icons">{icons}</text>}
+              {t != null && !lab.compact && (
+                <>
+                  <text x={r.x0 + pad} y={nameY + 58} fontSize={52} className={`v2-room-temp${hot ? " v2-hot" : ""}`}>{t}°</text>
+                  {ac && <text x={r.x0 + pad} y={nameY + 94} fontSize={30} className={s?.cooling ? "v2-ac-cool" : "v2-ac-idle"}>{ac}</text>}
+                </>
+              )}
+              {icons && !lab.compact && <text x={r.x0 + pad} y={nameY + (t != null ? (ac ? 130 : 100) : 44)} fontSize={30} className="v2-room-icons">{icons}</text>}
               {s?.motion && (!r.group || r.id === "stair2b") && <circle cx={r.x1 - 26} cy={r.y0 + 26} r={14} className="v2-motion" />}
             </g>
           );

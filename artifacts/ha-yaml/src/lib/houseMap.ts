@@ -196,6 +196,10 @@ export type RoomStatus = {
   lightsOn: number;
   lightIds: string[];
   temp: number | null;
+  /** Thermostat target, whether it is cooling right now, and whether the AC is off. */
+  target: number | null;
+  cooling: boolean;
+  acOff: boolean;
   playing: boolean;
   motion: boolean;
 };
@@ -208,7 +212,7 @@ export function roomStatus(states: Map<string, HAState>, nowMs: number): Map<str
   const get = (g: string) => {
     let s = out.get(g);
     if (!s) {
-      s = { lightsOn: 0, lightIds: [], temp: null, playing: false, motion: false };
+      s = { lightsOn: 0, lightIds: [], temp: null, target: null, cooling: false, acOff: false, playing: false, motion: false };
       out.set(g, s);
     }
     return s;
@@ -221,8 +225,15 @@ export function roomStatus(states: Map<string, HAState>, nowMs: number): Map<str
     if (st.state === "on") s.lightsOn += 1;
   }
   for (const [g, id] of Object.entries(ROOM_CLIMATE)) {
-    const t = Number(states.get(id)?.attributes?.current_temperature);
+    const c = states.get(id);
+    const t = Number(c?.attributes?.current_temperature);
     if (Number.isFinite(t)) get(g).temp = Math.round(t);
+    const tg = Number(c?.attributes?.temperature);
+    if (Number.isFinite(tg) && c?.attributes?.temperature != null) get(g).target = Math.round(tg);
+    if (c) {
+      get(g).cooling = c.attributes.hvac_action === "cooling";
+      get(g).acOff = c.state === "off";
+    }
   }
   for (const [g, id] of Object.entries(ROOM_MEDIA)) {
     if (states.get(id)?.state === "playing") get(g).playing = true;
