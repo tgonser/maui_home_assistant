@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.93
+
+- Home map: each room shows its temperature now (red when more than 1° above its target) and,
+  under it, the AC: "❄ 75°" while cooling toward 75°, "→ 75°" when it's at target, "AC off" when
+  switched off. The guest-suite "G" now reads "in use", and the legend explains all of it.
+
 ## 1.0.92
 
 - New wall power strip (Home and Energy): instead of one line, the sun now fans out to the
