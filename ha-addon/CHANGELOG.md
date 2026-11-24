@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.101
+
+- Music: when no Spotify is connected, the controls explain why it's missing (Spotify only
+  appears while a phone is connected to a speaker) and how to start it; BluOS presets will show
+  as one-tap sources.
+
 ## 1.0.100
 
 - "Guests" on the Home map (and "Guests staying" in Right now) now means a wake-up is set in that

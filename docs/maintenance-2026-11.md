@@ -656,7 +656,7 @@ lights low, shades stay; live camera (Pool/Front entry/BBQ) on the wake screen. 
 - Fix (live in HA, automation id 1784393891358, mirrored in `ha-config/maui_manual_hold.yaml`): ignore changes within 4 minutes after the solar automation runs or the house mode changes.
 
 ## 15. Molokini thermostat (Nov 23)
-- T2 confirmed `climate.maui_bar` is the Molokini suite; Honeywell's own name is "Maui-Molokini". HA entity name set to "Molokini".
+- T2 confirmed `climate.maui_bar` is the Molokini suite (its Honeywell name is already "Maui-Molokini"; no rename needed).
 - Solar-aware climate (automation id 1781981986844): moved from the open-air group (forced off 5–9 PM in Owners/Visitors) to the rest/bedroom group.
 - Manual hold automation now triggers on it, and `timer.maui_hold_maui_bar` was added in `maui_solar_tier_package.yaml`.
 - Wall: guest occupancy now comes from wake-ups, not from 24 h of activity.
