@@ -714,3 +714,11 @@ no overnight purchase.
 - **Nov 23 2–4 PM:** house bought ~8.5 kWh while S2's reserve stayed raised and S1's AC ate its
   surplus — the stale-reserve bug found and fixed that afternoon (section 13). Re-check today's
   2–4 PM window.
+
+**Storm prep retuned (Nov 24, T2):** this morning it asked to set both reserves to 100% because 2 of the
+next 3 days had low sun (Wed 72% rain, 0.29"). T2: not a storm. Request declined (balancer was paused by the
+pending request; back to "Watching"). Package now asks only for an official alert, 3-day rain ≥ 2.0 in
+(`input_number.maui_storm_prep_rain_threshold` set to 2.0), or forecast wind/gusts ≥ 40 mph. Low-sun days no
+longer count (`maui_storm_prep_low_sun_days` is unused). Requests now go to T2's iPhone:
+`input_text.maui_storm_prep_notify_service` = `notify.mobile_app_temp` (device "Tom_iPhone17"). No official
+alert source is configured (no NWS alerts integration). House mode is Suspend on purpose (workers on site).
