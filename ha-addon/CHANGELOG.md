@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.100
+
+- "Guests" on the Home map (and "Guests staying" in Right now) now means a wake-up is set in that
+  suite, instead of guessing from lights and music (which workers also use).
+- Climate: Molokini (climate.maui_bar) is a bedroom, not an open-air room.
+
 ## 1.0.99
 
 - Home map: motion shows as a small walking figure in the room (for 2 minutes after movement)

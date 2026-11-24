@@ -37,6 +37,7 @@ triggers:
       - climate.boardroom
       - climate.beach_room
       - climate.upper_mauka
+      - climate.maui_bar   # Molokini (added Nov 23)
 conditions:
   # Only real changes to the mode or target temperature (ignore sensor
   # updates like current_temperature).

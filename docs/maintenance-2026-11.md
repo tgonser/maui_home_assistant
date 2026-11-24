@@ -654,3 +654,9 @@ lights low, shades stay; live camera (Pool/Front entry/BBQ) on the wake screen. 
 ## 14. False manual holds fixed (Nov 23)
 - Cause: at 3:34 PM, switching Suspend → Vacation made the solar automation set 84°. About 15 s later, Honeywell TCC briefly reported the old 78° with no automation context, so the hold automation started 2-hour holds on Beach and Boardroom.
 - Fix (live in HA, automation id 1784393891358, mirrored in `ha-config/maui_manual_hold.yaml`): ignore changes within 4 minutes after the solar automation runs or the house mode changes.
+
+## 15. Molokini thermostat (Nov 23)
+- T2 confirmed `climate.maui_bar` is the Molokini suite; Honeywell's own name is "Maui-Molokini". HA entity name set to "Molokini".
+- Solar-aware climate (automation id 1781981986844): moved from the open-air group (forced off 5–9 PM in Owners/Visitors) to the rest/bedroom group.
+- Manual hold automation now triggers on it, and `timer.maui_hold_maui_bar` was added in `maui_solar_tier_package.yaml`.
+- Wall: guest occupancy now comes from wake-ups, not from 24 h of activity.

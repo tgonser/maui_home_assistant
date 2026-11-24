@@ -101,6 +101,9 @@ timer:
   maui_hold_upper_mauka:
     name: "Hold: Upper Mauka"
     restore: true
+  maui_hold_maui_bar:
+    name: "Hold: Molokini"
+    restore: true
 
 input_number:
   # --- Night row (9pm–7am) -------------------------------------------------

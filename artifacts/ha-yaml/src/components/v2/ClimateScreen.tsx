@@ -9,7 +9,7 @@ import { holdTimer, openSliderTip, zoneViews, type ZoneView } from "@/lib/climat
 
 const MAUI_TZ = "Pacific/Honolulu";
 // Rooms the solar automation treats as open-air (no manual hold timer).
-const OPEN_AIR = new Set(["climate.atrium", "climate.bar", "climate.maui_bar", "climate.kitchen"]);
+const OPEN_AIR = new Set(["climate.atrium", "climate.bar", "climate.kitchen"]);
 const time = (iso: string) => new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: MAUI_TZ });
 
 export function ClimateScreen({ states, now }: { states: Map<string, HAState>; now: number }) {
