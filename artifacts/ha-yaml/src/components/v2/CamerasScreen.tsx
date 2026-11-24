@@ -23,8 +23,11 @@ function useSnapshot(id: string, everyMs: number, enabled = true) {
   return { src, err };
 }
 
-export function CamerasScreen({ states }: { states: Map<string, HAState> }) {
-  const cams = useMemo(() => listCameras(states), [states]);
+// Guests don't see cameras that look into the owners' private spaces.
+const OWNER_ONLY = /master/i;
+
+export function CamerasScreen({ states, guest = false }: { states: Map<string, HAState>; guest?: boolean }) {
+  const cams = useMemo(() => listCameras(states).filter((c) => !guest || !OWNER_ONLY.test(c.name + c.id)), [states, guest]);
   const [big, setBig] = useState<CameraInfo | null>(null);
   const motionNow = (c: CameraInfo) => states.get(c.motionId)?.state === "on";
   return (
