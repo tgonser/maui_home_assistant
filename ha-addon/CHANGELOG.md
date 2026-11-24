@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.103
+
+- Music: only Spotify playlists whose names start with "Maui", "Makena" or "Mākena" show on the
+  wall (e.g. "MauiCool"). Rename or create playlists in Spotify to control what appears; if none
+  are named that way, all playlists show.
+
 ## 1.0.102
 
 - Music: "Your Spotify playlists" (from the Spotify integration) appear as one-tap buttons for

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { haCallService, haWsBatch, type HAState } from "@/lib/ha";
-import { parsePlaylists, planSpotify, PLAYLIST_CACHE_KEY, spotifyEntity, type Playlist } from "@/lib/spotify";
+import { parsePlaylists, planSpotify, PLAYLIST_CACHE_KEY, spotifyEntity, wallPlaylists, type Playlist } from "@/lib/spotify";
 import { describeNowPlaying, effectivePlayer, groupFor, musicGroups, MUSIC_SECTIONS, pickLeader, PLAYER_NAMES } from "@/lib/music";
 
 // Music: pick rooms on the left, control them on the right. Tapping a room
@@ -213,6 +213,7 @@ function SpotifyPlaylists({ states, picked, groups }: { states: Map<string, HASt
     });
   }, [spId]);
   if (!sp || lists.length === 0) return null;
+  const { shown, filtered } = wallPlaylists(lists);
 
   const play = async (pl: Playlist) => {
     const plan = planSpotify(states, (sp.attributes.source_list as string[] | undefined) ?? [], picked);
@@ -236,9 +237,9 @@ function SpotifyPlaylists({ states, picked, groups }: { states: Map<string, HASt
 
   return (
     <div className="v2-playlists">
-      <div className="v2-cap">Your Spotify playlists</div>
+      <div className="v2-cap">Your Spotify playlists{filtered ? "" : " — name one \"Maui…\" or \"Makena…\" to show only those"}</div>
       <div className="v2-sources">
-        {lists.map((pl) => (
+        {shown.map((pl) => (
           <button key={pl.uri} type="button" className={confirm === pl.uri ? "on" : ""} disabled={busy != null} onClick={() => void play(pl)}>{busy === pl.uri ? "Starting…" : pl.title}</button>
         ))}
       </div>

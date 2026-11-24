@@ -40,3 +40,11 @@ export function parsePlaylists(result: unknown): Playlist[] {
     .filter((k) => typeof k.media_content_id === "string" && k.media_content_id.startsWith("spotify:"))
     .map((k) => ({ title: String(k.title ?? "").trim() || "Playlist", uri: k.media_content_id! }));
 }
+
+/** Only playlists named for the house show on the wall: titles starting
+ *  "Maui", "Makena" or "Mākena" (any case). If none are named that way yet,
+ *  nothing is filtered, so the wall is never empty by surprise. */
+export function wallPlaylists(all: Playlist[]): { shown: Playlist[]; filtered: boolean } {
+  const house = all.filter((p) => /^(maui|makena|mākena)/i.test(p.title.trim()));
+  return house.length ? { shown: house, filtered: true } : { shown: all, filtered: false };
+}
