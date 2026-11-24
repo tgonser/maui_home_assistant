@@ -301,7 +301,7 @@
 .v2-block-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .v2-light-rows { display: flex; flex-direction: column; gap: 4px; max-height: 420px; overflow: auto; }
 .v2-lrow { display: flex; align-items: center; gap: 10px; min-height: 42px; }
-.v2-lrow-name { flex: 1; min-width: 0; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.v2-lrow-name { flex: 1; min-width: 0; font-size: 14px; line-height: 1.25; overflow-wrap: anywhere; }
 .v2-lrow input[type=range] { width: 38%; accent-color: #D9A400; }
 .v2-switch { flex: none; width: 50px; height: 30px; border-radius: 999px; border: 0; background: #D8CFBF; position: relative; cursor: pointer; padding: 0; }
 .v2-switch i { position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #FFF; box-shadow: 0 1px 2px rgba(0,0,0,0.2); transition: left 120ms; }
@@ -312,3 +312,30 @@
 .v2-phonehelp { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border-radius: 12px; background: #FFF; }
 .v2-phonehelp ol { margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.5; }
 .v2-phonehelp .v2-mini { align-self: flex-start; }
+.v2-shade-btns button.on { background: var(--teal); border-color: var(--teal); color: #FFF; }
+.v2-srow-win { width: 54px; flex: none; }
+.v2-srow-win .v2-shade-win { height: 34px; }
+.v2-inline-wrap .v2-shade-btns { display: inline-grid; grid-template-columns: repeat(3, 58px); }
+
+/* Wake-up */
+.v2-wake { flex: 1; min-height: 0; display: flex; gap: 12px; }
+.v2-wake-set { flex: 1.5; min-width: 0; padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; overflow: auto; }
+.v2-wake-info { flex: 1; min-width: 0; padding: 16px 20px; }
+.v2-wake-info ul { margin: 8px 0 0; padding-left: 18px; font-size: 14px; line-height: 1.6; color: var(--ink-2); }
+.v2-wake-status { font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: #EFE8DC; color: var(--muted); }
+.v2-wake-status.on { background: #E3EEF0; color: #0A4553; }
+.v2-wake-time { display: flex; align-items: center; justify-content: center; gap: 22px; }
+.v2-wake-clock { position: relative; }
+.v2-wake-clock span { font-family: Outfit, Inter, sans-serif; font-size: 64px; font-weight: 600; color: var(--teal); pointer-events: none; }
+.v2-wake-clock input { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
+.v2-wake-opts { display: flex; flex-direction: column; gap: 6px; }
+.v2-check { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 4px; border: 0; background: none; font: inherit; font-size: 15px; color: var(--ink); text-align: left; cursor: pointer; }
+.v2-check[aria-checked="true"] .v2-switch { background: var(--teal); }
+.v2-check[aria-checked="true"] .v2-switch i { left: 23px; }
+.v2-ring { position: fixed; inset: 0; z-index: 20; background: #0E2A31; display: flex; align-items: flex-end; }
+.v2-ring-cam { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.75; }
+.v2-ring-body { position: relative; width: 100%; padding: 40px 48px; background: linear-gradient(transparent, rgba(8,24,28,0.85) 40%); color: #FFF; display: flex; flex-direction: column; gap: 8px; }
+.v2-ring-clock { font-family: Outfit, Inter, sans-serif; font-size: 110px; font-weight: 600; line-height: 1; }
+.v2-ring-sub { font-size: 22px; opacity: 0.9; }
+.v2-ring-btns { display: flex; gap: 14px; margin-top: 16px; }
+.v2-ring-btns .v2-btn { min-height: 72px; min-width: 220px; font-size: 20px; }

@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { haCallService, type HAState } from "@/lib/ha";
-import { GUEST_TEMP, lightName, roomLights, roomsFor, type RoomDef, type TabletRole } from "@/lib/roomsCatalog";
+import { GUEST_TEMP, roomLightNames, roomLights, roomsFor, type RoomDef, type TabletRole } from "@/lib/roomsCatalog";
 import { describeNowPlaying } from "@/lib/music";
 import { shadeView } from "@/lib/shades";
+import { ShadeButtons, ShadeWindow } from "./ShadesScreen";
 
 // Rooms: pick a room, control everything in it. Owners see every room;
 // a guest tablet starts in its own suite and never sees the master suite.
@@ -50,6 +51,8 @@ function useDebounced() {
 
 function RoomPanel({ room, states, guest }: { room: RoomDef; states: Map<string, HAState>; guest: boolean }) {
   const lights = roomLights(states, room);
+  const names = roomLightNames(lights);
+  const lightName = (l: HAState) => names.get(l.entity_id) ?? l.entity_id;
   const on = lights.filter((l) => l.state === "on");
   const debounce = useDebounced();
   const [levels, setLevels] = useState<Record<string, number>>({});
@@ -99,12 +102,9 @@ function RoomPanel({ room, states, guest }: { room: RoomDef; states: Map<string,
                 const v = shadeView(states, sid, room.shades!.length > 1 ? (i === 0 ? "Bedroom" : sid.includes("bath") ? "Bath" : `Shade ${i + 1}`) : "Shade");
                 return (
                   <div key={sid} className="v2-srow">
+                    <div className="v2-srow-win"><ShadeWindow pos={v.pos} /></div>
                     <span className="v2-lrow-name">{v.name} <small className="v2-muted">{v.label}</small></span>
-                    <span className="v2-shade-btns v2-inline">
-                      <button type="button" disabled={!v.available} onClick={() => call("cover", "open_cover", { entity_id: sid })}>Open</button>
-                      <button type="button" disabled={!v.available} onClick={() => call("cover", "set_cover_position", { entity_id: sid, position: 50 })}>Half</button>
-                      <button type="button" disabled={!v.available} onClick={() => call("cover", "close_cover", { entity_id: sid })}>Close</button>
-                    </span>
+                    <span className="v2-inline-wrap"><ShadeButtons id={sid} name={v.name} pos={v.pos} disabled={!v.available} act={(svc, data) => void call("cover", svc, data)} /></span>
                   </div>
                 );
               })}
