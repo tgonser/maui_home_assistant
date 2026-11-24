@@ -14,6 +14,7 @@ test("guests never see the master suite", () => {
   const ids = roomsFor({ kind: "guest", room: "molokini" }).map((r) => r.id);
   assert.ok(ids.includes("molokini") && ids.includes("great"));
   assert.ok(!ids.includes("master") && !ids.includes("sitting") && !ids.includes("ext_master"));
+  assert.ok(!ids.includes("beach") && !ids.includes("boardroom") && !ids.includes("mauka"));
   assert.equal(roomsFor({ kind: "owner" }).length, ROOMS.length);
 });
 

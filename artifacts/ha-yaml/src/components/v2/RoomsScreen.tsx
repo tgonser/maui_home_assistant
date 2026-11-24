@@ -171,7 +171,35 @@ function MusicBlock({ id, states }: { id: string; states: Map<string, HAState> }
         }} />
         <b>{v}</b>
       </div>
-      <div className="v2-small">{np.sub || "Play from Spotify on your phone and choose this room's speaker."}</div>
+      <div className="v2-small">{np.sub}</div>
+      <PhoneHelp id={id} st={st} />
+    </div>
+  );
+}
+
+// How to get music from a phone onto this room's speaker. Bluetooth works
+// on any Wi-Fi (including an isolated guest network); Spotify and AirPlay
+// need the phone on the same network as the speaker.
+function PhoneHelp({ id, st }: { id: string; st: HAState }) {
+  const [open, setOpen] = useState(false);
+  const sources = (st.attributes.source_list as string[] | undefined) ?? [];
+  const hasBt = sources.includes("Bluetooth");
+  const speaker = String(st.attributes.friendly_name ?? "this room's speaker");
+  if (!open) return <button type="button" className="v2-mini v2-mini-teal" onClick={() => setOpen(true)}>Play from your phone</button>;
+  return (
+    <div className="v2-phonehelp">
+      {hasBt && (
+        <>
+          <button type="button" className="v2-btn v2-primary" onClick={() => call("media_player", "select_source", { entity_id: id, source: "Bluetooth" })}>Switch speaker to Bluetooth</button>
+          <ol>
+            <li>Tap the button above.</li>
+            <li>On your phone, open Bluetooth settings and pick <b>{speaker}</b>.</li>
+            <li>Play anything — it comes out of this room's speakers. Volume works here or on the phone.</li>
+          </ol>
+        </>
+      )}
+      <p className="v2-small">On the house Wi-Fi you can also use Spotify (tap the speaker icon and choose <b>{speaker}</b>) or AirPlay.</p>
+      <button type="button" className="v2-mini" onClick={() => setOpen(false)}>Done</button>
     </div>
   );
 }
