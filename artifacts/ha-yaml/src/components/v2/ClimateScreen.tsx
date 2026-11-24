@@ -70,7 +70,7 @@ function ZoneCard({ z, holdable }: { z: ZoneView; holdable: boolean }) {
   };
   const act = async (fn: () => Promise<unknown>) => { setBusy(true); await fn(); setBusy(false); };
 
-  const status = !z.available ? "Offline" : off ? "Off" : z.doorOpen ? "Door open" : z.action === "cooling" ? "Cooling" : z.action === "heating" ? "Heating" : z.now != null && z.target != null && z.now <= z.target ? "At target" : "Idle";
+  const status = !z.available ? "Offline" : off ? "Off" : z.doorOpen ? "Door open" : z.action === "cooling" ? "Cooling" : z.action === "heating" ? "Heating" : z.now != null && z.target != null && z.now < z.target ? `Cooler than ${z.target}° · AC resting` : "AC resting";
   const warm = z.now != null && z.target != null && !off && z.now > z.target + 1;
 
   return (

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.98
+
+- Climate: a room cooler than its setting now says "Cooler than 84° · AC resting" instead of
+  "At target". Honeywell sometimes reports "cooling" while the fan is idle (nothing running);
+  those rooms now show as resting, on Climate and on the Home map.
+- Home map: rooms no longer get a warm/cool background tint (it mixed with the lights-on glow and
+  read as random). Background = lights; the big number = room temperature, red when warmer than
+  the AC setting.
+
 ## 1.0.97
 
 - Power strip works out the flows per Tesla system and then adds them up. Example: System 1
