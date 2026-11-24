@@ -62,8 +62,8 @@ function Floor({ floor: f, states, status, inUse, onRoomTap }: Props & { floor: 
           const lit = r.kind !== "elev" && r.kind !== "void" && (s?.lightsOn ?? 0) > 0;
           const t = r.kind === "room" ? s?.temp ?? null : null;
           const lab = labels.get(r.id)!;
-          let fill = r.kind === "elev" ? "#1F5F73" : r.kind === "void" ? "url(#v2-hatch)" : t != null ? mix("#D6E9EF", "#F4D3BC", Math.max(0, Math.min(1, (t - 72) / 8))) : "#EFE8DC";
-          if (lit) fill = t != null ? mix(fill, "#FFF1C9", 0.55) : "#FFF1C9";
+          let fill = r.kind === "elev" ? "#1F5F73" : r.kind === "void" ? "url(#v2-hatch)" : r.kind === "room" ? "#F4EFE6" : "#EFE8DC";
+          if (lit) fill = "#FFF1C9";
           const w = r.x1 - r.x0, h = r.y1 - r.y0;
           const tappable = r.kind !== "void" && r.kind !== "elev" && (s?.lightIds.length ?? 0) > 0;
           const icons = (s?.playing && r.kind === "room" && !r.group ? "♪ " : "") + (inUse.has(r.id) ? "guests" : "");

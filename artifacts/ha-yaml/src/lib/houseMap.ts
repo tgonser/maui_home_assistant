@@ -231,7 +231,7 @@ export function roomStatus(states: Map<string, HAState>, nowMs: number): Map<str
     const tg = Number(c?.attributes?.temperature);
     if (Number.isFinite(tg) && c?.attributes?.temperature != null) get(g).target = Math.round(tg);
     if (c) {
-      get(g).cooling = c.attributes.hvac_action === "cooling";
+      get(g).cooling = c.attributes.hvac_action === "cooling" && c.attributes.fan_action !== "idle";
       get(g).acOff = c.state === "off";
     }
   }

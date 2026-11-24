@@ -41,7 +41,8 @@ export function zoneViews(states: Map<string, HAState>): ZoneView[] {
       now: n(st?.attributes.current_temperature),
       target: n(st?.attributes.temperature),
       mode: st?.state ?? "unavailable",
-      action: String(st?.attributes.hvac_action ?? ""),
+      // Honeywell can say "cooling" while its fan is idle (nothing running).
+      action: st?.attributes.hvac_action === "cooling" && st?.attributes.fan_action === "idle" ? "idle" : String(st?.attributes.hvac_action ?? ""),
       held,
       heldUntil: held ? fin : null,
       doorOpen: openDoorsPause.has(z.id),

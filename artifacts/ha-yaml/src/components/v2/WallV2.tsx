@@ -262,7 +262,7 @@ function HomeScreen({ states, now }: { states: Map<string, HAState>; now: number
           </div>
           <div className="v2-legend">
             <span><i className="lg-lit" />Lights on</span>
-            <span><i className="lg-temp" />Room temp (red = above target)</span>
+            <span>Big number = room temp now (red = warmer than its AC setting)</span>
             <span><i className="lg-door" />Door</span>
             <span><i className="lg-open" />Open</span>
             <span><i className="lg-motion" />Motion</span>
