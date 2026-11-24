@@ -338,9 +338,9 @@
 .v2-wake-info ul { margin: 8px 0 0; padding-left: 18px; font-size: 14px; line-height: 1.6; color: var(--ink-2); }
 .v2-wake-status { font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: #EFE8DC; color: var(--muted); }
 .v2-wake-status.on { background: #E3EEF0; color: #0A4553; }
-.v2-wake-time { display: flex; align-items: center; justify-content: center; gap: 22px; }
+.v2-wake-time { display: flex; align-items: center; justify-content: center; gap: 14px; }
 .v2-wake-clock { position: relative; }
-.v2-wake-clock span { font-family: Outfit, Inter, sans-serif; font-size: 64px; font-weight: 600; color: var(--teal); pointer-events: none; }
+.v2-wake-clock span { white-space: nowrap; font-family: Outfit, Inter, sans-serif; font-size: 56px; font-weight: 600; color: var(--teal); pointer-events: none; }
 .v2-wake-clock input { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
 .v2-wake-opts { display: flex; flex-direction: column; gap: 6px; }
 .v2-check { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 4px; border: 0; background: none; font: inherit; font-size: 15px; color: var(--ink); text-align: left; cursor: pointer; }

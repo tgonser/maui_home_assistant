@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.105
+
+- Wake-up: the time ("7:00 AM") stays on one line on the tablet.
+
 ## 1.0.104
 
 - Wake-up: a big On/Off switch at the top; the time is always visible, with quick picks
