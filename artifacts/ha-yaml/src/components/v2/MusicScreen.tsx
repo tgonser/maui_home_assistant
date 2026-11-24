@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { haCallService, haWsBatch, type HAState } from "@/lib/ha";
-import { parsePlaylists, planSpotify, PLAYLIST_CACHE_KEY, spotifyEntity, wallPlaylists, type Playlist } from "@/lib/spotify";
+import { planSpotify, playlistLabel, spotifyEntity, wallPlaylists, type Playlist } from "@/lib/spotify";
+import { usePlaylists } from "./usePlaylists";
 import { describeNowPlaying, effectivePlayer, groupFor, musicGroups, MUSIC_SECTIONS, pickLeader, PLAYER_NAMES } from "@/lib/music";
 
 // Music: pick rooms on the left, control them on the right. Tapping a room
@@ -200,18 +201,10 @@ function Control({ states, picked, setPicked }: { states: Map<string, HAState>; 
 // carries it to the other picked rooms.
 function SpotifyPlaylists({ states, picked, groups }: { states: Map<string, HAState>; picked: string[]; groups: ReturnType<typeof musicGroups> }) {
   const sp = spotifyEntity(states);
-  const [lists, setLists] = useState<Playlist[]>(() => { try { return JSON.parse(localStorage.getItem(PLAYLIST_CACHE_KEY) ?? "[]") as Playlist[]; } catch { return []; } });
+  const { lists } = usePlaylists(states);
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<string | null>(null);
-  const spId = sp?.entity_id;
-  useEffect(() => {
-    if (!spId) return;
-    void haWsBatch([{ type: "media_player/browse_media", entity_id: spId, media_content_type: "current_user_playlists", media_content_id: "current_user_playlists" }]).then((r) => {
-      const got = r.ok && r.results[0]?.success ? parsePlaylists(r.results[0].result) : [];
-      if (got.length) { setLists(got); try { localStorage.setItem(PLAYLIST_CACHE_KEY, JSON.stringify(got)); } catch { /* ignore */ } }
-    });
-  }, [spId]);
   if (!sp || lists.length === 0) return null;
   const { shown, filtered } = wallPlaylists(lists);
 
@@ -232,15 +225,15 @@ function SpotifyPlaylists({ states, picked, groups }: { states: Map<string, HASt
       await call("join", { entity_id: plan.leader, group_members: plan.joiners });
     }
     setBusy(null);
-    setMsg(r.ok ? `Playing "${pl.title}"${plan.joiners.length ? ` in ${1 + plan.joiners.length} rooms` : ""}.` : `Spotify didn't start: ${r.error}`);
+    setMsg(r.ok ? `Playing "${playlistLabel(pl.title)}"${plan.joiners.length ? ` in ${1 + plan.joiners.length} rooms` : ""}.` : `Spotify didn't start: ${r.error}`);
   };
 
   return (
     <div className="v2-playlists">
-      <div className="v2-cap">Your Spotify playlists{filtered ? "" : " — name one \"Maui…\" or \"Makena…\" to show only those"}</div>
+      <div className="v2-cap">Your Spotify playlists{filtered ? "" : " — start a name with \"Maui-\" or \"MA-\" to show only those"}</div>
       <div className="v2-sources">
         {shown.map((pl) => (
-          <button key={pl.uri} type="button" className={confirm === pl.uri ? "on" : ""} disabled={busy != null} onClick={() => void play(pl)}>{busy === pl.uri ? "Starting…" : pl.title}</button>
+          <button key={pl.uri} type="button" className={confirm === pl.uri ? "on" : ""} disabled={busy != null} onClick={() => void play(pl)}>{busy === pl.uri ? "Starting…" : playlistLabel(pl.title)}</button>
         ))}
       </div>
       {msg && <div className="v2-small">{msg}</div>}
