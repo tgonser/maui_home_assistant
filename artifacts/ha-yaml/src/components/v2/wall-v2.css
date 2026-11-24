@@ -355,3 +355,10 @@
 .v2-hot { fill: #B3261E; }
 .v2-ac-cool { fill: #1F6FA8; font-weight: 700; font-family: Inter, sans-serif; }
 .v2-ac-idle { fill: #56646A; font-weight: 600; font-family: Inter, sans-serif; }
+.v2-open-tag rect { fill: var(--orange); }
+.v2-open-tag text { fill: #FFF; font-weight: 700; font-family: Inter, sans-serif; letter-spacing: 1px; }
+.v2-walker path { fill: none; stroke: var(--green); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.v2-walker circle { fill: var(--green); }
+.v2-walker-bob { animation: v2walk 0.9s ease-in-out infinite alternate; }
+@keyframes v2walk { from { transform: translate(-3px, 0); } to { transform: translate(3px, -3px); } }
+@media (prefers-reduced-motion: reduce) { .v2-walker-bob { animation: none; } }

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.99
+
+- Home map: motion shows as a small walking figure in the room (for 2 minutes after movement)
+  instead of a green dot.
+- Home map: an open sliding door is drawn with a gap in the middle, and every open door —
+  sliders, the front door and the mudroom door — gets an orange OPEN tag.
+
 ## 1.0.98
 
 - Climate: a room cooler than its setting now says "Cooler than 84° · AC resting" instead of
