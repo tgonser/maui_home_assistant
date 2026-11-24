@@ -318,7 +318,7 @@ export function energyNow(states: Map<string, HAState>): EnergyNow {
 
 export type EnergyFlows = {
   sunToHouse: number; sunToBattery: number; sunToGrid: number;
-  batteryToHouse: number; gridToHouse: number; gridToBattery: number;
+  batteryToHouse: number; batteryToGrid: number; gridToHouse: number; gridToBattery: number;
 };
 
 /** Split the four live numbers into who-is-feeding-whom (kW, all ≥ 0).
@@ -333,8 +333,12 @@ export function energyFlows(e: EnergyNow): EnergyFlows {
   spare -= sunToBattery;
   const sunToGrid = Math.min(spare, exportKw);
   const batteryToHouse = Math.min(discharge, H - sunToHouse);
+  // With two systems, one battery can be covering its own panel while the
+  // other system's sun is exported — at the house level that battery power
+  // is leaving through the meter.
+  const batteryToGrid = Math.max(0, Math.min(discharge - batteryToHouse, exportKw - sunToGrid));
   const gridToHouse = Math.max(0, Math.min(importKw, H - sunToHouse - batteryToHouse));
   const gridToBattery = Math.max(0, Math.min(importKw - gridToHouse, charge - sunToBattery));
   const r = (n: number) => Math.round(n * 10) / 10;
-  return { sunToHouse: r(sunToHouse), sunToBattery: r(sunToBattery), sunToGrid: r(sunToGrid), batteryToHouse: r(batteryToHouse), gridToHouse: r(gridToHouse), gridToBattery: r(gridToBattery) };
+  return { sunToHouse: r(sunToHouse), sunToBattery: r(sunToBattery), sunToGrid: r(sunToGrid), batteryToHouse: r(batteryToHouse), batteryToGrid: r(batteryToGrid), gridToHouse: r(gridToHouse), gridToBattery: r(gridToBattery) };
 }

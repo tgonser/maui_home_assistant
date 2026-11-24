@@ -343,12 +343,12 @@
 /* Energy flow strip */
 .v2-strip2 { display: flex; align-items: stretch; gap: 14px; padding: 8px 18px; height: 128px; box-sizing: border-box; flex: none; }
 .v2-strip2 .v2-node { justify-content: center; }
-.v2-flowbox { flex: 1; min-width: 120px; position: relative; }
+.v2-flowbox { flex: 1; min-width: 120px; max-width: 640px; margin-left: auto; position: relative; }
 .v2-flowbox svg { position: absolute; inset: 0; overflow: visible; }
 .v2-flow-base { fill: none; stroke: #EFE8DC; stroke-width: 2; }
 .v2-flow-text { font-size: 11px; fill: #3D4A4E; paint-order: stroke; stroke: #FFF; stroke-width: 3px; font-family: Inter, sans-serif; }
-.v2-dests { flex: 0 0 250px; display: flex; flex-direction: column; justify-content: space-between; }
-.v2-dest { display: grid; grid-template-columns: 78px 70px 1fr; align-items: baseline; gap: 6px; font-size: 13px; }
+.v2-dests { flex: 0 0 300px; display: flex; flex-direction: column; justify-content: space-between; }
+.v2-dest { display: grid; grid-template-columns: 136px 74px 1fr; align-items: baseline; gap: 6px; font-size: 13px; }
 .v2-dest b { font-size: 17px; }
 .v2-dest small { color: var(--muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media (prefers-reduced-motion: reduce) { .v2-flowbox circle { display: none; } }

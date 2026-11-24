@@ -82,10 +82,13 @@ test("a restart stamp is not activity", () => {
 test("energyFlows splits sun between house, batteries and grid", () => {
   const base = { soc1: null, soc2: null };
   assert.deepEqual(energyFlows({ ...base, solarKw: 6, houseKw: 3.9, batteryKw: -2.1, gridKw: 0 }),
-    { sunToHouse: 3.9, sunToBattery: 2.1, sunToGrid: 0, batteryToHouse: 0, gridToHouse: 0, gridToBattery: 0 });
+    { sunToHouse: 3.9, sunToBattery: 2.1, sunToGrid: 0, batteryToHouse: 0, batteryToGrid: 0, gridToHouse: 0, gridToBattery: 0 });
   // evening: batteries run the house
   assert.deepEqual(energyFlows({ ...base, solarKw: 0, houseKw: 1.2, batteryKw: 1.2, gridKw: 0 }),
-    { sunToHouse: 0, sunToBattery: 0, sunToGrid: 0, batteryToHouse: 1.2, gridToHouse: 0, gridToBattery: 0 });
+    { sunToHouse: 0, sunToBattery: 0, sunToGrid: 0, batteryToHouse: 1.2, batteryToGrid: 0, gridToHouse: 0, gridToBattery: 0 });
   // midday surplus: charging and selling
   assert.equal(energyFlows({ ...base, solarKw: 15, houseKw: 2, batteryKw: -5, gridKw: -8 }).sunToGrid, 8);
+  // T2's screen: sun 4.4, house 3.9, one battery giving 0.5, selling 1.0 — the lines must add up to 1.0 sold
+  const f = energyFlows({ ...base, solarKw: 4.4, houseKw: 3.9, batteryKw: 0.5, gridKw: -1.0 });
+  assert.equal(f.sunToGrid, 0.5); assert.equal(f.batteryToGrid, 0.5);
 });

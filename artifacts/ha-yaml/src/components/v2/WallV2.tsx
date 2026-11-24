@@ -341,6 +341,7 @@ export function EnergyStrip({ states }: { states: Map<string, HAState> }) {
     { d: fan(1), kw: f.sunToBattery, label: `${kw(f.sunToBattery)} kW charging`, lx: w * 0.5, ly: h / 2 - 5, color: "#D9A400" },
     { d: fan(2), kw: f.sunToGrid, label: `${kw(f.sunToGrid)} kW selling`, lx: w * 0.5, ly: (h / 2 + y[2]) / 2 + 12, color: "#D9A400" },
     { d: side(1, 0, 70), kw: f.batteryToHouse, label: `${kw(f.batteryToHouse)} kW from batteries`, lx: w - 78, ly: (y[0] + y[1]) / 2 + 4, color: "#0E5A6B" },
+    { d: side(1, 2, 70), kw: f.batteryToGrid, label: `${kw(f.batteryToGrid)} kW batteries → grid`, lx: w - 78, ly: (y[1] + y[2]) / 2 + 4, color: "#0E5A6B" },
     { d: side(2, 0, 120), kw: f.gridToHouse, label: `${kw(f.gridToHouse)} kW bought`, lx: w - 128, ly: h / 2 + 4, color: "#7A2E14" },
     { d: side(2, 1, 40), kw: f.gridToBattery, label: `${kw(f.gridToBattery)} kW grid charging`, lx: w - 48, ly: (y[1] + y[2]) / 2 + 4, color: "#7A2E14" },
   ].filter((l) => l.kw >= 0.05);
@@ -374,9 +375,13 @@ export function EnergyStrip({ states }: { states: Map<string, HAState> }) {
         </svg>
       </div>
       <div className="v2-dests">
-        <div className="v2-dest"><span className="v2-muted">House</span><b>{kw(e.houseKw)} kW</b><small>using now</small></div>
-        <div className="v2-dest"><span className="v2-muted">Powerwalls</span><b style={{ color: "#0E5A6B" }}>{socAvg != null ? `${Math.round(socAvg)}%` : "—"}</b><small>{charging ? `charging ${kw(-e.batteryKw)}` : discharging ? `supplying ${kw(e.batteryKw)}` : "idle"} · S1 {e.soc1 != null ? Math.round(e.soc1) : "—"}% · S2 {e.soc2 != null ? Math.round(e.soc2) : "—"}%</small></div>
-        <div className="v2-dest"><span className="v2-muted">Grid</span><b style={{ color: buying ? "#7A2E14" : "#2E6B3A" }}>{kw(Math.abs(e.gridKw))} kW</b><small>{selling ? "selling" : buying ? "buying" : "not in use"}</small></div>
+        <div className="v2-dest"><span className="v2-muted">House</span><b>{kw(e.houseKw)} kW</b><small>using</small></div>
+        <div className="v2-dest" title={`System 1 ${e.soc1 != null ? Math.round(e.soc1) : "—"}% · System 2 ${e.soc2 != null ? Math.round(e.soc2) : "—"}%`}>
+          <span className="v2-muted">Powerwalls {socAvg != null ? `${Math.round(socAvg)}%` : ""}</span>
+          <b style={{ color: "#0E5A6B" }}>{charging || discharging ? `${kw(Math.abs(e.batteryKw))} kW` : "—"}</b>
+          <small>{charging ? "charging" : discharging ? "giving" : "idle"}</small>
+        </div>
+        <div className="v2-dest"><span className="v2-muted">Grid</span><b style={{ color: buying ? "#7A2E14" : "#2E6B3A" }}>{kw(Math.abs(e.gridKw))} kW</b><small>{selling ? "selling" : buying ? "buying" : "idle"}</small></div>
       </div>
     </section>
   );
