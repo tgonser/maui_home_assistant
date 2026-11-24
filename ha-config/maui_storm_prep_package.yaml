@@ -109,6 +109,7 @@ input_text:
     icon: mdi:key-clock
 
 input_number:
+  # Set to 2.0 in (Nov 24 2026). Low-sun days no longer trigger a request.
   maui_storm_prep_rain_threshold:
     name: Storm Prep — 3-day rain threshold
     min: 0.5
@@ -1247,6 +1248,17 @@ automation:
               {% endif %}
             {% endfor %}
             {{ ns.count }}
+          max_wind_mph: >-
+            {% set unit = state_attr(weather_entity, 'wind_speed_unit') | default('', true) | lower | trim %}
+            {% set ns = namespace(m=0) %}
+            {% for item in (forecast_items | list)[:3] %}
+              {% set w = [item.get('wind_speed', 0) | float(0), item.get('wind_gust_speed', 0) | float(0)] | max %}
+              {% set ns.m = [ns.m, w] | max %}
+            {% endfor %}
+            {% if unit in ['km/h', 'kmh'] %}{{ (ns.m / 1.609) | round(0) }}
+            {% elif unit in ['m/s'] %}{{ (ns.m * 2.237) | round(0) }}
+            {% elif unit in ['kn', 'knots'] %}{{ (ns.m * 1.151) | round(0) }}
+            {% else %}{{ ns.m | round(0) }}{% endif %}
           forecast_window: >-
             {% set items = (forecast_items | list)[:3] %}
             {% if forecast_ok | bool and items | length > 0 %}
@@ -1258,10 +1270,13 @@ automation:
               Forecast unavailable
             {% endif %}
       - variables:
+          # Nov 24 2026 (T2): only real storms ask for approval — heavy rain
+          # (3-day total over the threshold, default 2 in) or storm-force wind.
+          # Ordinary cloudy/rainy days (low sun) no longer trigger a request.
           forecast_risk: >-
             {{ forecast_ok | bool and precipitation_unit_known | bool
-               and (low_sun_days | int >= low_sun_days_required | int
-                    or rain_total | float >= rain_threshold | float) }}
+               and (rain_total | float >= rain_threshold | float
+                    or max_wind_mph | float >= 40) }}
           risk_detected: "{{ official_alert | bool or forecast_risk | bool }}"
           evaluation_ok: >-
             {{ official_alert | bool
@@ -1272,9 +1287,9 @@ automation:
             {% if official_alert | bool %}
               {% set ns.parts = ns.parts + ['Official severe-weather alert is active'] %}
             {% endif %}
-            {% if low_sun_days | int >= low_sun_days_required | int %}
+            {% if max_wind_mph | float >= 40 %}
               {% set ns.parts = ns.parts + [
-                (low_sun_days | int | string) ~ ' of the next 3 days have low-sun conditions'
+                'Forecast wind up to ' ~ (max_wind_mph | int | string) ~ ' mph'
               ] %}
             {% endif %}
             {% if rain_total | float >= rain_threshold | float %}
@@ -1284,7 +1299,7 @@ automation:
               ] %}
             {% endif %}
             {{ ns.parts | join('; ') if ns.parts | length > 0
-               else 'No official alert or multi-day low-sun/rain risk detected' }}
+               else 'No official alert, heavy rain or storm wind in the forecast' }}
           risk_source: >-
             {% if official_alert | bool and forecast_risk | bool %}official alert + forecast
             {% elif official_alert | bool %}official alert

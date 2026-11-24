@@ -12,7 +12,8 @@ export const HOUSE_MODES = [
   { option: "Suspend", label: "Suspend", hint: "Climate automation paused — set AC by hand" },
 ] as const;
 
-const PHONE = /tom.*iphone.*temp|iphone.*tom/i;
+// T2's iPhone is the mobile-app device "Temp" (device_tracker.temp).
+const PHONE = /^device_tracker\.temp$|tom.*iphone.*temp|iphone.*tom/i;
 
 export function modeGuard(states: Map<string, HAState>, now: number): { current: string; ownersLocked: boolean; awayHours: number | null; home: boolean | null } {
   const current = states.get(MODE_ENTITY)?.state ?? "";
