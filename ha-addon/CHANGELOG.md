@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.111
+
+- Music: now playing names the Spotify playlist ("from your \"Bossa Chill\" playlist").
+- Home: motion names drop the "Makena Alarm" prefix.
+
 ## 1.0.110
 
 - Home: the "Right now" rows scroll so the quick buttons (lights off, shades, Leave) always fit.

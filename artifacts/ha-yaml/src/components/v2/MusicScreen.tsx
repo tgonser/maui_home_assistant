@@ -143,7 +143,12 @@ function Control({ states, picked, setPicked }: { states: Map<string, HAState>; 
 
       <div className="v2-np">
         <div className="v2-np-title">{np.title}</div>
-        <div className="v2-muted">{np.sub}</div>
+        <div className="v2-muted">{np.sub}{(() => {
+          // When Spotify is the source, name the playlist (from the Spotify entity).
+          const sp = spotifyEntity(states);
+          const pl = sp?.state === "playing" && /spotify/i.test(np.sub) ? String(sp.attributes.media_playlist ?? "") : "";
+          return pl ? ` · from your "${playlistLabel(pl)}" playlist` : "";
+        })()}</div>
       </div>
 
       <div className="v2-transport">

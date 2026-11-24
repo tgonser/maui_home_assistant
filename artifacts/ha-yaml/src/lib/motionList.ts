@@ -20,7 +20,7 @@ export type MotionItem = { id: string; name: string; active: boolean; changed: n
 export function recentMotion(states: Map<string, HAState>): MotionItem[] {
   return [...states.values()].filter(isMotionSensor).map((s) => ({
     id: s.entity_id,
-    name: motionSensorLabel(String(s.attributes.friendly_name ?? s.entity_id)),
+    name: motionSensorLabel(String(s.attributes.friendly_name ?? s.entity_id).replace(/^Makena Alarm\s+/i, "")),
     active: s.state === "on",
     available: s.state !== "unavailable" && s.state !== "unknown",
     changed: Date.parse(s.last_changed),
