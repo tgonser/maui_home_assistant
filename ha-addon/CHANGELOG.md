@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.89
+
+- New wall › Rooms: pick a room on the left, control everything in it on the right — each light
+  (on/off and brightness), All on / All off, the room's AC (− / + and on/off), its shades and its
+  speaker (play/pause, volume).
+- Guest tablets: "This tablet" (owner view) turns a tablet into the guest tablet for Beach,
+  Boardroom, Molokini or Mauka. It opens in that suite with only Rooms and the outdoor cameras;
+  the master suite, Alarm, Energy and the classic wall are hidden, and guest AC targets stay
+  within 72–80°. "Owner" asks for the homeowner PIN (checked by the add-on) to switch back.
+  Guest mode can only be turned on once a homeowner PIN is set in the add-on options.
+
 ## 1.0.88
 
 - New wall: swipe left or right on a screen to go to the next or previous tab (touches that start

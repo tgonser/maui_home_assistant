@@ -284,3 +284,28 @@
 .v2-main { animation: v2in 180ms ease-out; touch-action: pan-y; }
 @keyframes v2in { from { opacity: 0.4; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .v2-main { animation: none; } }
+
+/* Rooms */
+.v2-rooms { flex: 1; min-height: 0; display: flex; gap: 12px; }
+.v2-room-list { flex: 0 0 230px; padding: 8px 10px; overflow: auto; display: flex; flex-direction: column; gap: 4px; }
+.v2-room-pick { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 46px; padding: 6px 12px; margin-bottom: 4px; border: 0; border-radius: 12px; background: transparent; font: inherit; font-size: 15px; font-weight: 600; color: var(--ink); text-align: left; cursor: pointer; }
+.v2-room-pick small { font-size: 12px; font-weight: 500; color: var(--muted); white-space: nowrap; }
+.v2-room-pick.on { background: var(--teal); color: #FFF; }
+.v2-room-pick.on small { color: #D7E9ED; }
+.v2-room-panel { flex: 1; min-width: 0; padding: 14px 18px; display: flex; flex-direction: column; gap: 10px; overflow: auto; }
+.v2-room-head { display: flex; align-items: baseline; gap: 14px; }
+.v2-room-title { font-family: Outfit, Inter, sans-serif; font-size: 26px; font-weight: 600; }
+.v2-room-cols { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
+.v2-room-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.v2-block { padding: 12px 14px; border-radius: 14px; background: #F8F4EC; display: flex; flex-direction: column; gap: 8px; }
+.v2-block-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.v2-light-rows { display: flex; flex-direction: column; gap: 4px; max-height: 420px; overflow: auto; }
+.v2-lrow { display: flex; align-items: center; gap: 10px; min-height: 42px; }
+.v2-lrow-name { flex: 1; min-width: 0; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.v2-lrow input[type=range] { width: 38%; accent-color: #D9A400; }
+.v2-switch { flex: none; width: 50px; height: 30px; border-radius: 999px; border: 0; background: #D8CFBF; position: relative; cursor: pointer; padding: 0; }
+.v2-switch i { position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #FFF; box-shadow: 0 1px 2px rgba(0,0,0,0.2); transition: left 120ms; }
+.v2-switch[aria-checked="true"] { background: #E2B93B; }
+.v2-switch[aria-checked="true"] i { left: 23px; }
+.v2-srow { display: flex; align-items: center; gap: 10px; }
+.v2-inline { display: inline-grid; grid-template-columns: repeat(3, 60px); }

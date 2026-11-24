@@ -11,6 +11,9 @@ import { ShadesScreen } from "./ShadesScreen";
 import { EnergyScreen } from "./EnergyScreen";
 import { AlarmScreen } from "./AlarmScreen";
 import { CamerasScreen } from "./CamerasScreen";
+import { RoomsScreen } from "./RoomsScreen";
+import { GUEST_SUITE_IDS, parseRole, ROLE_KEY, ROOMS, type TabletRole } from "@/lib/roomsCatalog";
+import { haStormPrepSecurity, haUnlockStormPrep } from "@/lib/ha";
 import "./wall-v2.css";
 
 // The redesigned wall (sand palette, menu across the top). Screens are added
@@ -26,13 +29,19 @@ export function wantsWallV2(): boolean {
 }
 
 const NAV = ["Home", "Rooms", "Lights", "Climate", "Shades", "Music", "Energy", "Alarm", "Cameras"] as const;
+// A guest tablet gets its room (lights, AC, shades, music) and the outdoor cameras.
+const GUEST_NAV = ["Rooms", "Cameras"] as const;
 type Nav = (typeof NAV)[number];
-const BUILT: Nav[] = ["Home", "Lights", "Music", "Climate", "Shades", "Energy", "Alarm", "Cameras"];
+const BUILT: Nav[] = ["Home", "Rooms", "Lights", "Music", "Climate", "Shades", "Energy", "Alarm", "Cameras"];
 const MAUI_TZ = "Pacific/Honolulu";
 
 export function WallV2() {
   const url = useHAStore((s) => s.url);
-  const [tab, setTab] = useState<Nav>("Home");
+  const [role, setRoleState] = useState<TabletRole>(() => { try { return parseRole(localStorage.getItem(ROLE_KEY)); } catch { return { kind: "owner" }; } });
+  const setRole = (r: TabletRole) => { try { localStorage.setItem(ROLE_KEY, JSON.stringify(r)); } catch { /* private mode */ } setRoleState(r); setTab(r.kind === "guest" ? "Rooms" : "Home"); };
+  const nav: readonly Nav[] = role.kind === "guest" ? GUEST_NAV : NAV;
+  const [tab, setTab] = useState<Nav>(() => (role.kind === "guest" ? "Rooms" : "Home"));
+  const [tabletDlg, setTabletDlg] = useState(false);
   const [now, setNow] = useState(Date.now());
   const { states, mode, error, lastMs } = useLiveStates();
 
@@ -63,8 +72,8 @@ export function WallV2() {
     const t = e.changedTouches[0];
     const dir = swipeDirection(t.clientX - start.x, t.clientY - start.y, Date.now() - start.t);
     if (!dir) return;
-    const i = NAV.indexOf(tab);
-    const next = NAV[(i + dir + NAV.length) % NAV.length];
+    const i = nav.indexOf(tab);
+    const next = nav[(i + dir + nav.length) % nav.length];
     setTab(next);
   };
 
@@ -76,7 +85,7 @@ export function WallV2() {
     <div className="v2-root">
       <header className="v2-header">
         <div className="v2-brand">
-          <span className="v2-title">Mākena</span>
+          <span className="v2-title">{role.kind === "guest" ? ROOMS.find((r) => r.id === role.room)?.name ?? "Mākena" : "Mākena"}</span>
           <span className="v2-sub">{dateStr}{houseMode ? ` · ${houseMode}` : ""}</span>
         </div>
         <div className="v2-header-right">
@@ -84,18 +93,24 @@ export function WallV2() {
           {Number.isFinite(outside) && <span className="v2-chip">Outside {Math.round(outside)}°</span>}
           <span className="v2-clock">{hm} <small>{ampm}</small></span>
           <FullScreenButton />
-          <button type="button" className="v2-link" onClick={() => setWallUi("classic")}>Classic view</button>
+          {role.kind === "owner" && <button type="button" className="v2-link" onClick={() => setTabletDlg(true)}>This tablet</button>}
+          {role.kind === "owner" && <button type="button" className="v2-link" onClick={() => setWallUi("classic")}>Classic view</button>}
+          {role.kind === "guest" && <button type="button" className="v2-link" onClick={() => setTabletDlg(true)}>Owner</button>}
         </div>
       </header>
       <nav className="v2-nav" aria-label="Sections">
-        {NAV.map((n) => (
+        {nav.map((n) => (
           <button key={n} type="button" aria-current={tab === n ? "page" : undefined} className={tab === n ? "v2-nav-on" : ""} onClick={() => setTab(n)}>
             {n}
           </button>
         ))}
       </nav>
       <main className="v2-main" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} key={tab}>
-        {tab === "Home" ? (
+        {tab === "Rooms" ? (
+          <RoomsScreen states={states} role={role} />
+        ) : tab === "Cameras" && role.kind === "guest" ? (
+          <CamerasScreen states={states} guest />
+        ) : tab === "Home" ? (
           <HomeScreen states={states} now={now} />
         ) : tab === "Lights" ? (
           <LightsScreen states={states} now={now} />
@@ -115,6 +130,64 @@ export function WallV2() {
           <NotYet name={tab} built={BUILT} />
         )}
       </main>
+      {tabletDlg && <TabletDialog role={role} onSet={(r) => { setRole(r); setTabletDlg(false); }} onClose={() => setTabletDlg(false)} />}
+    </div>
+  );
+}
+
+// Owners: make this tablet a guest tablet for one suite. Guests: the way back
+// to the owner view is the homeowner PIN (checked by the add-on server; it
+// needs the secure Home Assistant connection, so on a plain-network kiosk
+// browser use the kiosk app's own exit instead).
+function TabletDialog({ role, onSet, onClose }: { role: TabletRole; onSet: (r: TabletRole) => void; onClose: () => void }) {
+  const [pin, setPin] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  // Never lock a tablet into guest mode unless the way back (the PIN) exists.
+  const [pinReady, setPinReady] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (role.kind !== "owner") return;
+    void haStormPrepSecurity().then((r) => setPinReady(r.ok ? r.data.pinConfigured : false));
+  }, [role.kind]);
+  return (
+    <div className="v2-modal" role="dialog" aria-modal="true" aria-label="This tablet">
+      <div className="v2-card v2-modal-card">
+        {role.kind === "owner" ? (
+          <>
+            <div className="v2-h">Make this a guest tablet</div>
+            <p className="v2-muted">The tablet opens in that suite with only its room and the outdoor cameras. Alarm, energy and the master suite are hidden. Getting back here needs the homeowner PIN.</p>
+            {pinReady === false ? (
+              <div className="v2-alert">Set a homeowner PIN first (Home Assistant › Settings › Add-ons › Wall › Configuration), so there is a way back to the owner view.</div>
+            ) : (
+              <div className="v2-quick">
+                {GUEST_SUITE_IDS.map((id) => (
+                  <button key={id} type="button" className="v2-btn" disabled={pinReady !== true} onClick={() => onSet({ kind: "guest", room: id })}>{ROOMS.find((r) => r.id === id)?.name}</button>
+                ))}
+              </div>
+            )}
+            <div className="v2-modal-actions"><button type="button" className="v2-btn" onClick={onClose}>Cancel</button></div>
+          </>
+        ) : (
+          <form onSubmit={async (e) => {
+            e.preventDefault(); setBusy(true); setErr(null);
+            const r = await haUnlockStormPrep(pin);
+            setBusy(false); setPin("");
+            if (r.ok && r.data.unlocked) onSet({ kind: "owner" });
+            else setErr(r.ok ? "PIN not accepted." : r.error);
+          }}>
+            <div className="v2-h">Owner view</div>
+            <p className="v2-muted">Enter the homeowner PIN to leave guest mode on this tablet.</p>
+            <label className="v2-field">Homeowner PIN
+              <input type="password" inputMode="numeric" autoComplete="off" value={pin} onChange={(e) => setPin(e.target.value.slice(0, 32))} autoFocus />
+            </label>
+            {err && <div className="v2-alert">{err}</div>}
+            <div className="v2-modal-actions">
+              <button type="button" className="v2-btn" onClick={onClose}>Cancel</button>
+              <button type="submit" className="v2-btn v2-primary" disabled={busy || pin.length < 4}>{busy ? "Checking…" : "Unlock"}</button>
+            </div>
+          </form>
+        )}
+      </div>
     </div>
   );
 }
