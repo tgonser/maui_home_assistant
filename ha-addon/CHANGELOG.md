@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.108
+
+- Playlists are now separate: "MA-" playlists are for the wake-up alarm only, "Maui-" (or
+  "Makena-") playlists for the Music screen only.
+
 ## 1.0.107
 
 - Spotify playlists: the wall server keeps a shared copy of the playlist list. HA can only list
