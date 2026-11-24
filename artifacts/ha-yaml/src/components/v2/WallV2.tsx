@@ -281,6 +281,7 @@ function HomeScreen({ states, now }: { states: Map<string, HAState>; now: number
         <section className="v2-card v2-now" aria-label="Right now">
           <div className="v2-h">Right now</div>
           <ModeBar states={states} now={now} />
+          <div className="v2-now-rows">
           {doors.length > 0 && (
             <div className="v2-alert">
               {doors.map((d) => doorName(d.sensor!)).join(", ")} open
@@ -293,7 +294,7 @@ function HomeScreen({ states, now }: { states: Map<string, HAState>; now: number
           <Row label="Security" value={alarm ? titleCase(alarm.state) : "—"} sub={doors.length ? `${doors.length} door${doors.length > 1 ? "s" : ""} open` : "All doors closed"} />
           <MotionRow states={states} now={now} />
           <Row label="Lights" value={roomsOn ? `On in ${roomsOn} room${roomsOn > 1 ? "s" : ""}` : "All off"} sub={`Shades: ${shadesOpen} of ${shades.length} open`} />
-          <div className="v2-grow" />
+          </div>
           <div className="v2-quick">
             <button type="button" className={confirm === "off" ? "v2-btn v2-confirm" : "v2-btn"} disabled={busy === "off" || lightsOnIds.length === 0} onClick={() => run("off", () => haCallService("light", "turn_off", { entity_id: lightsOnIds }))}>
               {confirm === "off" ? `Tap again: ${lightsOnIds.length} off` : "All lights off"}

@@ -82,9 +82,10 @@
 .v2-door-nosensor { fill: #8FB3BC; }
 .v2-door-open { fill: var(--orange); }
 
-.v2-now { flex: 1; min-width: 290px; padding: 12px 18px; display: flex; flex-direction: column; }
+.v2-now { flex: 1; min-width: 290px; min-height: 0; padding: 12px 18px; display: flex; flex-direction: column; }
+.v2-now-rows { flex: 1; min-height: 0; overflow: auto; margin-bottom: 8px; }
 .v2-alert { margin: 8px 0 4px; padding: 8px 10px; border-radius: 10px; background: #FBEBDD; color: #7A4A14; font-size: 13px; }
-.v2-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.v2-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--line); }
 .v2-row-label { font-size: 13px; color: var(--muted); white-space: nowrap; }
 .v2-row-val { text-align: right; min-width: 0; font-size: 15px; font-weight: 600; }
 .v2-row-val small { display: block; font-size: 12px; font-weight: 400; color: var(--muted); }

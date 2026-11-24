@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.110
+
+- Home: the "Right now" rows scroll so the quick buttons (lights off, shades, Leave) always fit.
+
 ## 1.0.109
 
 - Home: house mode buttons (Owners · Visitors · Vacation · Suspend) at the top of "Right now",
