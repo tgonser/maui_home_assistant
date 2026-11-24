@@ -30,3 +30,12 @@ test("suiteOccupied follows the wake-up", () => {
   assert.equal(suiteOccupied(on, "molokini", "2026-11-23"), true);
   assert.equal(suiteOccupied(off, "molokini", "2026-11-23"), false);
 });
+
+import { nextWakeDay, WAKE_PRESETS } from "./wake.ts";
+
+test("nextWakeDay: later today vs tomorrow", () => {
+  assert.equal(nextWakeDay("07:00", "06:17"), "today");
+  assert.equal(nextWakeDay("07:00", "07:00"), "tomorrow");
+  assert.equal(nextWakeDay("06:30", "22:10"), "tomorrow");
+  assert.ok(WAKE_PRESETS.includes("07:00"));
+});

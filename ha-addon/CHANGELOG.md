@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.104
+
+- Wake-up: a big On/Off switch at the top; the time is always visible, with quick picks
+  (6:00–8:30) and −/+ 15 min; while it's on, changes save by themselves (no "Update" button).
+  "Just tomorrow" is now "Just once", and the status says whether it rings today or tomorrow.
+  On short screens (phones) the "How it works" card is hidden so nothing scrolls off.
+
 ## 1.0.103
 
 - Music: only Spotify playlists whose names start with "Maui", "Makena" or "Mākena" show on the

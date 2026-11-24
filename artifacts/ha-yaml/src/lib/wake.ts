@@ -52,3 +52,12 @@ export function suiteOccupied(states: Map<string, HAState>, suite: string, today
   if (!w.available) return false;
   return w.enabled || w.ringing || w.snoozeEnds != null || (w.repeat === "Every day until I leave" && w.until >= todayIso && w.enabled);
 }
+
+/** Quick picks on the wake-up screen. */
+export const WAKE_PRESETS = ["06:00", "06:30", "07:00", "07:30", "08:00", "08:30"];
+
+/** Whether a wake-up set for `hhmm` next rings today or tomorrow, given the
+ *  current Maui time `nowHhmm` (both "HH:MM"). */
+export function nextWakeDay(hhmm: string, nowHhmm: string): "today" | "tomorrow" {
+  return hhmm > nowHhmm ? "today" : "tomorrow";
+}
