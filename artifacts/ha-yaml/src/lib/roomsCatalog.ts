@@ -67,6 +67,24 @@ export function lightName(s: HAState): string {
   return out.charAt(0).toUpperCase() + out.slice(1).toLowerCase();
 }
 
+/** Names for a room's lights with the shared room word removed, so
+ *  "Atrium downlights" / "Atrium chandelier" read "Downlights" / "Chandelier".
+ *  Repeated words ("Bar bar artwork") collapse. */
+export function roomLightNames(lights: HAState[]): Map<string, string> {
+  const words = lights.map((l) => lightName(l).split(/\s+/).filter((w, i, a) => i === 0 || w.toLowerCase() !== a[i - 1].toLowerCase()));
+  let common = 0;
+  if (words.length > 1) {
+    const shortest = Math.min(...words.map((w) => w.length));
+    while (common < shortest - 1 && words.every((w) => w[common].toLowerCase() === words[0][common].toLowerCase())) common++;
+  }
+  const out = new Map<string, string>();
+  lights.forEach((l, i) => {
+    const rest = words[i].slice(common).join(" ");
+    out.set(l.entity_id, rest.charAt(0).toUpperCase() + rest.slice(1).toLowerCase());
+  });
+  return out;
+}
+
 // ── Tablet role ──────────────────────────────────────────────────────────────
 
 export type TabletRole = { kind: "owner" } | { kind: "guest"; room: string };

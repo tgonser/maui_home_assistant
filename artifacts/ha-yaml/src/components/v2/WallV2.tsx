@@ -12,6 +12,7 @@ import { EnergyScreen } from "./EnergyScreen";
 import { AlarmScreen } from "./AlarmScreen";
 import { CamerasScreen } from "./CamerasScreen";
 import { RoomsScreen } from "./RoomsScreen";
+import { WakeRinging, WakeScreen } from "./WakeScreen";
 import { GUEST_SUITE_IDS, parseRole, ROLE_KEY, ROOMS, type TabletRole } from "@/lib/roomsCatalog";
 import { haStormPrepSecurity, haUnlockStormPrep } from "@/lib/ha";
 import "./wall-v2.css";
@@ -28,9 +29,10 @@ export function wantsWallV2(): boolean {
   try { return localStorage.getItem(UI_KEY) === "v2"; } catch { return false; }
 }
 
-const NAV = ["Home", "Rooms", "Lights", "Climate", "Shades", "Music", "Energy", "Alarm", "Cameras"] as const;
+const NAV = ["Home", "Rooms", "Lights", "Climate", "Shades", "Music", "Energy", "Alarm", "Cameras", "Wake-up"] as const;
+const OWNER_NAV = ["Home", "Rooms", "Lights", "Climate", "Shades", "Music", "Energy", "Alarm", "Cameras"] as const;
 // A guest tablet gets its room (lights, AC, shades, music) and the outdoor cameras.
-const GUEST_NAV = ["Rooms", "Cameras"] as const;
+const GUEST_NAV = ["Rooms", "Wake-up", "Cameras"] as const;
 type Nav = (typeof NAV)[number];
 const BUILT: Nav[] = ["Home", "Rooms", "Lights", "Music", "Climate", "Shades", "Energy", "Alarm", "Cameras"];
 const MAUI_TZ = "Pacific/Honolulu";
@@ -39,7 +41,7 @@ export function WallV2() {
   const url = useHAStore((s) => s.url);
   const [role, setRoleState] = useState<TabletRole>(() => { try { return parseRole(localStorage.getItem(ROLE_KEY)); } catch { return { kind: "owner" }; } });
   const setRole = (r: TabletRole) => { try { localStorage.setItem(ROLE_KEY, JSON.stringify(r)); } catch { /* private mode */ } setRoleState(r); setTab(r.kind === "guest" ? "Rooms" : "Home"); };
-  const nav: readonly Nav[] = role.kind === "guest" ? GUEST_NAV : NAV;
+  const nav: readonly Nav[] = role.kind === "guest" ? GUEST_NAV : OWNER_NAV;
   const [tab, setTab] = useState<Nav>(() => (role.kind === "guest" ? "Rooms" : "Home"));
   const [tabletDlg, setTabletDlg] = useState(false);
   const [now, setNow] = useState(Date.now());
@@ -106,7 +108,9 @@ export function WallV2() {
         ))}
       </nav>
       <main className="v2-main" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} key={tab}>
-        {tab === "Rooms" ? (
+        {tab === "Wake-up" && role.kind === "guest" ? (
+          <WakeScreen states={states} suite={role.room} suiteName={ROOMS.find((r) => r.id === role.room)?.name ?? role.room} />
+        ) : tab === "Rooms" ? (
           <RoomsScreen states={states} role={role} />
         ) : tab === "Cameras" && role.kind === "guest" ? (
           <CamerasScreen states={states} guest />
@@ -130,6 +134,7 @@ export function WallV2() {
           <NotYet name={tab} built={BUILT} />
         )}
       </main>
+      {role.kind === "guest" && <WakeRinging states={states} suite={role.room} suiteName={ROOMS.find((r) => r.id === role.room)?.name ?? role.room} />}
       {tabletDlg && <TabletDialog role={role} onSet={(r) => { setRole(r); setTabletDlg(false); }} onClose={() => setTabletDlg(false)} />}
     </div>
   );

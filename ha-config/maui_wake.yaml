@@ -1,0 +1,567 @@
+# =============================================================================
+# Maui Guest Wake-up (one alarm per guest suite) — managed by the Wall Kiosk
+# =============================================================================
+# The guest tablet in a suite sets these helpers; at the wake time this
+# package fades up THAT suite's bedroom lights, opens its bedroom shades and
+# (where the suite has a speaker) says good morning every 2 minutes, up to 3
+# times. Snooze dims the lights, stops the voice and rings again in 9 min.
+# "I'm up" stops everything. Nothing outside the suite is touched.
+# Repeat: "Once" turns itself off after ringing; "Every day until I leave"
+# rings each day through the leave date, then turns itself off.
+# Ringing ends by itself after 20 minutes.
+# =============================================================================
+
+
+input_boolean:
+  wake_beach_enabled:
+    name: "Beach wake-up on"
+    icon: mdi:alarm
+  wake_beach_lights:
+    name: "Beach wake-up fade up lights"
+    icon: mdi:alarm
+  wake_beach_shades:
+    name: "Beach wake-up open shades"
+    icon: mdi:alarm
+  wake_beach_voice:
+    name: "Beach wake-up good-morning voice"
+    icon: mdi:alarm
+  wake_beach_ringing:
+    name: "Beach wake-up ringing now"
+    icon: mdi:alarm
+  wake_boardroom_enabled:
+    name: "Boardroom wake-up on"
+    icon: mdi:alarm
+  wake_boardroom_lights:
+    name: "Boardroom wake-up fade up lights"
+    icon: mdi:alarm
+  wake_boardroom_shades:
+    name: "Boardroom wake-up open shades"
+    icon: mdi:alarm
+  wake_boardroom_voice:
+    name: "Boardroom wake-up good-morning voice"
+    icon: mdi:alarm
+  wake_boardroom_ringing:
+    name: "Boardroom wake-up ringing now"
+    icon: mdi:alarm
+  wake_molokini_enabled:
+    name: "Molokini wake-up on"
+    icon: mdi:alarm
+  wake_molokini_lights:
+    name: "Molokini wake-up fade up lights"
+    icon: mdi:alarm
+  wake_molokini_shades:
+    name: "Molokini wake-up open shades"
+    icon: mdi:alarm
+  wake_molokini_voice:
+    name: "Molokini wake-up good-morning voice"
+    icon: mdi:alarm
+  wake_molokini_ringing:
+    name: "Molokini wake-up ringing now"
+    icon: mdi:alarm
+  wake_mauka_enabled:
+    name: "Mauka wake-up on"
+    icon: mdi:alarm
+  wake_mauka_lights:
+    name: "Mauka wake-up fade up lights"
+    icon: mdi:alarm
+  wake_mauka_shades:
+    name: "Mauka wake-up open shades"
+    icon: mdi:alarm
+  wake_mauka_voice:
+    name: "Mauka wake-up good-morning voice"
+    icon: mdi:alarm
+  wake_mauka_ringing:
+    name: "Mauka wake-up ringing now"
+    icon: mdi:alarm
+
+input_datetime:
+  wake_beach_time:
+    name: "Beach wake-up time"
+    has_date: false
+    has_time: true
+  wake_beach_until:
+    name: "Beach wake-up last day"
+    has_date: true
+    has_time: false
+  wake_boardroom_time:
+    name: "Boardroom wake-up time"
+    has_date: false
+    has_time: true
+  wake_boardroom_until:
+    name: "Boardroom wake-up last day"
+    has_date: true
+    has_time: false
+  wake_molokini_time:
+    name: "Molokini wake-up time"
+    has_date: false
+    has_time: true
+  wake_molokini_until:
+    name: "Molokini wake-up last day"
+    has_date: true
+    has_time: false
+  wake_mauka_time:
+    name: "Mauka wake-up time"
+    has_date: false
+    has_time: true
+  wake_mauka_until:
+    name: "Mauka wake-up last day"
+    has_date: true
+    has_time: false
+
+input_select:
+  wake_beach_repeat:
+    name: "Beach wake-up repeat"
+    options:
+      - Once
+      - Every day until I leave
+  wake_boardroom_repeat:
+    name: "Boardroom wake-up repeat"
+    options:
+      - Once
+      - Every day until I leave
+  wake_molokini_repeat:
+    name: "Molokini wake-up repeat"
+    options:
+      - Once
+      - Every day until I leave
+  wake_mauka_repeat:
+    name: "Mauka wake-up repeat"
+    options:
+      - Once
+      - Every day until I leave
+
+timer:
+  wake_beach_snooze:
+    name: "Beach wake-up snooze"
+    duration: "00:09:00"
+  wake_boardroom_snooze:
+    name: "Boardroom wake-up snooze"
+    duration: "00:09:00"
+  wake_molokini_snooze:
+    name: "Molokini wake-up snooze"
+    duration: "00:09:00"
+  wake_mauka_snooze:
+    name: "Mauka wake-up snooze"
+    duration: "00:09:00"
+
+automation maui_wake:
+  - id: maui_wake_beach
+    alias: "Maui Wake-up — Beach"
+    description: "Guest wake-up for the Beach suite only. Set from the guest tablet."
+    mode: restart
+    triggers:
+      - trigger: time
+        at: input_datetime.wake_beach_time
+        id: time
+      - trigger: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.wake_beach_snooze
+        id: snooze
+    conditions:
+      # A snooze re-ring still happens after a one-time alarm switched itself off.
+      - condition: template
+        value_template: "{{ trigger.id == 'snooze' or is_state('input_boolean.wake_beach_enabled', 'on') }}"
+      - condition: template
+        value_template: >-
+          {{ trigger.id == 'snooze'
+             or is_state('input_select.wake_beach_repeat', 'Once')
+             or states('input_datetime.wake_beach_until') in ['unknown', 'unavailable', '']
+             or now().date() | string <= states('input_datetime.wake_beach_until') }}
+    actions:
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.wake_beach_ringing
+      - if:
+          - condition: state
+            entity_id: input_boolean.wake_beach_lights
+            state: "on"
+        then:
+          - action: light.turn_on
+            target:
+              entity_id: "{{ states.light | selectattr('entity_id', 'match', 'light\\.floor_1_bedroom_2_suite_bed_2_') | rejectattr('entity_id', 'search', '_bath_|closet') | rejectattr('state', 'eq', 'unavailable') | map(attribute='entity_id') | list }}"
+            data:
+              brightness_pct: 70
+              transition: 120
+            continue_on_error: true
+      - if:
+          - condition: template
+            value_template: "{{ trigger.id == 'time' and is_state('input_boolean.wake_beach_shades', 'on') }}"
+        then:
+          - action: cover.open_cover
+            target:
+              entity_id:
+                - cover.floor_1_bedroom_2_suite_bed_2_shade_group_1
+            continue_on_error: true
+      # One-time alarms switch themselves off; daily ones stop after the last day.
+      - if:
+          - condition: template
+            value_template: >-
+              {{ trigger.id == 'time' and (is_state('input_select.wake_beach_repeat', 'Once')
+                 or now().date() | string >= states('input_datetime.wake_beach_until')) }}
+        then:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.wake_beach_enabled
+      - if:
+          - condition: state
+            entity_id: input_boolean.wake_beach_voice
+            state: "on"
+        then:
+          - action: media_player.volume_set
+            target:
+              entity_id: media_player.beach_guest_bed
+            data:
+              volume_level: 0.25
+            continue_on_error: true
+          - repeat:
+              count: 3
+              sequence:
+                - condition: state
+                  entity_id: input_boolean.wake_beach_ringing
+                  state: "on"
+                - action: tts.speak
+                  target:
+                    entity_id: tts.home_assistant_cloud
+                  data:
+                    media_player_entity_id: media_player.beach_guest_bed
+                    message: "Good morning. It's {{ now().strftime('%-I:%M') }}. Time to wake up."
+                  continue_on_error: true
+                - delay: "00:02:00"
+      - wait_template: "{{ is_state('input_boolean.wake_beach_ringing', 'off') }}"
+        timeout: "00:20:00"
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.wake_beach_ringing
+  - id: maui_wake_boardroom
+    alias: "Maui Wake-up — Boardroom"
+    description: "Guest wake-up for the Boardroom suite only. Set from the guest tablet."
+    mode: restart
+    triggers:
+      - trigger: time
+        at: input_datetime.wake_boardroom_time
+        id: time
+      - trigger: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.wake_boardroom_snooze
+        id: snooze
+    conditions:
+      # A snooze re-ring still happens after a one-time alarm switched itself off.
+      - condition: template
+        value_template: "{{ trigger.id == 'snooze' or is_state('input_boolean.wake_boardroom_enabled', 'on') }}"
+      - condition: template
+        value_template: >-
+          {{ trigger.id == 'snooze'
+             or is_state('input_select.wake_boardroom_repeat', 'Once')
+             or states('input_datetime.wake_boardroom_until') in ['unknown', 'unavailable', '']
+             or now().date() | string <= states('input_datetime.wake_boardroom_until') }}
+    actions:
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.wake_boardroom_ringing
+      - if:
+          - condition: state
+            entity_id: input_boolean.wake_boardroom_lights
+            state: "on"
+        then:
+          - action: light.turn_on
+            target:
+              entity_id: "{{ states.light | selectattr('entity_id', 'match', 'light\\.floor_1_bedroom_3_suite_bed_3_') | rejectattr('entity_id', 'search', '_bath_|closet') | rejectattr('state', 'eq', 'unavailable') | map(attribute='entity_id') | list }}"
+            data:
+              brightness_pct: 70
+              transition: 120
+            continue_on_error: true
+      # One-time alarms switch themselves off; daily ones stop after the last day.
+      - if:
+          - condition: template
+            value_template: >-
+              {{ trigger.id == 'time' and (is_state('input_select.wake_boardroom_repeat', 'Once')
+                 or now().date() | string >= states('input_datetime.wake_boardroom_until')) }}
+        then:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.wake_boardroom_enabled
+      - wait_template: "{{ is_state('input_boolean.wake_boardroom_ringing', 'off') }}"
+        timeout: "00:20:00"
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.wake_boardroom_ringing
+  - id: maui_wake_molokini
+    alias: "Maui Wake-up — Molokini"
+    description: "Guest wake-up for the Molokini suite only. Set from the guest tablet."
+    mode: restart
+    triggers:
+      - trigger: time
+        at: input_datetime.wake_molokini_time
+        id: time
+      - trigger: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.wake_molokini_snooze
+        id: snooze
+    conditions:
+      # A snooze re-ring still happens after a one-time alarm switched itself off.
+      - condition: template
+        value_template: "{{ trigger.id == 'snooze' or is_state('input_boolean.wake_molokini_enabled', 'on') }}"
+      - condition: template
+        value_template: >-
+          {{ trigger.id == 'snooze'
+             or is_state('input_select.wake_molokini_repeat', 'Once')
+             or states('input_datetime.wake_molokini_until') in ['unknown', 'unavailable', '']
+             or now().date() | string <= states('input_datetime.wake_molokini_until') }}
+    actions:
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.wake_molokini_ringing
+      - if:
+          - condition: state
+            entity_id: input_boolean.wake_molokini_lights
+            state: "on"
+        then:
+          - action: light.turn_on
+            target:
+              entity_id: "{{ states.light | selectattr('entity_id', 'match', 'light\\.floor_2_bedroom_4_suite_bed_4_') | rejectattr('entity_id', 'search', '_bath_|closet') | rejectattr('state', 'eq', 'unavailable') | map(attribute='entity_id') | list }}"
+            data:
+              brightness_pct: 70
+              transition: 120
+            continue_on_error: true
+      - if:
+          - condition: template
+            value_template: "{{ trigger.id == 'time' and is_state('input_boolean.wake_molokini_shades', 'on') }}"
+        then:
+          - action: cover.open_cover
+            target:
+              entity_id:
+                - cover.floor_2_bedroom_4_suite_bed_4_shade_group_1
+            continue_on_error: true
+      # One-time alarms switch themselves off; daily ones stop after the last day.
+      - if:
+          - condition: template
+            value_template: >-
+              {{ trigger.id == 'time' and (is_state('input_select.wake_molokini_repeat', 'Once')
+                 or now().date() | string >= states('input_datetime.wake_molokini_until')) }}
+        then:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.wake_molokini_enabled
+      - if:
+          - condition: state
+            entity_id: input_boolean.wake_molokini_voice
+            state: "on"
+        then:
+          - action: media_player.volume_set
+            target:
+              entity_id: media_player.molokini_guest_bed
+            data:
+              volume_level: 0.25
+            continue_on_error: true
+          - repeat:
+              count: 3
+              sequence:
+                - condition: state
+                  entity_id: input_boolean.wake_molokini_ringing
+                  state: "on"
+                - action: tts.speak
+                  target:
+                    entity_id: tts.home_assistant_cloud
+                  data:
+                    media_player_entity_id: media_player.molokini_guest_bed
+                    message: "Good morning. It's {{ now().strftime('%-I:%M') }}. Time to wake up."
+                  continue_on_error: true
+                - delay: "00:02:00"
+      - wait_template: "{{ is_state('input_boolean.wake_molokini_ringing', 'off') }}"
+        timeout: "00:20:00"
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.wake_molokini_ringing
+  - id: maui_wake_mauka
+    alias: "Maui Wake-up — Mauka"
+    description: "Guest wake-up for the Mauka suite only. Set from the guest tablet."
+    mode: restart
+    triggers:
+      - trigger: time
+        at: input_datetime.wake_mauka_time
+        id: time
+      - trigger: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.wake_mauka_snooze
+        id: snooze
+    conditions:
+      # A snooze re-ring still happens after a one-time alarm switched itself off.
+      - condition: template
+        value_template: "{{ trigger.id == 'snooze' or is_state('input_boolean.wake_mauka_enabled', 'on') }}"
+      - condition: template
+        value_template: >-
+          {{ trigger.id == 'snooze'
+             or is_state('input_select.wake_mauka_repeat', 'Once')
+             or states('input_datetime.wake_mauka_until') in ['unknown', 'unavailable', '']
+             or now().date() | string <= states('input_datetime.wake_mauka_until') }}
+    actions:
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.wake_mauka_ringing
+      - if:
+          - condition: state
+            entity_id: input_boolean.wake_mauka_lights
+            state: "on"
+        then:
+          - action: light.turn_on
+            target:
+              entity_id: "{{ states.light | selectattr('entity_id', 'match', 'light\\.floor_2_bedroom_5_suite_bed_5_') | rejectattr('entity_id', 'search', '_bath_|closet') | rejectattr('state', 'eq', 'unavailable') | map(attribute='entity_id') | list }}"
+            data:
+              brightness_pct: 70
+              transition: 120
+            continue_on_error: true
+      - if:
+          - condition: template
+            value_template: "{{ trigger.id == 'time' and is_state('input_boolean.wake_mauka_shades', 'on') }}"
+        then:
+          - action: cover.open_cover
+            target:
+              entity_id:
+                - cover.floor_2_bedroom_5_suite_bed_5_shade_group_1
+                - cover.floor_2_bedroom_5_suite_bed_5_shade_group_2
+            continue_on_error: true
+      # One-time alarms switch themselves off; daily ones stop after the last day.
+      - if:
+          - condition: template
+            value_template: >-
+              {{ trigger.id == 'time' and (is_state('input_select.wake_mauka_repeat', 'Once')
+                 or now().date() | string >= states('input_datetime.wake_mauka_until')) }}
+        then:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.wake_mauka_enabled
+      - wait_template: "{{ is_state('input_boolean.wake_mauka_ringing', 'off') }}"
+        timeout: "00:20:00"
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.wake_mauka_ringing
+
+script maui_wake:
+  wake_beach_snooze:
+    alias: "Wake-up Beach — snooze 9 min"
+    mode: single
+    sequence:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.wake_beach_ringing
+      - action: media_player.media_stop
+        target:
+          entity_id: media_player.beach_guest_bed
+        continue_on_error: true
+      - action: light.turn_on
+        target:
+          entity_id: "{{ states.light | selectattr('entity_id', 'match', 'light\\.floor_1_bedroom_2_suite_bed_2_') | rejectattr('entity_id', 'search', '_bath_|closet') | rejectattr('state', 'eq', 'unavailable') | map(attribute='entity_id') | list }}"
+        data:
+          brightness_pct: 10
+          transition: 3
+        continue_on_error: true
+      - action: timer.start
+        target:
+          entity_id: timer.wake_beach_snooze
+  wake_beach_stop:
+    alias: "Wake-up Beach — I'm up"
+    mode: single
+    sequence:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.wake_beach_ringing
+      - action: timer.cancel
+        target:
+          entity_id: timer.wake_beach_snooze
+      - action: media_player.media_stop
+        target:
+          entity_id: media_player.beach_guest_bed
+        continue_on_error: true
+  wake_boardroom_snooze:
+    alias: "Wake-up Boardroom — snooze 9 min"
+    mode: single
+    sequence:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.wake_boardroom_ringing
+      - action: light.turn_on
+        target:
+          entity_id: "{{ states.light | selectattr('entity_id', 'match', 'light\\.floor_1_bedroom_3_suite_bed_3_') | rejectattr('entity_id', 'search', '_bath_|closet') | rejectattr('state', 'eq', 'unavailable') | map(attribute='entity_id') | list }}"
+        data:
+          brightness_pct: 10
+          transition: 3
+        continue_on_error: true
+      - action: timer.start
+        target:
+          entity_id: timer.wake_boardroom_snooze
+  wake_boardroom_stop:
+    alias: "Wake-up Boardroom — I'm up"
+    mode: single
+    sequence:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.wake_boardroom_ringing
+      - action: timer.cancel
+        target:
+          entity_id: timer.wake_boardroom_snooze
+  wake_molokini_snooze:
+    alias: "Wake-up Molokini — snooze 9 min"
+    mode: single
+    sequence:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.wake_molokini_ringing
+      - action: media_player.media_stop
+        target:
+          entity_id: media_player.molokini_guest_bed
+        continue_on_error: true
+      - action: light.turn_on
+        target:
+          entity_id: "{{ states.light | selectattr('entity_id', 'match', 'light\\.floor_2_bedroom_4_suite_bed_4_') | rejectattr('entity_id', 'search', '_bath_|closet') | rejectattr('state', 'eq', 'unavailable') | map(attribute='entity_id') | list }}"
+        data:
+          brightness_pct: 10
+          transition: 3
+        continue_on_error: true
+      - action: timer.start
+        target:
+          entity_id: timer.wake_molokini_snooze
+  wake_molokini_stop:
+    alias: "Wake-up Molokini — I'm up"
+    mode: single
+    sequence:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.wake_molokini_ringing
+      - action: timer.cancel
+        target:
+          entity_id: timer.wake_molokini_snooze
+      - action: media_player.media_stop
+        target:
+          entity_id: media_player.molokini_guest_bed
+        continue_on_error: true
+  wake_mauka_snooze:
+    alias: "Wake-up Mauka — snooze 9 min"
+    mode: single
+    sequence:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.wake_mauka_ringing
+      - action: light.turn_on
+        target:
+          entity_id: "{{ states.light | selectattr('entity_id', 'match', 'light\\.floor_2_bedroom_5_suite_bed_5_') | rejectattr('entity_id', 'search', '_bath_|closet') | rejectattr('state', 'eq', 'unavailable') | map(attribute='entity_id') | list }}"
+        data:
+          brightness_pct: 10
+          transition: 3
+        continue_on_error: true
+      - action: timer.start
+        target:
+          entity_id: timer.wake_mauka_snooze
+  wake_mauka_stop:
+    alias: "Wake-up Mauka — I'm up"
+    mode: single
+    sequence:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.wake_mauka_ringing
+      - action: timer.cancel
+        target:
+          entity_id: timer.wake_mauka_snooze

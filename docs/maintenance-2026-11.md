@@ -638,3 +638,10 @@ lights low, shades stay; live camera (Pool/Front entry/BBQ) on the wake screen. 
 - Home screen is live: floor-plan map (lights, temperatures, doors, motion, music, suites in use), power strip, Right now panel, and All lights off / Open shades / Close shades / Leave (each needs a second tap to confirm).
 - Verified on HA at 1280×800: Live, real values. Room taps and quick buttons have not been exercised, to avoid switching lights in the house remotely.
 - Next screens, in order: Lights (rooms + scenes + capture), Music, Climate, Shades, Energy, Alarm, Cameras, then the guest view and the night look.
+
+## 12. Guest tablets and wake-up (Nov 23)
+- Wall 1.0.89–1.0.91: Rooms screen; per-tablet guest mode ("This tablet" → a suite; "Owner" + storm-prep PIN to leave). Guests see only their own suite plus the shared rooms, Wake-up and the outdoor cameras.
+- `packages/maui_wake.yaml` (installed Nov 23, config valid). Per suite (beach, boardroom, molokini, mauka):
+  - Helpers `wake_<suite>_*`: enabled, time, repeat, until, lights, shades, voice, ringing; `timer.wake_<suite>_snooze` (9 min).
+  - Automation `maui_wake_<suite>`: fades up that suite's bedroom lights (not bath or closet), opens its bedroom shades, and says good morning on its speaker via Nabu Casa TTS (Beach and Molokini only) up to 3 times. Ringing ends after 20 minutes.
+  - Scripts `wake_<suite>_snooze` / `wake_<suite>_stop`.

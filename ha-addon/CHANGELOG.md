@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.0.91
+
+- Guest tablets › Wake-up (new): set a wake time for that suite only — "Just tomorrow" or "Every
+  day of my stay" (asks "When do you leave?"), and choose fade up the bedroom lights, open the
+  shades, and a spoken good-morning on the suite speaker. At wake time the tablet shows a big
+  clock over the ocean camera with Snooze 9 min (dims lights, goes quiet; shades stay) and I'm up.
+  Runs in Home Assistant (needs the maui_wake.yaml package), so it works even if the tablet sleeps.
+- Shades: every shade shows a little window that fills with fabric as it closes, and the Open /
+  Half / Close button that matches its position is lit — on the Shades and Rooms screens.
+- Rooms: light names drop the repeated room word ("Atrium downlights" → "Downlights") and wrap
+  instead of being cut off.
+
 ## 1.0.90
 
 - Guest tablets only show their own suite plus the shared rooms (Great Room, Kitchen, Bar, Entry,

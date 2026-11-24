@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { lightName, parseRole, roomLights, roomsFor, ROOMS } from "./roomsCatalog.ts";
+import { lightName, parseRole, roomLightNames, roomLights, roomsFor, ROOMS } from "./roomsCatalog.ts";
 
 const st = (entity_id: string, state: string, friendly: string) =>
   ({ entity_id, state, attributes: { friendly_name: friendly }, last_changed: "", last_updated: "" });
@@ -33,4 +33,16 @@ test("roomLights picks the suite and its bath", () => {
   ].map((s) => [s.entity_id, s]));
   const molokini = ROOMS.find((r) => r.id === "molokini")!;
   assert.equal(roomLights(m, molokini).length, 2);
+});
+
+test("roomLightNames drops the shared room word", () => {
+  const ls = [
+    st("light.a", "on", "Floor 1 Great Room Atrium Downlights"),
+    st("light.b", "on", "Floor 1 Great Room Atrium Chandelier"),
+    st("light.c", "on", "Floor 1 Great Room Atrium TV Palm Lights"),
+  ];
+  const n = roomLightNames(ls);
+  assert.deepEqual([...n.values()], ["Downlights", "Chandelier", "Tv palm lights"]);
+  const bar = roomLightNames([st("light.d", "on", "Floor 1 Bar Bar Artwork"), st("light.e", "on", "Floor 1 Mudroom Downlights")]);
+  assert.deepEqual([...bar.values()], ["Bar artwork", "Mudroom downlights"]);
 });

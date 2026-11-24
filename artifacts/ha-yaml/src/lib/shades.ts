@@ -35,3 +35,12 @@ export function shadeView(states: Map<string, HAState>, id: string, name: string
   const label = !available ? "Offline" : moving ? (st!.state === "opening" ? "Opening…" : "Closing…") : pos == null ? st!.state : pos >= 99 ? "Open" : pos <= 1 ? "Closed" : `${pos}% open`;
   return { id, name, pos, moving, available, label };
 }
+
+/** Which of Open / Half / Close matches where the shade is now. */
+export function shadePreset(pos: number | null): "open" | "half" | "close" | null {
+  if (pos == null) return null;
+  if (pos >= 95) return "open";
+  if (pos <= 5) return "close";
+  if (pos >= 35 && pos <= 65) return "half";
+  return null;
+}

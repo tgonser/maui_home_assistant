@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { haCallService, type HAState } from "@/lib/ha";
-import { SHADE_SECTIONS, shadeView } from "@/lib/shades";
+import { SHADE_SECTIONS, shadePreset, shadeView } from "@/lib/shades";
 
 // Shades: every Lutron shade by room with Open / Half / Close, plus open or
 // close a whole floor. The garage door is shown for status only.
@@ -35,12 +35,8 @@ export function ShadesScreen({ states }: { states: Map<string, HAState> }) {
                       <span className="v2-ltile-name">{name}</span>
                       <span className="v2-small">{v.label}</span>
                     </div>
-                    <div className="v2-shade-win" aria-hidden="true"><i style={{ height: `${100 - (v.pos ?? 0)}%` }} /></div>
-                    <div className="v2-shade-btns" role="group" aria-label={`${name} position`}>
-                      <button type="button" disabled={!v.available || busy === id} onClick={() => act(id, "open_cover", { entity_id: id })}>Open</button>
-                      <button type="button" disabled={!v.available || busy === id} onClick={() => act(id, "set_cover_position", { entity_id: id, position: 50 })}>Half</button>
-                      <button type="button" disabled={!v.available || busy === id} onClick={() => act(id, "close_cover", { entity_id: id })}>Close</button>
-                    </div>
+                    <ShadeWindow pos={v.pos} />
+                    <ShadeButtons id={id} name={name} pos={v.pos} disabled={!v.available || busy === id} act={(svc, data) => act(id, svc, data)} />
                   </div>
                 );
               })}
@@ -57,4 +53,23 @@ export function ShadesScreen({ states }: { states: Map<string, HAState> }) {
       )}
     </div>
   );
+}
+
+export function ShadeButtons({ id, name, pos, disabled, act }: { id: string; name: string; pos: number | null; disabled: boolean; act: (service: string, data: Record<string, unknown>) => void }) {
+  const cur = shadePreset(pos);
+  const b = (key: "open" | "half" | "close", label: string, service: string, extra: Record<string, unknown> = {}) => (
+    <button type="button" aria-pressed={cur === key} className={cur === key ? "on" : ""} disabled={disabled} onClick={() => act(service, { entity_id: id, ...extra })}>{label}</button>
+  );
+  return (
+    <div className="v2-shade-btns" role="group" aria-label={`${name} position`}>
+      {b("open", "Open", "open_cover")}
+      {b("half", "Half", "set_cover_position", { position: 50 })}
+      {b("close", "Close", "close_cover")}
+    </div>
+  );
+}
+
+/** A little window: the shade fabric covers it from the top as it closes. */
+export function ShadeWindow({ pos }: { pos: number | null }) {
+  return <div className="v2-shade-win" aria-hidden="true"><i style={{ height: `${100 - (pos ?? 0)}%` }} /></div>;
 }
