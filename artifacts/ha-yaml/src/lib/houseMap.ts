@@ -304,3 +304,26 @@ export function energyNow(states: Map<string, HAState>): EnergyNow {
     soc2: num(states, "sensor.4680_system_2_percentage_charged"),
   };
 }
+
+export type EnergyFlows = {
+  sunToHouse: number; sunToBattery: number; sunToGrid: number;
+  batteryToHouse: number; gridToHouse: number; gridToBattery: number;
+};
+
+/** Split the four live numbers into who-is-feeding-whom (kW, all ≥ 0).
+ *  Tesla: battery < 0 = charging, grid < 0 = selling. */
+export function energyFlows(e: EnergyNow): EnergyFlows {
+  const S = Math.max(0, e.solarKw), H = Math.max(0, e.houseKw);
+  const charge = Math.max(0, -e.batteryKw), discharge = Math.max(0, e.batteryKw);
+  const exportKw = Math.max(0, -e.gridKw), importKw = Math.max(0, e.gridKw);
+  const sunToHouse = Math.min(S, H);
+  let spare = S - sunToHouse;
+  const sunToBattery = Math.min(spare, charge);
+  spare -= sunToBattery;
+  const sunToGrid = Math.min(spare, exportKw);
+  const batteryToHouse = Math.min(discharge, H - sunToHouse);
+  const gridToHouse = Math.max(0, Math.min(importKw, H - sunToHouse - batteryToHouse));
+  const gridToBattery = Math.max(0, Math.min(importKw - gridToHouse, charge - sunToBattery));
+  const r = (n: number) => Math.round(n * 10) / 10;
+  return { sunToHouse: r(sunToHouse), sunToBattery: r(sunToBattery), sunToGrid: r(sunToGrid), batteryToHouse: r(batteryToHouse), gridToHouse: r(gridToHouse), gridToBattery: r(gridToBattery) };
+}

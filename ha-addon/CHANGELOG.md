@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.92
+
+- New wall power strip (Home and Energy): instead of one line, the sun now fans out to the
+  House, the Powerwalls and the Grid, each line showing its own kW (e.g. 3.9 kW to the house and
+  2.1 kW charging). When the sun can't cover the house, lines show the batteries or the grid
+  feeding it.
+
 ## 1.0.91
 
 - Guest tablets › Wake-up (new): set a wake time for that suite only — "Just tomorrow" or "Every

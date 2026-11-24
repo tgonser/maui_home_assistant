@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { NO_SWIPE_SELECTOR, swipeDirection } from "@/lib/swipe";
 import { haAutoConnectIfAddon, haCallService, useHAStore, type HAState } from "@/lib/ha";
 import { useLiveStates, type LiveMode } from "@/lib/liveStates";
-import { energyNow, GUEST_SUITES, restartMinute, roomStatus, ROOM_CLIMATE, suiteInUse, FLOORS } from "@/lib/houseMap";
+import { energyFlows, energyNow, GUEST_SUITES, restartMinute, roomStatus, ROOM_CLIMATE, suiteInUse, FLOORS } from "@/lib/houseMap";
 import { HouseMap } from "./HouseMap";
 import { LightsScreen } from "./LightsScreen";
 import { MusicScreen } from "./MusicScreen";
@@ -315,45 +315,69 @@ function Row({ label, value, sub }: { label: string; value: string; sub?: string
   );
 }
 
-function Flow({ kw, label }: { kw: number; label: string }) {
-  const active = Math.abs(kw) >= 0.05;
-  const speed = active ? Math.max(0.6, Math.min(3, 3 / Math.abs(kw))) : 0;
-  return (
-    <div className="v2-flow">
-      <div className="v2-flow-line">
-        {active && [0, 1, 2].map((i) => <span key={i} className="v2-dot" style={{ animationDuration: `${speed}s`, animationDelay: `${(-speed * i) / 3}s` }} />)}
-      </div>
-      <div className="v2-flow-label">{label}</div>
-    </div>
-  );
-}
-
-function Node({ top, big, unit, sub, color }: { top: string; big: string; unit: string; sub: string; color: string }) {
-  return (
-    <div className="v2-node">
-      <div className="v2-muted">{top}</div>
-      <div><span className="v2-big" style={{ color }}>{big}</span> <span className="v2-muted">{unit}</span></div>
-      <div className="v2-small">{sub}</div>
-    </div>
-  );
-}
-
 const kw = (n: number) => (Math.abs(n) < 10 ? n.toFixed(1) : n.toFixed(0));
 
+// Live power as a fan: the sun on the left feeds the house, the Powerwalls
+// and the grid on the right, each line labelled with its own kW, plus the
+// batteries or grid feeding the house when the sun can't.
 export function EnergyStrip({ states }: { states: Map<string, HAState> }) {
   const e = energyNow(states);
+  const f = energyFlows(e);
+  const box = useRef<HTMLDivElement>(null);
+  const [size, setSize] = useState({ w: 600, h: 110 });
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setSize({ w: el.clientWidth, h: el.clientHeight }));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const { w, h } = size;
+  const y = [h / 6, h / 2, (5 * h) / 6];
+  const fan = (to: number) => `M 0 ${h / 2} C ${w * 0.45} ${h / 2}, ${w * 0.55} ${y[to]}, ${w} ${y[to]}`;
+  const side = (from: number, to: number, bend: number) => `M ${w} ${y[from]} C ${w - bend} ${y[from]}, ${w - bend} ${y[to]}, ${w} ${y[to]}`;
+  const lines: Array<{ d: string; kw: number; label: string; lx: number; ly: number; color: string }> = [
+    { d: fan(0), kw: f.sunToHouse, label: `${kw(f.sunToHouse)} kW to house`, lx: w * 0.5, ly: (h / 2 + y[0]) / 2 - 4, color: "#D9A400" },
+    { d: fan(1), kw: f.sunToBattery, label: `${kw(f.sunToBattery)} kW charging`, lx: w * 0.5, ly: h / 2 - 5, color: "#D9A400" },
+    { d: fan(2), kw: f.sunToGrid, label: `${kw(f.sunToGrid)} kW selling`, lx: w * 0.5, ly: (h / 2 + y[2]) / 2 + 12, color: "#D9A400" },
+    { d: side(1, 0, 70), kw: f.batteryToHouse, label: `${kw(f.batteryToHouse)} kW from batteries`, lx: w - 78, ly: (y[0] + y[1]) / 2 + 4, color: "#0E5A6B" },
+    { d: side(2, 0, 120), kw: f.gridToHouse, label: `${kw(f.gridToHouse)} kW bought`, lx: w - 128, ly: h / 2 + 4, color: "#7A2E14" },
+    { d: side(2, 1, 40), kw: f.gridToBattery, label: `${kw(f.gridToBattery)} kW grid charging`, lx: w - 48, ly: (y[1] + y[2]) / 2 + 4, color: "#7A2E14" },
+  ].filter((l) => l.kw >= 0.05);
   const charging = e.batteryKw < -0.05, discharging = e.batteryKw > 0.05;
   const selling = e.gridKw < -0.05, buying = e.gridKw > 0.05;
   const socAvg = e.soc1 != null && e.soc2 != null ? (e.soc1 + e.soc2) / 2 : e.soc1 ?? e.soc2;
   return (
-    <section className="v2-card v2-strip" aria-label="Energy right now">
-      <Node top="Sun" big={kw(e.solarKw)} unit="kW" sub="both systems" color="#B07800" />
-      <Flow kw={Math.min(e.solarKw, e.houseKw)} label={`${kw(Math.min(e.solarKw, e.houseKw))} kW to house`} />
-      <Node top="House" big={kw(e.houseKw)} unit="kW" sub="using now" color="#1E2A2E" />
-      <Flow kw={e.batteryKw} label={charging ? `${kw(-e.batteryKw)} kW charging` : discharging ? `${kw(e.batteryKw)} kW from batteries` : "batteries idle"} />
-      <Node top="Powerwalls" big={socAvg != null ? String(Math.round(socAvg)) : "—"} unit="%" sub={`S1 ${e.soc1 != null ? Math.round(e.soc1) : "—"}% · S2 ${e.soc2 != null ? Math.round(e.soc2) : "—"}%`} color="#0E5A6B" />
-      <Flow kw={e.gridKw} label={selling ? `${kw(-e.gridKw)} kW selling` : buying ? `${kw(e.gridKw)} kW buying` : "grid idle"} />
-      <Node top="Grid" big={kw(Math.abs(e.gridKw))} unit="kW" sub={selling ? "selling now" : buying ? "buying now" : "not in use"} color={buying ? "#7A2E14" : "#2E6B3A"} />
+    <section className="v2-card v2-strip2" aria-label={`Sun ${kw(e.solarKw)} kilowatts: ${lines.map((l) => l.label).join(", ") || "nothing flowing"}`}>
+      <div className="v2-node">
+        <div className="v2-muted">Sun</div>
+        <div><span className="v2-big" style={{ color: "#B07800" }}>{kw(e.solarKw)}</span> <span className="v2-muted">kW</span></div>
+        <div className="v2-small">both systems</div>
+      </div>
+      <div className="v2-flowbox" ref={box} aria-hidden="true">
+        <svg width={w} height={h}>
+          {[0, 1, 2].map((i) => <path key={i} d={fan(i)} className="v2-flow-base" />)}
+          {lines.map((l, i) => {
+            const dur = Math.max(0.7, Math.min(3.5, 3.5 / l.kw));
+            return (
+              <g key={i}>
+                <path d={l.d} fill="none" stroke={l.color} strokeOpacity={0.35} strokeWidth={Math.max(2, Math.min(7, l.kw * 0.9))} strokeLinecap="round" />
+                {[0, 1, 2].map((k) => (
+                  <circle key={k} r={3.5} fill={l.color}>
+                    <animateMotion dur={`${dur}s`} begin={`${(-dur * k) / 3}s`} repeatCount="indefinite" path={l.d} />
+                  </circle>
+                ))}
+                <text x={l.lx} y={l.ly} textAnchor="middle" className="v2-flow-text">{l.label}</text>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+      <div className="v2-dests">
+        <div className="v2-dest"><span className="v2-muted">House</span><b>{kw(e.houseKw)} kW</b><small>using now</small></div>
+        <div className="v2-dest"><span className="v2-muted">Powerwalls</span><b style={{ color: "#0E5A6B" }}>{socAvg != null ? `${Math.round(socAvg)}%` : "—"}</b><small>{charging ? `charging ${kw(-e.batteryKw)}` : discharging ? `supplying ${kw(e.batteryKw)}` : "idle"} · S1 {e.soc1 != null ? Math.round(e.soc1) : "—"}% · S2 {e.soc2 != null ? Math.round(e.soc2) : "—"}%</small></div>
+        <div className="v2-dest"><span className="v2-muted">Grid</span><b style={{ color: buying ? "#7A2E14" : "#2E6B3A" }}>{kw(Math.abs(e.gridKw))} kW</b><small>{selling ? "selling" : buying ? "buying" : "not in use"}</small></div>
+      </div>
     </section>
   );
 }
