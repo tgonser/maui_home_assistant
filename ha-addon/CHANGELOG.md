@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.112
+
+- House mode: the Owners lock now finds T2's iPhone (mobile-app device "Temp").
+- HA package `maui_storm_prep_package.yaml`: approval is requested only for heavy rain (3-day
+  total over the threshold, now 2.0 in) or forecast wind/gusts of 40 mph+, or an official alert —
+  no longer for ordinary low-sun days. Requests are sent to T2's iPhone (notify.mobile_app_temp).
+
 ## 1.0.111
 
 - Music: now playing names the Spotify playlist ("from your \"Bossa Chill\" playlist").
