@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { haCallService, type HAState } from "@/lib/ha";
-import { describeNowPlaying, groupFor, musicGroups, MUSIC_SECTIONS, pickLeader, PLAYER_NAMES } from "@/lib/music";
+import { describeNowPlaying, effectivePlayer, groupFor, musicGroups, MUSIC_SECTIONS, pickLeader, PLAYER_NAMES } from "@/lib/music";
 
 // Music: pick rooms on the left, control them on the right. Tapping a room
 // picks its whole group; picking rooms from different groups offers
@@ -44,18 +44,20 @@ export function MusicScreen({ states }: { states: Map<string, HAState> }) {
             <div className="v2-cap">{sec.title}</div>
             <div className="v2-music-grid">
               {sec.players.filter(([id]) => states.has(id)).map(([id, name]) => {
-                const st = states.get(id)!;
+                const own = states.get(id)!;
+                const eff = effectivePlayer(states, id);
+                const st = eff.st ?? own;
                 const on = picked.includes(id);
                 const np = describeNowPlaying(st);
-                const vol = Math.round(Number(st.attributes.volume_level ?? 0) * 100);
+                const vol = Math.round(Number(own.attributes.volume_level ?? 0) * 100);
                 const color = groupColor.get(id);
                 return (
-                  <button key={id} type="button" aria-pressed={on} className={`v2-mtile${on ? " on" : ""}${st.state === "playing" ? " playing" : ""}`} onClick={() => toggle(id)} disabled={st.state === "unavailable"}>
+                  <button key={id} type="button" aria-pressed={on} className={`v2-mtile${on ? " on" : ""}${st.state === "playing" ? " playing" : ""}`} onClick={() => toggle(id)} disabled={own.state === "unavailable"}>
                     <span className="v2-mtile-top">
                       <span className="v2-mtile-name">{name}</span>
                       {color && <span className="v2-gdot" style={{ background: color }} title="Grouped" />}
                     </span>
-                    <span className="v2-mtile-sub">{st.state === "playing" ? `♪ ${np.title}` : st.state === "paused" ? "Paused" : st.state === "unavailable" ? "Offline" : "Idle"}</span>
+                    <span className="v2-mtile-sub">{own.state === "unavailable" ? "Offline" : st.state === "playing" ? `♪ ${eff.followsName ? `with ${eff.followsName}` : np.title}` : st.state === "paused" ? "Paused" : "Idle"}</span>
                     <span className="v2-mtile-vol"><i style={{ width: `${vol}%` }} /></span>
                   </button>
                 );
@@ -111,6 +113,14 @@ function Control({ states, picked, setPicked }: { states: Map<string, HAState>; 
     picked.forEach((id) => sendVol(id, Math.max(0, Math.min(100, volOf(id) + d))));
   };
   const act = async (fn: () => Promise<unknown>) => { setBusy(true); await fn(); setBusy(false); };
+  // Picking several rooms and then choosing a source or Play means "play
+  // this everywhere I picked", so group them first.
+  const groupPicked = async () => {
+    if (together || picked.length < 2) return;
+    const others = picked.filter((id) => id !== leader);
+    for (const id of others) if ((groupFor(groups, id)?.members.length ?? 1) > 1) await call("unjoin", { entity_id: id });
+    await call("join", { entity_id: leader, group_members: others });
+  };
 
   return (
     <section className="v2-card v2-music-ctl" aria-label="Controls for picked rooms">
@@ -125,7 +135,7 @@ function Control({ states, picked, setPicked }: { states: Map<string, HAState>; 
           for (const id of others) if ((groupFor(groups, id)?.members.length ?? 1) > 1) await call("unjoin", { entity_id: id });
           await call("join", { entity_id: leader, group_members: others });
         })}>
-          Play together in {picked.length} rooms{lst?.state === "playing" ? ` (from ${PLAYER_NAMES.get(leader)})` : ""}
+          Play together in {picked.length} rooms{lst?.state === "playing" ? ` (from ${PLAYER_NAMES.get(leader)})` : ""} — or just pick a source
         </button>
       )}
 
@@ -136,14 +146,14 @@ function Control({ states, picked, setPicked }: { states: Map<string, HAState>; 
 
       <div className="v2-transport">
         <button type="button" className="v2-round" aria-label="Previous" disabled={busy} onClick={() => act(() => call("media_previous_track", { entity_id: leader }))}>⏮</button>
-        <button type="button" className="v2-round v2-round-big" aria-label={playing ? "Pause" : "Play"} disabled={busy} onClick={() => act(() => call(playing ? "media_pause" : "media_play", { entity_id: leader }))}>{playing ? "⏸" : "▶"}</button>
+        <button type="button" className="v2-round v2-round-big" aria-label={playing ? "Pause" : "Play"} disabled={busy} onClick={() => act(async () => { if (!playing) await groupPicked(); await call(playing ? "media_pause" : "media_play", { entity_id: leader }); })}>{playing ? "⏸" : "▶"}</button>
         <button type="button" className="v2-round" aria-label="Next" disabled={busy} onClick={() => act(() => call("media_next_track", { entity_id: leader }))}>⏭</button>
       </div>
 
       {sources.length > 0 && (
         <div className="v2-sources" role="group" aria-label="Source">
           {sources.map((s) => (
-            <button key={s} type="button" aria-pressed={s === source} className={s === source ? "on" : ""} disabled={busy} onClick={() => act(() => call("select_source", { entity_id: leader, source: s }))}>{s}</button>
+            <button key={s} type="button" aria-pressed={s === source} className={s === source ? "on" : ""} disabled={busy} onClick={() => act(async () => { await groupPicked(); await call("select_source", { entity_id: leader, source: s }); })}>{s}</button>
           ))}
         </div>
       )}

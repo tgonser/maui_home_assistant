@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.94
+
+- Music: a speaker playing as part of a group no longer shows "Idle" — Bluesound reports grouped
+  speakers as idle, so the wall now shows "♪ with Great Room" (Music) and "Playing together with
+  Great Room" (Rooms), and Play/Pause on a grouped room controls the group.
+- Music: with several rooms picked, choosing a source or pressing Play groups them first, so the
+  music plays in every picked room (no need to press "Play together" first).
+
 ## 1.0.93
 
 - Home map: each room shows its temperature now (red when more than 1° above its target) and,

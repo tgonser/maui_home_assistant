@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { haCallService, type HAState } from "@/lib/ha";
 import { GUEST_TEMP, roomLightNames, roomLights, roomsFor, type RoomDef, type TabletRole } from "@/lib/roomsCatalog";
-import { describeNowPlaying } from "@/lib/music";
+import { describeNowPlaying, effectivePlayer } from "@/lib/music";
 import { shadeView } from "@/lib/shades";
 import { ShadeButtons, ShadeWindow } from "./ShadesScreen";
 
@@ -157,21 +157,24 @@ function MusicBlock({ id, states }: { id: string; states: Map<string, HAState> }
   const [vol, setVol] = useState<number | null>(null);
   const t = useRef(0);
   if (!st || st.state === "unavailable") return null;
-  const np = describeNowPlaying(st);
-  const playing = st.state === "playing";
+  // When this speaker follows a group, play/pause act on the group's leader.
+  const eff = effectivePlayer(states, id);
+  const lead = eff.st ?? st;
+  const np = describeNowPlaying(lead);
+  const playing = lead.state === "playing";
   const v = vol ?? Math.round(Number(st.attributes.volume_level ?? 0) * 100);
   return (
     <div className="v2-block">
       <div className="v2-block-head"><span className="v2-h">Music</span><span className="v2-muted v2-ellipsis">{np.title}</span></div>
       <div className="v2-vol">
-        <button type="button" className="v2-round" aria-label={playing ? "Pause" : "Play"} onClick={() => call("media_player", playing ? "media_pause" : "media_play", { entity_id: id })}>{playing ? "⏸" : "▶"}</button>
+        <button type="button" className="v2-round" aria-label={playing ? "Pause" : "Play"} onClick={() => call("media_player", playing ? "media_pause" : "media_play", { entity_id: eff.leader })}>{playing ? "⏸" : "▶"}</button>
         <input type="range" min={0} max={100} value={v} aria-label="Volume" onChange={(e) => {
           const n = Number(e.target.value); setVol(n); window.clearTimeout(t.current);
           t.current = window.setTimeout(() => { void call("media_player", "volume_set", { entity_id: id, volume_level: n / 100 }); window.setTimeout(() => setVol(null), 1500); }, 250);
         }} />
         <b>{v}</b>
       </div>
-      <div className="v2-small">{np.sub}</div>
+      <div className="v2-small">{eff.followsName ? `Playing together with ${eff.followsName}` : np.sub}</div>
       <PhoneHelp id={id} st={st} />
     </div>
   );

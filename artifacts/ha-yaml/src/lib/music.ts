@@ -56,3 +56,15 @@ export function describeNowPlaying(st: HAState | undefined): { title: string; su
   }
   return { title: "Nothing playing", sub: source ? `Last source: ${source}` : "" };
 }
+
+/** A grouped follower reports "idle" even while it plays the leader's music.
+ *  Return the state that describes what the room is actually doing. */
+export function effectivePlayer(states: Map<string, HAState>, id: string): { st: HAState | undefined; leader: string; followsName: string | null } {
+  const own = states.get(id);
+  const gm = own?.attributes.group_members;
+  if (Array.isArray(gm) && gm.length > 1 && gm[0] !== id && states.has(gm[0])) {
+    const leader = gm[0] as string;
+    return { st: states.get(leader), leader, followsName: PLAYER_NAMES.get(leader) ?? null };
+  }
+  return { st: own, leader: id, followsName: null };
+}
