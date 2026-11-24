@@ -309,3 +309,6 @@
 .v2-switch[aria-checked="true"] i { left: 23px; }
 .v2-srow { display: flex; align-items: center; gap: 10px; }
 .v2-inline { display: inline-grid; grid-template-columns: repeat(3, 60px); }
+.v2-phonehelp { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border-radius: 12px; background: #FFF; }
+.v2-phonehelp ol { margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.5; }
+.v2-phonehelp .v2-mini { align-self: flex-start; }

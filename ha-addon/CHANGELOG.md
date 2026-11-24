@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.90
+
+- Guest tablets only show their own suite plus the shared rooms (Great Room, Kitchen, Bar, Entry,
+  lanais) — never another guest suite.
+- Rooms › Music: "Play from your phone" switches the room's speaker to Bluetooth and shows how to
+  pair a phone (works on any Wi-Fi), with a note about Spotify and AirPlay on the house Wi-Fi.
+
 ## 1.0.89
 
 - New wall › Rooms: pick a room on the left, control everything in it on the right — each light

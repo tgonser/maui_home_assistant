@@ -41,8 +41,11 @@ export const GUEST_SUITE_IDS = ["beach", "boardroom", "molokini", "mauka"];
 /** Guest thermostat range (owners get the full range). */
 export const GUEST_TEMP = { min: 72, max: 80 };
 
+/** Owners get every room. A guest tablet gets its own suite plus the shared
+ *  rooms — never the master suite and never another guest's suite. */
 export function roomsFor(role: TabletRole): RoomDef[] {
-  return role.kind === "owner" ? ROOMS : ROOMS.filter((r) => r.guest);
+  if (role.kind === "owner") return ROOMS;
+  return ROOMS.filter((r) => r.guest && (!GUEST_SUITE_IDS.includes(r.id) || r.id === role.room));
 }
 
 /** Every light entity in a room, sorted by name. */
