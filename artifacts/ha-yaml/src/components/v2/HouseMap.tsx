@@ -66,10 +66,10 @@ function Floor({ floor: f, states, status, inUse, onRoomTap }: Props & { floor: 
           if (lit) fill = t != null ? mix(fill, "#FFF1C9", 0.55) : "#FFF1C9";
           const w = r.x1 - r.x0, h = r.y1 - r.y0;
           const tappable = r.kind !== "void" && r.kind !== "elev" && (s?.lightIds.length ?? 0) > 0;
-          const icons = (s?.playing && r.kind === "room" && !r.group ? "♪ " : "") + (inUse.has(r.id) ? "in use" : "");
+          const icons = (s?.playing && r.kind === "room" && !r.group ? "♪ " : "") + (inUse.has(r.id) ? "guests" : "");
           // Current room temperature, then the AC: ❄ + target while cooling,
           // "→ target" when idle, "AC off" when switched off.
-          const ac = t == null ? "" : s?.acOff ? "AC off" : s?.target != null ? `${s.cooling ? "❄ " : "→ "}${s.target}°` : "";
+          const ac = t == null ? "" : s?.acOff ? "AC off" : s?.target != null ? `${s.cooling ? "❄ " : ""}set ${s.target}°` : "";
           const hot = t != null && !s?.acOff && s?.target != null && t > s.target + 1;
           const pad = lab.compact ? 10 : 22;
           const nameY = r.y0 + pad + lab.fs * 0.85;
