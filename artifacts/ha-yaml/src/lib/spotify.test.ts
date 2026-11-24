@@ -46,8 +46,10 @@ test("playlistLabel drops the house prefix", () => {
   assert.equal(playlistLabel("Mabel"), "Mabel");
 });
 
-test("wakePlaylists prefers MA- lists", () => {
+test("MA- lists are for wake-up only, Maui- for Music", () => {
   const all = [{ title: "MA-Rock", uri: "spotify:a" }, { title: "MauiCool", uri: "spotify:b" }, { title: "Boats", uri: "spotify:c" }];
   assert.deepEqual(wakePlaylists(all).map((p) => p.title), ["MA-Rock"]);
-  assert.deepEqual(wakePlaylists(all.slice(1)).map((p) => p.title), ["MauiCool"]);
+  assert.deepEqual(wakePlaylists(all.slice(1)).map((p) => p.title), []);
+  assert.deepEqual(wallPlaylists(all).shown.map((p) => p.title), ["MauiCool"]);
+  assert.deepEqual(wallPlaylists([all[0], all[2]]).shown.map((p) => p.title), ["Boats"]);
 });

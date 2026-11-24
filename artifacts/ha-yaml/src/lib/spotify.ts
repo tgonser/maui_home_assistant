@@ -42,11 +42,14 @@ export function parsePlaylists(result: unknown): Playlist[] {
 }
 
 /** Only playlists named for the house show on the wall: titles starting
- *  "Maui", "Makena", "Mākena" or "MA-" (any case). If none are named that way yet,
+ *  "Maui", "Makena" or "Mākena" (any case). "MA-" playlists are for the
+ *  wake-up alarm only and never show here. If none are named that way yet,
  *  nothing is filtered, so the wall is never empty by surprise. */
 export function wallPlaylists(all: Playlist[]): { shown: Playlist[]; filtered: boolean } {
-  const house = all.filter((p) => /^(maui|makena|mākena|ma-)/i.test(p.title.trim()));
-  return house.length ? { shown: house, filtered: true } : { shown: all, filtered: false };
+  // "MA-" playlists are the alarm-clock ones (wake-up screen only), never here.
+  const notWake = all.filter((p) => !/^ma-/i.test(p.title.trim()));
+  const house = notWake.filter((p) => /^(maui|makena|mākena)/i.test(p.title.trim()));
+  return house.length ? { shown: house, filtered: true } : { shown: notWake, filtered: false };
 }
 
 /** What the wall shows for a playlist: the house prefix is dropped, so
@@ -63,9 +66,7 @@ export function playlistLabel(title: string): string {
   return t;
 }
 
-/** Wake-up music: the "MA-" playlists (e.g. MA-Hawaiian, MA-Rock, MA-Jazz);
- *  if there are none yet, the house playlists. */
+/** Wake-up music: only the "MA-" playlists (e.g. MA-Hawaiian, MA-Jazz). */
 export function wakePlaylists(all: Playlist[]): Playlist[] {
-  const ma = all.filter((p) => /^ma-/i.test(p.title.trim()));
-  return ma.length ? ma : wallPlaylists(all).shown;
+  return all.filter((p) => /^ma-/i.test(p.title.trim()));
 }
