@@ -290,6 +290,13 @@ automation:
     triggers:
       - trigger: time
         at: "14:45:00"
+      # Re-assert before the 5 PM peak: Tesla's cloud can report a stale
+      # reserve, so one check at 14:45 is not enough (Nov 23: it read 20%
+      # while System 2 was really still held at 73%).
+      - trigger: time
+        at: "15:30:00"
+      - trigger: time
+        at: "16:40:00"
       - trigger: homeassistant
         event: start
       - trigger: state
@@ -318,9 +325,11 @@ automation:
             - number.gonser_4680_system_1_backup_reserve
             - number.4680_system_2_backup_reserve
           sequence:
+            # Always send the base reserve on a scheduled check — the reported
+            # value may be stale, so "already 20%" can't be trusted.
             - if:
                 - condition: template
-                  value_template: "{{ states(repeat.item) | float(0) > base_reserve }}"
+                  value_template: "{{ trigger.platform == 'time' or states(repeat.item) | float(0) > base_reserve }}"
               then:
                 - action: number.set_value
                   continue_on_error: true
