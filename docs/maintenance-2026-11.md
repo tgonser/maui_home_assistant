@@ -660,3 +660,34 @@ lights low, shades stay; live camera (Pool/Front entry/BBQ) on the wake screen. 
 - Solar-aware climate (automation id 1781981986844): moved from the open-air group (forced off 5–9 PM in Owners/Visitors) to the rest/bedroom group.
 - Manual hold automation now triggers on it, and `timer.maui_hold_maui_bar` was added in `maui_solar_tier_package.yaml`.
 - Wall: guest occupancy now comes from wake-ups, not from 24 h of activity.
+
+## 16. Nov 24 — utility bill, pool schedule, one-week AC-move check
+
+**Oct bill (Sep 23–Oct 22, Smart Export, R TOU).** Received 932 kWh: 831 kWh in the 9 AM–4 PM window earned
+nothing; 101 kWh (4 PM–9 AM) earned $14.55 = 14.41¢/kWh. Delivered 209 kWh (overnight 153, evening peak 24,
+daytime 32). Note the *purchase* periods on the bill are 9–5 / 5–9 PM / 9 PM–9 AM, while paid export starts at
+4 PM. Effective buy rates (Oct): ~25¢ day, ~73¢ 5–9 PM, ~49¢ overnight. This bill predates the Nov 22 balancer
+and pool changes. Biggest bills are occupied winter months (Feb 1,565 kWh / $636, Mar 1,259 kWh / $491), so
+Dec–Mar bills are the real test.
+
+**Pool schedule (T2, set Nov 24 in OmniLogic, daily):**
+
+| Pump | Schedule |
+|---|---|
+| Main filter | 8:30–11:59 AM 2016 rpm · 11:59 AM–2 PM 3008 rpm · 2–4 PM 1504 rpm |
+| Edge (infinity booster) | 11 AM–2 PM 2173 rpm |
+| Spa | 12–1 PM 2000 rpm |
+| All | off 4 PM–8:30 AM |
+
+Pool 51,950 gal incl. surge trough; HydraPure UV max 120 GPM (design flow 144 — bypass unverified), so the
+3008 rpm step must stay under ~120 GPM through the UV branch. Watch for a week: water clarity/chlorine (if it
+slips, raise 2–4 PM to 2000 or start at 8 AM), edge sheet at 2173 (raise ~200 rpm only if it breaks), System 2
+near full by ~4 PM on sunny days (trim edge first, then the 3008 peak). House empty → edge ~1 h at noon.
+
+**Morning snapshot Nov 24, ~5:45 AM HST (Tesla app):** S1 68 % / 0.8 kW, S2 45 % / 0.7 kW, grid 0 on both —
+no overnight purchase.
+
+**One-week AC-move check (scheduled):** could not run — no Home Assistant access from the check-in session
+(the desktop browser link was offline). Still to do: before/after comparison (excluding Nov 17 12:19 PM–Nov 19
+~11:20 AM Suspend), S1 still reaching ~100 %, overnight battery vs grid kWh, the ~1–3.5 kW of S2 load not on
+span_panel_3, and whether solar-tier pre-cooling cools S2 rooms.
