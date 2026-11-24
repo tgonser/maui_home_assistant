@@ -319,8 +319,22 @@
 
 /* Wake-up */
 .v2-wake { flex: 1; min-height: 0; display: flex; gap: 12px; }
-.v2-wake-set { flex: 1.5; min-width: 0; padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; overflow: auto; }
-.v2-wake-info { flex: 1; min-width: 0; padding: 16px 20px; }
+.v2-wake-set { flex: 2.2; min-width: 0; padding: 14px 20px; display: flex; flex-direction: column; gap: 12px; overflow: auto; }
+.v2-wake-top { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.v2-wake-when { font-size: 15px; color: var(--ink-2); margin-top: 2px; }
+.v2-wake-toggle { flex: none; display: inline-flex; align-items: center; gap: 12px; height: 56px; padding: 0 20px 0 8px; flex-direction: row-reverse; border: 0; border-radius: 999px; background: #D8CFBF; color: var(--ink); font: inherit; font-size: 20px; font-weight: 700; cursor: pointer; }
+.v2-wake-toggle i { width: 42px; height: 42px; border-radius: 50%; background: #FFF; box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
+.v2-wake-toggle.on { background: var(--teal); color: #FFF; flex-direction: row; padding: 0 8px 0 20px; }
+.v2-wake-toggle:disabled { opacity: 0.6; }
+.v2-wake-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.v2-wake-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.v2-wake-presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.v2-wake-presets .v2-mini { height: 44px; font-size: 16px; }
+.v2-wake-presets .v2-mini.on { background: var(--teal); border-color: var(--teal); color: #FFF; }
+.v2-wake .v2-seg { align-self: flex-start; }
+@media (max-height: 640px) { .v2-wake-info { display: none; } .v2-wake-clock span { font-size: 52px; } }
+@media (max-width: 900px) { .v2-wake-body { grid-template-columns: 1fr; } .v2-wake-info { display: none; } }
+.v2-wake-info { flex: 1; min-width: 0; padding: 14px 18px; }
 .v2-wake-info ul { margin: 8px 0 0; padding-left: 18px; font-size: 14px; line-height: 1.6; color: var(--ink-2); }
 .v2-wake-status { font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: #EFE8DC; color: var(--muted); }
 .v2-wake-status.on { background: #E3EEF0; color: #0A4553; }
