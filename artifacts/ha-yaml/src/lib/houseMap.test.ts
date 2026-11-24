@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { lightGroup, roomStatus, suiteInUse, restartMinute, energyNow, energyFlows, fitLabel, FLOORS } from "./houseMap.ts";
+import { lightGroup, roomStatus, suiteInUse, restartMinute, energyNow, energyFlows, houseFlows, fitLabel, FLOORS } from "./houseMap.ts";
 
 const st = (entity_id: string, state: string, attributes: Record<string, unknown> = {}, last_changed = "2026-11-23T10:00:00Z") =>
   ({ entity_id, state, attributes, last_changed, last_updated: last_changed });
@@ -91,4 +91,16 @@ test("energyFlows splits sun between house, batteries and grid", () => {
   // T2's screen: sun 4.4, house 3.9, one battery giving 0.5, selling 1.0 — the lines must add up to 1.0 sold
   const f = energyFlows({ ...base, solarKw: 4.4, houseKw: 3.9, batteryKw: 0.5, gridKw: -1.0 });
   assert.equal(f.sunToGrid, 0.5); assert.equal(f.batteryToGrid, 0.5);
+});
+
+test("houseFlows works per system: S1 sells spare sun while S2's battery runs S2", () => {
+  const n = { soc1: null, soc2: null };
+  const f = houseFlows([
+    { ...n, solarKw: 1.45, houseKw: 0.78, batteryKw: 0, gridKw: -0.67 },
+    { ...n, solarKw: 2.05, houseKw: 2.95, batteryKw: 0.9, gridKw: 0 },
+  ]);
+  assert.equal(f.sunToGrid, 0.7);
+  assert.equal(f.batteryToGrid, 0);
+  assert.equal(f.batteryToHouse, 0.9);
+  assert.equal(f.sunToHouse, 2.9); // 0.8 + 2.1 after per-system rounding
 });

@@ -342,3 +342,25 @@ export function energyFlows(e: EnergyNow): EnergyFlows {
   const r = (n: number) => Math.round(n * 10) / 10;
   return { sunToHouse: r(sunToHouse), sunToBattery: r(sunToBattery), sunToGrid: r(sunToGrid), batteryToHouse: r(batteryToHouse), batteryToGrid: r(batteryToGrid), gridToHouse: r(gridToHouse), gridToBattery: r(gridToBattery) };
 }
+
+/** Each Tesla system as its own EnergyNow (so flows can be worked out per
+ *  system — the two systems can't pass power to each other directly). */
+export function energyBySystem(states: Map<string, HAState>): EnergyNow[] {
+  return ["sensor.gonser_4680_system_1_", "sensor.4680_system_2_"].map((p) => ({
+    solarKw: num(states, `${p}solar_power`) ?? 0,
+    houseKw: num(states, `${p}load_power`) ?? 0,
+    batteryKw: num(states, `${p}battery_power`) ?? 0,
+    gridKw: num(states, `${p}grid_power`) ?? 0,
+    soc1: null, soc2: null,
+  }));
+}
+
+/** Flows worked out per system, then added up for the house. */
+export function houseFlows(systems: EnergyNow[]): EnergyFlows {
+  const total: EnergyFlows = { sunToHouse: 0, sunToBattery: 0, sunToGrid: 0, batteryToHouse: 0, batteryToGrid: 0, gridToHouse: 0, gridToBattery: 0 };
+  for (const e of systems) {
+    const f = energyFlows(e);
+    for (const k of Object.keys(total) as Array<keyof EnergyFlows>) total[k] = Math.round((total[k] + f[k]) * 10) / 10;
+  }
+  return total;
+}

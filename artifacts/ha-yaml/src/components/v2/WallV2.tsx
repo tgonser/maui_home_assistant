@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { NO_SWIPE_SELECTOR, swipeDirection } from "@/lib/swipe";
 import { haAutoConnectIfAddon, haCallService, useHAStore, type HAState } from "@/lib/ha";
 import { useLiveStates, type LiveMode } from "@/lib/liveStates";
-import { energyFlows, energyNow, GUEST_SUITES, restartMinute, roomStatus, ROOM_CLIMATE, suiteInUse, FLOORS } from "@/lib/houseMap";
+import { energyBySystem, houseFlows, energyNow, GUEST_SUITES, restartMinute, roomStatus, ROOM_CLIMATE, suiteInUse, FLOORS } from "@/lib/houseMap";
 import { HouseMap } from "./HouseMap";
 import { LightsScreen } from "./LightsScreen";
 import { MusicScreen } from "./MusicScreen";
@@ -322,7 +322,7 @@ const kw = (n: number) => (Math.abs(n) < 10 ? n.toFixed(1) : n.toFixed(0));
 // batteries or grid feeding the house when the sun can't.
 export function EnergyStrip({ states }: { states: Map<string, HAState> }) {
   const e = energyNow(states);
-  const f = energyFlows(e);
+  const f = houseFlows(energyBySystem(states));
   const box = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 600, h: 110 });
   useEffect(() => {

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.97
+
+- Power strip works out the flows per Tesla system and then adds them up. Example: System 1
+  (full) sells 0.7 kW of its own spare sun while System 2's battery runs System 2's pool/garage
+  loads — this now shows as "0.7 kW selling" from the sun, not as batteries selling to the grid.
+
 ## 1.0.96
 
 - Home map wording: the AC line reads "set 84°" (with ❄ while cooling) instead of "→ 84°", and
