@@ -687,7 +687,30 @@ near full by ~4 PM on sunny days (trim edge first, then the 3008 peak). House em
 **Morning snapshot Nov 24, ~5:45 AM HST (Tesla app):** S1 68 % / 0.8 kW, S2 45 % / 0.7 kW, grid 0 on both —
 no overnight purchase.
 
-**One-week AC-move check (scheduled):** could not run — no Home Assistant access from the check-in session
-(the desktop browser link was offline). Still to do: before/after comparison (excluding Nov 17 12:19 PM–Nov 19
-~11:20 AM Suspend), S1 still reaching ~100 %, overnight battery vs grid kWh, the ~1–3.5 kW of S2 load not on
-span_panel_3, and whether solar-tier pre-cooling cools S2 rooms.
+**One-week AC-move check (run 7:30 AM HST Nov 24 from HA hourly statistics, Nov 9–24):**
+
+| | Before move (Nov 10–15 nights) | After (Nov 19–23 nights) |
+|---|---|---|
+| Bought 5–9 PM | ~13–29 kWh/night (S2 AC) | 0 every night |
+| Bought 9 PM–9 AM | ~16–37 kWh/night | 2.9 · 7.4 · 0 · 0 · 0 kWh |
+| S2 at dawn | stuck ~6–12 %, running on grid | 19 % (hit reserve) · 19 % · 23 % · 31 % · 42 % |
+| S1 at dawn | 7–70 % | 64 % · 17.5 % · 62 % · 65 % · 66 % |
+| S1 daily peak | 100 % most days | 100 % every day |
+
+- Before-move nights had S2 AC running 2–5 kW all night; after the move S1's night load is ~0.75 kW
+  and S2's ~0.6–0.8 kW (Vacation). Improvements after Nov 22 also include the balancer and pool change,
+  so not all of it is the move.
+- The two import nights: Nov 19→20 (S2 hit 20 % ~3 AM) and Nov 20→21 (S1 ran ~6.7 kW of AC 5–9 PM,
+  then both sides hit reserve ~3 AM). None since Nov 21.
+- **No S1 overshoot:** S1 reaches 100 % every day and ends nights at ~62–66 %. No need to move the
+  Boardroom back or lower S1's reserve.
+- **The "missing" S2 load is the Garage SPAN panel** (pool, garage subpanel, water heater): S2 load =
+  span_panel_3 + span_panel_2 within ~0.05 kW day and night. No hidden condenser on S2.
+- **New: S1 has ~0.9–1.4 kW of daytime-only load not on its SPAN panel** (S1 load minus
+  span_panel; ~0 at night). Cycles like AC — likely a condenser fed from S1's gateway outside SPAN.
+  Ask Walter.
+- **Pre-cooling and S2:** span_panel_3 stays ~0.4–0.9 kW all day, so solar-tier pre-cooling is not
+  loading S2.
+- **Nov 23 2–4 PM:** house bought ~8.5 kWh while S2's reserve stayed raised and S1's AC ate its
+  surplus — the stale-reserve bug found and fixed that afternoon (section 13). Re-check today's
+  2–4 PM window.
