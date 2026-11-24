@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.95
+
+- Power strip: the lines now add up to what the grid shows. When one system's battery covers its
+  own panel while the other's sun is sold, that battery power is drawn as "batteries → grid"
+  (e.g. 0.5 kW from the sun + 0.5 kW from batteries = 1.0 kW selling).
+- Power strip labels are shorter so nothing is cut off on the tablet: House "3.9 kW using",
+  Powerwalls "86%" with "0.5 kW giving / charging", Grid "1.0 kW selling". The flow area is narrower.
+
 ## 1.0.94
 
 - Music: a speaker playing as part of a group no longer shows "Idle" — Bluesound reports grouped
