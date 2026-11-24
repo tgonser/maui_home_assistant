@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { agoText, recentMotion } from "@/lib/motionList";
+import { HOUSE_MODES, MODE_ENTITY, modeGuard } from "@/lib/houseMode";
 import { NO_SWIPE_SELECTOR, swipeDirection } from "@/lib/swipe";
 import { haAutoConnectIfAddon, haCallService, useHAStore, type HAState } from "@/lib/ha";
 import { useLiveStates, type LiveMode } from "@/lib/liveStates";
@@ -278,6 +280,7 @@ function HomeScreen({ states, now }: { states: Map<string, HAState>; now: number
         </section>
         <section className="v2-card v2-now" aria-label="Right now">
           <div className="v2-h">Right now</div>
+          <ModeBar states={states} now={now} />
           {doors.length > 0 && (
             <div className="v2-alert">
               {doors.map((d) => doorName(d.sensor!)).join(", ")} open
@@ -288,6 +291,7 @@ function HomeScreen({ states, now }: { states: Map<string, HAState>; now: number
           <Row label="Music" value={playing.length ? playing.map((p) => String(p.attributes.friendly_name)).join(" + ") : "Nothing playing"} sub={song ? `${song.attributes.media_title}${song.attributes.media_artist ? ` · ${song.attributes.media_artist}` : ""}` : ""} />
           <Row label="Climate" value={avg != null ? `Inside avg ${avg}°` : "—"} sub={`${cooling} of ${temps.length} zones cooling`} />
           <Row label="Security" value={alarm ? titleCase(alarm.state) : "—"} sub={doors.length ? `${doors.length} door${doors.length > 1 ? "s" : ""} open` : "All doors closed"} />
+          <MotionRow states={states} now={now} />
           <Row label="Lights" value={roomsOn ? `On in ${roomsOn} room${roomsOn > 1 ? "s" : ""}` : "All off"} sub={`Shades: ${shadesOpen} of ${shades.length} open`} />
           <div className="v2-grow" />
           <div className="v2-quick">
@@ -307,6 +311,68 @@ function HomeScreen({ states, now }: { states: Map<string, HAState>; now: number
         </section>
       </div>
     </div>
+  );
+}
+
+// House mode: Owners / Visitors / Vacation / Suspend. Owners is locked from
+// the wall while on Vacation if T2's phone hasn't been home for 48 h.
+function ModeBar({ states, now }: { states: Map<string, HAState>; now: number }) {
+  const g = modeGuard(states, now);
+  const [busy, setBusy] = useState(false);
+  if (!states.has(MODE_ENTITY)) return null;
+  const hint = HOUSE_MODES.find((m) => m.option === g.current)?.hint ?? g.current;
+  const pick = async (option: string) => {
+    if (busy || option === g.current) return;
+    setBusy(true);
+    await haCallService("input_select", "select_option", { entity_id: MODE_ENTITY, option });
+    setBusy(false);
+  };
+  return (
+    <div className="v2-modebar">
+      <div className="v2-seg" role="radiogroup" aria-label="House mode">
+        {HOUSE_MODES.map((m) => {
+          const locked = g.ownersLocked && m.option === "Owners Home";
+          return (
+            <button key={m.option} type="button" role="radio" aria-checked={g.current === m.option} disabled={busy || locked}
+              title={locked ? "Locked: your phone hasn't been home for 48 hours" : m.hint}
+              className={g.current === m.option ? "on" : ""} onClick={() => void pick(m.option)}>{m.label}</button>
+          );
+        })}
+      </div>
+      <small>{hint}{g.ownersLocked ? " · Owners locked (phone away 48 h+)" : ""}</small>
+    </div>
+  );
+}
+
+// Latest motion in the house; tap for the full list.
+function MotionRow({ states, now }: { states: Map<string, HAState>; now: number }) {
+  const [open, setOpen] = useState(false);
+  const list = useMemo(() => recentMotion(states), [states]);
+  if (!list.length) return null;
+  const top = list.filter((m) => m.available).slice(0, 2);
+  const val = top.map((m) => `${m.name} ${m.active ? "now" : agoText(m.changed, now)}`).join(" · ");
+  return (
+    <>
+      <button type="button" className="v2-row v2-row-btn" onClick={() => setOpen(true)}>
+        <div className="v2-row-label">Motion</div>
+        <div className="v2-row-val"><div>{val || "No recent motion"}</div><small>Tap for all {list.length} sensors</small></div>
+      </button>
+      {open && (
+        <div className="v2-modal" role="dialog" aria-modal="true" aria-label="Recent motion" onClick={() => setOpen(false)}>
+          <div className="v2-card v2-modal-card v2-motion-sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="v2-sec-head"><span className="v2-h">Recent motion</span><button type="button" className="v2-btn" onClick={() => setOpen(false)}>Close</button></div>
+            <div className="v2-motion-list">
+              {list.map((m) => (
+                <div key={m.id} className={`v2-motion-item${m.active ? " on" : ""}`}>
+                  <span>{m.name}</span>
+                  <span>{!m.available ? "Offline" : m.active ? "Moving now" : agoText(m.changed, now)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

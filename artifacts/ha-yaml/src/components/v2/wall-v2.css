@@ -379,3 +379,19 @@
 .v2-wake-music { display: flex; flex-direction: column; gap: 6px; }
 .v2-wake-music .v2-seg { flex-wrap: wrap; border-radius: 22px; }
 .v2-wake-music .v2-seg button { padding: 0 18px; }
+.v2-modebar { display: flex; flex-direction: column; gap: 4px; margin: 4px 0 6px; }
+.v2-modebar .v2-seg { display: flex; }
+.v2-modebar .v2-seg button { flex: 1; padding: 0 8px; height: 38px; font-size: 14px; }
+.v2-modebar .v2-seg button:disabled:not(.on) { opacity: 0.4; }
+.v2-modebar small { font-size: 12px; color: var(--muted); padding-left: 6px; }
+.v2-row-btn { width: 100%; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; padding: 0; }
+.v2-motion-sheet { width: min(620px, 94vw); max-height: 86vh; display: flex; flex-direction: column; }
+.v2-motion-list { overflow: auto; display: flex; flex-direction: column; gap: 2px; }
+.v2-motion-item { display: flex; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 10px; font-size: 15px; }
+.v2-motion-item:nth-child(odd) { background: #F7F2E9; }
+.v2-motion-item span:last-child { color: var(--muted); white-space: nowrap; }
+.v2-motion-item.on { background: #FFF1C9; font-weight: 600; }
+.v2-motion-item.on span:last-child { color: #8A5A00; }
+.v2-seg-sm button { height: 34px; padding: 0 14px; font-size: 13px; }
+.lg-sell { background: #3FA66A; }
+.lg-buy { background: #D9534F; }

@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.109
+
+- Home: house mode buttons (Owners · Visitors · Vacation · Suspend) at the top of "Right now",
+  with the classic wall's guard (Owners locked from the wall on Vacation when T2's phone has been
+  away 48 h+).
+- Home: "Motion" row with the latest motion; tap for every motion sensor and when it last moved.
+- Energy: "Selling / buying" chart (now the default): above the line = selling to the grid, below =
+  buying, last 24 h, with 9 AM–4 PM ("selling unpaid") and 5–9 PM ("peak price") shaded.
+  "Solar / house" is the other tab.
+
 ## 1.0.108
 
 - Playlists are now separate: "MA-" playlists are for the wake-up alarm only, "Maui-" (or
