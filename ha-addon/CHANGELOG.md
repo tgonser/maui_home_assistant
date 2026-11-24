@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.107
+
+- Spotify playlists: the wall server keeps a shared copy of the playlist list. HA can only list
+  playlists while Spotify is active, so any tablet that sees a fresh list (or has one cached)
+  saves it, and every tablet and the wake-up screen can use it even when Spotify is idle.
+
 ## 1.0.106
 
 - Wake-up music (Beach and Molokini): pick one of the "MA-" Spotify playlists (shown without the
