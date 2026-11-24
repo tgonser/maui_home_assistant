@@ -101,13 +101,35 @@ function Floor({ floor: f, states, status, inUse, onRoomTap }: Props & { floor: 
                 </>
               )}
               {icons && !lab.compact && <text x={r.x0 + pad} y={nameY + (t != null ? (ac ? 130 : 100) : 44)} fontSize={30} className="v2-room-icons">{icons}</text>}
-              {s?.motion && (!r.group || r.id === "stair2b") && <circle cx={r.x1 - 26} cy={r.y0 + 26} r={14} className="v2-motion" />}
+              {s?.motion && (!r.group || r.id === "stair2b") && <Walker x={r.x1 - 34} y={r.y0 + 10} />}
             </g>
           );
         })}
         {f.doors.map((d, i) => {
           const open = d.sensor ? states.get(d.sensor)?.state === "on" : false;
-          return <rect key={i} x={d.x0} y={d.y0} width={d.x1 - d.x0} height={d.y1 - d.y0} rx={6} className={open ? "v2-door v2-door-open" : d.sensor ? "v2-door" : "v2-door v2-door-nosensor"} />;
+          const w = d.x1 - d.x0, h = d.y1 - d.y0;
+          const vertical = h > w;
+          const cls = open ? "v2-door v2-door-open" : d.sensor ? "v2-door" : "v2-door v2-door-nosensor";
+          if (!open) return <rect key={i} x={d.x0} y={d.y0} width={w} height={h} rx={6} className={cls} />;
+          // Open: a slider shows a gap in the middle; any open door gets an OPEN tag.
+          const cx = (d.x0 + d.x1) / 2, cy = (d.y0 + d.y1) / 2;
+          const gap = d.kind === "door" ? 0 : 0.45;
+          const parts = gap === 0
+            ? [<rect key="a" x={d.x0} y={d.y0} width={w} height={h} rx={6} className={cls} />]
+            : vertical
+              ? [<rect key="a" x={d.x0} y={d.y0} width={w} height={h * (1 - gap) / 2} rx={6} className={cls} />,
+                 <rect key="b" x={d.x0} y={d.y1 - h * (1 - gap) / 2} width={w} height={h * (1 - gap) / 2} rx={6} className={cls} />]
+              : [<rect key="a" x={d.x0} y={d.y0} width={w * (1 - gap) / 2} height={h} rx={6} className={cls} />,
+                 <rect key="b" x={d.x1 - w * (1 - gap) / 2} y={d.y0} width={w * (1 - gap) / 2} height={h} rx={6} className={cls} />];
+          return (
+            <g key={i}>
+              {parts}
+              <g className="v2-open-tag">
+                <rect x={cx - 52} y={cy - 20} width={104} height={40} rx={20} />
+                <text x={cx} y={cy + 9} textAnchor="middle" fontSize={26}>OPEN</text>
+              </g>
+            </g>
+          );
         })}
         <defs>
           <pattern id="v2-hatch" width="24" height="24" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
@@ -117,5 +139,17 @@ function Floor({ floor: f, states, status, inUse, onRoomTap }: Props & { floor: 
         </defs>
       </svg>
     </figure>
+  );
+}
+
+/** A small walking figure that bobs while someone has just moved in the room. */
+function Walker({ x, y }: { x: number; y: number }) {
+  return (
+    <g transform={`translate(${x} ${y})`} className="v2-walker" aria-hidden="true">
+      <g className="v2-walker-bob">
+        <circle cx={12} cy={6} r={6} />
+        <path d="M12 13 L10 30 M12 16 L4 24 M12 16 L21 22 M10 30 L3 44 M10 30 L19 43" />
+      </g>
+    </g>
   );
 }

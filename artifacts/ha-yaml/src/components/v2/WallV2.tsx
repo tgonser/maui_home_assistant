@@ -264,8 +264,8 @@ function HomeScreen({ states, now }: { states: Map<string, HAState>; now: number
             <span><i className="lg-lit" />Lights on</span>
             <span>Big number = room temp now (red = warmer than its AC setting)</span>
             <span><i className="lg-door" />Door</span>
-            <span><i className="lg-open" />Open</span>
-            <span><i className="lg-motion" />Motion</span>
+            <span><i className="lg-open" />OPEN (sliders show a gap)</span>
+            <span>🚶 someone moved here (last 2 min)</span>
             <span>"set 84°" = AC target · ❄ = cooling now · ♪ = music · "guests" = suite used in the last 24 h</span>
           </div>
           <HouseMap states={states} status={status} inUse={inUse} onRoomTap={onRoomTap} />

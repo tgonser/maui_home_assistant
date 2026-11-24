@@ -20,6 +20,8 @@ export type MapDoor = {
   x0: number; y0: number; x1: number; y1: number;
   /** Thermostats paused while this door is open (for the label). */
   pauses?: string[];
+  /** Hinged door (front, mudroom, showers) vs. sliding glass door. */
+  kind?: "slider" | "door";
 };
 export type MapFloor = {
   id: "ground" | "up";
@@ -30,10 +32,10 @@ export type MapFloor = {
   doors: MapDoor[];
 };
 
-const v = (x: number, y0: number, y1: number, sensor?: string, pauses?: string[]): MapDoor =>
-  ({ x0: x - 8, x1: x + 8, y0, y1, sensor, pauses });
-const hz = (y: number, x0: number, x1: number, sensor?: string, pauses?: string[]): MapDoor =>
-  ({ x0, x1, y0: y - 8, y1: y + 8, sensor, pauses });
+const v = (x: number, y0: number, y1: number, sensor?: string, pauses?: string[], kind: "slider" | "door" = "slider"): MapDoor =>
+  ({ x0: x - 8, x1: x + 8, y0, y1, sensor, pauses, kind });
+const hz = (y: number, x0: number, x1: number, sensor?: string, pauses?: string[], kind: "slider" | "door" = "slider"): MapDoor =>
+  ({ x0, x1, y0: y - 8, y1: y + 8, sensor, pauses, kind });
 
 const GREAT_PAUSE = ["climate.kitchen", "climate.atrium"];
 
@@ -67,12 +69,12 @@ export const FLOORS: MapFloor[] = [
       hz(540, 760, 1040, "binary_sensor.makena_alarm_zone_17", GREAT_PAUSE),
       v(700, 560, 1090, "binary_sensor.makena_alarm_zone_18", GREAT_PAUSE),
       v(1075, 360, 540, "binary_sensor.makena_alarm_zone_6", ["climate.bar"]),
-      v(1430, 265, 340, "binary_sensor.makena_alarm_zone_11"),
-      v(1200, 905, 1000, "binary_sensor.makena_alarm_zone_7"),
+      v(1430, 265, 340, "binary_sensor.makena_alarm_zone_11", undefined, "door"),
+      v(1200, 905, 1000, "binary_sensor.makena_alarm_zone_7", undefined, "door"),
       v(700, 1130, 1290, undefined, ["climate.beach_room"]),
       v(1450, 1130, 1290, undefined, ["climate.boardroom"]),
-      v(830, 1330, 1415),
-      hz(1420, 1165, 1245),
+      v(830, 1330, 1415, undefined, undefined, "door"),
+      hz(1420, 1165, 1245, undefined, undefined, "door"),
     ],
   },
   {
@@ -105,7 +107,7 @@ export const FLOORS: MapFloor[] = [
       hz(545, 640, 930), v(595, 570, 780), v(965, 270, 400), v(1230, 590, 760),
       v(595, 1150, 1290, undefined, ["climate.maui_bar"]),
       v(1335, 1130, 1300, undefined, ["climate.upper_mauka"]),
-      v(860, 1340, 1410),
+      v(860, 1340, 1410, undefined, undefined, "door"),
     ],
   },
 ];
