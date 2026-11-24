@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { musicGroups, groupFor, pickLeader, describeNowPlaying } from "./music.ts";
+import { musicGroups, groupFor, pickLeader, describeNowPlaying, effectivePlayer } from "./music.ts";
 
 const st = (entity_id: string, state: string, attributes: Record<string, unknown> = {}) =>
   ({ entity_id, state, attributes, last_changed: "", last_updated: "" });
@@ -28,4 +28,17 @@ test("describeNowPlaying explains Spotify Connect", () => {
   assert.equal(d.title, "Lazylife");
   assert.match(d.sub, /phone/);
   assert.equal(describeNowPlaying(st("x", "idle", { source: "Spotify" })).title, "Nothing playing");
+});
+
+test("effectivePlayer shows a follower as playing the leader's music", () => {
+  const gm = ["media_player.great_room", "media_player.great_room_tv_bsr"];
+  const m = new Map([
+    st("media_player.great_room", "playing", { group_members: gm, media_title: "Sattava" }),
+    st("media_player.great_room_tv_bsr", "idle", { group_members: gm }),
+  ].map((s) => [s.entity_id, s]));
+  const e = effectivePlayer(m, "media_player.great_room_tv_bsr");
+  assert.equal(e.st?.state, "playing");
+  assert.equal(e.leader, "media_player.great_room");
+  assert.equal(e.followsName, "Great Room");
+  assert.equal(effectivePlayer(m, "media_player.great_room").followsName, null);
 });
