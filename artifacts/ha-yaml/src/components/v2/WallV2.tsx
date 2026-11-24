@@ -13,6 +13,7 @@ import { AlarmScreen } from "./AlarmScreen";
 import { CamerasScreen } from "./CamerasScreen";
 import { RoomsScreen } from "./RoomsScreen";
 import { WakeRinging, WakeScreen } from "./WakeScreen";
+import { suiteOccupied } from "@/lib/wake";
 import { GUEST_SUITE_IDS, parseRole, ROLE_KEY, ROOMS, type TabletRole } from "@/lib/roomsCatalog";
 import { haStormPrepSecurity, haUnlockStormPrep } from "@/lib/ha";
 import "./wall-v2.css";
@@ -214,7 +215,12 @@ function NotYet({ name }: { name: string; built: Nav[] }) {
 
 function HomeScreen({ states, now }: { states: Map<string, HAState>; now: number }) {
   const status = useMemo(() => roomStatus(states, now), [states, now]);
-  const inUse = useMemo(() => { const boot = restartMinute(states); return new Set(GUEST_SUITES.filter((s) => suiteInUse(states, s, now, boot)).map((s) => s.id)); }, [states, now]);
+  // "Guests" = someone set a wake-up in that suite (the only reliable sign
+  // someone is staying — lights and music also move when workers are in).
+  const inUse = useMemo(() => {
+    const today = new Date(now).toLocaleDateString("en-CA", { timeZone: "Pacific/Honolulu" });
+    return new Set(GUEST_SUITES.filter((s) => suiteOccupied(states, s.id, today)).map((s) => s.id));
+  }, [states, now]);
   const [busy, setBusy] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<string | null>(null);
 
@@ -266,7 +272,7 @@ function HomeScreen({ states, now }: { states: Map<string, HAState>; now: number
             <span><i className="lg-door" />Door</span>
             <span><i className="lg-open" />OPEN (sliders show a gap)</span>
             <span>🚶 someone moved here (last 2 min)</span>
-            <span>"set 84°" = AC target · ❄ = cooling now · ♪ = music · "guests" = suite used in the last 24 h</span>
+            <span>"set 84°" = AC target · ❄ = cooling now · ♪ = music · "guests" = a wake-up is set in that suite</span>
           </div>
           <HouseMap states={states} status={status} inUse={inUse} onRoomTap={onRoomTap} />
         </section>
@@ -278,7 +284,7 @@ function HomeScreen({ states, now }: { states: Map<string, HAState>; now: number
               {paused.length > 0 ? ` — ${paused.map(roomName).join(", ")} AC should pause` : ""}
             </div>
           )}
-          <Row label="Suites in use today" value={inUse.size ? GUEST_SUITES.filter((s) => inUse.has(s.id)).map((s) => s.name).join(" · ") : "None"} sub={GUEST_SUITES.filter((s) => !inUse.has(s.id)).map((s) => s.name).join(", ") + " quiet 24 h+"} />
+          <Row label="Guests staying" value={inUse.size ? GUEST_SUITES.filter((s) => inUse.has(s.id)).map((s) => s.name).join(" · ") : "None"} sub="Shown when a guest sets a wake-up in their suite" />
           <Row label="Music" value={playing.length ? playing.map((p) => String(p.attributes.friendly_name)).join(" + ") : "Nothing playing"} sub={song ? `${song.attributes.media_title}${song.attributes.media_artist ? ` · ${song.attributes.media_artist}` : ""}` : ""} />
           <Row label="Climate" value={avg != null ? `Inside avg ${avg}°` : "—"} sub={`${cooling} of ${temps.length} zones cooling`} />
           <Row label="Security" value={alarm ? titleCase(alarm.state) : "—"} sub={doors.length ? `${doors.length} door${doors.length > 1 ? "s" : ""} open` : "All doors closed"} />

@@ -19,7 +19,7 @@
 #      Groups:  master  = climate.master_bed_2
 #               sitting = climate.sitting
 #               rest    = climate.boardroom, climate.beach_room,
-#                         climate.upper_mauka
+#                         climate.upper_mauka, climate.maui_bar (Molokini)
 #      Atrium / Bar / Kitchen (open-air rooms) are excluded from the matrix
 #      in Owners Home / Visitors (doors open), but in Vacation the doors are
 #      closed, so they follow the rest-group target.
@@ -184,6 +184,7 @@ actions:
       for_each:
         - climate.boardroom
         - climate.beach_room
+        - climate.maui_bar
         - climate.upper_mauka
       sequence:
         - choose:
@@ -242,7 +243,6 @@ actions:
           for_each:
             - climate.atrium
             - climate.bar
-            - climate.maui_bar
             - climate.kitchen
           sequence:
             - if:
@@ -275,7 +275,6 @@ actions:
           for_each:
             - climate.atrium
             - climate.bar
-            - climate.maui_bar
             - climate.kitchen
           sequence:
             - condition: template

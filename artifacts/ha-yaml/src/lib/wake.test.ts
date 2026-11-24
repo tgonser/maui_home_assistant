@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { prettyTime, shiftTime, readWake } from "./wake.ts";
+import { prettyTime, shiftTime, readWake, suiteOccupied } from "./wake.ts";
 
 test("time helpers", () => {
   assert.equal(prettyTime("07:05"), "7:05 AM");
@@ -21,4 +21,12 @@ test("readWake", () => {
   const w = readWake(m, "molokini");
   assert.equal(w.time, "06:45"); assert.equal(w.enabled, true); assert.equal(w.repeat, "Every day until I leave"); assert.equal(w.until, "2026-11-30");
   assert.equal(readWake(new Map(), "beach").available, false);
+});
+
+test("suiteOccupied follows the wake-up", () => {
+  const st = (entity_id: string, state: string) => ({ entity_id, state, attributes: {}, last_changed: "", last_updated: "" });
+  const on = new Map([st("input_datetime.wake_molokini_time", "06:45:00"), st("input_boolean.wake_molokini_enabled", "on")].map((s) => [s.entity_id, s]));
+  const off = new Map([st("input_datetime.wake_molokini_time", "06:45:00"), st("input_boolean.wake_molokini_enabled", "off")].map((s) => [s.entity_id, s]));
+  assert.equal(suiteOccupied(on, "molokini", "2026-11-23"), true);
+  assert.equal(suiteOccupied(off, "molokini", "2026-11-23"), false);
 });
