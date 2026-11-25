@@ -1,5 +1,6 @@
 # =============================================================================
-# Maui Guest Wake-up (one alarm per guest suite) — managed by the Wall Kiosk
+# Maui Wake-up (one alarm per suite: Beach, Boardroom, Molokini, Mauka guest suites
+# and the owners' Master suite) — managed by the Wall Kiosk
 # =============================================================================
 # The guest tablet in a suite sets these helpers; at the wake time this
 # package fades up THAT suite's bedroom lights, opens its bedroom shades and
@@ -46,17 +47,32 @@ input_boolean:
   wake_molokini_enabled:
     name: "Molokini wake-up on"
     icon: mdi:alarm
+  wake_master_enabled:
+    name: "Master wake-up on"
+    icon: mdi:alarm
   wake_molokini_lights:
     name: "Molokini wake-up fade up lights"
+    icon: mdi:alarm
+  wake_master_lights:
+    name: "Master wake-up fade up lights"
     icon: mdi:alarm
   wake_molokini_shades:
     name: "Molokini wake-up open shades"
     icon: mdi:alarm
+  wake_master_shades:
+    name: "Master wake-up open shades"
+    icon: mdi:alarm
   wake_molokini_voice:
     name: "Molokini wake-up good-morning voice"
     icon: mdi:alarm
+  wake_master_voice:
+    name: "Master wake-up good-morning voice"
+    icon: mdi:alarm
   wake_molokini_ringing:
     name: "Molokini wake-up ringing now"
+    icon: mdi:alarm
+  wake_master_ringing:
+    name: "Master wake-up ringing now"
     icon: mdi:alarm
   wake_mauka_enabled:
     name: "Mauka wake-up on"
@@ -79,6 +95,9 @@ input_boolean:
   wake_molokini_music:
     name: "Molokini wake-up music"
     icon: mdi:music
+  wake_master_music:
+    name: "Master wake-up music"
+    icon: mdi:music
 
 input_text:
   wake_beach_playlist:
@@ -87,6 +106,10 @@ input_text:
     max: 255
   wake_molokini_playlist:
     name: "Molokini wake-up playlist"
+    icon: mdi:playlist-music
+    max: 255
+  wake_master_playlist:
+    name: "Master wake-up playlist"
     icon: mdi:playlist-music
     max: 255
 
@@ -111,8 +134,16 @@ input_datetime:
     name: "Molokini wake-up time"
     has_date: false
     has_time: true
+  wake_master_time:
+    name: "Master wake-up time"
+    has_date: false
+    has_time: true
   wake_molokini_until:
     name: "Molokini wake-up last day"
+    has_date: true
+    has_time: false
+  wake_master_until:
+    name: "Master wake-up last day"
     has_date: true
     has_time: false
   wake_mauka_time:
@@ -140,6 +171,11 @@ input_select:
     options:
       - Once
       - Every day until I leave
+  wake_master_repeat:
+    name: "Master wake-up repeat"
+    options:
+      - Once
+      - Every day until I leave
   wake_mauka_repeat:
     name: "Mauka wake-up repeat"
     options:
@@ -155,6 +191,9 @@ timer:
     duration: "00:09:00"
   wake_molokini_snooze:
     name: "Molokini wake-up snooze"
+    duration: "00:09:00"
+  wake_master_snooze:
+    name: "Master wake-up snooze"
     duration: "00:09:00"
   wake_mauka_snooze:
     name: "Mauka wake-up snooze"
@@ -537,6 +576,167 @@ automation maui_wake:
       - action: input_boolean.turn_off
         target:
           entity_id: input_boolean.wake_molokini_ringing
+  - id: maui_wake_master
+    alias: "Maui Wake-up — Master"
+    description: "Guest wake-up for the master suite only. Set from the guest tablet."
+    mode: restart
+    triggers:
+      - trigger: time
+        at: input_datetime.wake_master_time
+        id: time
+      - trigger: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.wake_master_snooze
+        id: snooze
+    conditions:
+      # A snooze re-ring still happens after a one-time alarm switched itself off.
+      - condition: template
+        value_template: "{{ trigger.id == 'snooze' or is_state('input_boolean.wake_master_enabled', 'on') }}"
+      - condition: template
+        value_template: >-
+          {{ trigger.id == 'snooze'
+             or is_state('input_select.wake_master_repeat', 'Once')
+             or states('input_datetime.wake_master_until') in ['unknown', 'unavailable', '']
+             or now().date() | string <= states('input_datetime.wake_master_until') }}
+    actions:
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.wake_master_ringing
+      - if:
+          - condition: state
+            entity_id: input_boolean.wake_master_lights
+            state: "on"
+        then:
+          - action: light.turn_on
+            target:
+              entity_id: "{{ states.light | selectattr('entity_id', 'match', 'light\\.floor_2_master_suite_master_bed_') | rejectattr('entity_id', 'search', '_bath_|closet') | rejectattr('state', 'eq', 'unavailable') | map(attribute='entity_id') | list }}"
+            data:
+              brightness_pct: 70
+              transition: 120
+            continue_on_error: true
+      - if:
+          - condition: template
+            value_template: "{{ trigger.id == 'time' and is_state('input_boolean.wake_master_shades', 'on') }}"
+        then:
+          - action: cover.open_cover
+            target:
+              entity_id:
+                - cover.floor_2_master_suite_master_bed_shade_group_1
+            continue_on_error: true
+      # One-time alarms switch themselves off; daily ones stop after the last day.
+      - if:
+          - condition: template
+            value_template: >-
+              {{ trigger.id == 'time' and (is_state('input_select.wake_master_repeat', 'Once')
+                 or now().date() | string >= states('input_datetime.wake_master_until')) }}
+        then:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.wake_master_enabled
+      # Music (a Spotify playlist on the bedroom Bluesound, quiet → louder over
+      # ~5 min) when Spotify can see the speaker and isn't already playing
+      # somewhere else; otherwise the good-morning voice.
+      - variables:
+          music_ok: >-
+            {{ is_state('input_boolean.wake_master_music', 'on')
+               and states('input_text.wake_master_playlist') is match('spotify:')
+               and 'Master Bed' in (state_attr('media_player.spotify_gonzomatic', 'source_list') or [])
+               and not is_state('media_player.spotify_gonzomatic', 'playing') }}
+      - if:
+          - condition: template
+            value_template: "{{ music_ok }}"
+        then:
+          # Good morning once (voice first — speaking over Spotify would cut it off), then music.
+          - if:
+              - condition: state
+                entity_id: input_boolean.wake_master_voice
+                state: "on"
+            then:
+              - action: media_player.volume_set
+                target:
+                  entity_id: media_player.master_bed
+                data:
+                  volume_level: 0.2
+                continue_on_error: true
+              - action: tts.speak
+                target:
+                  entity_id: tts.home_assistant_cloud
+                data:
+                  media_player_entity_id: media_player.master_bed
+                  message: "Good morning. It's {{ now().strftime('%-I:%M') }}. Time to wake up."
+                continue_on_error: true
+              - delay: "00:00:08"
+          - action: media_player.volume_set
+            target:
+              entity_id: media_player.master_bed
+            data:
+              volume_level: 0.04
+            continue_on_error: true
+          - action: media_player.select_source
+            target:
+              entity_id: media_player.spotify_gonzomatic
+            data:
+              source: "Master Bed"
+            continue_on_error: true
+          - delay: "00:00:03"
+          - action: media_player.play_media
+            target:
+              entity_id: media_player.spotify_gonzomatic
+            data:
+              media_content_id: "{{ states('input_text.wake_master_playlist') }}"
+              media_content_type: playlist
+            continue_on_error: true
+          - action: media_player.shuffle_set
+            target:
+              entity_id: media_player.spotify_gonzomatic
+            data:
+              shuffle: true
+            continue_on_error: true
+          - repeat:
+              count: 12
+              sequence:
+                - delay: "00:00:25"
+                - condition: state
+                  entity_id: input_boolean.wake_master_ringing
+                  state: "on"
+                - action: media_player.volume_set
+                  target:
+                    entity_id: media_player.master_bed
+                  data:
+                    volume_level: "{{ [0.04 + 0.025 * repeat.index, 0.32] | min }}"
+                  continue_on_error: true
+      - if:
+          - condition: template
+            value_template: >-
+              {{ not music_ok and (is_state('input_boolean.wake_master_voice', 'on')
+                 or is_state('input_boolean.wake_master_music', 'on')) }}
+        then:
+          - action: media_player.volume_set
+            target:
+              entity_id: media_player.master_bed
+            data:
+              volume_level: 0.25
+            continue_on_error: true
+          - repeat:
+              count: 3
+              sequence:
+                - condition: state
+                  entity_id: input_boolean.wake_master_ringing
+                  state: "on"
+                - action: tts.speak
+                  target:
+                    entity_id: tts.home_assistant_cloud
+                  data:
+                    media_player_entity_id: media_player.master_bed
+                    message: "Good morning. It's {{ now().strftime('%-I:%M') }}. Time to wake up."
+                  continue_on_error: true
+                - delay: "00:02:00"
+      - wait_template: "{{ is_state('input_boolean.wake_master_ringing', 'off') }}"
+        timeout: "00:20:00"
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.wake_master_ringing
   - id: maui_wake_mauka
     alias: "Maui Wake-up — Mauka"
     description: "Guest wake-up for the Mauka suite only. Set from the guest tablet."
@@ -710,6 +910,35 @@ script maui_wake:
       - action: timer.start
         target:
           entity_id: timer.wake_molokini_snooze
+  wake_master_snooze:
+    alias: "Wake-up Master — snooze 9 min"
+    mode: single
+    sequence:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.wake_master_ringing
+      - if:
+          - condition: template
+            value_template: "{{ state_attr('media_player.spotify_gonzomatic', 'source') == 'Master Bed' }}"
+        then:
+          - action: media_player.media_pause
+            target:
+              entity_id: media_player.spotify_gonzomatic
+            continue_on_error: true
+      - action: media_player.media_stop
+        target:
+          entity_id: media_player.master_bed
+        continue_on_error: true
+      - action: light.turn_on
+        target:
+          entity_id: "{{ states.light | selectattr('entity_id', 'match', 'light\\.floor_2_master_suite_master_bed_') | rejectattr('entity_id', 'search', '_bath_|closet') | rejectattr('state', 'eq', 'unavailable') | map(attribute='entity_id') | list }}"
+        data:
+          brightness_pct: 10
+          transition: 3
+        continue_on_error: true
+      - action: timer.start
+        target:
+          entity_id: timer.wake_master_snooze
   wake_molokini_stop:
     alias: "Wake-up Molokini — I'm up"
     mode: single
@@ -731,6 +960,28 @@ script maui_wake:
       - action: media_player.media_stop
         target:
           entity_id: media_player.molokini_guest_bed
+        continue_on_error: true
+  wake_master_stop:
+    alias: "Wake-up Master — I'm up"
+    mode: single
+    sequence:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.wake_master_ringing
+      - action: timer.cancel
+        target:
+          entity_id: timer.wake_master_snooze
+      - if:
+          - condition: template
+            value_template: "{{ state_attr('media_player.spotify_gonzomatic', 'source') == 'Master Bed' }}"
+        then:
+          - action: media_player.media_pause
+            target:
+              entity_id: media_player.spotify_gonzomatic
+            continue_on_error: true
+      - action: media_player.media_stop
+        target:
+          entity_id: media_player.master_bed
         continue_on_error: true
   wake_mauka_snooze:
     alias: "Wake-up Mauka — snooze 9 min"

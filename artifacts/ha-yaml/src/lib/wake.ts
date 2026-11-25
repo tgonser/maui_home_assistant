@@ -7,6 +7,7 @@ export const WAKE_FEATURES: Record<string, { shades: boolean; voice: boolean; sp
   boardroom: { shades: false, voice: false },
   molokini: { shades: true, voice: true, speaker: "Molokini Guest Bed" },
   mauka: { shades: true, voice: false },
+  master: { shades: true, voice: true, speaker: "Master Bed" },
 };
 
 export const wakeId = (suite: string, part: string, domain = "input_boolean") => `${domain}.wake_${suite}_${part}`;

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.113
+
+- Owners' alarm clock: a "Wake-up" tab on owner tablets for the Master suite — fades up the master
+  bedroom lights, opens the master bedroom shade, says good morning and/or plays an "MA-" playlist on
+  the Master Bed Bluesound (quiet → louder). The ringing screen (Snooze / I'm up) shows on owner tablets.
+- Needs the updated `maui_wake.yaml` package (adds the `wake_master_*` helpers, automation and scripts).
+
 ## 1.0.112
 
 - House mode: the Owners lock now finds T2's iPhone (mobile-app device "Temp").
