@@ -722,3 +722,24 @@ pending request; back to "Watching"). Package now asks only for an official aler
 longer count (`maui_storm_prep_low_sun_days` is unused). Requests now go to T2's iPhone:
 `input_text.maui_storm_prep_notify_service` = `notify.mobile_app_temp` (device "Tom_iPhone17"). No official
 alert source is configured (no NWS alerts integration). House mode is Suspend on purpose (workers on site).
+
+## 17. Where things stand (handoff, Nov 25 2026)
+
+Start here in a new conversation. Wall Kiosk add-on **1.0.112** installed (CHANGELOG has every release).
+
+- **Wall v2:** owner tabs Home · Rooms · Lights · Climate · Shades · Music · Energy · Alarm · Cameras;
+  guest tablets (role per tablet, "This tablet") get Rooms · Wake-up · Cameras for their own suite only.
+  Home has house-mode buttons and a Motion row; Energy defaults to the Selling/buying chart.
+- **Spotify naming:** "Maui-" playlists → Music screen; "MA-" playlists → wake-up alarm only (prefix hidden).
+  The wall server keeps a shared copy of the list (`/api/spotify-playlists`); it refreshes whenever
+  Spotify is playing. Guest Bluesounds (Molokini/Beach Guest Bed) are NOT yet visible to Spotify —
+  T2 must play to each once from the house Wi-Fi; until then wake-up uses the voice.
+- **Wake-up:** `maui_wake.yaml` (Beach, Boardroom, Molokini, Mauka); music ramps 4% → ~32% over ~5 min
+  after one good-morning; falls back to voice if Spotify can't reach the speaker or is busy.
+- **Energy:** battery balancer on; storm prep only for heavy rain (≥ 2 in / 3 days), 40 mph+ wind or an
+  official alert, notifies `notify.mobile_app_temp`. Pool schedule in section 16.
+- **Mode:** Suspend while workers are on site — switch back to Vacation after.
+
+**Open:** guest-speaker Spotify link (on site); wake-up music test; S1 has ~1–1.4 kW daytime load not on
+its SPAN panel (ask Walter); door/motion sensors to install (4 entry, 4 motion — section 10); night look;
+Modern Forms fans; next bill (Nov 23–Dec 22) is the first full test of balancer + pool schedule.
