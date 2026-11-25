@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.115
+
+- Settings sheet: the storm-protection box is no longer squashed at the top.
+
 ## 1.0.114
 
 - The new wall is now the default: the Wall panel opens straight into it. "Classic view" (in
