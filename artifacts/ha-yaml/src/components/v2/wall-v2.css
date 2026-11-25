@@ -402,3 +402,46 @@
 .v2-settings-actions { display: flex; gap: 8px; }
 .v2-settings-body { flex: 1; min-height: 0; overflow: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 18px; }
 .v2-settings-body > * { flex-shrink: 0; }
+
+/* ---- Light theme for the classic settings panels inside the Settings sheet ----
+   The panels (storm protection, cooling targets, diagnostics) are the tested
+   classic components; this remaps their dark "wood" colours to the sand look. */
+.v2-light-panels {
+  --cream: #1E2A2E; --cream-muted: #56646A; --brass: #B07800; --brass-bright: #8A5A00;
+  --wood-deep: #FFFFFF; --wood-koa: #F7F2E9; --wood-teak: #F3EEE4; --wood-teak-light: #FFFFFF; --wood-raised: #EFE8DC;
+  --shadow-deep: none; --shadow-inset: none;
+  background: #F4EFE6 !important; color: #1E2A2E;
+}
+.v2-light-panels::before { display: none !important; }
+.v2-light-panels .v2-settings-head { border-bottom-color: #E2D9C8; color: #1E2A2E; background: #FBF8F2; }
+.v2-light-panels .wall-tile { background: #FFFFFF !important; border: 1px solid #E7DFCF !important; box-shadow: none !important; color: #1E2A2E; }
+.v2-light-panels .wall-tile::before, .v2-light-panels .wall-tile::after { display: none !important; }
+.v2-light-panels .wall-icon-wrap { background: #F3EEE4 !important; border-color: #E2D9C8 !important; }
+.v2-light-panels .wall-btn { background: #FFFFFF !important; border: 1.5px solid #C9BFAE !important; color: #1E2A2E !important; box-shadow: none !important; }
+.v2-light-panels .wall-btn:hover:not(:disabled) { background: #F7F2E9 !important; color: #0A4553 !important; }
+.v2-light-panels .wall-btn-active, .v2-light-panels [class*="bg-amber-7"] { background: var(--teal) !important; border-color: var(--teal) !important; color: #FFFFFF !important; }
+/* text */
+.v2-light-panels [class*="text-stone-50"], .v2-light-panels [class*="text-stone-100"], .v2-light-panels [class*="text-stone-200"], .v2-light-panels [class*="text-white"] { color: #1E2A2E !important; }
+.v2-light-panels [class*="text-stone-300"], .v2-light-panels [class*="text-stone-400"] { color: #56646A !important; }
+.v2-light-panels [class*="text-stone-500"], .v2-light-panels [class*="text-stone-600"] { color: #7A8A90 !important; }
+.v2-light-panels [class*="text-amber-50"], .v2-light-panels [class*="text-amber-100"], .v2-light-panels [class*="text-amber-200"], .v2-light-panels [class*="text-amber-300"] { color: #8A5A00 !important; }
+.v2-light-panels [class*="text-amber-400"], .v2-light-panels [class*="text-amber-500"] { color: #B07800 !important; }
+.v2-light-panels [class*="text-red-"], .v2-light-panels [class*="text-rose-"] { color: #B3261E !important; }
+.v2-light-panels [class*="text-emerald-"] { color: #2E7D4F !important; }
+.v2-light-panels [class*="text-indigo-"] { color: #3B4BA8 !important; }
+/* backgrounds */
+.v2-light-panels [class*="bg-stone-9"], .v2-light-panels [class*="bg-black/"], .v2-light-panels [class*="bg-stone-8"] { background-color: #F7F2E9 !important; }
+.v2-light-panels [class*="bg-red-950"], .v2-light-panels [class*="bg-rose-950"] { background-color: #FCE9E7 !important; }
+.v2-light-panels [class*="bg-amber-950"] { background-color: #FFF4D6 !important; }
+.v2-light-panels [class*="bg-emerald-950"] { background-color: #E6F4EA !important; }
+/* borders */
+.v2-light-panels [class*="border-stone-"] { border-color: #E2D9C8 !important; }
+.v2-light-panels [class*="border-amber-"] { border-color: #E0C27A !important; }
+.v2-light-panels [class*="border-red-"], .v2-light-panels [class*="border-rose-"] { border-color: #E8B4AE !important; }
+.v2-light-panels [class*="border-emerald-"] { border-color: #B5DCC2 !important; }
+/* form fields */
+.v2-light-panels input, .v2-light-panels select, .v2-light-panels textarea { background: #FFFFFF !important; color: #1E2A2E !important; border-color: #C9BFAE !important; }
+.v2-light-panels input:focus, .v2-light-panels select:focus, .v2-light-panels textarea:focus { border-color: var(--teal) !important; outline: none; }
+.v2-light-panels input::placeholder { color: #9AA6AA !important; }
+.v2-light-panels pre, .v2-light-panels code { background: #F7F2E9 !important; color: #1E2A2E !important; }
+.v2-light-panels .wall-btn-active, .v2-light-panels [class*="bg-amber-7"], .v2-light-panels [class*="bg-amber-6"] { background: var(--teal) !important; border-color: var(--teal) !important; color: #FFFFFF !important; }

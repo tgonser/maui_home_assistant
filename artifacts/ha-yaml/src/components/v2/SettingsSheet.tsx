@@ -11,7 +11,7 @@ export function SettingsSheet({ states, onClose }: { states: Map<string, HAState
   const list = useMemo(() => [...states.values()], [states]);
   return (
     <div className="v2-modal" role="dialog" aria-modal="true" aria-label="Settings" onClick={onClose}>
-      <div className="wall-root v2-settings-sheet" onClick={(e) => e.stopPropagation()}>
+      <div className="wall-root v2-light-panels v2-settings-sheet" onClick={(e) => e.stopPropagation()}>
         <div className="v2-settings-head">
           <span>Settings</span>
           <div className="v2-settings-actions">
