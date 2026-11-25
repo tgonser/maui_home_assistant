@@ -33,7 +33,7 @@ export function wantsWallV2(): boolean {
 }
 
 const NAV = ["Home", "Rooms", "Lights", "Climate", "Shades", "Music", "Energy", "Alarm", "Cameras", "Wake-up"] as const;
-const OWNER_NAV = ["Home", "Rooms", "Lights", "Climate", "Shades", "Music", "Energy", "Alarm", "Cameras"] as const;
+const OWNER_NAV = ["Home", "Rooms", "Lights", "Climate", "Shades", "Music", "Wake-up", "Energy", "Alarm", "Cameras"] as const;
 // A guest tablet gets its room (lights, AC, shades, music) and the outdoor cameras.
 const GUEST_NAV = ["Rooms", "Wake-up", "Cameras"] as const;
 type Nav = (typeof NAV)[number];
@@ -113,6 +113,8 @@ export function WallV2() {
       <main className="v2-main" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} key={tab}>
         {tab === "Wake-up" && role.kind === "guest" ? (
           <WakeScreen states={states} suite={role.room} suiteName={ROOMS.find((r) => r.id === role.room)?.name ?? role.room} />
+        ) : tab === "Wake-up" ? (
+          <WakeScreen states={states} suite="master" suiteName="Master suite" />
         ) : tab === "Rooms" ? (
           <RoomsScreen states={states} role={role} />
         ) : tab === "Cameras" && role.kind === "guest" ? (
@@ -137,7 +139,9 @@ export function WallV2() {
           <NotYet name={tab} built={BUILT} />
         )}
       </main>
-      {role.kind === "guest" && <WakeRinging states={states} suite={role.room} suiteName={ROOMS.find((r) => r.id === role.room)?.name ?? role.room} />}
+      {role.kind === "guest"
+        ? <WakeRinging states={states} suite={role.room} suiteName={ROOMS.find((r) => r.id === role.room)?.name ?? role.room} />
+        : <WakeRinging states={states} suite="master" suiteName="Master suite" />}
       {tabletDlg && <TabletDialog role={role} onSet={(r) => { setRole(r); setTabletDlg(false); }} onClose={() => setTabletDlg(false)} />}
     </div>
   );
