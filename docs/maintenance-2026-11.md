@@ -740,6 +740,7 @@ Start here in a new conversation. Wall Kiosk add-on **1.0.112** installed (CHANG
   official alert, notifies `notify.mobile_app_temp`. Pool schedule in section 16.
 - **Mode:** Suspend while workers are on site — switch back to Vacation after.
 
-**Open:** guest-speaker Spotify link (on site); wake-up music test; S1 has ~1–1.4 kW daytime load not on
+**Open:** INSTALL 1.0.113 + updated `maui_wake.yaml` (owners' Master suite wake-up — built and pushed Nov 25,
+not yet installed: no HA access from that session); guest-speaker Spotify link (on site); wake-up music test; S1 has ~1–1.4 kW daytime load not on
 its SPAN panel (ask Walter); door/motion sensors to install (4 entry, 4 motion — section 10); night look;
 Modern Forms fans; next bill (Nov 23–Dec 22) is the first full test of balancer + pool schedule.
