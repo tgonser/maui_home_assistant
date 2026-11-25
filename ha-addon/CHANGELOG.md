@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.116
+
+- Settings sheet in the light sand look: storm protection, cooling targets and diagnostics are restyled
+  in place (same tested panels, new colours).
+
 ## 1.0.115
 
 - Settings sheet: the storm-protection box is no longer squashed at the top.
