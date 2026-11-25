@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.114
+
+- The new wall is now the default: the Wall panel opens straight into it. "Classic view" (in
+  Settings) still switches back, and is remembered per tablet.
+- Owner Settings gear (⚙, top right): storm-prep approval and settings, the cooling-target table
+  and diagnostics export, without going through the classic view.
+
 ## 1.0.113
 
 - Owners' alarm clock: a "Wake-up" tab on owner tablets for the Master suite — fades up the master

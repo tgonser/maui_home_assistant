@@ -396,3 +396,8 @@
 .v2-seg-sm button { height: 34px; padding: 0 14px; font-size: 13px; }
 .lg-sell { background: #3FA66A; }
 .lg-buy { background: #D9534F; }
+.v2-gear { border: 0; background: var(--sand-2); width: 44px; height: 44px; border-radius: 50%; font-size: 22px; line-height: 1; cursor: pointer; color: var(--ink); }
+.v2-settings-sheet { width: min(1100px, 96vw); height: 92vh; border-radius: 18px; display: flex; flex-direction: column; overflow: hidden; }
+.v2-settings-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; font-size: 20px; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.12); }
+.v2-settings-actions { display: flex; gap: 8px; }
+.v2-settings-body { flex: 1; min-height: 0; overflow: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 18px; }

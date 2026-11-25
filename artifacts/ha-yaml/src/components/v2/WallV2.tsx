@@ -15,6 +15,7 @@ import { AlarmScreen } from "./AlarmScreen";
 import { CamerasScreen } from "./CamerasScreen";
 import { RoomsScreen } from "./RoomsScreen";
 import { WakeRinging, WakeScreen } from "./WakeScreen";
+import { SettingsSheet } from "./SettingsSheet";
 import { suiteOccupied } from "@/lib/wake";
 import { GUEST_SUITE_IDS, parseRole, ROLE_KEY, ROOMS, type TabletRole } from "@/lib/roomsCatalog";
 import { haStormPrepSecurity, haUnlockStormPrep } from "@/lib/ha";
@@ -28,8 +29,9 @@ export function setWallUi(ui: "v2" | "classic") {
   try { localStorage.setItem(UI_KEY, ui); } catch { /* private mode */ }
   window.location.reload();
 }
+/** The new wall is the default; "Classic view" stores "classic" to opt out. */
 export function wantsWallV2(): boolean {
-  try { return localStorage.getItem(UI_KEY) === "v2"; } catch { return false; }
+  try { return localStorage.getItem(UI_KEY) !== "classic"; } catch { return true; }
 }
 
 const NAV = ["Home", "Rooms", "Lights", "Climate", "Shades", "Music", "Energy", "Alarm", "Cameras", "Wake-up"] as const;
@@ -46,6 +48,7 @@ export function WallV2() {
   const setRole = (r: TabletRole) => { try { localStorage.setItem(ROLE_KEY, JSON.stringify(r)); } catch { /* private mode */ } setRoleState(r); setTab(r.kind === "guest" ? "Rooms" : "Home"); };
   const nav: readonly Nav[] = role.kind === "guest" ? GUEST_NAV : OWNER_NAV;
   const [tab, setTab] = useState<Nav>(() => (role.kind === "guest" ? "Rooms" : "Home"));
+  const [showSettings, setShowSettings] = useState(false);
   const [tabletDlg, setTabletDlg] = useState(false);
   const [now, setNow] = useState(Date.now());
   const { states, mode, error, lastMs } = useLiveStates();
@@ -99,7 +102,7 @@ export function WallV2() {
           <span className="v2-clock">{hm} <small>{ampm}</small></span>
           <FullScreenButton />
           {role.kind === "owner" && <button type="button" className="v2-link" onClick={() => setTabletDlg(true)}>This tablet</button>}
-          {role.kind === "owner" && <button type="button" className="v2-link" onClick={() => setWallUi("classic")}>Classic view</button>}
+          {role.kind === "owner" && <button type="button" className="v2-gear" aria-label="Settings" title="Settings" onClick={() => setShowSettings(true)}>⚙</button>}
           {role.kind === "guest" && <button type="button" className="v2-link" onClick={() => setTabletDlg(true)}>Owner</button>}
         </div>
       </header>
@@ -142,6 +145,7 @@ export function WallV2() {
       {role.kind === "guest"
         ? <WakeRinging states={states} suite={role.room} suiteName={ROOMS.find((r) => r.id === role.room)?.name ?? role.room} />
         : <WakeRinging states={states} suite="master" suiteName="Master suite" />}
+      {showSettings && role.kind === "owner" && <SettingsSheet states={states} onClose={() => setShowSettings(false)} />}
       {tabletDlg && <TabletDialog role={role} onSet={(r) => { setRole(r); setTabletDlg(false); }} onClose={() => setTabletDlg(false)} />}
     </div>
   );
