@@ -259,10 +259,12 @@ export function SettingsPanelBody({
   states,
   onChanged,
   includeStormPrep = true,
+  includeTilePickers = true,
 }: {
   states: HAState[];
   onChanged?: () => void;
   includeStormPrep?: boolean;
+  includeTilePickers?: boolean;
 }) {
   const { overrides, setOverride, reset } = useSuperViewOverrides();
   return (
@@ -276,6 +278,7 @@ export function SettingsPanelBody({
           <div className="border-t border-stone-800" />
         </>
       )}
+      {includeTilePickers && (<>
       <div className="text-xs uppercase tracking-wider text-stone-300">
         Super View entities
       </div>
@@ -300,6 +303,7 @@ export function SettingsPanelBody({
           Reset all to auto-detect
         </button>
       </div>
+      </>)}
     </div>
   );
 }
