@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.117
+
+- Fix: Snooze and "I'm up" on the wake-up screen did nothing. The wall server locked every script
+  behind the homeowner PIN (storm-prep protection), so these calls were refused. The same lock was
+  silently blocking the Home screen's Leave button and the Lights → Scenes buttons.
+- Now allowed without the PIN: the wake-up snooze/stop scripts for each suite, script.maui_leave,
+  turning on the wall's own scenes (scene.wall_*), scene reload, and saving a wall scene that holds
+  only lights. All other scripts, scenes and automation triggers stay behind the PIN.
+
 ## 1.0.116
 
 - Settings sheet in the light sand look: storm protection, cooling targets and diagnostics are restyled
