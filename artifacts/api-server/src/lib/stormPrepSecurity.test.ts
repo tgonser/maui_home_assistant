@@ -326,7 +326,8 @@ test("the wall's everyday scripts and light scenes run without the PIN", () => {
   assert.equal(isSensitiveStormPrepCall("/api/services/script/turn_on", { entity_id: "script.wake_master_stop", area_id: "house" }), true);
   assert.equal(isSensitiveStormPrepCall("/api/services/scene/turn_on", { entity_id: "scene.battery_full" }), true);
   assert.equal(isSensitiveStormPrepCall("/api/services/scene/apply", { entities: { "light.x": "on" } }), true);
-  // Wall scene configs may hold lights only.
+  // Wall scene configs may hold lights and shades only.
+  assert.equal(isSensitiveStormPrepCall("/api/config/scene/config/wall_x", { entities: { "light.a": {}, "cover.b": { state: "open" } } }), false);
   assert.equal(isSensitiveStormPrepCall("/api/config/scene/config/wall_evening", { name: "Evening", entities: { "light.a": { state: "on" } } }), false);
   assert.equal(isSensitiveStormPrepCall("/api/config/scene/config/wall_evening", { name: "x", entities: { "light.a": {}, "number.gonser_4680_system_1_backup_reserve": { state: 100 } } }), true);
 });
