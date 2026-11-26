@@ -249,7 +249,7 @@ export function sceneConfigIsLightsOnly(body: unknown): boolean {
   const entities = rec.entities;
   if (!entities || typeof entities !== "object" || Array.isArray(entities)) return false;
   const keys = Object.keys(entities as Record<string, unknown>);
-  return keys.length > 0 && keys.every((k) => /^light\.[a-z0-9_]+$/.test(k));
+  return keys.length > 0 && keys.every((k) => /^(?:light|cover)\.[a-z0-9_]+$/.test(k));
 }
 
 function hasBroadTargetSelector(body: unknown): boolean {

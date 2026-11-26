@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.118
+
+- Wall scenes may include shades as well as lights when saved without the PIN.
+
 ## 1.0.117
 
 - Fix: Snooze and "I'm up" on the wake-up screen did nothing. The wall server locked every script
