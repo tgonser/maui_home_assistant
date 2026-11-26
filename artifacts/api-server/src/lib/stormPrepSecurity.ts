@@ -18,6 +18,12 @@ const SECRET_PATH = "/data/.storm_prep_session_secret";
 const BATTERY_CONTROL_ENTITY =
   /(powerwall|battery|backup|reserve|enphase|solaredge|span|storage|gonser|4680|energy.?gateway|storm.?watch|grid.?charg)/i;
 const INDIRECT_DOMAIN = /^(script|automation|scene)$/;
+// The wall's own everyday controls. These scripts live in the HA packages
+// (lights, shades, speakers only) and the wall's scenes hold only lights, so
+// they run without the homeowner PIN. Everything else in these domains stays
+// locked.
+const SAFE_WALL_SCRIPT = /^script\.(?:wake_(?:beach|boardroom|molokini|mauka|master)_(?:snooze|stop)|maui_leave)$/;
+const SAFE_WALL_SCENE = /^scene\.wall_[a-z0-9_]{1,80}$/;
 const STORM_PREP_NAMESPACE =
   /^(?:input_text|input_boolean|input_datetime|input_number|input_select|timer|script|automation)\.maui_storm_prep_/;
 const LIGHTING_SWITCH_ENTITY =
@@ -218,6 +224,34 @@ function bodyEntityIds(body: unknown): string[] {
   ];
 }
 
+function isSafeWallControl(domain: string | undefined, service: string | undefined, body: unknown): boolean {
+  if (hasBroadTargetSelector(body)) return false;
+  if (domain === "script") {
+    // script.turn_on with entity ids, or the script called as its own service.
+    if (service === "turn_on") {
+      const ids = bodyEntityIds(body);
+      return ids.length > 0 && ids.every((id) => SAFE_WALL_SCRIPT.test(id));
+    }
+    return SAFE_WALL_SCRIPT.test(`script.${service ?? ""}`) && bodyEntityIds(body).length === 0;
+  }
+  // Reloading scenes (after the wall saves one) runs nothing.
+  if (domain === "scene" && service === "reload") return bodyEntityIds(body).length === 0;
+  if (domain === "scene" && service === "turn_on") {
+    const ids = bodyEntityIds(body);
+    return ids.length > 0 && ids.every((id) => SAFE_WALL_SCENE.test(id));
+  }
+  return false;
+}
+
+export function sceneConfigIsLightsOnly(body: unknown): boolean {
+  if (!body || typeof body !== "object") return false;
+  const rec = body as Record<string, unknown>;
+  const entities = rec.entities;
+  if (!entities || typeof entities !== "object" || Array.isArray(entities)) return false;
+  const keys = Object.keys(entities as Record<string, unknown>);
+  return keys.length > 0 && keys.every((k) => /^light\.[a-z0-9_]+$/.test(k));
+}
+
 function hasBroadTargetSelector(body: unknown): boolean {
   if (!body || typeof body !== "object") return false;
   const record = body as Record<string, unknown>;
@@ -285,6 +319,12 @@ export function isSensitiveStormPrepCall(
     return true;
   }
 
+  // The wall saves scenes through the config API. A scene may set any entity,
+  // so a wall scene that touches anything but lights needs the homeowner PIN.
+  if (/^\/api\/config\/scene\/config\/[^/]+$/.test(normalizedPath)) {
+    return !sceneConfigIsLightsOnly(body);
+  }
+
   const match = normalizedPath.match(/^\/api\/services\/([^/]+)\/([^/]+)$/);
   if (!match) return false;
   const [, domain, service] = match;
@@ -292,6 +332,7 @@ export function isSensitiveStormPrepCall(
   // Scripts, scenes, and automation.trigger are indirect execution
   // primitives: Home Assistant can hide a battery write inside them, beyond
   // what the proxy can inspect. Keep them behind the homeowner session.
+  if (isSafeWallControl(domain, service, body)) return false;
   if (
     INDIRECT_DOMAIN.test(domain ?? "") &&
     (domain !== "automation" || service === "trigger")

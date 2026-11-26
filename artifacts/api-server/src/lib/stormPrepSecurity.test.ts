@@ -313,3 +313,20 @@ test("proxy uses the shared protected transaction helper set", () => {
     ),
   );
 });
+
+test("the wall's everyday scripts and light scenes run without the PIN", () => {
+  for (const id of ["script.wake_master_stop", "script.wake_master_snooze", "script.wake_molokini_stop", "script.maui_leave"]) {
+    assert.equal(isSensitiveStormPrepCall("/api/services/script/turn_on", { entity_id: id }), false, id);
+  }
+  assert.equal(isSensitiveStormPrepCall("/api/services/script/wake_beach_snooze", {}), false);
+  assert.equal(isSensitiveStormPrepCall("/api/services/scene/turn_on", { entity_id: "scene.wall_evening" }), false);
+  assert.equal(isSensitiveStormPrepCall("/api/services/scene/reload", {}), false);
+  // Anything else stays locked.
+  assert.equal(isSensitiveStormPrepCall("/api/services/script/turn_on", { entity_id: ["script.wake_master_stop", "script.maui_storm_prep_approve"] }), true);
+  assert.equal(isSensitiveStormPrepCall("/api/services/script/turn_on", { entity_id: "script.wake_master_stop", area_id: "house" }), true);
+  assert.equal(isSensitiveStormPrepCall("/api/services/scene/turn_on", { entity_id: "scene.battery_full" }), true);
+  assert.equal(isSensitiveStormPrepCall("/api/services/scene/apply", { entities: { "light.x": "on" } }), true);
+  // Wall scene configs may hold lights only.
+  assert.equal(isSensitiveStormPrepCall("/api/config/scene/config/wall_evening", { name: "Evening", entities: { "light.a": { state: "on" } } }), false);
+  assert.equal(isSensitiveStormPrepCall("/api/config/scene/config/wall_evening", { name: "x", entities: { "light.a": {}, "number.gonser_4680_system_1_backup_reserve": { state: 100 } } }), true);
+});
