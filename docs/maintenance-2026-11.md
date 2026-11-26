@@ -744,3 +744,15 @@ Start here in a new conversation. Wall Kiosk add-on **1.0.112** installed (CHANG
 not yet installed: no HA access from that session); guest-speaker Spotify link (on site); wake-up music test; S1 has ~1–1.4 kW daytime load not on
 its SPAN panel (ask Walter); door/motion sensors to install (4 entry, 4 motion — section 10); night look;
 Modern Forms fans; next bill (Nov 23–Dec 22) is the first full test of balancer + pool schedule.
+
+## 18. Nov 26 — alarm buttons fixed (1.0.117/118); Beach thermostat offline
+
+- Master wake-up rang at 7:00 AM HST and **Snooze / I'm up did nothing**: the wall server's storm-prep guard
+  refused every `script.*` call without the homeowner PIN. Same lock was silently blocking **Leave** and
+  **Lights → Scenes**. Fixed with an allowlist (`stormPrepSecurity.ts`): `script.wake_<suite>_snooze|stop`,
+  `script.maui_leave`, `scene.wall_*` turn_on, `scene.reload`, and wall scene configs holding only lights/shades.
+  Everything else stays PIN-locked (tested). Alarm stopped by hand at 7:19 AM HST.
+- **Beach thermostat (climate.beach_room) offline since 11:05 AM HST Nov 25** — no Honeywell updates while
+  the other eight report. Last known: set 71°, cooling (set by hand at 9:35 AM Nov 25 during Suspend). The
+  automation's 84° can't reach it. Needs someone on site: set it to 84 by hand, check its Wi-Fi in the
+  Honeywell app, power-cycle if needed.
