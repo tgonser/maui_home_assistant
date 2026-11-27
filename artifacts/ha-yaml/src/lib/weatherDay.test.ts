@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { addDays, clockText, daytimeCloud, mauiDay, solarEstimate, sunTimes, sunWords } from "./weatherDay.ts";
+import { addDays, clockText, hoursText, daytimeCloud, mauiDay, solarEstimate, sunTimes, sunWords } from "./weatherDay.ts";
 
 test("sun times for Nov 27 2026 match the weather app within 3 min", () => {
   const s = sunTimes("2026-11-27");
@@ -20,5 +20,7 @@ test("days, cloud and solar", () => {
   assert.equal(solarEstimate(100, 0), 100);
   assert.equal(solarEstimate(100, 100), 30);
   assert.equal(sunWords(10), "Sunny");
+  assert.equal(hoursText(10.999), "11 h 0 min");
+  assert.equal(hoursText(13.25), "13 h 15 min");
   assert.equal(sunWords(75), "Mostly cloudy");
 });

@@ -466,7 +466,10 @@
 .v2-wx-fact small { font-size: 11.5px; color: var(--muted); }
 .v2-wx-sunrow { flex: 1; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; }
 .v2-wx-suncol { display: flex; flex-direction: column; gap: 10px; }
-.v2-wx-dial { width: 100%; max-width: 250px; justify-self: center; }
+.v2-wx-dial { width: 100%; max-width: 270px; align-self: center; flex: 1; min-height: 0; }
+.v2-wx-suntimes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.v2-wx-suntimes .v2-wx-fact { padding: 6px 8px; }
+.v2-wx-suntimes .v2-wx-fact b { font-size: 15px; }
 .v2-wx-hourrow { display: flex; gap: 6px; overflow-x: auto; padding-top: 6px; }
 .v2-wx-hour { flex: 0 0 64px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; border-radius: 10px; background: #F7F2E9; font-size: 13px; }
 .v2-wx-hour small { color: #3B6FB0; min-height: 14px; }

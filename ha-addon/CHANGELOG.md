@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.120
+
+- Weather: bigger sun dial with first light, sunrise, sunset and last light in a row under it; daylight
+  hours no longer show "10 h 60 min".
+
 ## 1.0.119
 
 - New **Weather** tab for owner and guest tablets:
