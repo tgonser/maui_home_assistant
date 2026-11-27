@@ -791,3 +791,6 @@ Modern Forms fans; next bill (Nov 23–Dec 22) is the first full test of balance
   sensors; ask statistics for `change`/`state`, not `max`). Energy tab → "Battery balance … By day" shows 14
   days: moved, bought while boosting, both systems' charge at 5 PM. So far: Nov 22 moved 2.6 / bought 0.6;
   Nov 23 8.2 / 6.0 (stuck-reserve glitch); Nov 24–26 nothing to move (cloudy, S1 never full); Nov 27 4.0 / 0.3.
+- **Balancer chains boosts (Nov 27):** when a boost reaches its target and the full side is still exporting,
+  it raises the reserve straight to the next +25 step (logged "System N reached X% … raised to Y%") instead
+  of dropping to 10% and waiting ~15 min (10-min cooldown + 5-min tick) for a new boost.

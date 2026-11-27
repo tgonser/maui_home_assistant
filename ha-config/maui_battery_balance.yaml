@@ -14,7 +14,8 @@
 #   Every 5 min between 9:00 AM and 3:30 PM HST (Smart Export pays nothing 9 AM–4 PM):
 #   - START: if one side is >= 80% and has been exporting > 2 kW for 10 min, and the other
 #     side is at least 15 points lower and below 75%, raise the low side's backup reserve
-#     to (its charge + 25), max 95%. (Was +15 / 80% / 9:30–2:30 until Nov 27 2026.)
+#     to (its charge + 25), max 95%. When it reaches that and the other side is still exporting,
+#     it goes straight to the next +25 step. (Was +15 / 80% / 9:30–2:30, one step, until Nov 27 2026.)
 #   - STOP (reserve back to 10%): when the boosted side reaches its target, the whole house
 #     has been importing for 5 min (the surplus is gone), or it's 3:30 PM.
 #   At most one change per side every 10 minutes.
@@ -202,42 +203,90 @@ automation:
                 value_template: "{{ res2 > base_reserve }}"
             sequence:
               - if:
+                  # Target reached but System 1 is still sending spare solar out:
+                  # go straight to the next step instead of waiting for a new boost.
                   - condition: template
-                    value_template: "{{ past_window or importing or soc2 >= res2 - 1 }}"
+                    value_template: >-
+                      {{ not past_window and not importing and soc2 >= res2 - 1
+                         and is_state('binary_sensor.maui_s1_solar_surplus', 'on')
+                         and soc2 < max_reserve - 5 }}
                 then:
+                  - variables:
+                      next_target: "{{ [ (soc2 + boost_points) | round(0) | int, max_reserve ] | min }}"
                   - action: number.set_value
                     target:
                       entity_id: number.4680_system_2_backup_reserve
                     data:
-                      value: "{{ base_reserve }}"
+                      value: "{{ next_target }}"
                   - action: logbook.log
                     data:
                       name: Maui Battery Balance
                       entity_id: input_boolean.maui_balance_enabled
                       message: >-
-                        System 2 reserve back to {{ base_reserve }}% (charge {{ soc2 | round(0) }}%,
-                        reason: {{ 'time' if past_window else ('house importing' if importing else 'target reached') }}).
+                        System 2 reached {{ soc2 | round(0) }}% and System 1 is still exporting —
+                        reserve raised to {{ next_target }}%.
+                else:
+                  - if:
+                      - condition: template
+                        value_template: "{{ past_window or importing or soc2 >= res2 - 1 }}"
+                    then:
+                      - action: number.set_value
+                        target:
+                          entity_id: number.4680_system_2_backup_reserve
+                        data:
+                          value: "{{ base_reserve }}"
+                      - action: logbook.log
+                        data:
+                          name: Maui Battery Balance
+                          entity_id: input_boolean.maui_balance_enabled
+                          message: >-
+                            System 2 reserve back to {{ base_reserve }}% (charge {{ soc2 | round(0) }}%,
+                            reason: {{ 'time' if past_window else ('house importing' if importing else 'target reached') }}).
           # ---- A boost is active on System 1 ------------------------------------------
           - conditions:
               - condition: template
                 value_template: "{{ res1 > base_reserve }}"
             sequence:
               - if:
+                  # Target reached but System 2 is still sending spare solar out:
+                  # go straight to the next step instead of waiting for a new boost.
                   - condition: template
-                    value_template: "{{ past_window or importing or soc1 >= res1 - 1 }}"
+                    value_template: >-
+                      {{ not past_window and not importing and soc1 >= res1 - 1
+                         and is_state('binary_sensor.maui_s2_solar_surplus', 'on')
+                         and soc1 < max_reserve - 5 }}
                 then:
+                  - variables:
+                      next_target: "{{ [ (soc1 + boost_points) | round(0) | int, max_reserve ] | min }}"
                   - action: number.set_value
                     target:
                       entity_id: number.gonser_4680_system_1_backup_reserve
                     data:
-                      value: "{{ base_reserve }}"
+                      value: "{{ next_target }}"
                   - action: logbook.log
                     data:
                       name: Maui Battery Balance
                       entity_id: input_boolean.maui_balance_enabled
                       message: >-
-                        System 1 reserve back to {{ base_reserve }}% (charge {{ soc1 | round(0) }}%,
-                        reason: {{ 'time' if past_window else ('house importing' if importing else 'target reached') }}).
+                        System 1 reached {{ soc1 | round(0) }}% and System 2 is still exporting —
+                        reserve raised to {{ next_target }}%.
+                else:
+                  - if:
+                      - condition: template
+                        value_template: "{{ past_window or importing or soc1 >= res1 - 1 }}"
+                    then:
+                      - action: number.set_value
+                        target:
+                          entity_id: number.gonser_4680_system_1_backup_reserve
+                        data:
+                          value: "{{ base_reserve }}"
+                      - action: logbook.log
+                        data:
+                          name: Maui Battery Balance
+                          entity_id: input_boolean.maui_balance_enabled
+                          message: >-
+                            System 1 reserve back to {{ base_reserve }}% (charge {{ soc1 | round(0) }}%,
+                            reason: {{ 'time' if past_window else ('house importing' if importing else 'target reached') }}).
           # ---- No boost: start one if System 1 has surplus and System 2 is low -------
           - conditions:
               - condition: template
