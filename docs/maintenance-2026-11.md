@@ -794,3 +794,7 @@ Modern Forms fans; next bill (Nov 23–Dec 22) is the first full test of balance
 - **Balancer chains boosts (Nov 27):** when a boost reaches its target and the full side is still exporting,
   it raises the reserve straight to the next +25 step (logged "System N reached X% … raised to Y%") instead
   of dropping to 10% and waiting ~15 min (10-min cooldown + 5-min tick) for a new boost.
+- **Decided Nov 27 — wait a week before a grid top-up:** rates (Oct bill) ~25¢ day, ~49¢ overnight, ~73¢ 5–9 PM.
+  Idea: 3–4 PM, charge any system below ~55% from the grid. Est. $10–25/month on top of today's changes (10%
+  reserve, aggressive balancer). Check Dec 4: balancer "By day" table + overnight purchases; add it only if the
+  house still buys at night.
