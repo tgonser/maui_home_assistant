@@ -31,7 +31,7 @@
 # Base reserve is 10% (T2's setting from Nov 27 2026; was 20%). In a real outage the
 # SPAN panels shed non-essential loads, and storm prep fills to 100% before real storms.
 # To change it, edit `base_reserve` in both automations and the `> 10` checks in the sensors,
-# automations below. No `initial:` on the helper, so its on/off state survives restarts.
+# below. No `initial:` on the helper, so its on/off state survives restarts.
 # =============================================================================
 
 input_boolean:
