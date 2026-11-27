@@ -781,3 +781,6 @@ Modern Forms fans; next bill (Nov 23–Dec 22) is the first full test of balance
 - **Motion list after restart (1.0.123):** the 6:01 AM restart made every motion sensor show "16 min ago" —
   the list used each sensor's live `last_changed`, which a restart resets. It now uses the last off→on in the
   last 3 days of history (refreshed every 2 min), or "now" for a sensor that is on.
+- **Balancer made more aggressive (Nov 27, T2's request — don't export unpaid midday solar):**
+  `maui_battery_balance.yaml` window 9:00 AM–3:30 PM (was 9:30–2:30), boost +25 points (was +15), max 95%
+  (was 80%). Safety resets at 3:30 (end of window), 3:45, 4:15 and 4:40 PM — all well before the 5 PM peak.
