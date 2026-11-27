@@ -13,10 +13,11 @@ test("daily peak of the running totals, 5 PM charge, newest first, empty early d
       { s: "unavailable", lu: hst("2026-11-23T16:30:00") },
     ],
     [BALANCE_BOUGHT]: [{ s: "5.999", lu: hst("2026-11-23T16:00:00") }],
-    [SOC5_S2]: [{ s: "58", lu: hst("2026-11-22T17:00:00") }, { s: "68", lu: hst("2026-11-23T17:00:00") }],
+    [SOC5_S2]: [{ s: "58", lu: hst("2026-11-22T17:00:00") }, { s: "68", lu: hst("2026-11-23T17:00:00") }, { s: "68", lu: hst("2026-11-24T06:01:00") }],
   }, Date.parse("2026-11-24T12:00:00-10:00"), 14);
   assert.deepEqual(rows.map((r) => r.day), ["2026-11-24", "2026-11-23", "2026-11-22"]);
   assert.deepEqual(rows[1], { day: "2026-11-23", moved: 8.226, bought: 5.999, soc1: null, soc2: 68 });
   assert.equal(rows[2].moved, 2.645);
   assert.equal(rows[0].moved, null);
+  assert.equal(rows[0].soc2, null, "a restart's re-recorded value is not today's 5 PM reading");
 });

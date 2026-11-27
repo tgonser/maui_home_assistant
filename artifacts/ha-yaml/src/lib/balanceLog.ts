@@ -21,6 +21,9 @@ function byDay(points: Point[] | undefined, pick: "max" | "last"): Map<string, n
     const t = (p.lc ?? p.lu ?? NaN) * 1000;
     if (!Number.isFinite(v) || !Number.isFinite(t)) continue;
     const d = hstDay(t);
+    // The 5 PM sensors are re-recorded on every restart; only a reading taken
+    // at 5 PM or later counts for that day.
+    if (pick === "last" && new Date(t - 10 * 3600_000).getUTCHours() < 17) continue;
     out.set(d, pick === "max" ? Math.max(out.get(d) ?? 0, v) : v);
   }
   return out;
