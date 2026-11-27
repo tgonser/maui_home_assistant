@@ -778,3 +778,6 @@ Modern Forms fans; next bill (Nov 23–Dec 22) is the first full test of balance
   API (hourly). The PacIOOS Kalama Beach (Kihei) sensor isn't real-time — last data July 7 2026.
 - **Wall 1.0.122:** Weather tab shows Forecast.Solar kWh for today/tomorrow (rough cloud estimate after
   that) and ocean/pool/spa water temperatures in the Now card.
+- **Motion list after restart (1.0.123):** the 6:01 AM restart made every motion sensor show "16 min ago" —
+  the list used each sensor's live `last_changed`, which a restart resets. It now uses the last off→on in the
+  last 3 days of history (refreshed every 2 min), or "now" for a sensor that is on.

@@ -13,18 +13,42 @@ export function isMotionSensor(s: HAState): boolean {
   return !/\bG[56]\b|PTZ|Turret|Instant\b/i.test(name);
 }
 
-export type MotionItem = { id: string; name: string; active: boolean; changed: number; available: boolean };
+export type MotionItem = { id: string; name: string; active: boolean; changed: number | null; available: boolean };
 
-/** Motion sensors, most recent activity first. "changed" is when it last
- *  turned on (or off, if that's all HA knows). */
-export function recentMotion(states: Map<string, HAState>): MotionItem[] {
-  return [...states.values()].filter(isMotionSensor).map((s) => ({
-    id: s.entity_id,
-    name: motionSensorLabel(String(s.attributes.friendly_name ?? s.entity_id).replace(/^Makena Alarm\s+/i, "")),
-    active: s.state === "on",
-    available: s.state !== "unavailable" && s.state !== "unknown",
-    changed: Date.parse(s.last_changed),
-  })).sort((a, b) => Number(b.active) - Number(a.active) || b.changed - a.changed);
+/** Motion sensors, most recent motion first. "changed" is when it last saw
+ *  motion: from the history (lastOn) or, if it is moving right now, its live
+ *  state. A sensor's live "last changed" alone is NOT used: a Home Assistant
+ *  restart resets it on every sensor, which made the whole house look busy. */
+export function recentMotion(states: Map<string, HAState>, lastOn: Map<string, number> = new Map()): MotionItem[] {
+  return [...states.values()].filter(isMotionSensor).map((s) => {
+    const active = s.state === "on";
+    const live = active ? Date.parse(s.last_changed) : NaN;
+    const hist = lastOn.get(s.entity_id);
+    const times = [live, hist ?? NaN].filter((t) => Number.isFinite(t));
+    return {
+      id: s.entity_id,
+      name: motionSensorLabel(String(s.attributes.friendly_name ?? s.entity_id).replace(/^Makena Alarm\s+/i, "")),
+      active,
+      available: s.state !== "unavailable" && s.state !== "unknown",
+      changed: times.length ? Math.max(...times) : null,
+    };
+  }).sort((a, b) => Number(b.active) - Number(a.active) || (b.changed ?? 0) - (a.changed ?? 0));
+}
+
+/** From HA history (history_during_period, minimal response: {s, lu} points),
+ *  the last time each sensor went from off to on — real motion only, not a
+ *  restart (unknown/unavailable → anything). */
+export function lastMotionFromHistory(history: Record<string, Array<{ s: string; lu?: number; lc?: number }>>): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const [id, points] of Object.entries(history)) {
+    let prev: string | null = null;
+    for (const p of points) {
+      const t = (p.lc ?? p.lu ?? NaN) * 1000;
+      if (p.s === "on" && prev === "off" && Number.isFinite(t)) out.set(id, Math.max(out.get(id) ?? 0, t));
+      prev = p.s;
+    }
+  }
+  return out;
 }
 
 /** "now", "4 min ago", "2 h ago", "3 days ago". */
