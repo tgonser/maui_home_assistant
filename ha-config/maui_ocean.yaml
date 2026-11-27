@@ -1,0 +1,18 @@
+# Ocean temperature off Mākena, for the Wall's Weather tab.
+#
+# Source: Open-Meteo Marine API (free, no key), sea-surface temperature
+# for the water just off the house. The PacIOOS Kalama Beach (Kihei)
+# sensor was the first choice but it is not real-time (last data July 2026).
+#
+# Reported in °C; Home Assistant shows it in °F.
+rest:
+  - resource: "https://marine-api.open-meteo.com/v1/marine?latitude=20.63&longitude=-156.46&current=sea_surface_temperature&timezone=Pacific%2FHonolulu"
+    scan_interval: 3600
+    timeout: 20
+    sensor:
+      - name: "Ocean temperature"
+        unique_id: maui_ocean_temperature
+        value_template: "{{ value_json.current.sea_surface_temperature }}"
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
