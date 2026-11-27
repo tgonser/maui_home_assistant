@@ -16,6 +16,7 @@ import { CamerasScreen } from "./CamerasScreen";
 import { RoomsScreen } from "./RoomsScreen";
 import { WakeRinging, WakeScreen } from "./WakeScreen";
 import { SettingsSheet } from "./SettingsSheet";
+import { WeatherScreen } from "./WeatherScreen";
 import { suiteOccupied } from "@/lib/wake";
 import { GUEST_SUITE_IDS, parseRole, ROLE_KEY, ROOMS, type TabletRole } from "@/lib/roomsCatalog";
 import { haStormPrepSecurity, haUnlockStormPrep } from "@/lib/ha";
@@ -34,10 +35,10 @@ export function wantsWallV2(): boolean {
   try { return localStorage.getItem(UI_KEY) !== "classic"; } catch { return true; }
 }
 
-const NAV = ["Home", "Rooms", "Lights", "Climate", "Shades", "Music", "Energy", "Alarm", "Cameras", "Wake-up"] as const;
-const OWNER_NAV = ["Home", "Rooms", "Lights", "Climate", "Shades", "Music", "Wake-up", "Energy", "Alarm", "Cameras"] as const;
+const NAV = ["Home", "Rooms", "Lights", "Climate", "Shades", "Music", "Energy", "Alarm", "Cameras", "Wake-up", "Weather"] as const;
+const OWNER_NAV = ["Home", "Rooms", "Lights", "Climate", "Shades", "Music", "Wake-up", "Weather", "Energy", "Alarm", "Cameras"] as const;
 // A guest tablet gets its room (lights, AC, shades, music) and the outdoor cameras.
-const GUEST_NAV = ["Rooms", "Wake-up", "Cameras"] as const;
+const GUEST_NAV = ["Rooms", "Wake-up", "Weather", "Cameras"] as const;
 type Nav = (typeof NAV)[number];
 const BUILT: Nav[] = ["Home", "Rooms", "Lights", "Music", "Climate", "Shades", "Energy", "Alarm", "Cameras"];
 const MAUI_TZ = "Pacific/Honolulu";
@@ -116,6 +117,8 @@ export function WallV2() {
       <main className="v2-main" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} key={tab}>
         {tab === "Wake-up" && role.kind === "guest" ? (
           <WakeScreen states={states} suite={role.room} suiteName={ROOMS.find((r) => r.id === role.room)?.name ?? role.room} />
+        ) : tab === "Weather" ? (
+          <WeatherScreen states={states} showSolar={role.kind !== "guest"} />
         ) : tab === "Wake-up" ? (
           <WakeScreen states={states} suite="master" suiteName="Master suite" />
         ) : tab === "Rooms" ? (
