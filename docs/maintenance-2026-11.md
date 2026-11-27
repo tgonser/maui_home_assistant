@@ -740,8 +740,7 @@ Start here in a new conversation. Wall Kiosk add-on **1.0.112** installed (CHANG
   official alert, notifies `notify.mobile_app_temp`. Pool schedule in section 16.
 - **Mode:** Suspend while workers are on site — switch back to Vacation after.
 
-**Open:** INSTALL 1.0.113 + updated `maui_wake.yaml` (owners' Master suite wake-up — built and pushed Nov 25,
-not yet installed: no HA access from that session); guest-speaker Spotify link (on site); wake-up music test; S1 has ~1–1.4 kW daytime load not on
+**Open:** ~~INSTALL 1.0.113 + `maui_wake.yaml`~~ (done Nov 25); guest-speaker Spotify link (on site); wake-up music test; S1 has ~1–1.4 kW daytime load not on
 its SPAN panel (ask Walter); door/motion sensors to install (4 entry, 4 motion — section 10); night look;
 Modern Forms fans; next bill (Nov 23–Dec 22) is the first full test of balancer + pool schedule.
 
@@ -756,3 +755,26 @@ Modern Forms fans; next bill (Nov 23–Dec 22) is the first full test of balance
   the other eight report. Last known: set 71°, cooling (set by hand at 9:35 AM Nov 25 during Suspend). The
   automation's 84° can't reach it. Needs someone on site: set it to 84 by hand, check its Wi-Fi in the
   Honeywell app, power-cycle if needed.
+
+## 19. Nov 27 — Marketplace (HACS), pool controller, Forecast.Solar, ocean temperature (1.0.122)
+
+- **HACS is gone in HA 2026.11** — it is built in as **Settings → Marketplace**. The "Get HACS" add-on
+  refuses to install on 2026.11 (tried it, then uninstalled it and removed its repository).
+- **Pool:** installed **Hayward OmniLogic Local 2.0.2** (cryptk/haomnilogic-local) from Marketplace via
+  "Add from link". Setup **can't reach the controller** (`cannot_connect`, port 10444, 10 s timeout) at
+  either address UniFi knows:
+  - `HaywardOmniLogicMSP0023620343D` (MAC 00:23:62:03:43:d0), wired to USW Pro Max 48 port 2 at 100 Mbps,
+    last IP 192.168.1.10 — flapping online/offline for days, **offline since 3:33 AM HST Nov 27**.
+  - `HaywardOmniLogicWLTF8F0056F132A`, Wi-Fi on Garage UAP-AC-M-Pro, 192.168.1.145, first seen ~Nov 21, online.
+  Needs on-site check of the controller's network (cable/port 2, or which link the Hayward app uses). Once it
+  answers, finish setup (Settings → Devices → Add integration → OmniLogic Local, IP + port 10444), then
+  delete the broken cloud `omnilogic` entry. Pool/spa temps then show on the Weather tab automatically.
+- **Forecast.Solar** (built-in) set up as "Solar forecast": home location, one plane, 15° tilt, azimuth 180
+  (south), 21 kWp. Not the real roof — the 70 microinverters are a big south/flat group (~29), smaller east
+  and west groups, several shaded — so it is calibrated to the house's real ~21 kW peak and ~110 kWh best
+  day. Sensors renamed `sensor.solar_forecast_*` (today, tomorrow, remaining, peak times, power now…).
+  Check it against the Envoy for a couple of weeks; adjust kWp if it runs high or low.
+- **Ocean temperature:** `packages/maui_ocean.yaml` → `sensor.ocean_temperature` from the Open-Meteo Marine
+  API (hourly). The PacIOOS Kalama Beach (Kihei) sensor isn't real-time — last data July 7 2026.
+- **Wall 1.0.122:** Weather tab shows Forecast.Solar kWh for today/tomorrow (rough cloud estimate after
+  that) and ocean/pool/spa water temperatures in the Now card.
