@@ -42,12 +42,12 @@ export function WeatherScreen({ states, showSolar }: { states: Map<string, HASta
 
   useEffect(() => {
     if (!showSolar) return;
-    void haStatistics([ENVOY_TODAY], "day", new Date(now - 21 * 86_400_000), undefined, ["max"]).then((r) => {
+    // The Envoy's "today" sensor is a running total, so each day's "change" is
+    // that day's production (kWh). Ignore resets and impossible values.
+    void haStatistics([ENVOY_TODAY], "day", new Date(now - 21 * 86_400_000), undefined, ["change"]).then((r) => {
       if (!r.ok) return;
-      const vals = (r.data[ENVOY_TODAY] ?? []).map((p) => p.max ?? 0).filter((v) => v > 0);
-      if (!vals.length) return;
-      const best = Math.max(...vals);
-      setBestKwh(best > 1000 ? best / 1000 : best);
+      const vals = (r.data[ENVOY_TODAY] ?? []).map((p) => p.change ?? 0).filter((v) => v > 5 && v < 250);
+      if (vals.length) setBestKwh(Math.max(...vals));
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showSolar]);

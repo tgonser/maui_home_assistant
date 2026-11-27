@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.121
+
+- Weather: the solar estimate now reads daily production from the Envoy history (it showed "—").
+
 ## 1.0.120
 
 - Weather: bigger sun dial with first light, sunrise, sunset and last light in a row under it; daylight
