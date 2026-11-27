@@ -63,6 +63,39 @@ export function daytimeCloud(hours: Hourly[], ymd: string): number | null {
 
 /** Rough solar for a day: the best recent day (≈ a clear day this season)
  *  scaled down by cloud cover. Heavy cloud still leaves ~30% (diffuse light). */
+// Water temperatures for the Weather tab: the ocean (Open-Meteo, from the
+// maui_ocean package) and the pool and spa (OmniLogic Local, once it can
+// reach the controller). Pool/spa sensors are found by name so the exact
+// entity ids the integration picks don't matter.
+export type WaterTemp = { label: string; entity: string; value: number };
+export function waterTemps(states: Iterable<[string, { state: string; attributes: Record<string, unknown> }]>): WaterTemp[] {
+  const out: WaterTemp[] = [];
+  const seen = new Set<string>();
+  for (const [id, s] of states) {
+    if (!id.startsWith("sensor.")) continue;
+    const v = Number(s.state);
+    if (!Number.isFinite(v)) continue;
+    const name = `${id} ${String(s.attributes.friendly_name ?? "")}`.toLowerCase();
+    const isTemp = s.attributes.device_class === "temperature" || /temp/.test(name);
+    if (!isTemp) continue;
+    let label: string | null = null;
+    if (id === "sensor.ocean_temperature") label = "Ocean";
+    else if (/water/.test(name) && /\bspa\b|_spa_|^sensor\.spa/.test(name)) label = "Spa";
+    else if (/water/.test(name) && /pool/.test(name) && !/air|double_sliders/.test(name)) label = "Pool";
+    if (label && !seen.has(label)) { seen.add(label); out.push({ label, entity: id, value: v }); }
+  }
+  const order = ["Ocean", "Pool", "Spa"];
+  return out.sort((a, b) => order.indexOf(a.label) - order.indexOf(b.label));
+}
+
+// Forecast.Solar gives kWh for today and tomorrow; later days fall back to
+// the cloud-based estimate.
+export function solarForecastFor(ymd: string, today: string, tomorrow: string, todayKwh: number | null, tomorrowKwh: number | null): number | null {
+  if (ymd === today && todayKwh != null) return Math.round(todayKwh);
+  if (ymd === tomorrow && tomorrowKwh != null) return Math.round(tomorrowKwh);
+  return null;
+}
+
 export function solarEstimate(bestRecentKwh: number, cloudPct: number): number {
   const c = Math.min(100, Math.max(0, cloudPct)) / 100;
   return Math.round(bestRecentKwh * (1 - 0.7 * c));

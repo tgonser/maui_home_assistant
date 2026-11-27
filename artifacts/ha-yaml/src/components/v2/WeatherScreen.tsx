@@ -1,15 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
 import { haForecast, haStatistics, type HAState } from "@/lib/ha";
-import { addDays, clockText, conditionIcon, conditionText, daytimeCloud, hoursText, mauiDay, mauiHour, solarEstimate, sunTimes, sunWords, type Hourly, type SunDay } from "@/lib/weatherDay";
+import { addDays, clockText, conditionIcon, conditionText, daytimeCloud, hoursText, mauiDay, mauiHour, solarEstimate, solarForecastFor, sunTimes, sunWords, waterTemps, type Hourly, type WaterTemp, type SunDay } from "@/lib/weatherDay";
 
 // Weather: conditions now (the house's Tempest station), a day picker with the
 // forecast for that day, the sun dial (first light, sunrise, sunset, last
 // light, hours of day and night) and the hours. Owners also see a rough solar
-// estimate from the cloud forecast.
+// forecast in kWh (Forecast.Solar for today and tomorrow, a rough cloud-based
+// estimate after that). Everyone sees water temperatures (ocean, pool, spa).
 
 const STATION = "weather.makena_4";
 const FALLBACK = "weather.forecast_home";
 const ENVOY_TODAY = "sensor.envoy_202445013483_energy_production_today";
+// Forecast.Solar (set up for the whole roof as one 21 kW south-facing array,
+// calibrated to the house's real peak and best days).
+const FS_TODAY = "sensor.solar_forecast_today";
+const FS_TOMORROW = "sensor.solar_forecast_tomorrow";
 
 type Daily = { datetime: string; temperature?: number; templow?: number; condition?: string; precipitation_probability?: number; wind_speed?: number; cloud_coverage?: number };
 
@@ -59,6 +64,10 @@ export function WeatherScreen({ states, showSolar }: { states: Map<string, HASta
   const sel = days.find((d) => d.ymd === day) ?? days[1];
   const sun = useMemo(() => sunTimes(sel.ymd), [sel.ymd]);
   const cloud = daytimeCloud(hourly, sel.ymd) ?? (typeof sel.f?.cloud_coverage === "number" ? sel.f.cloud_coverage : null);
+  const num = (id: string) => { const v = Number(states.get(id)?.state); return Number.isFinite(v) ? v : null; };
+  const forecastKwh = solarForecastFor(sel.ymd, today, addDays(today, 1), num(FS_TODAY), num(FS_TOMORROW));
+  const roughKwh = bestKwh != null && cloud != null ? solarEstimate(bestKwh, cloud) : null;
+  const water = useMemo(() => waterTemps(states.entries()), [states]);
   const dayLabel = (ymd: string) => (ymd === today ? "Today" : ymd === addDays(today, 1) ? "Tomorrow" : new Date(ymd + "T12:00:00Z").toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" }));
   const hoursForDay = hourly
     .filter((p) => p.temperature != null && mauiDay(Date.parse(p.datetime)) === sel.ymd && mauiHour(Date.parse(p.datetime)) >= 6 && mauiHour(Date.parse(p.datetime)) <= 20)
@@ -67,7 +76,7 @@ export function WeatherScreen({ states, showSolar }: { states: Map<string, HASta
 
   return (
     <div className="v2-weather">
-      <Now station={station} todayF={days[0].f} />
+      <Now station={station} todayF={days[0].f} water={water} />
       <section className="v2-card v2-wx-day" aria-label="Forecast">
         <div className="v2-seg v2-seg-sm v2-wx-days" role="radiogroup" aria-label="Day">
           {days.map((d) => (
@@ -87,7 +96,9 @@ export function WeatherScreen({ states, showSolar }: { states: Map<string, HASta
               <Fact label="Rain chance" value={sel.f.precipitation_probability != null ? `${Math.round(sel.f.precipitation_probability)}%` : "—"} />
               <Fact label="Sun" value={cloud != null ? `${sunWords(cloud)} · ${Math.round(cloud)}% cloud` : "—"} />
               {sel.f.wind_speed != null && <Fact label="Wind" value={`${Math.round(sel.f.wind_speed)} mph`} />}
-              {showSolar && <Fact label="Solar (estimate)" value={bestKwh != null && cloud != null ? `about ${solarEstimate(bestKwh, cloud)} kWh` : "—"} sub={bestKwh != null ? `A clear day lately: ${Math.round(bestKwh)} kWh` : undefined} />}
+              {showSolar && (forecastKwh != null
+                ? <Fact label="Solar forecast" value={`about ${forecastKwh} kWh`} sub={bestKwh != null ? `A clear day lately: ${Math.round(bestKwh)} kWh` : undefined} />
+                : <Fact label="Solar (rough estimate)" value={roughKwh != null ? `about ${roughKwh} kWh` : "—"} sub={bestKwh != null ? `From cloud cover · clear day lately: ${Math.round(bestKwh)} kWh` : undefined} />)}
             </div>
           </>
         ) : <div className="v2-muted v2-center" style={{ minHeight: 160 }}>Loading the forecast…</div>}
@@ -116,7 +127,7 @@ function Fact({ label, value, sub }: { label: string; value: string; sub?: strin
 
 // Current conditions: temperature on a coloured arc, feels-like, today's
 // high and low, rain chance and wind (sustained | gusts, from where).
-function Now({ station, todayF }: { station: HAState | undefined; todayF: Daily | undefined }) {
+function Now({ station, todayF, water }: { station: HAState | undefined; todayF: Daily | undefined; water: WaterTemp[] }) {
   const a = station?.attributes ?? {};
   const t = Number(a.temperature);
   const feels = Number(a.apparent_temperature);
@@ -153,6 +164,11 @@ function Now({ station, todayF }: { station: HAState | undefined; todayF: Daily 
           <small>sustained | gusts</small>
         </div>
       </div>
+      {water.length > 0 && (
+        <div className="v2-wx-waterrow" aria-label="Water temperatures">
+          {water.map((w) => <Fact key={w.label} label={`${w.label} water`} value={`${Math.round(w.value)}°`} />)}
+        </div>
+      )}
     </section>
   );
 }

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.122
+
+- Weather: solar uses the Forecast.Solar kWh forecast for today and tomorrow (rough estimate after that).
+- Weather: ocean temperature (and pool/spa once the pool controller is connected) in the Now card.
+
 ## 1.0.121
 
 - Weather: the solar estimate now reads daily production from the Envoy history (it showed "—").
