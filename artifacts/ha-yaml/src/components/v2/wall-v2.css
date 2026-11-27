@@ -478,3 +478,11 @@
 
 .v2-wx-waterrow { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; margin-top: 6px; }
 .v2-wx-waterrow .v2-wx-fact { padding: 6px 8px; }
+
+.v2-link-btn { background: none; border: 0; padding: 0; text-align: left; cursor: pointer; color: inherit; font: inherit; }
+.v2-balance-sheet { width: min(640px, 94vw); max-height: 86vh; overflow: auto; }
+.v2-balance-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.v2-balance-table th { text-align: right; font-size: 12px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; padding: 4px 8px; }
+.v2-balance-table td { text-align: right; padding: 7px 8px; border-top: 1px solid #EFE8DC; font-variant-numeric: tabular-nums; }
+.v2-balance-table th:first-child, .v2-balance-table td:first-child { text-align: left; }
+.v2-balance-table .v2-warn { color: #7A2E14; font-weight: 600; }

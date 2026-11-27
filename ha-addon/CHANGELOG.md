@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.124
+
+- Energy: tap "Battery balance … By day" for the balancer's last 14 days — kWh moved, kWh bought while
+  boosting, and each system's charge at 5 PM.
+
 ## 1.0.123
 
 - Recent motion: times come from the history of real motion, so a Home Assistant restart no longer

@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
-import type { HAState } from "@/lib/ha";
+import { useEffect, useMemo, useState } from "react";
+import { haWsBatch, type HAState } from "@/lib/ha";
+import { BALANCE_BOUGHT, BALANCE_MOVED, SOC5_S1, SOC5_S2, balanceDays, type BalanceDay } from "@/lib/balanceLog";
 import { buildNetGridSeries } from "@/lib/netGrid";
 import { useSolarPeriods } from "@/lib/useSolarPeriods";
 import { useEntityHistory, useGridCostStatistics } from "@/components/Wall";
@@ -35,6 +36,7 @@ export function EnergyScreen({ states }: { states: Map<string, HAState> }) {
   const g2 = useEntityHistory(`${S2}grid_power`);
   const net = useMemo(() => { const end = Date.now(); return buildNetGridSeries(g1, g2, end - 24 * 3600_000, end); }, [g1, g2]);
   const [view, setView] = useState<"grid" | "solar">("grid");
+  const [logOpen, setLogOpen] = useState(false);
   const e = energyNow(states);
   const num = (id: string) => { const n = Number(states.get(id)?.state); return Number.isFinite(n) ? n : null; };
   const exported = (num(`${S1}grid_exported`) ?? 0) + (num(`${S2}grid_exported`) ?? 0);
@@ -66,9 +68,9 @@ export function EnergyScreen({ states }: { states: Map<string, HAState> }) {
           <div className="v2-h">Powerwalls</div>
           <SysCard name="System 1" sub="Mudroom panel · AC condensers" soc={e.soc1} kw={num(`${S1}battery_power`)} solarToday={num(`${S1}solar_generated`)} />
           <SysCard name="System 2" sub="Garage · pool · water heater" soc={e.soc2} kw={num(`${S2}battery_power`)} solarToday={num(`${S2}solar_generated`)} />
-          <div className="v2-small">
-            Battery balance {balanceOn ? "on" : "off"}{balanceStatus ? ` · ${balanceStatus}` : ""}{moved != null && moved > 0 ? ` · moved ${moved.toFixed(1)} kWh today` : ""}
-          </div>
+          <button type="button" className="v2-small v2-link-btn" onClick={() => setLogOpen(true)}>
+            Battery balance {balanceOn ? "on" : "off"}{balanceStatus ? ` · ${balanceStatus}` : ""}{moved != null && moved > 0 ? ` · moved ${moved.toFixed(1)} kWh today` : ""} · <u>By day</u>
+          </button>
         </section>
       </div>
       <div className="v2-energy-tiles">
@@ -77,6 +79,43 @@ export function EnergyScreen({ states }: { states: Map<string, HAState> }) {
         <Tile label="Today vs. grid" big={credit(s?.todayBalance)} unit="" sub={s && !s.isTodayComplete ? "still adding up" : s && s.todayBalance < 0 ? "cost after selling back" : "credit after buying back"} color={s && s.todayBalance < 0 ? "#7A2E14" : "#2E6B3A"} />
         <Tile label="This month" big={s ? credit(-s.currentMonthCost) : "—"} unit="" sub={grid.loading ? "loading…" : grid.error ? "unavailable" : s && s.currentMonthCost > 0 ? "owed on the bill so far" : "credit on the bill so far"} color={s && s.currentMonthCost > 0 ? "#7A2E14" : "#2E6B3A"} />
         <Tile label="Solar last 7 days" big={solarRows.sevenDay.value.replace(" kWh", "")} unit={solarRows.sevenDay.value.includes("kWh") ? "kWh" : ""} sub="today + previous 6" color="#B07800" />
+      </div>
+      {logOpen && <BalanceLog onClose={() => setLogOpen(false)} />}
+    </div>
+  );
+}
+
+// The balancer, day by day: solar moved from the full system to the low one,
+// grid power bought while boosting (should stay near 0), and each system's
+// charge when the 5 PM peak starts.
+function BalanceLog({ onClose }: { onClose: () => void }) {
+  const [rows, setRows] = useState<BalanceDay[] | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  useEffect(() => {
+    void haWsBatch([{ type: "history/history_during_period", start_time: new Date(Date.now() - 15 * 86_400_000).toISOString(), entity_ids: [BALANCE_MOVED, BALANCE_BOUGHT, SOC5_S1, SOC5_S2], minimal_response: true, no_attributes: true }]).then((r) => {
+      const res = r.results[0];
+      if (!res?.success) { setErr(r.error ?? res?.error?.message ?? "Could not load the history"); return; }
+      setRows(balanceDays(res.result as Record<string, Array<{ s: string; lu?: number; lc?: number }>>, Date.now(), 14));
+    });
+  }, []);
+  const kwh = (v: number | null) => (v == null ? "—" : v < 0.05 ? "0" : v.toFixed(1));
+  const pct = (v: number | null) => (v == null ? "—" : `${Math.round(v)}%`);
+  const label = (ymd: string) => new Date(ymd + "T12:00:00Z").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" });
+  return (
+    <div className="v2-modal" role="dialog" aria-modal="true" aria-label="Battery balancer by day" onClick={onClose}>
+      <div className="v2-card v2-modal-card v2-balance-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="v2-sec-head"><span className="v2-h">Battery balancer by day</span><button type="button" className="v2-btn" onClick={onClose}>Close</button></div>
+        {err ? <p className="v2-muted">{err}</p> : !rows ? <p className="v2-muted">Loading…</p> : (
+          <table className="v2-balance-table">
+            <thead><tr><th>Day</th><th>Moved</th><th>Bought</th><th>System 1 at 5 PM</th><th>System 2 at 5 PM</th></tr></thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.day}><td>{label(r.day)}</td><td>{kwh(r.moved)}</td><td className={r.bought != null && r.bought >= 1 ? "v2-warn" : ""}>{kwh(r.bought)}</td><td>{pct(r.soc1)}</td><td>{pct(r.soc2)}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+        <p className="v2-small">Moved: kWh of one system's spare solar put into the other system's batteries. Bought: kWh taken from the grid while boosting — should stay near 0. At 5 PM: battery charge when the peak price starts.</p>
       </div>
     </div>
   );

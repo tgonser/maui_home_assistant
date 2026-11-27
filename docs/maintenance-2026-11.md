@@ -787,3 +787,7 @@ Modern Forms fans; next bill (Nov 23–Dec 22) is the first full test of balance
 - **Base battery reserve 20% → 10% (Nov 27, T2):** frees ~4 kWh per system overnight (the house was buying
   5–6 kWh on bad nights). OK for outages: SPAN sheds non-essential loads, and storm prep fills to 100% before
   real storms. `maui_battery_balance.yaml` base_reserve 10 and boost checks `> 10`.
+- **Balancer tracking (1.0.124):** the daily totals were being recorded all along (`total_increasing`
+  sensors; ask statistics for `change`/`state`, not `max`). Energy tab → "Battery balance … By day" shows 14
+  days: moved, bought while boosting, both systems' charge at 5 PM. So far: Nov 22 moved 2.6 / bought 0.6;
+  Nov 23 8.2 / 6.0 (stuck-reserve glitch); Nov 24–26 nothing to move (cloudy, S1 never full); Nov 27 4.0 / 0.3.
