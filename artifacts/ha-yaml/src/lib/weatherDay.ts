@@ -50,7 +50,7 @@ export function clockText(ms: number): string {
   return `${H % 12 || 12}:${String(M).padStart(2, "0")} ${H < 12 ? "AM" : "PM"}`;
 }
 /** "11 h 1 min" */
-export const hoursText = (h: number) => `${Math.floor(h)} h ${Math.round((h - Math.floor(h)) * 60)} min`;
+export const hoursText = (h: number) => { const m = Math.round(h * 60); return `${Math.floor(m / 60)} h ${m % 60} min`; };
 
 export type Hourly = { datetime: string; temperature?: number; condition?: string; precipitation_probability?: number; cloud_coverage?: number; wind_speed?: number };
 

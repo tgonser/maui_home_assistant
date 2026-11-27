@@ -166,29 +166,26 @@ function SunDial({ sun, nowMs }: { sun: SunDay; nowMs: number | null }) {
   const [fl, sr, ss, ll] = [sun.firstLight, sun.sunrise, sun.sunset, sun.lastLight].map(ang);
   return (
     <section className="v2-card v2-wx-sun" aria-label="Sun">
-      <div className="v2-wx-sunrow">
-        <div className="v2-wx-suncol">
-          <Fact label="Last light" value={clockText(sun.lastLight)} />
-          <Fact label="Sunset" value={clockText(sun.sunset)} />
-        </div>
-        <svg viewBox="0 0 260 260" className="v2-wx-dial" role="img" aria-label={`Daylight ${hoursText(sun.dayHours)}`}>
-          <circle cx={cx} cy={cy} r={r + 22} fill="#F7F2E9" stroke="#E2D9C8" />
-          <circle cx={cx} cy={cy} r={r} fill="#2B4E92" />
-          <path d={wedge(fl, sr)} fill="#5F86CC" />
-          <path d={wedge(ss, ll)} fill="#5F86CC" />
-          <path d={wedge(sr, ss)} fill="#F6DFA0" />
-          <text x={cx} y={cy - r - 7} textAnchor="middle" fontSize="11" letterSpacing="2" fill="#7A8A90">MIDNIGHT</text>
-          <text x={cx} y={cy + r + 16} textAnchor="middle" fontSize="11" letterSpacing="2" fill="#7A8A90">NOON</text>
-          <text x={cx} y={cy + 30} textAnchor="middle" fontSize="11" letterSpacing="1.5" fill="#7A6A40">DAYLIGHT</text>
-          <text x={cx} y={cy + 52} textAnchor="middle" fontSize="19" fontWeight="600" fill="#1E2A2E">{hoursText(sun.dayHours)}</text>
-          <text x={cx} y={cy - 38} textAnchor="middle" fontSize="11" letterSpacing="1.5" fill="#DCE6F8">NIGHT</text>
-          <text x={cx} y={cy - 18} textAnchor="middle" fontSize="15" fontWeight="600" fill="#FFFFFF">{hoursText(sun.nightHours)}</text>
-          {nowMs != null && <circle cx={+pt(ang(nowMs), r + 11).split(" ")[0]} cy={+pt(ang(nowMs), r + 11).split(" ")[1]} r="7" fill="#E2A72E" stroke="#FFFFFF" strokeWidth="2" />}
-        </svg>
-        <div className="v2-wx-suncol">
-          <Fact label="First light" value={clockText(sun.firstLight)} />
-          <Fact label="Sunrise" value={clockText(sun.sunrise)} />
-        </div>
+      <div className="v2-cap">Sun</div>
+      <svg viewBox="0 0 260 260" className="v2-wx-dial" role="img" aria-label={`Daylight ${hoursText(sun.dayHours)}`}>
+        <circle cx={cx} cy={cy} r={r + 22} fill="#F7F2E9" stroke="#E2D9C8" />
+        <circle cx={cx} cy={cy} r={r} fill="#2B4E92" />
+        <path d={wedge(fl, sr)} fill="#5F86CC" />
+        <path d={wedge(ss, ll)} fill="#5F86CC" />
+        <path d={wedge(sr, ss)} fill="#F6DFA0" />
+        <text x={cx} y={cy - r - 7} textAnchor="middle" fontSize="11" letterSpacing="2" fill="#7A8A90">MIDNIGHT</text>
+        <text x={cx} y={cy + r + 16} textAnchor="middle" fontSize="11" letterSpacing="2" fill="#7A8A90">NOON</text>
+        <text x={cx} y={cy + 30} textAnchor="middle" fontSize="11" letterSpacing="1.5" fill="#7A6A40">DAYLIGHT</text>
+        <text x={cx} y={cy + 52} textAnchor="middle" fontSize="19" fontWeight="600" fill="#1E2A2E">{hoursText(sun.dayHours)}</text>
+        <text x={cx} y={cy - 38} textAnchor="middle" fontSize="11" letterSpacing="1.5" fill="#DCE6F8">NIGHT</text>
+        <text x={cx} y={cy - 18} textAnchor="middle" fontSize="15" fontWeight="600" fill="#FFFFFF">{hoursText(sun.nightHours)}</text>
+        {nowMs != null && <circle cx={+pt(ang(nowMs), r + 11).split(" ")[0]} cy={+pt(ang(nowMs), r + 11).split(" ")[1]} r="7" fill="#E2A72E" stroke="#FFFFFF" strokeWidth="2" />}
+      </svg>
+      <div className="v2-wx-suntimes">
+        <Fact label="First light" value={clockText(sun.firstLight)} />
+        <Fact label="Sunrise" value={clockText(sun.sunrise)} />
+        <Fact label="Sunset" value={clockText(sun.sunset)} />
+        <Fact label="Last light" value={clockText(sun.lastLight)} />
       </div>
     </section>
   );
