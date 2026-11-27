@@ -15,20 +15,22 @@
 #   - START: if one side is >= 80% and has been exporting > 2 kW for 10 min, and the other
 #     side is at least 15 points lower and below 75%, raise the low side's backup reserve
 #     to (its charge + 25), max 95%. (Was +15 / 80% / 9:30–2:30 until Nov 27 2026.)
-#   - STOP (reserve back to 20%): when the boosted side reaches its target, the whole house
+#   - STOP (reserve back to 10%): when the boosted side reaches its target, the whole house
 #     has been importing for 5 min (the surplus is gone), or it's 3:30 PM.
 #   At most one change per side every 10 minutes.
 #
 # Safety
-#   - Hard reset of BOTH reserves to 20% at 3:45 PM, on HA start, when the master switch
+#   - Hard reset of BOTH reserves to 10% at 3:45 PM, on HA start, when the master switch
 #     is turned off, and if either system's Tesla data is unavailable for 15 min — so a
 #     raised reserve can never carry into the 5–9 PM peak.
 #   - Never acts during storm prep (active / pending / recovery) or Tesla Storm Watch.
-#   - While enabled, any reserve above 20% (including one set by hand) is treated as a
-#     boost and is returned to 20% by 3:30–3:45 PM.
+#   - While enabled, any reserve above 10% (including one set by hand) is treated as a
+#     boost and is returned to 10% by 3:30–3:45 PM.
 #   - Every change is written to the logbook ("Maui Battery Balance").
 #
-# Base reserve is 20% (T2's setting, Nov 2026). To change it, edit `base_reserve` in both
+# Base reserve is 10% (T2's setting from Nov 27 2026; was 20%). In a real outage the
+# SPAN panels shed non-essential loads, and storm prep fills to 100% before real storms.
+# To change it, edit `base_reserve` in both automations and the `> 10` checks in the sensors,
 # automations below. No `initial:` on the helper, so its on/off state survives restarts.
 # =============================================================================
 
@@ -91,8 +93,8 @@ template:
           {% set hm = now().strftime('%H:%M') %}
           {% if is_state('input_boolean.maui_storm_prep_active', 'on') or is_state('input_boolean.maui_storm_prep_pending', 'on') or is_state('sensor.gonser_4680_system_1_storm_watch_active', 'on') or is_state('sensor.4680_system_2_storm_watch_active', 'on') %}Paused (storm prep / Storm Watch)
           {%- elif not is_state('input_boolean.maui_balance_enabled', 'on') %}Off
-          {%- elif r2 > 20 %}Boosting System 2 to {{ r2 | int }}%
-          {%- elif r1 > 20 %}Boosting System 1 to {{ r1 | int }}%
+          {%- elif r2 > 10 %}Boosting System 2 to {{ r2 | int }}%
+          {%- elif r1 > 10 %}Boosting System 1 to {{ r1 | int }}%
           {%- elif '09:00' <= hm < '15:30' %}Watching (no boost needed)
           {%- else %}Idle (works 9 AM to 3:30 PM){% endif %}
 
@@ -115,7 +117,7 @@ template:
         state: >-
           {% set r1 = states('number.gonser_4680_system_1_backup_reserve') | float(0) %}
           {% set r2 = states('number.4680_system_2_backup_reserve') | float(0) %}
-          {% set p = [states('sensor.4680_system_2_grid_power') | float(0), 0] | max if r2 > 20 else ([states('sensor.gonser_4680_system_1_grid_power') | float(0), 0] | max if r1 > 20 else 0) %}
+          {% set p = [states('sensor.4680_system_2_grid_power') | float(0), 0] | max if r2 > 10 else ([states('sensor.gonser_4680_system_1_grid_power') | float(0), 0] | max if r1 > 10 else 0) %}
           {{ 0 if trigger.id == 'reset' else ((this.state | float(0)) + p / 60) | round(3) }}
       - name: Maui Balance Bought During Boost Today
         unique_id: maui_balance_bought_today
@@ -125,7 +127,7 @@ template:
         state_class: total_increasing
         # Whole-house grid purchase while a boost is on. Should stay near 0.
         state: >-
-          {% set boosting = states('number.gonser_4680_system_1_backup_reserve') | float(0) > 20 or states('number.4680_system_2_backup_reserve') | float(0) > 20 %}
+          {% set boosting = states('number.gonser_4680_system_1_backup_reserve') | float(0) > 10 or states('number.4680_system_2_backup_reserve') | float(0) > 10 %}
           {% set net = states('sensor.gonser_4680_system_1_grid_power') | float(0) + states('sensor.4680_system_2_grid_power') | float(0) %}
           {% set p = [net, 0] | max if boosting else 0 %}
           {{ 0 if trigger.id == 'reset' else ((this.state | float(0)) + p / 60) | round(3) }}
@@ -172,7 +174,7 @@ automation:
              and not is_state('sensor.gonser_4680_system_1_storm_watch_active', 'on')
              and not is_state('sensor.4680_system_2_storm_watch_active', 'on') }}
     variables:
-      base_reserve: 20
+      base_reserve: 10
       boost_points: 25
       max_reserve: 95
       min_gap: 15
@@ -284,7 +286,7 @@ automation:
   # ---------------------------------------------------------------------------
   - alias: Maui Battery Balance — safety reset
     description: >
-      Guarantees both Tesla backup reserves are back at 20% before the evening peak, after a
+      Guarantees both Tesla backup reserves are back at 10% before the evening peak, after a
       restart, when balancing is switched off, or when Tesla data goes stale.
     mode: queued
     triggers:
@@ -318,7 +320,7 @@ automation:
              and not is_state('sensor.gonser_4680_system_1_storm_watch_active', 'on')
              and not is_state('sensor.4680_system_2_storm_watch_active', 'on') }}
     variables:
-      base_reserve: 20
+      base_reserve: 10
     actions:
       - repeat:
           for_each:
@@ -326,7 +328,7 @@ automation:
             - number.4680_system_2_backup_reserve
           sequence:
             # Always send the base reserve on a scheduled check — the reported
-            # value may be stale, so "already 20%" can't be trusted.
+            # value may be stale, so "already 10%" can't be trusted.
             - if:
                 - condition: template
                   value_template: "{{ trigger.platform == 'time' or states(repeat.item) | float(0) > base_reserve }}"
