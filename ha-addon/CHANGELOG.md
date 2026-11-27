@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.125
+
+- Balancer by day: a restart no longer copies yesterday's 5 PM charge into today.
+
 ## 1.0.124
 
 - Energy: tap "Battery balance … By day" for the balancer's last 14 days — kWh moved, kWh bought while
