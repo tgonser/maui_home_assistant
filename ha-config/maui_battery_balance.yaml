@@ -11,21 +11,21 @@
 #   5.0 kW while the house as a whole kept exporting ~2.8 kW (nothing bought).
 #
 # What it does (only when input_boolean.maui_balance_enabled is on)
-#   Every 5 min between 9:30 AM and 2:30 PM HST:
+#   Every 5 min between 9:00 AM and 3:30 PM HST (Smart Export pays nothing 9 AM–4 PM):
 #   - START: if one side is >= 80% and has been exporting > 2 kW for 10 min, and the other
 #     side is at least 15 points lower and below 75%, raise the low side's backup reserve
-#     to (its charge + 15), max 80%.
+#     to (its charge + 25), max 95%. (Was +15 / 80% / 9:30–2:30 until Nov 27 2026.)
 #   - STOP (reserve back to 20%): when the boosted side reaches its target, the whole house
-#     has been importing for 5 min (the surplus is gone), or it's 2:30 PM.
+#     has been importing for 5 min (the surplus is gone), or it's 3:30 PM.
 #   At most one change per side every 10 minutes.
 #
 # Safety
-#   - Hard reset of BOTH reserves to 20% at 2:45 PM, on HA start, when the master switch
+#   - Hard reset of BOTH reserves to 20% at 3:45 PM, on HA start, when the master switch
 #     is turned off, and if either system's Tesla data is unavailable for 15 min — so a
 #     raised reserve can never carry into the 5–9 PM peak.
 #   - Never acts during storm prep (active / pending / recovery) or Tesla Storm Watch.
 #   - While enabled, any reserve above 20% (including one set by hand) is treated as a
-#     boost and is returned to 20% by 2:30–2:45 PM.
+#     boost and is returned to 20% by 3:30–3:45 PM.
 #   - Every change is written to the logbook ("Maui Battery Balance").
 #
 # Base reserve is 20% (T2's setting, Nov 2026). To change it, edit `base_reserve` in both
@@ -93,8 +93,8 @@ template:
           {%- elif not is_state('input_boolean.maui_balance_enabled', 'on') %}Off
           {%- elif r2 > 20 %}Boosting System 2 to {{ r2 | int }}%
           {%- elif r1 > 20 %}Boosting System 1 to {{ r1 | int }}%
-          {%- elif '09:30' <= hm < '14:30' %}Watching (no boost needed)
-          {%- else %}Idle (works 9:30 AM to 2:30 PM){% endif %}
+          {%- elif '09:00' <= hm < '15:30' %}Watching (no boost needed)
+          {%- else %}Idle (works 9 AM to 3:30 PM){% endif %}
 
   # Accumulated once a minute; reset at midnight. Restored across restarts.
   - triggers:
@@ -162,8 +162,8 @@ automation:
         entity_id: input_boolean.maui_balance_enabled
         state: "on"
       - condition: time
-        after: "09:30:00"
-        before: "14:45:00"
+        after: "09:00:00"
+        before: "15:45:00"
       - condition: template
         value_template: >-
           {{ not is_state('input_boolean.maui_storm_prep_active', 'on')
@@ -173,8 +173,8 @@ automation:
              and not is_state('sensor.4680_system_2_storm_watch_active', 'on') }}
     variables:
       base_reserve: 20
-      boost_points: 15
-      max_reserve: 80
+      boost_points: 25
+      max_reserve: 95
       min_gap: 15
       cooldown_min: 10
       soc1: "{{ states('sensor.gonser_4680_system_1_percentage_charged') | float(-1) }}"
@@ -187,7 +187,7 @@ automation:
       ready2: >-
         {{ (now() - states.number['4680_system_2_backup_reserve'].last_changed).total_seconds()
            > cooldown_min * 60 }}
-      past_window: "{{ now().strftime('%H:%M') >= '14:30' }}"
+      past_window: "{{ now().strftime('%H:%M') >= '15:30' }}"
       importing: "{{ is_state('binary_sensor.maui_house_importing', 'on') }}"
       data_ok: "{{ soc1 >= 0 and soc2 >= 0 and res1 >= 0 and res2 >= 0 }}"
     actions:
@@ -289,12 +289,12 @@ automation:
     mode: queued
     triggers:
       - trigger: time
-        at: "14:45:00"
+        at: "15:45:00"
       # Re-assert before the 5 PM peak: Tesla's cloud can report a stale
-      # reserve, so one check at 14:45 is not enough (Nov 23: it read 20%
+      # reserve, so one check at 15:45 is not enough (Nov 23: it read 20%
       # while System 2 was really still held at 73%).
       - trigger: time
-        at: "15:30:00"
+        at: "16:15:00"
       - trigger: time
         at: "16:40:00"
       - trigger: homeassistant
