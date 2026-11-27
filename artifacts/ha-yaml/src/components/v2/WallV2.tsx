@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { agoText, recentMotion } from "@/lib/motionList";
+import { agoText, lastMotionFromHistory, recentMotion } from "@/lib/motionList";
 import { HOUSE_MODES, MODE_ENTITY, modeGuard } from "@/lib/houseMode";
 import { NO_SWIPE_SELECTOR, swipeDirection } from "@/lib/swipe";
-import { haAutoConnectIfAddon, haCallService, useHAStore, type HAState } from "@/lib/ha";
+import { haAutoConnectIfAddon, haCallService, haWsBatch, useHAStore, type HAState } from "@/lib/ha";
 import { useLiveStates, type LiveMode } from "@/lib/liveStates";
 import { energyBySystem, houseFlows, energyNow, GUEST_SUITES, restartMinute, roomStatus, ROOM_CLIMATE, suiteInUse, FLOORS } from "@/lib/houseMap";
 import { HouseMap } from "./HouseMap";
@@ -359,10 +359,26 @@ function ModeBar({ states, now }: { states: Map<string, HAState>; now: number })
 // Latest motion in the house; tap for the full list.
 function MotionRow({ states, now }: { states: Map<string, HAState>; now: number }) {
   const [open, setOpen] = useState(false);
-  const list = useMemo(() => recentMotion(states), [states]);
+  const [lastOn, setLastOn] = useState<Map<string, number>>(new Map());
+  const ids = useMemo(() => recentMotion(states).map((m) => m.id).sort().join(","), [states]);
+  // Last real motion per sensor from the history (3 days), refreshed every 2 min.
+  useEffect(() => {
+    if (!ids) return;
+    let live = true;
+    const load = async () => {
+      const r = await haWsBatch([{ type: "history/history_during_period", start_time: new Date(Date.now() - 3 * 86_400_000).toISOString(), entity_ids: ids.split(","), minimal_response: true, no_attributes: true }]);
+      const res = r.results[0];
+      if (live && res?.success && res.result) setLastOn(lastMotionFromHistory(res.result as Record<string, Array<{ s: string; lu?: number; lc?: number }>>));
+    };
+    void load();
+    const t = window.setInterval(load, 120_000);
+    return () => { live = false; window.clearInterval(t); };
+  }, [ids]);
+  const list = useMemo(() => recentMotion(states, lastOn), [states, lastOn]);
   if (!list.length) return null;
-  const top = list.filter((m) => m.available).slice(0, 2);
-  const val = top.map((m) => `${m.name} ${m.active ? "now" : agoText(m.changed, now)}`).join(" · ");
+  const when = (m: (typeof list)[number]) => (m.active ? "now" : m.changed != null ? agoText(m.changed, now) : "none in 3 days");
+  const top = list.filter((m) => m.available && (m.active || m.changed != null)).slice(0, 2);
+  const val = top.map((m) => `${m.name} ${when(m)}`).join(" · ");
   return (
     <>
       <button type="button" className="v2-row v2-row-btn" onClick={() => setOpen(true)}>
@@ -377,7 +393,7 @@ function MotionRow({ states, now }: { states: Map<string, HAState>; now: number 
               {list.map((m) => (
                 <div key={m.id} className={`v2-motion-item${m.active ? " on" : ""}`}>
                   <span>{m.name}</span>
-                  <span>{!m.available ? "Offline" : m.active ? "Moving now" : agoText(m.changed, now)}</span>
+                  <span>{!m.available ? "Offline" : m.active ? "Moving now" : m.changed != null ? agoText(m.changed, now) : "None in 3 days"}</span>
                 </div>
               ))}
             </div>

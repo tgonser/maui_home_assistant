@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.123
+
+- Recent motion: times come from the history of real motion, so a Home Assistant restart no longer
+  makes every room look like it had motion at the same moment.
+
 ## 1.0.122
 
 - Weather: solar uses the Forecast.Solar kWh forecast for today and tomorrow (rough estimate after that).
