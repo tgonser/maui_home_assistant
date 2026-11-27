@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.0.119
+
+- New **Weather** tab for owner and guest tablets:
+  - **Now** (the house's Tempest station): temperature on a coloured arc, feels-like, today's high | low,
+    rain chance, wind sustained | gusts and where it's coming from.
+  - **Day picker** (Today, Tomorrow, next 3 days): high | low, conditions, rain chance, sun / cloud
+    cover (met.no hourly, 9 AM–4 PM), wind. Owners also get a **solar estimate**: the best day of the last
+    3 weeks scaled down by the cloud forecast.
+  - **Sun dial**: midnight at top, noon at bottom; first light, sunrise, sunset, last light, hours of
+    daylight and night, and where the sun is now. Times are calculated for the house (within ~2 min of
+    weather apps, which use Kihei town).
+  - **By the hour** for the chosen day.
+
 ## 1.0.118
 
 - Wall scenes may include shades as well as lights when saved without the PIN.

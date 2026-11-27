@@ -445,3 +445,30 @@
 .v2-light-panels input::placeholder { color: #9AA6AA !important; }
 .v2-light-panels pre, .v2-light-panels code { background: #F7F2E9 !important; color: #1E2A2E !important; }
 .v2-light-panels .wall-btn-active, .v2-light-panels [class*="bg-amber-7"], .v2-light-panels [class*="bg-amber-6"] { background: var(--teal) !important; border-color: var(--teal) !important; color: #FFFFFF !important; }
+
+/* Weather */
+.v2-weather { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1.25fr 1.15fr; grid-template-rows: 1fr auto; gap: 12px; }
+.v2-wx-now, .v2-wx-day, .v2-wx-sun { padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.v2-wx-hours { grid-column: 1 / -1; padding: 10px 16px; }
+.v2-wx-gauge { width: 100%; max-width: 230px; align-self: center; }
+.v2-center-text { text-align: center; }
+.v2-wx-nowfacts { display: grid; grid-template-columns: 1fr 1.3fr; gap: 8px; margin-top: 6px; }
+.v2-wx-days { align-self: flex-start; flex-wrap: wrap; }
+.v2-wx-big { display: flex; align-items: center; gap: 14px; margin: 8px 0 4px; }
+.v2-wx-icon { font-size: 54px; line-height: 1; }
+.v2-wx-hilo b { font-family: Outfit, Inter, sans-serif; font-size: 44px; font-weight: 600; }
+.v2-wx-hilo span { font-size: 26px; color: var(--muted); }
+.v2-wx-cond { font-size: 18px; font-weight: 600; }
+.v2-wx-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; margin-top: 6px; }
+.v2-wx-fact { display: flex; flex-direction: column; gap: 1px; background: #F7F2E9; border-radius: 10px; padding: 8px 10px; }
+.v2-wx-fact span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.v2-wx-fact b { font-size: 17px; }
+.v2-wx-fact small { font-size: 11.5px; color: var(--muted); }
+.v2-wx-sunrow { flex: 1; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; }
+.v2-wx-suncol { display: flex; flex-direction: column; gap: 10px; }
+.v2-wx-dial { width: 100%; max-width: 250px; justify-self: center; }
+.v2-wx-hourrow { display: flex; gap: 6px; overflow-x: auto; padding-top: 6px; }
+.v2-wx-hour { flex: 0 0 64px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; border-radius: 10px; background: #F7F2E9; font-size: 13px; }
+.v2-wx-hour small { color: #3B6FB0; min-height: 14px; }
+.v2-wx-hicon { font-size: 20px; }
+@media (max-width: 1000px) { .v2-weather { grid-template-columns: 1fr; grid-template-rows: none; overflow: auto; } }
