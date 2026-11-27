@@ -784,3 +784,6 @@ Modern Forms fans; next bill (Nov 23–Dec 22) is the first full test of balance
 - **Balancer made more aggressive (Nov 27, T2's request — don't export unpaid midday solar):**
   `maui_battery_balance.yaml` window 9:00 AM–3:30 PM (was 9:30–2:30), boost +25 points (was +15), max 95%
   (was 80%). Safety resets at 3:30 (end of window), 3:45, 4:15 and 4:40 PM — all well before the 5 PM peak.
+- **Base battery reserve 20% → 10% (Nov 27, T2):** frees ~4 kWh per system overnight (the house was buying
+  5–6 kWh on bad nights). OK for outages: SPAN sheds non-essential loads, and storm prep fills to 100% before
+  real storms. `maui_battery_balance.yaml` base_reserve 10 and boost checks `> 10`.
